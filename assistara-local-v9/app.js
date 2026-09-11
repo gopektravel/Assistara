@@ -42,12 +42,12 @@ if (matchCopy) {
   const title = matchCopy.querySelector("h2");
   const paragraph = matchCopy.querySelector("p");
   const points = matchCopy.querySelectorAll(".match-points div");
-  if (kicker) kicker.textContent = "MAKE MORE OF THE BUSINESS RUN WITHOUT YOU";
-  if (title) title.textContent = "What could your business do if less of it required you?";
-  if (paragraph) paragraph.textContent = "Tell us what keeps pulling you back into repeatable work. We’ll help turn it into a role a trained virtual assistant can own — so you can spend more time on the work that actually needs you.";
-  if (points[0]) points[0].innerHTML = "<span>✓</span> Less founder-dependent day-to-day work";
-  if (points[1]) points[1].innerHTML = "<span>✓</span> More time for decisions, growth and relationships";
-  if (points[2]) points[2].innerHTML = "<span>✓</span> Start with the work that keeps coming back";
+  if (kicker) kicker.textContent = "FIND YOUR VIRTUAL ASSISTANT";
+  if (title) title.textContent = "Ready to buy back your time?";
+  if (paragraph) paragraph.textContent = "Tell us what keeps pulling you back into the day-to-day. We’ll help define what can be delegated and match you with a trained virtual assistant who can take ownership of it.";
+  if (points[0]) points[0].innerHTML = "<span>✓</span> Get repeatable work off your plate";
+  if (points[1]) points[1].innerHTML = "<span>✓</span> Protect more time for growth, decisions and relationships";
+  if (points[2]) points[2].innerHTML = "<span>✓</span> Get matched around the work you actually need handled";
 }
 
 const hoursRange = document.getElementById("hoursRange");
