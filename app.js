@@ -1,14 +1,8 @@
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
 
-// Brand logo: inline SVG so the navbar never depends on a separately-loaded image asset.
+// Brand logo: icon + Manrope wordmark with the yellow dot positioned directly above the i.
 for (const brand of document.querySelectorAll('.brand')) {
-  brand.innerHTML = `<svg viewBox="0 0 420 96" role="img" aria-label="Assistara" style="display:block;width:148px;height:auto;max-height:38px;overflow:visible" xmlns="http://www.w3.org/2000/svg">
-    <rect width="96" height="96" rx="27" fill="#FFD51F"/>
-    <path d="M24 69.5 42.2 31.8c2.2-4.5 5.1-6.8 8.8-6.8 3.8 0 6.8 2.3 9 6.8l18.5 37.7c2.1 4.4-.8 8.5-5.2 8.5-2.7 0-4.9-1.5-6.1-4L52.8 45.3c-.8-1.6-2.8-1.6-3.6 0L35.2 74c-1.2 2.5-3.4 4-6 4-4.5 0-7.4-4.2-5.2-8.5Z" fill="#151515"/>
-    <circle cx="48" cy="68" r="7.4" fill="#151515"/>
-    <text x="116" y="67.5" fill="#FFFFFF" font-family="Manrope,Arial,sans-serif" font-size="52" font-weight="800" letter-spacing="-2.1">Assistara</text>
-    <circle cx="245.2" cy="31.8" r="4.9" fill="#FFD51F"/>
-  </svg>`;
+  brand.innerHTML = `<span aria-hidden="true" style="width:34px;height:34px;display:grid;place-items:center;flex:0 0 34px"><svg viewBox="0 0 96 96" width="34" height="34" xmlns="http://www.w3.org/2000/svg"><rect width="96" height="96" rx="27" fill="#FFD51F"/><path d="M24 69.5 42.2 31.8c2.2-4.5 5.1-6.8 8.8-6.8 3.8 0 6.8 2.3 9 6.8l18.5 37.7c2.1 4.4-.8 8.5-5.2 8.5-2.7 0-4.9-1.5-6.1-4L52.8 45.3c-.8-1.6-2.8-1.6-3.6 0L35.2 74c-1.2 2.5-3.4 4-6 4-4.5 0-7.4-4.2-5.2-8.5Z" fill="#151515"/><circle cx="48" cy="68" r="7.4" fill="#151515"/></svg></span><span aria-label="Assistara" style="display:inline-flex;align-items:baseline;color:#fff;font-family:Manrope,Arial,sans-serif;font-size:20px;font-weight:800;letter-spacing:-.75px;line-height:1;white-space:nowrap">Ass<span style="position:relative;display:inline-block;width:.28em">ı<span aria-hidden="true" style="position:absolute;width:.20em;height:.20em;border-radius:50%;background:#FFD51F;left:50%;top:-.05em;transform:translate(-50%,-100%)"></span></span>stara</span>`;
 }
 
 const form = document.getElementById("leadForm");
