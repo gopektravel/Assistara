@@ -1,6 +1,7 @@
 const criticalMobileStyles = document.createElement("style");
 criticalMobileStyles.textContent = `
 .mobile-academy-cta{display:none}
+.objection-wrap{display:none!important}
 @media (max-width:760px){
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
   .logo-strip{display:none!important}
@@ -46,6 +47,4 @@ const navLinks=document.querySelector(".nav-links");if(navLinks&&!navLinks.query
 const matchSection=document.querySelector(".match-wrap");if(matchSection&&!document.getElementById("academyTeaser")){const teaser=document.createElement("section");teaser.id="academyTeaser";teaser.style.cssText="padding:34px 0;background:#171717;color:#fff";teaser.innerHTML=`<div class="shell" style="display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap"><div style="max-width:760px"><div class="section-kicker" style="color:#aaa;margin-bottom:10px">WANT TO BE ON THE OTHER SIDE?</div><h3 style="font-size:clamp(25px,3vw,38px);letter-spacing:-.035em;margin-bottom:8px">Build a skill you can sell from anywhere.</h3><p style="margin:0;color:#bbb;font-size:17px;line-height:1.55">Learn professional virtual assistant skills, build proof, learn how to find clients and become eligible to be considered for suitable Assistara opportunities.</p></div><a class="btn btn-yellow" href="/academy">Become a Virtual Assistant →</a></div>`;matchSection.parentNode.insertBefore(teaser,matchSection)}
 
 const objectionSection=document.querySelector('.objection-wrap');
-if(objectionSection){
-  objectionSection.innerHTML=`<div class="shell section objection-redesign"><div class="objection-heading"><div class="section-kicker">THE REAL OBJECTION</div><h2>“I can delegate it. But I’ll probably have to redo it.”</h2><p class="objection-answer">That’s not delegation. <span>That’s another job.</span></p><p class="objection-support">Assistara is built to reduce the work on your plate, not give you another person to babysit.</p></div><div class="objection-cards"><article class="objection-card objection-yellow"><span>01</span><div><h3>Trained first.</h3><p>They practice the work before they touch yours.</p></div></article><article class="objection-card objection-dark"><span>02</span><div><h3>Matched to your business.</h3><p>We match around the work, tools and responsibilities you actually need handled.</p></div></article><article class="objection-card objection-lav"><span>03</span><div><h3>Less to manage.</h3><p>The goal is to remove work from your plate, not add another person you need to babysit.</p></div></article></div></div>`;
-}
+if(objectionSection){objectionSection.remove();}
