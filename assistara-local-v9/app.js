@@ -36,31 +36,31 @@ if (hoursRange && valueRange) {
 
     if (topline) topline.textContent = "TIME COST CALCULATOR";
     if (title) title.textContent = "How much is doing it yourself costing you?";
-    if (intro) intro.textContent = "Answer two simple questions. We’ll show you how much time you could buy back by delegating repeatable work.";
+    if (intro) intro.textContent = "Answer two simple questions. See how much time you could get back, and what it would cost to hand that work off.";
 
     if (labels[0]) labels[0].querySelector("b").textContent = "How many hours a week do you spend on work someone else could handle?";
     if (labels[1]) labels[1].querySelector("b").textContent = "What is one hour of your time worth?";
     if (labels[2]) labels[2].style.display = "none";
 
-    if (resultLabels[0]) resultLabels[0].textContent = "TIME YOU COULD GET BACK / YEAR";
-    if (resultLabels[1]) resultLabels[1].textContent = "VALUE OF YOUR TIME SPENT ON THIS / YEAR";
-    if (resultLabels[2]) resultLabels[2].textContent = "EST. COST TO DELEGATE / YEAR";
+    if (resultLabels[0]) resultLabels[0].textContent = "HOURS YOU GET BACK / YEAR";
+    if (resultLabels[1]) resultLabels[1].textContent = "WHAT YOUR TIME IS WORTH / YEAR";
+    if (resultLabels[2]) resultLabels[2].textContent = "VIRTUAL ASSISTANT COST / MONTH";
 
-    if (note) note.textContent = "Estimate assumes delegation at $28/hour. This is an illustrative comparison, not a guarantee of savings or revenue.";
+    if (note) note.textContent = "Virtual assistant cost is estimated at $28/hour. Illustrative only.";
   }
 
   function updateCalculator() {
     const hours = Math.max(1, Number(hoursRange.value) || 1);
     const ownValue = Math.max(0, Number(valueRange.value) || 0);
     const yearlyHours = hours * 52;
-    const ownTimeCost = yearlyHours * ownValue;
-    const delegationCost = yearlyHours * DELEGATION_RATE;
+    const ownTimeValue = yearlyHours * ownValue;
+    const monthlyAssistantCost = (yearlyHours * DELEGATION_RATE) / 12;
 
     hoursOut.textContent = `${hours} ${hours === 1 ? "hr" : "hrs"}`;
     valueOut.textContent = usd.format(ownValue);
     timeYear.textContent = `${yearlyHours.toLocaleString("en-US")} hrs`;
-    valueYear.textContent = usd.format(ownTimeCost);
-    netYear.textContent = usd.format(delegationCost);
+    valueYear.textContent = usd.format(ownTimeValue);
+    netYear.textContent = `${usd.format(monthlyAssistantCost)} / mo`;
   }
 
   [hoursRange, valueRange].forEach((input) => input.addEventListener("input", updateCalculator));
