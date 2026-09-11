@@ -55,3 +55,11 @@ const matchSection=document.querySelector(".match-wrap");if(matchSection&&!docum
 
 const objectionSection=document.querySelector('.objection-wrap');
 if(objectionSection){objectionSection.remove();}
+
+const problemSection=document.querySelector('.problem');
+if(problemSection){
+  const title=problemSection.querySelector('h2');
+  const lead=problemSection.querySelector('.section-lead');
+  if(title) title.innerHTML="You didn’t build a business to become its busiest employee.";
+  if(lead) lead.innerHTML="Doing everything yourself is not free. You pay for it with the hours you could have spent <strong>selling, creating, negotiating and growing.</strong><br><br><strong>Every hour you spend doing work someone else could do costs you an hour of work only you can do.</strong>";
+}
