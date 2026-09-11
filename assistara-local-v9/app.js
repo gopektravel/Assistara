@@ -1,4 +1,4 @@
-const mobileFixes=document.createElement("link");mobileFixes.rel="stylesheet";mobileFixes.href="/assistara-local-v9/mobile-fixes.css";document.head.appendChild(mobileFixes);
+const mobileFixes=document.createElement("link");mobileFixes.rel="stylesheet";mobileFixes.href="/mobile-fixes.css?v=3";document.head.appendChild(mobileFixes);
 
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
 
