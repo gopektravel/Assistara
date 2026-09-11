@@ -1,8 +1,14 @@
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
 
-// Brand logo
+// Brand logo: inline SVG so the navbar never depends on a separately-loaded image asset.
 for (const brand of document.querySelectorAll('.brand')) {
-  brand.innerHTML = '<img src="/assistara-logo.svg" alt="Assistara" style="display:block;width:148px;height:auto;max-height:38px">';
+  brand.innerHTML = `<svg viewBox="0 0 420 96" role="img" aria-label="Assistara" style="display:block;width:148px;height:auto;max-height:38px;overflow:visible" xmlns="http://www.w3.org/2000/svg">
+    <rect width="96" height="96" rx="27" fill="#FFD51F"/>
+    <path d="M24 69.5 42.2 31.8c2.2-4.5 5.1-6.8 8.8-6.8 3.8 0 6.8 2.3 9 6.8l18.5 37.7c2.1 4.4-.8 8.5-5.2 8.5-2.7 0-4.9-1.5-6.1-4L52.8 45.3c-.8-1.6-2.8-1.6-3.6 0L35.2 74c-1.2 2.5-3.4 4-6 4-4.5 0-7.4-4.2-5.2-8.5Z" fill="#151515"/>
+    <circle cx="48" cy="68" r="7.4" fill="#151515"/>
+    <text x="116" y="67.5" fill="#FFFFFF" font-family="Manrope,Arial,sans-serif" font-size="52" font-weight="800" letter-spacing="-2.1">Assistara</text>
+    <circle cx="245.2" cy="31.8" r="4.9" fill="#FFD51F"/>
+  </svg>`;
 }
 
 const form = document.getElementById("leadForm");
