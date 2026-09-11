@@ -27,7 +27,7 @@ document.head.appendChild(criticalMobileStyles);
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
 
 for (const brand of document.querySelectorAll('.brand')) {
-  brand.innerHTML = `<img class="mark" src="/assistara-logo.svg" alt=""><span>Assistaras</span>`;
+  brand.innerHTML = `<img src="/assistara-logo.svg" alt="Assistaras" style="width:152px;height:36px;object-fit:contain;object-position:left center">`;
 }
 
 const mainNav = document.querySelector('.nav');
@@ -41,7 +41,7 @@ if (mainNav && siteHeader && !document.querySelector('.mobile-academy-cta')) {
 }
 
 const form = document.getElementById("leadForm");
-const success = document.getElementById("successMsg");
+const success = document.getElementById("successMessage");
 if (form && success) {
   const note = form.querySelector(".form-note"); const button = form.querySelector('button[type="submit"]');
   if (note) note.textContent = "We’ll review your request and follow up with the next step.";
