@@ -108,3 +108,29 @@ if (hoursRange && valueRange) {
   [hoursRange, valueRange].forEach((input) => input.addEventListener("input", updateCalculator));
   updateCalculator();
 }
+
+const navLinks = document.querySelector(".nav-links");
+if (navLinks && !navLinks.querySelector('[href="/academy.html"]')) {
+  const academyNav = document.createElement("a");
+  academyNav.href = "/academy.html";
+  academyNav.textContent = "Become a Virtual Assistant";
+  navLinks.appendChild(academyNav);
+}
+
+const matchSection = document.querySelector(".match-wrap");
+if (matchSection && !document.getElementById("academyTeaser")) {
+  const teaser = document.createElement("section");
+  teaser.id = "academyTeaser";
+  teaser.style.cssText = "padding:34px 0;background:#171717;color:#fff";
+  teaser.innerHTML = `
+    <div class="shell" style="display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap">
+      <div style="max-width:760px">
+        <div class="section-kicker" style="color:#aaa;margin-bottom:10px">NOT LOOKING TO HIRE?</div>
+        <h3 style="font-size:clamp(25px,3vw,38px);letter-spacing:-.035em;margin-bottom:8px">Maybe you want to become the person businesses trust.</h3>
+        <p style="margin:0;color:#bbb;font-size:17px;line-height:1.55">Train as a professional virtual assistant, build practical skills and portfolio evidence, and get ready for real remote-work opportunities.</p>
+      </div>
+      <a class="btn btn-yellow" href="/academy.html">Become a Virtual Assistant →</a>
+    </div>
+  `;
+  matchSection.parentNode.insertBefore(teaser, matchSection);
+}
