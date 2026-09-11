@@ -46,3 +46,11 @@ const hoursRange=document.getElementById("hoursRange"),valueRange=document.getEl
 const navLinks=document.querySelector(".nav-links");if(navLinks&&!navLinks.querySelector('[href="/academy"]')){const academyNav=document.createElement("a");academyNav.href="/academy";academyNav.textContent="Become a Virtual Assistant";navLinks.appendChild(academyNav)}
 const matchSection=document.querySelector(".match-wrap");if(matchSection&&!document.getElementById("academyTeaser")){const teaser=document.createElement("section");teaser.id="academyTeaser";teaser.style.cssText="padding:34px 0;background:#171717;color:#fff";teaser.innerHTML=`<div class="shell" style="display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap"><div style="max-width:760px"><div class="section-kicker" style="color:#aaa;margin-bottom:10px">WANT TO BE ON THE OTHER SIDE?</div><h3 style="font-size:clamp(25px,3vw,38px);letter-spacing:-.035em;margin-bottom:8px">Build a skill you can sell from anywhere.</h3><p style="margin:0;color:#bbb;font-size:17px;line-height:1.55">Learn professional virtual assistant skills, build proof, learn how to find clients and become eligible to be considered for suitable Assistara opportunities.</p></div><a class="btn btn-yellow" href="/academy">Become a Virtual Assistant →</a></div>`;matchSection.parentNode.insertBefore(teaser,matchSection)}
 const objectionSection=document.querySelector('.objection-wrap');if(objectionSection){objectionSection.remove();}
+
+const problemSection=document.querySelector('.problem');
+if(problemSection){
+  const title=problemSection.querySelector('h2');
+  const lead=problemSection.querySelector('.section-lead');
+  if(title) title.innerHTML="You didn’t build a business to become its busiest employee.";
+  if(lead) lead.innerHTML="Doing everything yourself is not free. You pay for it with the hours you could have spent <strong>selling, creating, negotiating and growing.</strong><br><br><strong>Every hour you spend doing work someone else could do costs you an hour of work only you can do.</strong>";
+}
