@@ -1,0 +1,9 @@
+{
+  "name": "assistara-va-local",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-first VA agency landing page prototype",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
