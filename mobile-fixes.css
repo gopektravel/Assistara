@@ -1,0 +1,87 @@
+@media (max-width: 760px){
+  html,body{overflow-x:hidden}
+  body{font-size:16px}
+  .shell{width:min(100% - 24px,1180px)!important}
+  .announcement{padding:8px 12px!important;gap:6px!important;flex-direction:column;align-items:center;text-align:center;line-height:1.25}
+  .announcement a{font-size:12px}
+  .site-header{padding:8px 0!important}
+  .nav{min-height:56px!important;border-radius:18px!important;padding:8px 10px 8px 12px!important;gap:8px}
+  .brand{min-width:0}
+  .brand span[aria-label="Assistara"]{font-size:18px!important}
+  .nav>.btn{font-size:11px!important;padding:10px 12px!important;white-space:nowrap;max-width:48%;line-height:1.15;text-align:center}
+  .hero{padding:42px 0 58px!important;gap:32px!important}
+  h1{font-size:clamp(44px,14vw,56px)!important;line-height:.96!important;letter-spacing:-.05em!important}
+  .hero-sub{font-size:17px!important;line-height:1.5!important}
+  .eyebrow{font-size:10px!important;line-height:1.3;text-align:left;white-space:normal}
+  .hero-proofline{display:flex!important;flex-wrap:wrap;gap:7px 10px!important;align-items:center;font-size:12px!important;line-height:1.3}
+  .hero-actions{gap:14px!important;margin-top:24px!important}
+  .hero-actions .btn{width:100%;padding:16px 18px!important}
+  .hero-actions .text-link{font-size:14px}
+  .trust-row{gap:8px 12px!important;font-size:12px!important}
+  .hero-visual{min-height:430px!important;border-radius:28px!important;padding:16px!important}
+  .system-card{width:100%!important;max-width:none!important;padding:16px!important;border-radius:24px!important;transform:none!important}
+  .system-top{gap:8px!important;align-items:flex-start!important}
+  .system-top>div{min-width:0}
+  .system-top b{font-size:12px!important}
+  .system-top>small{font-size:9px!important;white-space:nowrap}
+  .system-row{grid-template-columns:32px minmax(0,1fr)!important;gap:9px!important;padding:13px 0!important;align-items:flex-start!important}
+  .system-row .system-state{grid-column:2;justify-self:start;margin-top:4px;font-size:9px!important}
+  .system-row b{font-size:13px!important;line-height:1.3!important}
+  .system-row small{font-size:11px!important;line-height:1.35!important}
+  .system-footer{grid-template-columns:1fr!important;gap:10px!important}
+  .float-card{display:none!important}
+  .logo-strip-inner{justify-content:center!important;gap:12px 18px!important;flex-wrap:wrap!important;text-align:center;padding:18px 0!important}
+  .logo-strip-inner span{width:100%;font-size:12px}
+  .logo-strip-inner b{font-size:11px!important}
+  .section{padding:68px 0!important}
+  .section-kicker{font-size:11px!important}
+  .problem h2,.guide h2,.roles-heading h2,.outcome h2,.match h2,.section>h2,.value-head h2,.objection-heading h2{font-size:clamp(36px,10vw,44px)!important;line-height:1.04!important;letter-spacing:-.045em!important}
+  .section-lead,.roles-heading>p,.guide-copy>p:not(.big-line),.outcome-copy p,.match-copy p{font-size:17px!important;line-height:1.55!important}
+  .problem-grid,.steps,.role-grid,.value-grid,.objection-cards{grid-template-columns:1fr!important}
+  .pain-card,.role-card,.step-card,.value-card{min-height:auto!important;padding:22px!important;border-radius:22px!important}
+  .iconbox{margin-bottom:28px!important}
+  .step-art{height:110px!important;margin:38px 0 22px!important}
+  .value-head{display:block!important}
+  .value-head>p{margin-top:18px!important;font-size:17px!important;line-height:1.55!important}
+  .calculator-card{padding:22px!important}
+  .calculator-card h3{font-size:28px!important;line-height:1.08!important}
+  .calc-control>span{gap:10px!important;align-items:flex-start!important;flex-direction:column!important}
+  .calc-control output{align-self:flex-start!important}
+  .calc-results{grid-template-columns:1fr!important;gap:10px!important}
+  .calc-results>div{padding:16px!important}
+  .calc-results strong{font-size:26px!important;word-break:break-word}
+  .guide{gap:34px!important}
+  .proof-panel{padding:8px 18px!important;border-radius:24px!important}
+  .proof-item{grid-template-columns:44px 1fr!important;padding:20px 0!important}
+  .roles-heading{margin-bottom:30px!important}
+  .outcome-card{padding:30px 22px!important;border-radius:28px!important;gap:32px!important}
+  .week-card{padding:20px!important;transform:none!important}
+  .barline{grid-template-columns:60px 1fr 16px!important;gap:8px!important}
+  .match{gap:34px!important}
+  .match-form{padding:22px!important;border-radius:24px!important}
+  .match-form input,.match-form textarea,.match-form select{font-size:16px!important}
+  .objection-redesign{display:block!important}
+  .objection-heading{max-width:none!important;margin-bottom:28px!important}
+  .objection-answer{font-size:22px!important;line-height:1.25!important}
+  .objection-support{font-size:16px!important;line-height:1.5!important}
+  .objection-card{padding:20px!important;border-radius:22px!important;grid-template-columns:42px 1fr!important;gap:12px!important}
+  .objection-card h3{font-size:21px!important}
+  #academyTeaser{padding:30px 0!important}
+  #academyTeaser .shell{display:block!important}
+  #academyTeaser h3{font-size:28px!important;line-height:1.08!important}
+  #academyTeaser p{font-size:16px!important}
+  #academyTeaser .btn{width:100%;margin-top:22px;padding:16px 18px!important}
+  .footer-inner{grid-template-columns:1fr!important;gap:18px!important;text-align:left!important}
+  .footer-inner>a:last-child{text-align:left!important}
+  .footer-bottom{flex-direction:column!important;gap:8px!important}
+}
+
+@media (max-width: 390px){
+  .shell{width:calc(100% - 18px)!important}
+  .nav>.btn{font-size:10px!important;padding:9px 10px!important}
+  h1{font-size:43px!important}
+  .hero-visual{min-height:400px!important}
+  .system-card{padding:14px!important}
+  .system-num{width:28px!important;height:28px!important}
+  .problem h2,.guide h2,.roles-heading h2,.outcome h2,.match h2,.section>h2,.value-head h2,.objection-heading h2{font-size:35px!important}
+}
