@@ -1,3 +1,5 @@
+const mobileFixes=document.createElement("link");mobileFixes.rel="stylesheet";mobileFixes.href="/mobile-fixes.css";document.head.appendChild(mobileFixes);
+
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
 
 // Brand logo: icon + Manrope wordmark with the yellow dot positioned directly above the i.
