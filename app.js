@@ -9,14 +9,16 @@ criticalMobileStyles.textContent = `
   .hero-visual{overflow:hidden!important;width:100%!important;max-width:100%!important;min-height:auto!important}
   .system-card{width:100%!important;max-width:100%!important;transform:none!important}
   .nav-links{display:none!important}
-  .site-header{padding:10px 0 8px!important}
-  .mobile-academy-cta{display:flex!important;position:static!important;transform:none!important;width:max-content!important;max-width:calc(100% - 40px)!important;margin:10px auto 0!important;z-index:20!important;align-items:center!important;justify-content:center!important;background:#ffd51f!important;color:#171717!important;border-radius:999px!important;padding:11px 18px!important;font-size:12px!important;font-weight:800!important;line-height:1.1!important;white-space:nowrap!important;box-shadow:0 8px 20px rgba(0,0,0,.08)!important}
-  .hero{grid-template-columns:1fr!important;max-width:100%!important;overflow:hidden!important;padding-top:24px!important}
+  .site-header{padding:10px 0 6px!important}
+  .nav{margin-bottom:0!important}
+  .mobile-academy-cta{display:flex!important;position:static!important;transform:none!important;width:max-content!important;max-width:calc(100% - 40px)!important;margin:14px auto 0!important;z-index:20!important;align-items:center!important;justify-content:center!important;background:#ffd51f!important;color:#171717!important;border-radius:999px!important;padding:11px 18px!important;font-size:12px!important;font-weight:800!important;line-height:1.1!important;white-space:nowrap!important;box-shadow:0 8px 20px rgba(0,0,0,.08)!important}
+  .hero{grid-template-columns:1fr!important;max-width:100%!important;overflow:hidden!important;padding-top:18px!important}
   .hero-copy{min-width:0!important}
   .shell{max-width:100%!important}
-  .eyebrow{margin-top:0!important}
-  h1{margin-top:18px!important;margin-bottom:20px!important}
-  .hero-actions{margin-top:24px!important}
+  .eyebrow{margin-top:0!important;margin-bottom:0!important}
+  h1{margin-top:20px!important;margin-bottom:18px!important}
+  .hero-sub{margin-top:0!important;margin-bottom:0!important}
+  .hero-actions{margin-top:24px!important;margin-bottom:0!important}
   .trust-row{margin-top:22px!important}
 }
 `;
