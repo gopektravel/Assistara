@@ -23,7 +23,7 @@ if (hoursRange && valueRange && delegateRange) {
   const timeYear = document.getElementById("timeYear");
   const valueYear = document.getElementById("valueYear");
   const netYear = document.getElementById("netYear");
-  const euro = new Intl.NumberFormat("en-IE", {style:"currency", currency:"EUR", maximumFractionDigits:0});
+  const usd = new Intl.NumberFormat("en-US", {style:"currency", currency:"USD", maximumFractionDigits:0});
 
   function updateCalculator() {
     const hours = Math.max(1, Number(hoursRange.value) || 1);
@@ -34,11 +34,11 @@ if (hoursRange && valueRange && delegateRange) {
     const netValue = yearlyHours * Math.max(0, ownValue - delegationCost);
 
     hoursOut.textContent = `${hours} ${hours === 1 ? "hr" : "hrs"}`;
-    valueOut.textContent = euro.format(ownValue);
-    delegateOut.textContent = euro.format(delegationCost);
+    valueOut.textContent = usd.format(ownValue);
+    delegateOut.textContent = usd.format(delegationCost);
     timeYear.textContent = `${yearlyHours.toLocaleString("en-US")} hrs`;
-    valueYear.textContent = euro.format(grossValue);
-    netYear.textContent = euro.format(netValue);
+    valueYear.textContent = usd.format(grossValue);
+    netYear.textContent = usd.format(netValue);
   }
 
   [hoursRange, valueRange, delegateRange].forEach((input) => input.addEventListener("input", updateCalculator));
