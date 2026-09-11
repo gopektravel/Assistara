@@ -1,8 +1,8 @@
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
 
-// Brand logo: use the exact approved Assistara icon artwork, plus the matching wordmark with the yellow i-dot.
+// Brand logo: exact icon artwork + wordmark with a clearly visible yellow i-dot.
 for (const brand of document.querySelectorAll('.brand')) {
-  brand.innerHTML = `<img src="/assistara-logo.svg" alt="" aria-hidden="true" style="display:block;width:34px;height:34px;flex:0 0 34px"><span aria-label="Assistara" style="display:inline-flex;align-items:baseline;color:#fff;font-family:Manrope,Arial,sans-serif;font-size:20px;font-weight:800;letter-spacing:-.75px;line-height:1;white-space:nowrap">Ass<span style="position:relative;display:inline-block;width:.28em">ı<span aria-hidden="true" style="position:absolute;width:.20em;height:.20em;border-radius:50%;background:#FFD51F;left:50%;top:-.05em;transform:translate(-50%,-100%)"></span></span>stara</span>`;
+  brand.innerHTML = `<img src="/assistara-logo.svg" alt="" aria-hidden="true" style="display:block;width:34px;height:34px;flex:0 0 34px"><span aria-label="Assistara" style="display:inline-flex;align-items:baseline;color:#fff;font-family:Manrope,Arial,sans-serif;font-size:20px;font-weight:800;letter-spacing:-.75px;line-height:1;white-space:nowrap">Ass<span style="position:relative;display:inline-block">i<span aria-hidden="true" style="position:absolute;width:5px;height:5px;border-radius:50%;background:#FFD51F;left:50%;top:0;transform:translate(-50%,-115%);z-index:2"></span><span aria-hidden="true" style="position:absolute;width:7px;height:7px;background:#1b1b1b;left:50%;top:0;transform:translate(-50%,-115%);z-index:1"></span></span>stara</span>`;
 }
 
 const form = document.getElementById("leadForm");
