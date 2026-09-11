@@ -1,14 +1,56 @@
+const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
+
 const form = document.getElementById("leadForm");
 const success = document.getElementById("successMsg");
 
 if (form && success) {
-  form.addEventListener("submit", (event) => {
+  const note = form.querySelector(".form-note");
+  const button = form.querySelector('button[type="submit"]');
+
+  if (note) note.textContent = "We’ll review your request and follow up with the next step.";
+
+  success.innerHTML = `
+    <b>Thanks — your request is in.</b>
+    <span>We’ll review what you want to delegate and follow up with the next step.</span>
+  `;
+
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    success.hidden = false;
-    const button = form.querySelector("button");
-    button.textContent = "Request captured ✓";
+
+    const formData = new FormData(form);
+    const payload = new URLSearchParams();
+    payload.set("name", formData.get("name") || "");
+    payload.set("email", formData.get("email") || "");
+    payload.set("company", formData.get("company") || "");
+    payload.set("tasks", formData.get("tasks") || "");
+    payload.set("support", formData.get("hours") || "Not sure yet");
+
+    const originalText = button.textContent;
+    button.textContent = "Sending…";
     button.disabled = true;
-    success.scrollIntoView({behavior:"smooth", block:"nearest"});
+    success.hidden = true;
+
+    try {
+      await fetch(LEAD_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+        body: payload.toString()
+      });
+
+      button.textContent = "Request sent ✓";
+      success.hidden = false;
+      form.reset();
+      success.scrollIntoView({behavior:"smooth", block:"nearest"});
+    } catch (error) {
+      button.textContent = originalText;
+      button.disabled = false;
+      success.innerHTML = `
+        <b>Couldn’t send that yet.</b>
+        <span>Please try again in a moment.</span>
+      `;
+      success.hidden = false;
+    }
   });
 }
 
