@@ -11,10 +11,10 @@
 
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important;background:#fbfaf6!important}
   html body .site-header{padding:0!important;background:#fbfaf6!important;position:relative!important;top:auto!important}
-  html body .site-header .shell{width:calc(100% - 40px)!important;max-width:none!important}
-  html body .nav{min-height:76px!important;margin:0!important;padding:18px 0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;justify-content:flex-start!important}
-  html body .nav .brand{font-size:20px!important;gap:10px!important;color:#171717!important}
-  html body .nav .mark{width:36px!important;height:36px!important}
+  html body .site-header .shell{width:calc(100% - 40px)!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important}
+  html body .nav{min-height:76px!important;margin:0 auto!important;padding:18px 0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;justify-content:flex-start!important}
+  html body .nav .brand{font-size:20px!important;gap:10px!important;color:#171717!important;padding-left:2px!important}
+  html body .nav .mark{width:36px!important;height:36px!important;flex:0 0 36px!important}
 
   html body #academyTeaser{height:0!important;min-height:0!important;padding:0!important;margin:0!important;background:transparent!important;overflow:visible!important}
   html body #academyTeaser .shell{padding:0!important;margin:0!important;width:0!important;height:0!important;overflow:visible!important}
