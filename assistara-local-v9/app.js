@@ -1,3 +1,4 @@
+// FORM NOTE REMOVAL DEPLOY v2
 document.querySelectorAll(".form-note").forEach(el=>el.remove());
 const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
 favicon.rel = 'icon';
@@ -16,6 +17,7 @@ criticalMobileStyles.textContent = `
 .mobile-academy-cta{display:none}
 .objection-wrap{display:none!important}
 .success{display:none!important}
+.form-note{display:none!important}
 @media (max-width:760px){
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
   .logo-strip{display:none!important}.float-card{display:none!important}
