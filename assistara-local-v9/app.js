@@ -106,3 +106,11 @@ if(problemSection){
   if(title) title.innerHTML="Your best hours are going to your cheapest work.";
   if(lead) lead.innerHTML="<strong>Doing everything yourself is not free.</strong> Every hour spent on work someone else could handle is an hour you can’t spend <strong>selling, creating, negotiating or growing.</strong>";
 }
+
+const regularFooter = document.querySelector('footer .footer-inner');
+if (regularFooter && !regularFooter.querySelector('[href="mailto:support@getassistara.com"]')) {
+  const supportLink = document.createElement('a');
+  supportLink.href = 'mailto:support@getassistara.com';
+  supportLink.textContent = 'support@getassistara.com';
+  regularFooter.appendChild(supportLink);
+}
