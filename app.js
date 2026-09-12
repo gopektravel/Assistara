@@ -113,7 +113,7 @@ if (siteFooter) {
     <div class="shell assistara-footer-main">
       <div class="assistara-footer-brand">
         <a class="brand" href="#top"><img class="mark" src="/assistara-logo.svg" alt=""><span>Assistara</span></a>
-        <p>Buy back your time. Keep your attention on the work that needs you.</p>
+        <p>Buy back your time. More room to grow. More freedom to live.</p>
       </div>
       <div class="assistara-footer-links">
         <span>EXPLORE</span>
