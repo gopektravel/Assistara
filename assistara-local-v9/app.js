@@ -17,100 +17,28 @@ criticalMobileStyles.textContent = `
 .success{display:none!important}
 @media (max-width:760px){
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
-  .logo-strip{display:none!important}
-  .float-card{display:none!important}
+  .logo-strip{display:none!important}.float-card{display:none!important}
   .hero-visual{overflow:hidden!important;width:100%!important;max-width:100%!important;min-height:auto!important}
   .system-card{width:100%!important;max-width:100%!important;transform:none!important}
-  .nav-links{display:none!important}
-  .site-header{padding:10px 0 6px!important}
-  .nav{margin-bottom:0!important}
+  .nav-links{display:none!important}.site-header{padding:10px 0 6px!important}.nav{margin-bottom:0!important}
   .mobile-academy-cta{display:flex!important;position:static!important;transform:none!important;width:max-content!important;max-width:calc(100% - 40px)!important;margin:14px auto 0!important;z-index:20!important;align-items:center!important;justify-content:center!important;background:#ffd51f!important;color:#171717!important;border-radius:999px!important;padding:11px 18px!important;font-size:12px!important;font-weight:800!important;line-height:1.1!important;white-space:nowrap!important;box-shadow:0 8px 20px rgba(0,0,0,.08)!important}
-  .hero{grid-template-columns:1fr!important;max-width:100%!important;overflow:hidden!important;padding-top:18px!important}
-  .hero-copy{min-width:0!important}
-  .shell{max-width:100%!important}
-  .eyebrow{margin-top:0!important;margin-bottom:0!important}
-  h1{margin-top:20px!important;margin-bottom:18px!important}
-  .hero-sub{margin-top:0!important;margin-bottom:0!important}
-  .hero-actions{margin-top:24px!important;margin-bottom:0!important}
-  .trust-row{margin-top:22px!important}
-}
-`;
+  .hero{grid-template-columns:1fr!important;max-width:100%!important;overflow:hidden!important;padding-top:18px!important}.hero-copy{min-width:0!important}.shell{max-width:100%!important}
+  .eyebrow{margin-top:0!important;margin-bottom:0!important}h1{margin-top:20px!important;margin-bottom:18px!important}.hero-sub{margin-top:0!important;margin-bottom:0!important}.hero-actions{margin-top:24px!important;margin-bottom:0!important}.trust-row{margin-top:22px!important}
+}`;
 document.head.appendChild(criticalMobileStyles);
 
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
-
-for (const brand of document.querySelectorAll('.brand')) {
-  brand.innerHTML = `<img class="mark" src="/assistara-logo.svg" alt=""><span>Assistara</span>`;
-}
-
-const mainNav = document.querySelector('.nav');
-const siteHeader = document.querySelector('.site-header');
-if (mainNav && siteHeader && !document.querySelector('.mobile-academy-cta')) {
-  const mobileAcademy = document.createElement('a');
-  mobileAcademy.className = 'mobile-academy-cta';
-  mobileAcademy.href = '/academy';
-  mobileAcademy.textContent = 'Become a Virtual Assistant →';
-  siteHeader.insertAdjacentElement('afterend', mobileAcademy);
-}
-
-const form = document.getElementById("leadForm");
-const success = document.getElementById("successMessage");
-if (form && success) {
-  const note = form.querySelector(".form-note");
-  const button = form.querySelector('button[type="submit"]');
-  success.hidden = true;
-  success.style.setProperty("display", "none", "important");
-  if (note) note.textContent = "We’ll review your request and follow up with the next step.";
-  success.innerHTML = `<b>Request received. We’ll be in touch soon.</b>`;
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const formData = new FormData(form), payload = new URLSearchParams();
-    payload.set("name",formData.get("name")||"");
-    payload.set("email",formData.get("email")||"");
-    payload.set("company",formData.get("company")||"");
-    payload.set("tasks",formData.get("tasks")||"");
-    payload.set("support",formData.get("hours")||"Not sure yet");
-    const originalText = button.textContent;
-    button.textContent = "Sending…";
-    button.disabled = true;
-    success.hidden = true;
-    success.style.setProperty("display", "none", "important");
-    try {
-      await fetch(LEAD_ENDPOINT,{method:"POST",mode:"no-cors",body:payload});
-      button.textContent = "Request sent ✓";
-      success.hidden = false;
-      success.style.setProperty("display", "flex", "important");
-      form.reset();
-      success.scrollIntoView({behavior:"smooth",block:"nearest"});
-    } catch(error) {
-      button.textContent = originalText;
-      button.disabled = false;
-      success.innerHTML = `<b>Couldn’t send that yet.</b><span>Please try again in a moment.</span>`;
-      success.hidden = false;
-      success.style.setProperty("display", "flex", "important");
-    }
-  });
-}
-const matchCopy=document.querySelector(".match-copy"); if(matchCopy){const kicker=matchCopy.querySelector(".section-kicker"),title=matchCopy.querySelector("h2"),paragraph=matchCopy.querySelector("p"),points=matchCopy.querySelectorAll(".match-points div");if(kicker)kicker.textContent="FIND YOUR VIRTUAL ASSISTANT";if(title)title.textContent="Ready to buy back your time?";if(paragraph)paragraph.textContent="Tell us what keeps pulling you back into the day-to-day. We’ll help define what can be delegated and match you with a trained virtual assistant who can take ownership of it.";if(points[0])points[0].innerHTML="<span>✓</span> Get repeatable work off your plate";if(points[1])points[1].innerHTML="<span>✓</span> Protect more time for growth, decisions and relationships";if(points[2])points[2].innerHTML="<span>✓</span> Get matched around the work you actually need handled"}
-const hoursRange=document.getElementById("hoursRange"),valueRange=document.getElementById("valueRange");if(hoursRange&&valueRange){const calculator=document.getElementById("savingsCalculator"),hoursOut=document.getElementById("hoursOut"),valueOut=document.getElementById("valueOut"),timeYear=document.getElementById("timeYear"),valueYear=document.getElementById("valueYear"),netYear=document.getElementById("netYear"),usd=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}),DELEGATION_RATE=28;if(calculator){const title=calculator.querySelector("h3"),intro=calculator.querySelector(".calc-intro"),labels=calculator.querySelectorAll(".calc-control"),resultLabels=calculator.querySelectorAll(".calc-results small"),note=calculator.querySelector(".calc-note"),topline=calculator.querySelector(".calc-topline small");if(topline)topline.textContent="TIME COST CALCULATOR";if(title)title.textContent="How much is doing it yourself costing you?";if(intro)intro.textContent="Answer two simple questions. See how much time you could get back, and what it would cost to hand that work off.";if(labels[0])labels[0].querySelector("b").textContent="How many hours a week do you spend on work someone else could handle?";if(labels[1])labels[1].querySelector("b").textContent="What is one hour of your time worth?";if(labels[2])labels[2].style.display="none";if(resultLabels[0])resultLabels[0].textContent="HOURS YOU GET BACK / YEAR";if(resultLabels[1])resultLabels[1].textContent="WHAT YOUR TIME IS WORTH / YEAR";if(resultLabels[2])resultLabels[2].textContent="ESTIMATED VIRTUAL ASSISTANT COST / MONTH";if(note)note.textContent="Estimate only. Final pricing depends on your needs and level of support."}function updateCalculator(){const hours=Math.max(1,Number(hoursRange.value)||1),ownValue=Math.max(0,Number(valueRange.value)||0),yearlyHours=hours*52,ownTimeValue=yearlyHours*ownValue,monthlyAssistantCost=yearlyHours*DELEGATION_RATE/12;hoursOut.textContent=`${hours} ${hours===1?"hr":"hrs"}`;valueOut.textContent=usd.format(ownValue);timeYear.textContent=`${yearlyHours.toLocaleString("en-US")} hrs`;valueYear.textContent=usd.format(ownTimeValue);netYear.textContent=`${usd.format(monthlyAssistantCost)} / mo`}[hoursRange,valueRange].forEach(input=>input.addEventListener("input",updateCalculator));updateCalculator()}
-const navLinks=document.querySelector(".nav-links");if(navLinks&&!navLinks.querySelector('[href="/academy"]')){const academyNav=document.createElement("a");academyNav.href="/academy";academyNav.textContent="Become a Virtual Assistant";navLinks.appendChild(academyNav)}
+for (const brand of document.querySelectorAll('.brand')) brand.innerHTML = `<img class="mark" src="/assistara-logo.svg" alt=""><span>Assistara</span>`;
+const mainNav=document.querySelector('.nav'),siteHeader=document.querySelector('.site-header');
+if(mainNav&&siteHeader&&!document.querySelector('.mobile-academy-cta')){const a=document.createElement('a');a.className='mobile-academy-cta';a.href='/academy';a.textContent='Become a Virtual Assistant →';siteHeader.insertAdjacentElement('afterend',a)}
+const form=document.getElementById("leadForm"),success=document.getElementById("successMessage");
+if(form&&success){const note=form.querySelector(".form-note"),button=form.querySelector('button[type="submit"]');success.hidden=true;success.style.setProperty("display","none","important");if(note)note.textContent="We’ll review your request and follow up with the next step.";success.innerHTML=`<b>Request received. We’ll be in touch soon.</b>`;form.addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(form),p=new URLSearchParams();p.set("name",f.get("name")||"");p.set("email",f.get("email")||"");p.set("company",f.get("company")||"");p.set("tasks",f.get("tasks")||"");p.set("support",f.get("hours")||"Not sure yet");const t=button.textContent;button.textContent="Sending…";button.disabled=true;success.hidden=true;success.style.setProperty("display","none","important");try{await fetch(LEAD_ENDPOINT,{method:"POST",mode:"no-cors",body:p});button.textContent="Request sent ✓";success.hidden=false;success.style.setProperty("display","flex","important");form.reset();success.scrollIntoView({behavior:"smooth",block:"nearest"})}catch(error){button.textContent=t;button.disabled=false;success.innerHTML=`<b>Couldn’t send that yet.</b><span>Please try again in a moment.</span>`;success.hidden=false;success.style.setProperty("display","flex","important")}})}
+const matchCopy=document.querySelector(".match-copy");if(matchCopy){const k=matchCopy.querySelector(".section-kicker"),t=matchCopy.querySelector("h2"),p=matchCopy.querySelector("p"),pts=matchCopy.querySelectorAll(".match-points div");if(k)k.textContent="FIND YOUR VIRTUAL ASSISTANT";if(t)t.textContent="Ready to buy back your time?";if(p)p.textContent="Tell us what keeps pulling you back into the day-to-day. We’ll help define what can be delegated and match you with a trained virtual assistant who can take ownership of it.";if(pts[0])pts[0].innerHTML="<span>✓</span> Get repeatable work off your plate";if(pts[1])pts[1].innerHTML="<span>✓</span> Protect more time for growth, decisions and relationships";if(pts[2])pts[2].innerHTML="<span>✓</span> Get matched around the work you actually need handled"}
+const hoursRange=document.getElementById("hoursRange"),valueRange=document.getElementById("valueRange");if(hoursRange&&valueRange){const calculator=document.getElementById("savingsCalculator"),hoursOut=document.getElementById("hoursOut"),valueOut=document.getElementById("valueOut"),timeYear=document.getElementById("timeYear"),valueYear=document.getElementById("valueYear"),netYear=document.getElementById("netYear"),usd=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}),RATE=28;if(calculator){const title=calculator.querySelector("h3"),intro=calculator.querySelector(".calc-intro"),labels=calculator.querySelectorAll(".calc-control"),results=calculator.querySelectorAll(".calc-results small"),note=calculator.querySelector(".calc-note"),top=calculator.querySelector(".calc-topline small");if(top)top.textContent="TIME COST CALCULATOR";if(title)title.textContent="How much is doing it yourself costing you?";if(intro)intro.textContent="Answer two simple questions. See how much time you could get back, and what it would cost to hand that work off.";if(labels[0])labels[0].querySelector("b").textContent="How many hours a week do you spend on work someone else could handle?";if(labels[1])labels[1].querySelector("b").textContent="What is one hour of your time worth?";if(labels[2])labels[2].style.display="none";if(results[0])results[0].textContent="HOURS YOU GET BACK / YEAR";if(results[1])results[1].textContent="WHAT YOUR TIME IS WORTH / YEAR";if(results[2])results[2].textContent="ESTIMATED VIRTUAL ASSISTANT COST / MONTH";if(note)note.textContent="Estimate only. Final pricing depends on your needs and level of support."}function update(){const h=Math.max(1,Number(hoursRange.value)||1),v=Math.max(0,Number(valueRange.value)||0),yh=h*52;hoursOut.textContent=`${h} ${h===1?"hr":"hrs"}`;valueOut.textContent=usd.format(v);timeYear.textContent=`${yh.toLocaleString("en-US")} hrs`;valueYear.textContent=usd.format(yh*v);netYear.textContent=`${usd.format(yh*RATE/12)} / mo`}[hoursRange,valueRange].forEach(i=>i.addEventListener("input",update));update()}
+const navLinks=document.querySelector(".nav-links");if(navLinks&&!navLinks.querySelector('[href="/academy"]')){const a=document.createElement("a");a.href="/academy";a.textContent="Become a Virtual Assistant";navLinks.appendChild(a)}
 const matchSection=document.querySelector(".match-wrap");if(matchSection&&!document.getElementById("academyTeaser")){const teaser=document.createElement("section");teaser.id="academyTeaser";teaser.style.cssText="padding:34px 0;background:#171717;color:#fff";teaser.innerHTML=`<div class="shell" style="display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap"><div style="max-width:760px"><div class="section-kicker" style="color:#aaa;margin-bottom:10px">WANT TO BE ON THE OTHER SIDE?</div><h3 style="font-size:clamp(25px,3vw,38px);letter-spacing:-.035em;margin-bottom:8px">Build a skill you can sell from anywhere.</h3><p style="margin:0;color:#bbb;font-size:17px;line-height:1.55">Learn professional virtual assistant skills, build proof, learn how to find clients and become eligible to be considered for suitable Assistara opportunities.</p></div><a class="btn btn-yellow" href="/academy">Become a Virtual Assistant →</a></div>`;matchSection.parentNode.insertBefore(teaser,matchSection)}
+const objection=document.querySelector('.objection-wrap');if(objection)objection.remove();
+const problem=document.querySelector('.problem');if(problem){const t=problem.querySelector('h2'),l=problem.querySelector('.section-lead');if(t)t.innerHTML="Your best hours are going to your cheapest work.";if(l)l.innerHTML="<strong>Doing everything yourself is not free.</strong> Every hour spent on work someone else could handle is an hour you can’t spend <strong>selling, creating, negotiating or growing.</strong>"}
 
-const objectionSection=document.querySelector('.objection-wrap');
-if(objectionSection){objectionSection.remove();}
-
-const problemSection=document.querySelector('.problem');
-if(problemSection){
-  const title=problemSection.querySelector('h2');
-  const lead=problemSection.querySelector('.section-lead');
-  if(title) title.innerHTML="Your best hours are going to your cheapest work.";
-  if(lead) lead.innerHTML="<strong>Doing everything yourself is not free.</strong> Every hour spent on work someone else could handle is an hour you can’t spend <strong>selling, creating, negotiating or growing.</strong>";
-}
-
-const regularFooter = document.querySelector('footer .footer-inner');
-if (regularFooter && !regularFooter.querySelector('[href="mailto:support@getassistara.com"]')) {
-  const supportLink = document.createElement('a');
-  supportLink.href = 'mailto:support@getassistara.com';
-  supportLink.textContent = 'support@getassistara.com';
-  regularFooter.appendChild(supportLink);
-}
+const siteFooter=document.querySelector('body > footer');
+if(siteFooter){siteFooter.innerHTML=`<div class="shell assistara-footer-main"><div class="assistara-footer-brand"><a class="brand" href="#top"><img class="mark" src="/assistara-logo.svg" alt=""><span>Assistara</span></a><p>Buy back your time. Keep your attention on the work that needs you.</p></div><div class="assistara-footer-links"><span>EXPLORE</span><a href="#how">How it works</a><a href="#roles">What you can delegate</a><a href="/academy">Assistara Academy</a></div><div class="assistara-footer-contact"><span>CONTACT</span><a class="assistara-email" href="mailto:support@getassistara.com">support@getassistara.com <b>↗</b></a><a class="assistara-footer-cta" href="#match">Find my virtual assistant <b>→</b></a></div></div><div class="shell assistara-footer-bottom"><span>© 2026 Assistara</span><span>Trained. Vetted. Matched around your work.</span></div>`;const s=document.createElement('style');s.textContent=`body>footer{background:#111!important;color:#fff!important;padding:0!important;overflow:hidden}.assistara-footer-main{display:grid;grid-template-columns:1.15fr .7fr 1fr;gap:70px;padding:72px 0 54px;align-items:start}.assistara-footer-brand .brand{width:max-content;font-size:24px;margin-bottom:22px}.assistara-footer-brand .mark{width:42px;height:42px}.assistara-footer-brand p{margin:0;max-width:410px;color:#9d9d9d;font-size:17px;line-height:1.6}.assistara-footer-links,.assistara-footer-contact{display:flex;flex-direction:column;align-items:flex-start;gap:13px}.assistara-footer-links>span,.assistara-footer-contact>span{font-size:11px;letter-spacing:.14em;font-weight:800;color:#666;margin-bottom:5px}.assistara-footer-links a{color:#c8c8c8;font-size:15px;transition:.2s ease}.assistara-footer-links a:hover{color:#fff;transform:translateX(3px)}.assistara-email{display:inline-flex;align-items:center;gap:9px;color:#fff;font:700 18px/1.25 Manrope,sans-serif;border-bottom:1px solid #3b3b3b;padding-bottom:6px;transition:.2s ease}.assistara-email b{color:#ffd51f;font-size:16px}.assistara-email:hover{border-color:#ffd51f;color:#ffd51f}.assistara-footer-cta{display:inline-flex;align-items:center;gap:10px;margin-top:12px;background:#ffd51f;color:#111!important;border-radius:999px;padding:14px 18px;font-weight:800;transition:.2s ease}.assistara-footer-cta:hover{transform:translateY(-2px)}.assistara-footer-bottom{border-top:1px solid #292929;display:flex;justify-content:space-between;gap:20px;padding:20px 0 24px;color:#666;font-size:12px}@media(max-width:850px){.assistara-footer-main{grid-template-columns:1fr 1fr;gap:42px}.assistara-footer-brand{grid-column:1/-1}.assistara-footer-brand p{max-width:600px}}@media(max-width:620px){.assistara-footer-main{grid-template-columns:1fr;gap:34px;padding:52px 0 38px}.assistara-footer-brand{grid-column:auto}.assistara-footer-bottom{flex-direction:column;gap:7px}.assistara-email{font-size:16px;word-break:break-word}.assistara-footer-cta{width:100%;justify-content:center}}`;document.head.appendChild(s)}
