@@ -27,7 +27,7 @@ document.head.appendChild(criticalMobileStyles);
 const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec";
 
 for (const brand of document.querySelectorAll('.brand')) {
-  brand.innerHTML = `<img src="/assistara-logo.svg" alt="Assistaras" style="width:152px;height:36px;object-fit:contain;object-position:left center">`;
+  brand.innerHTML = `<img class="mark" src="/assistara-logo.svg" alt=""><span>Assistaras</span>`;
 }
 
 const mainNav = document.querySelector('.nav');
