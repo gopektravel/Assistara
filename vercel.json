@@ -4,11 +4,13 @@
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "academy.html", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
+    { "src": "mobile-polish.css", "use": "@vercel/static" },
     { "src": "app.js", "use": "@vercel/static" },
     { "src": "assistara-logo.svg", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/styles.css", "dest": "/styles.css" },
+    { "src": "/mobile-polish.css", "dest": "/mobile-polish.css" },
     { "src": "/app.js", "dest": "/app.js" },
     { "src": "/assistara-logo.svg", "dest": "/assistara-logo.svg" },
     { "src": "/academy", "dest": "/academy.html" },
