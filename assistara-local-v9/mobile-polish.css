@@ -1,0 +1,27 @@
+@media (max-width:760px){
+  .announcement{display:none!important}
+  .mobile-academy-cta{display:none!important}
+  .site-header{padding:10px 0!important;background:rgba(251,250,246,.94)!important}
+  .site-header .shell{width:calc(100% - 28px)!important}
+  .nav{min-height:62px!important;border-radius:20px!important;padding:9px 14px!important;box-shadow:0 8px 24px rgba(0,0,0,.07)!important}
+  .nav .brand{font-size:19px!important;gap:9px!important}
+  .nav .mark{width:34px!important;height:34px!important}
+  .nav>.btn,.nav .btn-small{display:none!important}
+  .hero{padding:38px 0 64px!important;gap:34px!important}
+  .hero-copy{max-width:100%!important}
+  .hero .eyebrow{display:none!important}
+  .hero h1{font-size:clamp(52px,15vw,68px)!important;line-height:.94!important;letter-spacing:-.06em!important;margin:0 0 24px!important;max-width:360px!important}
+  .hero h1 span:after{height:12px!important;bottom:1px!important}
+  .hero-sub{font-size:18px!important;line-height:1.48!important;color:#5f5b57!important;max-width:390px!important}
+  .hero-actions{margin-top:28px!important;display:block!important}
+  .hero-actions .btn{width:100%!important;min-height:58px!important;font-size:17px!important;padding:17px 22px!important;box-shadow:0 12px 28px rgba(255,213,31,.22)!important}
+  .hero-actions .text-link{display:none!important}
+  .trust-row{margin-top:22px!important;gap:7px 9px!important;font-size:12px!important;color:#77716c!important}
+  .trust-row .mini-check{width:17px!important;height:17px!important;font-size:10px!important}
+  .hero-visual{margin-top:4px!important;border-radius:28px!important;min-height:390px!important}
+  .section{padding:72px 0!important}
+}
+@media (max-width:420px){
+  .hero h1{font-size:54px!important}
+  .hero-sub{font-size:17px!important}
+}
