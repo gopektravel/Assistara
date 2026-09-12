@@ -49,7 +49,7 @@ if (form && success) {
   success.hidden = true;
   success.style.setProperty("display", "none", "important");
   if (note) note.textContent = "We’ll review your request and follow up with the next step.";
-  success.innerHTML = `<b>Request received — we’ll take it from here.</b><span>We’ll review what you want off your plate and get back to you with the next step and the kind of virtual assistant that could be the right fit.</span>`;
+  success.innerHTML = `<b>Request received. We’ll be in touch soon.</b>`;
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(form), payload = new URLSearchParams();
