@@ -2,6 +2,7 @@ const criticalMobileStyles = document.createElement("style");
 criticalMobileStyles.textContent = `
 .mobile-academy-cta{display:none}
 .objection-wrap{display:none!important}
+.success{display:none!important}
 @media (max-width:760px){
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
   .logo-strip{display:none!important}
@@ -43,10 +44,40 @@ if (mainNav && siteHeader && !document.querySelector('.mobile-academy-cta')) {
 const form = document.getElementById("leadForm");
 const success = document.getElementById("successMessage");
 if (form && success) {
-  const note = form.querySelector(".form-note"); const button = form.querySelector('button[type="submit"]');
+  const note = form.querySelector(".form-note");
+  const button = form.querySelector('button[type="submit"]');
+  success.hidden = true;
+  success.style.setProperty("display", "none", "important");
   if (note) note.textContent = "We’ll review your request and follow up with the next step.";
-  success.innerHTML = `<b>Thanks — your request is in.</b><span>We’ll review what you want to delegate and follow up with the next step.</span>`;
-  form.addEventListener("submit", async (event) => { event.preventDefault(); const formData=new FormData(form),payload=new URLSearchParams(); payload.set("name",formData.get("name")||""); payload.set("email",formData.get("email")||""); payload.set("company",formData.get("company")||""); payload.set("tasks",formData.get("tasks")||""); payload.set("support",formData.get("hours")||"Not sure yet"); const originalText=button.textContent; button.textContent="Sending…"; button.disabled=true; success.hidden=true; try{await fetch(LEAD_ENDPOINT,{method:"POST",mode:"no-cors",body:payload});button.textContent="Request sent ✓";success.hidden=false;form.reset();success.scrollIntoView({behavior:"smooth",block:"nearest"})}catch(error){button.textContent=originalText;button.disabled=false;success.innerHTML=`<b>Couldn’t send that yet.</b><span>Please try again in a moment.</span>`;success.hidden=false} });
+  success.innerHTML = `<b>Request received — we’ll take it from here.</b><span>We’ll review what you want off your plate and get back to you with the next step and the kind of virtual assistant that could be the right fit.</span>`;
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(form), payload = new URLSearchParams();
+    payload.set("name",formData.get("name")||"");
+    payload.set("email",formData.get("email")||"");
+    payload.set("company",formData.get("company")||"");
+    payload.set("tasks",formData.get("tasks")||"");
+    payload.set("support",formData.get("hours")||"Not sure yet");
+    const originalText = button.textContent;
+    button.textContent = "Sending…";
+    button.disabled = true;
+    success.hidden = true;
+    success.style.setProperty("display", "none", "important");
+    try {
+      await fetch(LEAD_ENDPOINT,{method:"POST",mode:"no-cors",body:payload});
+      button.textContent = "Request sent ✓";
+      success.hidden = false;
+      success.style.setProperty("display", "flex", "important");
+      form.reset();
+      success.scrollIntoView({behavior:"smooth",block:"nearest"});
+    } catch(error) {
+      button.textContent = originalText;
+      button.disabled = false;
+      success.innerHTML = `<b>Couldn’t send that yet.</b><span>Please try again in a moment.</span>`;
+      success.hidden = false;
+      success.style.setProperty("display", "flex", "important");
+    }
+  });
 }
 const matchCopy=document.querySelector(".match-copy"); if(matchCopy){const kicker=matchCopy.querySelector(".section-kicker"),title=matchCopy.querySelector("h2"),paragraph=matchCopy.querySelector("p"),points=matchCopy.querySelectorAll(".match-points div");if(kicker)kicker.textContent="FIND YOUR VIRTUAL ASSISTANT";if(title)title.textContent="Ready to buy back your time?";if(paragraph)paragraph.textContent="Tell us what keeps pulling you back into the day-to-day. We’ll help define what can be delegated and match you with a trained virtual assistant who can take ownership of it.";if(points[0])points[0].innerHTML="<span>✓</span> Get repeatable work off your plate";if(points[1])points[1].innerHTML="<span>✓</span> Protect more time for growth, decisions and relationships";if(points[2])points[2].innerHTML="<span>✓</span> Get matched around the work you actually need handled"}
 const hoursRange=document.getElementById("hoursRange"),valueRange=document.getElementById("valueRange");if(hoursRange&&valueRange){const calculator=document.getElementById("savingsCalculator"),hoursOut=document.getElementById("hoursOut"),valueOut=document.getElementById("valueOut"),timeYear=document.getElementById("timeYear"),valueYear=document.getElementById("valueYear"),netYear=document.getElementById("netYear"),usd=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}),DELEGATION_RATE=28;if(calculator){const title=calculator.querySelector("h3"),intro=calculator.querySelector(".calc-intro"),labels=calculator.querySelectorAll(".calc-control"),resultLabels=calculator.querySelectorAll(".calc-results small"),note=calculator.querySelector(".calc-note"),topline=calculator.querySelector(".calc-topline small");if(topline)topline.textContent="TIME COST CALCULATOR";if(title)title.textContent="How much is doing it yourself costing you?";if(intro)intro.textContent="Answer two simple questions. See how much time you could get back, and what it would cost to hand that work off.";if(labels[0])labels[0].querySelector("b").textContent="How many hours a week do you spend on work someone else could handle?";if(labels[1])labels[1].querySelector("b").textContent="What is one hour of your time worth?";if(labels[2])labels[2].style.display="none";if(resultLabels[0])resultLabels[0].textContent="HOURS YOU GET BACK / YEAR";if(resultLabels[1])resultLabels[1].textContent="WHAT YOUR TIME IS WORTH / YEAR";if(resultLabels[2])resultLabels[2].textContent="ESTIMATED VIRTUAL ASSISTANT COST / MONTH";if(note)note.textContent="Estimate only. Final pricing depends on your needs and level of support."}function updateCalculator(){const hours=Math.max(1,Number(hoursRange.value)||1),ownValue=Math.max(0,Number(valueRange.value)||0),yearlyHours=hours*52,ownTimeValue=yearlyHours*ownValue,monthlyAssistantCost=yearlyHours*DELEGATION_RATE/12;hoursOut.textContent=`${hours} ${hours===1?"hr":"hrs"}`;valueOut.textContent=usd.format(ownValue);timeYear.textContent=`${yearlyHours.toLocaleString("en-US")} hrs`;valueYear.textContent=usd.format(ownTimeValue);netYear.textContent=`${usd.format(monthlyAssistantCost)} / mo`}[hoursRange,valueRange].forEach(input=>input.addEventListener("input",updateCalculator));updateCalculator()}
