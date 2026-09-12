@@ -56,11 +56,10 @@ if (mainNav && siteHeader && !document.querySelector('.mobile-academy-cta')) {
 const form = document.getElementById("leadForm");
 const success = document.getElementById("successMessage");
 if (form && success) {
-  const note = form.querySelector(".form-note");
+  form.querySelector(".form-note")?.remove();
   const button = form.querySelector('button[type="submit"]');
   success.hidden = true;
   success.style.setProperty("display", "none", "important");
-  if (note) note.textContent = "We’ll review your request and follow up with the next step.";
   success.innerHTML = `<b>Request received. We’ll be in touch soon.</b>`;
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
