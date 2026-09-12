@@ -1,3 +1,15 @@
+const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+favicon.rel = 'icon';
+favicon.type = 'image/svg+xml';
+favicon.href = '/assistara-logo.svg?v=4';
+if (!favicon.parentNode) document.head.appendChild(favicon);
+
+const shortcutFavicon = document.querySelector('link[rel="shortcut icon"]') || document.createElement('link');
+shortcutFavicon.rel = 'shortcut icon';
+shortcutFavicon.type = 'image/svg+xml';
+shortcutFavicon.href = '/assistara-logo.svg?v=4';
+if (!shortcutFavicon.parentNode) document.head.appendChild(shortcutFavicon);
+
 const criticalMobileStyles = document.createElement("style");
 criticalMobileStyles.textContent = `
 .mobile-academy-cta{display:none}
