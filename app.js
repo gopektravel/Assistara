@@ -124,7 +124,7 @@ if (siteFooter) {
       <div class="assistara-footer-contact">
         <span>NEED HELP?</span>
         <a class="assistara-email" href="mailto:support@getassistara.com">support@getassistara.com <b>↗</b></a>
-        <a class="assistara-footer-cta" href="#match">Find my virtual assistant <b>→</b></a>
+        <a class="assistara-footer-cta" href="/academy">Become a Virtual Assistant <b>→</b></a>
       </div>
     </div>
     <div class="shell assistara-footer-bottom">
