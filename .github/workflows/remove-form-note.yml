@@ -1,0 +1,38 @@
+name: Remove pre-submit form note
+
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-form-note.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Remove static pre-submit note
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          targets = [Path('index.html'), Path('assistara-local-v9/index.html')]
+          for path in targets:
+              text = path.read_text(encoding='utf-8')
+              text = text.replace('<p class="form-note">No job description needed. Start with what you want off your plate.</p>', '')
+              text = text.replace('<p class="form-note">We’ll review your request and follow up with the next step.</p>', '')
+              path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html assistara-local-v9/index.html
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Remove pre-submit form note from HTML"
+          git push
