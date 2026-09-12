@@ -1,0 +1,43 @@
+name: Bulletproof form note removal
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bulletproof-form-note-removal.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Remove note and cache-bust JS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for p in [Path('index.html'), Path('assistara-local-v9/index.html')]:
+              s = p.read_text(encoding='utf-8')
+              s = s.replace('<p class="form-note">No job description needed. Start with what you want off your plate.</p>', '')
+              s = s.replace('<p class="form-note">We’ll review your request and follow up with the next step.</p>', '')
+              s = s.replace('<script src="/app.js"></script>', '<script src="/app.js?v=20260912-1515"></script>')
+              if '<style id="force-hide-form-note">.form-note{display:none!important}</style>' not in s:
+                  s = s.replace('</head>', '  <style id="force-hide-form-note">.form-note{display:none!important}</style>\n</head>')
+              p.write_text(s, encoding='utf-8')
+          for p in [Path('app.js'), Path('assistara-local-v9/app.js')]:
+              s = p.read_text(encoding='utf-8')
+              marker = 'const form = document.getElementById("leadForm");' if 'const form = document.getElementById("leadForm");' in s else 'const form=document.getElementById("leadForm")'
+              if 'document.querySelectorAll(".form-note").forEach(el=>el.remove());' not in s:
+                  s = 'document.querySelectorAll(".form-note").forEach(el=>el.remove());\n' + s
+              p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html assistara-local-v9/index.html app.js assistara-local-v9/app.js
+          git commit -m "Bulletproof removal of pre-submit form note" || exit 0
+          git push
