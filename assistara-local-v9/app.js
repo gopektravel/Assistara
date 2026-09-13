@@ -13,6 +13,8 @@ criticalMobileStyles.textContent=`
 .objection-wrap{display:none!important}
 .success{display:none!important}
 .mobile-academy-cta{display:none!important}
+#savingsCalculator .calc-control[for="delegateRange"],
+#savingsCalculator .calc-result-highlight{display:none!important}
 @media(max-width:760px){
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
   .announcement{display:none!important}
@@ -98,19 +100,19 @@ if(matchCopy){
 
 const hoursRange=document.getElementById('hoursRange'),valueRange=document.getElementById('valueRange');
 if(hoursRange&&valueRange){
-  const calculator=document.getElementById('savingsCalculator'),hoursOut=document.getElementById('hoursOut'),valueOut=document.getElementById('valueOut'),timeYear=document.getElementById('timeYear'),valueYear=document.getElementById('valueYear'),netYear=document.getElementById('netYear'),usd=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}),RATE=28;
+  const calculator=document.getElementById('savingsCalculator'),hoursOut=document.getElementById('hoursOut'),valueOut=document.getElementById('valueOut'),timeYear=document.getElementById('timeYear'),valueYear=document.getElementById('valueYear'),usd=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
   if(calculator){
-    const title=calculator.querySelector('h3'),intro=calculator.querySelector('.calc-intro'),labels=calculator.querySelectorAll('.calc-control'),results=calculator.querySelectorAll('.calc-results small'),note=calculator.querySelector('.calc-note'),top=calculator.querySelector('.calc-topline small');
+    const title=calculator.querySelector('h3'),intro=calculator.querySelector('.calc-intro'),labels=calculator.querySelectorAll('.calc-control'),results=calculator.querySelectorAll('.calc-results > div'),note=calculator.querySelector('.calc-note'),top=calculator.querySelector('.calc-topline small');
     if(top)top.textContent='TIME COST CALCULATOR';
     if(title)title.textContent='How much is doing it yourself costing you?';
-    if(intro)intro.textContent='Answer two simple questions. See how much time you could get back, and what it would cost to hand that work off.';
+    if(intro)intro.textContent='Answer two simple questions. See how many hours you could reclaim and what those hours represent over a year.';
     if(labels[0])labels[0].querySelector('b').textContent='How many hours a week do you spend on work someone else could handle?';
     if(labels[1])labels[1].querySelector('b').textContent='What is one hour of your time worth?';
-    if(labels[2])labels[2].style.display='none';
-    if(results[0])results[0].textContent='HOURS YOU GET BACK / YEAR';
-    if(results[1])results[1].textContent='WHAT YOUR TIME IS WORTH / YEAR';
-    if(results[2])results[2].textContent='ESTIMATED VIRTUAL ASSISTANT COST / MONTH';
-    if(note)note.textContent='Estimate only. Final pricing depends on your needs and level of support.';
+    if(labels[2])labels[2].remove();
+    if(results[0])results[0].querySelector('small').textContent='HOURS YOU COULD RECLAIM / YEAR';
+    if(results[1])results[1].querySelector('small').textContent='VALUE OF THOSE HOURS / YEAR';
+    if(results[2])results[2].remove();
+    if(note)note.textContent='Illustrative only. This shows the value of your time currently spent on delegatable work. It is not a projection of additional revenue.';
   }
   function updateCalculator(){
     const h=Math.max(1,Number(hoursRange.value)||1),v=Math.max(0,Number(valueRange.value)||0),yh=h*52;
@@ -118,7 +120,6 @@ if(hoursRange&&valueRange){
     valueOut.textContent=usd.format(v);
     timeYear.textContent=`${yh.toLocaleString('en-US')} hrs`;
     valueYear.textContent=usd.format(yh*v);
-    netYear.textContent=`${usd.format(yh*RATE/12)} / mo`;
   }
   [hoursRange,valueRange].forEach(i=>i.addEventListener('input',updateCalculator));updateCalculator();
 }
