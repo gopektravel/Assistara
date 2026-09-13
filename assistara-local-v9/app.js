@@ -15,6 +15,8 @@ criticalMobileStyles.textContent=`
 .mobile-academy-cta{display:none!important}
 #savingsCalculator .calc-control[for="delegateRange"],
 #savingsCalculator .calc-result-highlight{display:none!important}
+.assistara-footer-brand .brand{display:inline-flex!important;align-items:center!important;gap:10px!important;width:max-content!important}
+.assistara-footer-brand .brand .mark{width:42px!important;height:42px!important;flex:0 0 42px!important;object-fit:contain!important;object-position:center!important}
 @media(max-width:760px){
   html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
   .announcement{display:none!important}
