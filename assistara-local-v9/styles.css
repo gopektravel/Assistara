@@ -142,6 +142,20 @@ footer{background:#151515;color:#fff;padding:55px 0 25px}
 .footer-inner p{color:#b8b8b8}
 .footer-inner>a:last-child{text-align:right;font-weight:800;color:var(--yellow)}
 .footer-bottom{display:flex;justify-content:space-between;color:#707070;font-size:12px;border-top:1px solid #292929;margin-top:35px;padding-top:20px}
+.assistara-footer-main{display:grid;grid-template-columns:1.15fr .7fr 1fr;gap:70px;padding:72px 0 54px;align-items:start}
+.assistara-footer-brand .brand{display:flex;width:max-content;margin-bottom:22px}
+.assistara-footer-brand .mark{width:168px;height:42px;object-fit:contain;object-position:left center}
+.assistara-footer-brand p{margin:0;max-width:410px;color:#9d9d9d;font-size:17px;line-height:1.6}
+.assistara-footer-links,.assistara-footer-contact{display:flex;flex-direction:column;align-items:flex-start;gap:13px}
+.assistara-footer-links>span,.assistara-footer-contact>span{font-size:11px;letter-spacing:.14em;font-weight:800;color:#666;margin-bottom:5px}
+.assistara-footer-links a{color:#c8c8c8;font-size:15px;transition:.2s ease}
+.assistara-footer-links a:hover{color:#fff;transform:translateX(3px)}
+.assistara-email{display:inline-flex;align-items:center;gap:9px;color:#fff;font:700 18px/1.25 Manrope,sans-serif;border-bottom:1px solid #3b3b3b;padding-bottom:6px;transition:.2s ease}
+.assistara-email b{color:var(--yellow);font-size:16px}.assistara-email:hover{border-color:var(--yellow);color:var(--yellow)}
+.assistara-footer-cta{display:inline-flex;align-items:center;gap:10px;margin-top:12px;background:var(--yellow);color:#111!important;border-radius:999px;padding:14px 18px;font-weight:800;transition:.2s ease}
+.assistara-footer-cta:hover{transform:translateY(-2px)}
+.assistara-footer-bottom{border-top:1px solid #292929;display:flex;justify-content:space-between;gap:20px;padding:20px 0 24px;color:#666;font-size:12px}
+@media(max-width:900px){.assistara-footer-main{grid-template-columns:1fr 1fr;gap:42px}.assistara-footer-brand{grid-column:1/-1}}
 @media(max-width:900px){
   .nav-links{display:none}
   .hero,.guide,.outcome-card,.match{grid-template-columns:1fr}
