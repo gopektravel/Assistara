@@ -15,7 +15,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          old='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/submit-lead'
+          old='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form'
           new='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form-proxy'
           paths=[
             Path('assistara-local-v9/app.js'),
@@ -25,7 +25,7 @@ jobs:
           for p in paths:
             s=p.read_text()
             if old not in s:
-              raise SystemExit(f'Old endpoint not found in {p}')
+              raise SystemExit(f'Email endpoint not found in {p}')
             s=s.replace(old,new)
             if p.name=='academy-apply.html':
               s=s.replace("type:'academy'","type:'academy_application'")
