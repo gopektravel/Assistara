@@ -1,0 +1,30 @@
+name: Short v9 application headline
+on:
+  push:
+    paths:
+      - '.github/workflows/short-v9-application-headline.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shorten application headline
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/academy-apply.html')
+          s=p.read_text()
+          s=s.replace('<h1>Apply to build your path to your first remote client.</h1>','<h1>Apply for Assistara Academy.</h1>')
+          s=s.replace('<p>Only 15 spots are available for the Founding Cohort. Applications close once all 15 spots are filled.</p>','<p>15 spots. Applications close when filled.</p>')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy-apply.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Shorten v9 Academy application headline"
+          git push
