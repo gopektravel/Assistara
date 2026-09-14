@@ -20,10 +20,11 @@ jobs:
           s = apply.read_text()
           replacements = {
             '<meta name="description" content="Apply for the first Assistara Academy Founding Cohort. Up to 15 applicants will be selected."/>': '<meta name="description" content="Apply to Assistara Academy."/>',
-            '<h1>Apply for one of the first 15 spots.</h1>': '<h1>Apply to Assistara Academy.</h1>',
-            '<p>We’re keeping the first Assistara Academy cohort intentionally small. We’re looking for beginners who are serious about building a remote career and willing to do the work.</p>': '<p>Tell us a little about where you are now, what you want to achieve, and whether you’re ready to do the work.</p>',
-            '<div class="facts"><div class="fact"><strong>15</strong> spots maximum</div><div class="fact"><strong>₱6,900</strong> if accepted</div><div class="fact">Payment only after acceptance</div></div>': '',
-            '<p class="fine">Submitting an application does not guarantee acceptance or charge you. Up to 15 applicants will be selected for the Founding Cohort.</p>': '<p class="fine">Submitting an application does not guarantee acceptance or charge you.</p>',
+            '<h1>Be one of the first 15.</h1>': '<h1>Apply to Assistara Academy.</h1>',
+            '<p>Only 15 spots. Once they’re filled, applications close.</p>': '<p>Tell us a little about where you are now, what you want to achieve, and whether you’re ready to do the work.</p>',
+            '<div class="facts"><div class="fact"><strong>ONLY 15</strong> SPOTS</div><div class="fact"><strong>₱6,900</strong> if accepted</div></div>': '',
+            '<div class="intro"><strong>How it works</strong>Apply for one of the 15 spots. If selected, you’ll receive your private enrollment link.</div>': '<div class="intro"><strong>How it works</strong>Complete the application below. If selected, you’ll receive your private enrollment link.</div>',
+            '<p class="fine">Only 15 spots. Once they’re filled, applications close.</p>': '<p class="fine">Submitting an application does not guarantee acceptance or charge you.</p>',
           }
           for old, new in replacements.items():
               if old not in s:
