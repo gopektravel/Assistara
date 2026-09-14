@@ -1,0 +1,42 @@
+name: Declutter v9 Academy CTA
+on:
+  push:
+    paths:
+      - '.github/workflows/declutter-v9-academy-cta.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Declutter offer card
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('assistara-local-v9/academy.html')
+          s=p.read_text()
+
+          # Remove extra price anchoring and the inclusions grid from the CTA card.
+          s=re.sub(r'<p class="future-price">.*?</p>', '', s, flags=re.S)
+          s=re.sub(r'<div class="include-grid">.*?</div>\s*<p class="apply-free">', '<p class="apply-free">', s, flags=re.S)
+
+          # Keep the price label clean and make the low-friction line quiet and simple.
+          s=s.replace('<p class="price-sub">Founding Cohort price</p>', '<p class="price-sub">Founding Cohort price</p>')
+          s=s.replace('<p class="apply-free"><span>Apply for free.</span> Pay only if accepted.</p>', '<p class="apply-free">Apply for free. <span>Pay only if accepted.</span></p>')
+
+          # Strip obsolete styles from removed elements and refine the remaining hierarchy.
+          s=s.replace('.future-price{font-size:14px;color:#c9c9c9;margin:0 0 22px}.apply-free{margin:0 0 10px;text-align:center;color:#fff;font-size:13px;font-weight:800}.apply-free span{color:var(--yellow)}.old-price{color:#aaa;margin-right:8px}.include-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin:24px 0}.include{color:#ddd;font-size:14px;line-height:1.45}', '.apply-free{margin:18px 0 12px;text-align:center;color:#fff;font-size:14px;font-weight:800}.apply-free span{color:#aaa;font-weight:600}')
+          s=s.replace('.checkout-note{display:flex;align-items:center;justify-content:center;gap:9px;margin:14px 0 0;padding:10px 14px;border:1px solid #353535;border-radius:14px;background:#202020;color:#bdbdbd;font-size:12px;line-height:1.35;font-weight:600;text-align:center}.checkout-note:before{content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 4px rgba(255,213,31,.12)}.checkout-note strong{color:#fff;font-size:13px;font-weight:900}', '.checkout-note{margin:12px 0 0;color:#aaa;font-size:12px;line-height:1.4;font-weight:600;text-align:center}.checkout-note strong{color:#fff;font-size:12px;font-weight:900}')
+
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Declutter v9 Academy application CTA"
+          git push
