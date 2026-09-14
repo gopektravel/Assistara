@@ -1,0 +1,45 @@
+name: Final clean v9 Academy offer card
+on:
+  push:
+    paths:
+      - '.github/workflows/final-clean-v9-academy-offer-card.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clean v9 offer card
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('assistara-local-v9/academy.html')
+          s=p.read_text()
+          # Remove redundant price subtitle and application explanation.
+          s=re.sub(r'<p class="price-sub">.*?</p>', '', s, count=1)
+          s=re.sub(r'<p class="application-note">.*?</p>', '', s, count=1)
+          # Remove separate apply-free line and disclaimer entirely.
+          s=re.sub(r'<p class="apply-free">.*?</p>', '', s, count=1)
+          s=re.sub(r'<p class="offer-note">.*?</p>', '', s, count=1)
+          # Move scarcity directly below the price: remove existing instance first.
+          scarcity='<p class="checkout-note"><strong>Only 15 spots.</strong> Applications close once they’re filled.</p>'
+          s=s.replace(scarcity, '')
+          price_match=re.search(r'(<div class="price">₱6,900</div>)', s)
+          if price_match:
+              s=s[:price_match.end()]+'\n        '+scarcity+s[price_match.end():]
+          # CTA communicates the free application itself.
+          s=s.replace('>Apply now →</a>', '>Apply for free →</a>', 1)
+          # Make scarcity a light supporting line under price, not a competing box.
+          s=re.sub(r'\.checkout-note\{[^}]*\}\.checkout-note:before\{[^}]*\}\.checkout-note strong\{[^}]*\}', '.checkout-note{display:flex;align-items:center;gap:8px;margin:12px 0 24px;color:#aaa;font-size:12px;line-height:1.4;font-weight:600}.checkout-note:before{content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--yellow)}.checkout-note strong{color:#fff;font-size:12px;font-weight:900}', s, count=1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Clean up v9 Academy offer card"
+          git push
