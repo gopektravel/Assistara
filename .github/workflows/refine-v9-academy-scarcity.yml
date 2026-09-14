@@ -1,0 +1,53 @@
+name: Refine v9 Academy scarcity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/refine-v9-academy-scarcity.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine application and Academy CTA
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          apply = Path('assistara-local-v9/academy-apply.html')
+          s = apply.read_text()
+          replacements = {
+            '<meta name="description" content="Apply for the first Assistara Academy Founding Cohort. Up to 15 applicants will be selected."/>': '<meta name="description" content="Apply to Assistara Academy."/>',
+            '<h1>Apply for one of the first 15 spots.</h1>': '<h1>Apply to Assistara Academy.</h1>',
+            '<p>We’re keeping the first Assistara Academy cohort intentionally small. We’re looking for beginners who are serious about building a remote career and willing to do the work.</p>': '<p>Tell us a little about where you are now, what you want to achieve, and whether you’re ready to do the work.</p>',
+            '<div class="facts"><div class="fact"><strong>15</strong> spots maximum</div><div class="fact"><strong>₱6,900</strong> if accepted</div><div class="fact">Payment only after acceptance</div></div>': '',
+            '<p class="fine">Submitting an application does not guarantee acceptance or charge you. Up to 15 applicants will be selected for the Founding Cohort.</p>': '<p class="fine">Submitting an application does not guarantee acceptance or charge you.</p>',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Missing expected application text: {old[:90]}')
+              s = s.replace(old, new)
+          apply.write_text(s)
+
+          academy = Path('assistara-local-v9/academy.html')
+          s = academy.read_text()
+          replacements = {
+            '<div class="price-badge">FOUNDING COHORT · 15 SPOTS</div>': '<div class="price-badge">FOUNDING COHORT</div>',
+            '<p class="checkout-note">Up to 15 applicants will be selected. Accepted applicants receive a private enrollment and payment link.</p>': '<p class="checkout-note"><strong>Only 15 spots.</strong> Once they’re filled, applications close.</p>',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Missing expected Academy text: {old[:90]}')
+              s = s.replace(old, new)
+          academy.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html assistara-local-v9/academy-apply.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Refine v9 Academy scarcity messaging"
+          git push
