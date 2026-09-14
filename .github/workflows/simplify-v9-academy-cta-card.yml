@@ -1,0 +1,33 @@
+name: Simplify v9 Academy CTA card
+on:
+  push:
+    paths:
+      - '.github/workflows/simplify-v9-academy-cta-card.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Simplify v9 offer card
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/academy.html')
+          s=p.read_text()
+          s=s.replace('.future-price{font-size:15px;color:#ddd;margin:0 0 26px}', '.future-price{font-size:14px;color:#c9c9c9;margin:0 0 22px}.apply-free{margin:0 0 10px;text-align:center;color:#fff;font-size:13px;font-weight:800}.apply-free span{color:var(--yellow)}')
+          s=s.replace('<p class="price-sub">Founding Cohort price · payment only after acceptance</p>', '<p class="price-sub">Founding Cohort price</p>')
+          s=s.replace('<p class="future-price"><span class="old-price"><s>₱14,900</s></span> Planned standard price after the founding cohort.</p>', '<p class="future-price"><span class="old-price"><s>₱14,900</s></span> Future cohorts will cost more.</p>')
+          s=s.replace('<a class="btn btn-yellow full" href="/academy/apply">Apply now →</a>', '<p class="apply-free"><span>Apply for free.</span> Pay only if accepted.</p><a class="btn btn-yellow full" href="/academy/apply">Apply now →</a>')
+          s=s.replace('<p class="offer-note">Successful graduation secures your place in the Assistara Talent Network. Client matching, work and income are not guaranteed.</p>', '')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Simplify v9 Academy application CTA card"
+          git push
