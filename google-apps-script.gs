@@ -21,7 +21,7 @@ function doPost(e) {
   const delegating = first('delegating', 'tasks', 'bottleneck', 'timeStealers', 'whatKeepsStealingYourTime');
   const support = first('support', 'supportNeeded', 'hours') || 'Not sure yet';
 
-  if (company === 'Assistara Academy — Founding Cohort Application') {
+  if (company === 'Assistara Academy - Founding Cohort Application') {
     const sheet = ss.getSheetByName(ACADEMY_SHEET);
     const value = (text, start, end) => {
       const re = end
