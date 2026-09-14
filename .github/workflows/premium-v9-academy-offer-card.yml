@@ -1,0 +1,36 @@
+name: Premium v9 Academy offer card
+on:
+  push:
+    paths:
+      - '.github/workflows/premium-v9-academy-offer-card.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine offer card
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/academy.html')
+          s=p.read_text()
+          s=s.replace('.price-card{background:#171717;color:#fff;border-radius:34px;padding:38px;box-shadow:0 30px 70px rgba(0,0,0,.14)}', '.price-card{background:#171717;color:#fff;border-radius:34px;padding:44px 42px 34px;min-height:490px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 30px 70px rgba(0,0,0,.14)}')
+          s=s.replace('.price{font:800 clamp(58px,7vw,86px)/1 Manrope;letter-spacing:-.06em;margin:20px 0 4px}', '.price{font:800 clamp(64px,7vw,90px)/1 Manrope;letter-spacing:-.06em;margin:24px 0 6px}')
+          s=s.replace('.price-sub{color:#aaa;margin:0 0 8px}', '.price-sub{color:#aaa;margin:0 0 30px;font-size:14px}')
+          s=s.replace('.apply-free{margin:18px 0 12px;text-align:center;color:#fff;font-size:14px;font-weight:800}.apply-free span{color:#aaa;font-weight:600}', '.apply-free{margin:0 0 14px;padding-top:24px;border-top:1px solid #303030;text-align:center;color:#fff;font-size:15px;font-weight:800}.apply-free span{display:block;margin-top:4px;color:#8f8f8f;font-size:12px;font-weight:600}')
+          s=s.replace('.checkout-note{margin:12px 0 0;color:#aaa;font-size:12px;line-height:1.4;font-weight:600;text-align:center}.checkout-note strong{color:#fff;font-size:12px;font-weight:900}', '.checkout-note{margin:22px 0 0;padding-top:18px;border-top:1px solid #303030;color:#8f8f8f;font-size:12px;line-height:1.45;font-weight:600;text-align:left;position:relative;padding-left:18px}.checkout-note:before{content:"";position:absolute;left:0;top:23px;width:7px;height:7px;border-radius:50%;background:var(--yellow)}.checkout-note strong{display:block;color:#fff;font-size:13px;font-weight:900;margin-bottom:2px}')
+          s=s.replace('<p class="price-sub">Founding Cohort price</p>', '<p class="price-sub">Founding price for the first cohort</p>')
+          s=s.replace('<p class="apply-free"><strong>Apply for free.</strong> <span>Pay only if accepted.</span></p>', '<p class="apply-free">Apply for free<span>Pay only if accepted.</span></p>')
+          s=s.replace('<p class="checkout-note"><strong>Only 15 spots.</strong> Applications close once they’re filled.</p>', '<p class="checkout-note"><strong>Only 15 spots</strong>Applications close once they’re filled.</p>')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Polish v9 Academy offer card"
+          git push
