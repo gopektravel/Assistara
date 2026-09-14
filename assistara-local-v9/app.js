@@ -77,7 +77,7 @@ if(form&&success){
     button.textContent='Sending…';button.disabled=true;
     success.hidden=true;success.style.setProperty('display','none','important');
     try{
-      const response=await fetch(LEAD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'b2b',name:fd.get('name')||'',email:fd.get('email')||'',company:fd.get('company')||'',time_thieves:fd.get('tasks')||'',support_level:fd.get('hours')||'Not sure yet'})});
+      const response=await fetch(LEAD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E'},body:JSON.stringify({type:'b2b',name:fd.get('name')||'',email:fd.get('email')||'',company:fd.get('company')||'',time_thieves:fd.get('tasks')||'',support_level:fd.get('hours')||'Not sure yet'})});
       if(!response.ok)throw new Error('Submission failed');
       button.textContent='Request sent ✓';
       success.hidden=false;success.style.setProperty('display','flex','important');
