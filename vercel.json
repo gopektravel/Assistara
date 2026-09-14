@@ -3,6 +3,7 @@
   "builds": [
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "academy.html", "use": "@vercel/static" },
+    { "src": "academy-apply.html", "use": "@vercel/static" },
     { "src": "robots.txt", "use": "@vercel/static" },
     { "src": "sitemap.xml", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
@@ -17,6 +18,8 @@
     { "src": "/assistara-logo.svg", "dest": "/assistara-logo.svg" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
     { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
+    { "src": "/academy/apply", "dest": "/academy-apply.html" },
+    { "src": "/academy-apply.html", "dest": "/academy-apply.html" },
     { "src": "/academy", "dest": "/academy.html" },
     { "src": "/academy.html", "dest": "/academy.html" },
     { "src": "/", "dest": "/index.html" }
