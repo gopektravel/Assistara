@@ -52,7 +52,7 @@ if(window.matchMedia('(max-width:760px)').matches){
   if(heroSub)heroSub.textContent='Delegate the repeatable work. Keep your time for what moves the business forward.';
 }
 
-const LEAD_ENDPOINT='https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec';
+const SUPABASE_FORM_ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form';
 const form=document.getElementById('leadForm');
 const success=document.getElementById('successMessage');
 if(form&&success){
@@ -63,21 +63,27 @@ if(form&&success){
   success.innerHTML='<b>Request received. We’ll be in touch soon.</b>';
   form.addEventListener('submit',async event=>{
     event.preventDefault();
-    const fd=new FormData(form),payload=new URLSearchParams();
-    payload.set('name',fd.get('name')||'');
-    payload.set('email',fd.get('email')||'');
-    payload.set('company',fd.get('company')||'');
-    payload.set('tasks',fd.get('tasks')||'');
-    payload.set('support',fd.get('hours')||'Not sure yet');
+    const fd=new FormData(form);
+    const payload={
+      type:'b2b',
+      name:String(fd.get('name')||'').trim(),
+      email:String(fd.get('email')||'').trim(),
+      company:String(fd.get('company')||'').trim(),
+      time_thieves:String(fd.get('tasks')||'').trim(),
+      support_level:String(fd.get('hours')||'Not sure yet').trim()
+    };
     const original=button.textContent;
     button.textContent='Sending…';button.disabled=true;
     success.hidden=true;success.style.setProperty('display','none','important');
     try{
-      await fetch(LEAD_ENDPOINT,{method:'POST',mode:'no-cors',body:payload});
+      const response=await fetch(SUPABASE_FORM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!response.ok)throw new Error(`Supabase returned ${response.status}`);
       button.textContent='Request sent ✓';
+      success.innerHTML='<b>Request received. We’ll be in touch soon.</b>';
       success.hidden=false;success.style.setProperty('display','flex','important');
       form.reset();success.scrollIntoView({behavior:'smooth',block:'nearest'});
     }catch(error){
+      console.error(error);
       button.textContent=original;button.disabled=false;
       success.innerHTML='<b>Couldn’t send that yet.</b><span>Please try again in a moment.</span>';
       success.hidden=false;success.style.setProperty('display','flex','important');
