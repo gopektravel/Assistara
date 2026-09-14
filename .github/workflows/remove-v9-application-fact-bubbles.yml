@@ -1,0 +1,32 @@
+name: Remove v9 application fact bubbles
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-v9-application-fact-bubbles.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove redundant bubbles
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('assistara-local-v9/academy-apply.html')
+          s=p.read_text()
+          s=re.sub(r'<div class="facts">.*?</div></div></div>', '', s, count=1)
+          # Fallback exact current markup
+          s=s.replace('<div class="facts"><div class="fact"><strong>15</strong> spots available</div><div class="fact"><strong>₱6,900</strong> if accepted</div><div class="fact">Payment only after acceptance</div></div>','')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy-apply.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Remove redundant v9 application fact bubbles"
+          git push
