@@ -1,0 +1,32 @@
+name: Outcome-first v9 Academy application hero
+on:
+  push:
+    paths:
+      - '.github/workflows/outcome-first-v9-application-hero.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update application hero messaging
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/academy-apply.html')
+          s=p.read_text()
+          s=s.replace('<meta name="description" content="Apply for the first Assistara Academy Founding Cohort. Up to 15 applicants will be selected."/>','<meta name="description" content="Apply to Assistara Academy and build your path toward your first remote client. Only 15 spots are available for the Founding Cohort."/>')
+          s=s.replace('<h1>Apply for one of the first 15 spots.</h1>','<h1>Apply to build your path to your first remote client.</h1>')
+          s=s.replace('<p>We’re keeping the first Assistara Academy cohort intentionally small. We’re looking for beginners who are serious about building a remote career and willing to do the work.</p>','<p>Only 15 spots are available for the Founding Cohort. Applications close once all 15 spots are filled.</p>')
+          s=s.replace('<div class="facts"><div class="fact"><strong>15</strong> spots maximum</div><div class="fact"><strong>₱6,900</strong> if accepted</div><div class="fact">Payment only after acceptance</div></div>','<div class="facts"><div class="fact"><strong>15</strong> spots available</div><div class="fact"><strong>₱6,900</strong> if accepted</div><div class="fact">Payment only after acceptance</div></div>')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy-apply.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Make v9 Academy application hero outcome-first"
+          git push
