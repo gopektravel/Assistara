@@ -15,11 +15,8 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
-          original = '''REPLACE_FROM_GIT_AT_RUNTIME'''
-          # Restore the application page from the original pre-scarcity-refinement commit,
-          # then retain the later radio alignment and no-em-dash fixes.
           import subprocess
+
           restored = subprocess.check_output([
               'git','show','240fe092d3c170d0a6d1324ac09f423872618660:assistara-local-v9/academy-apply.html'
           ], text=True)
@@ -42,3 +39,4 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Restore original Academy application and emphasize 15 spots"
           git push
+# trigger-v2
