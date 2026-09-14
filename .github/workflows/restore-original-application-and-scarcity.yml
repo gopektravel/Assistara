@@ -1,0 +1,44 @@
+name: Restore original application and emphasize scarcity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/restore-original-application-and-scarcity.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore application and update Academy offer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          original = '''REPLACE_FROM_GIT_AT_RUNTIME'''
+          # Restore the application page from the original pre-scarcity-refinement commit,
+          # then retain the later radio alignment and no-em-dash fixes.
+          import subprocess
+          restored = subprocess.check_output([
+              'git','show','240fe092d3c170d0a6d1324ac09f423872618660:assistara-local-v9/academy-apply.html'
+          ], text=True)
+          restored = restored.replace('.choice input{margin-top:3px}', '.choice input{width:18px;height:18px;min-width:18px;flex:0 0 18px;margin:2px 0 0;padding:0;border:0;border-radius:50%;box-shadow:none;accent-color:#171717}')
+          restored = restored.replace('nothing yet — be honest.', 'nothing yet. Be honest.')
+          restored = restored.replace(' — ', ' - ').replace('—', '-')
+          Path('assistara-local-v9/academy-apply.html').write_text(restored)
+
+          academy = Path('assistara-local-v9/academy.html')
+          s = academy.read_text()
+          s = s.replace('.checkout-note{font-size:12px;color:#999;text-align:center;margin:10px 0 0}', '.checkout-note{font-size:17px;color:#fff;text-align:center;margin:16px 0 0;font-weight:900;letter-spacing:.01em}.checkout-note strong{color:var(--yellow);font-size:20px}')
+          s = s.replace('<p class="offer-note">Self-paced. Most students can complete the Academy in 3-4 weeks. Successful graduation secures your place in the Assistara Talent Network. Client matching, work and income are not guaranteed.</p>', '<p class="offer-note">Successful graduation secures your place in the Assistara Talent Network. Client matching, work and income are not guaranteed.</p>')
+          academy.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html assistara-local-v9/academy-apply.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Restore original Academy application and emphasize 15 spots"
+          git push
