@@ -1,4 +1,4 @@
-name: Diagnose live masterclass endpoint
+name: Diagnose live form endpoints
 on:
   push:
     paths:
@@ -11,11 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Call exact endpoint used by v9
+      - name: Verify all v9 forms against production Supabase
         shell: bash
         run: |
           set -euo pipefail
-          FILE='assistara-local-v9/academy.html'
           KEY=$(python - <<'PY'
           import re
           s=open('assistara-local-v9/academy.html',encoding='utf-8').read()
@@ -26,19 +25,24 @@ jobs:
           PY
           )
           URL='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/submit-lead'
-          BODY='{"type":"masterclass","name":"Diagnostic Test","email":"diag-live-20260914@example.com"}'
-          echo '--- POST RESPONSE ---'
-          curl -sS -D headers.txt -o body.txt -w 'HTTP_STATUS=%{http_code}\n' -X POST "$URL" \
-            -H 'Content-Type: application/json' \
-            -H "apikey: $KEY" \
-            -H 'Origin: https://www.getassistara.com' \
-            --data "$BODY"
-          echo '--- HEADERS ---'
-          cat headers.txt
-          echo '--- BODY ---'
-          cat body.txt
-          echo
-          echo '--- PREFLIGHT ---'
+          call_form(){
+            label="$1"
+            body="$2"
+            echo "=== $label ==="
+            code=$(curl -sS -o response.txt -w '%{http_code}' -X POST "$URL" \
+              -H 'Content-Type: application/json' \
+              -H "apikey: $KEY" \
+              -H 'Origin: https://www.getassistara.com' \
+              --data "$body")
+            echo "HTTP_STATUS=$code"
+            cat response.txt
+            echo
+            test "$code" = "200"
+          }
+          call_form 'MASTERCLASS' '{"type":"masterclass","name":"Diagnostic Test","email":"diag-live-20260914@example.com"}'
+          call_form 'B2B' '{"type":"b2b","name":"Diagnostic B2B","email":"diag-b2b-20260914@example.com","company":"Diagnostic Co","time_thieves":"Inbox and admin","support_level":"10 hours"}'
+          call_form 'ACADEMY' '{"type":"academy","name":"Diagnostic Academy","email":"diag-academy-20260914@example.com","current_situation":"Employed","why_remote_work":"Remote career","what_tried":"Applications","biggest_obstacle":"Direction","remote_work_interest":"Virtual assistant","weekly_commitment":"Yes","payment_readiness":"Yes"}'
+          echo '=== PREFLIGHT ==='
           curl -sS -i -X OPTIONS "$URL" \
             -H 'Origin: https://www.getassistara.com' \
             -H 'Access-Control-Request-Method: POST' \
