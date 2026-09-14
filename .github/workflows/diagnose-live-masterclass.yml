@@ -1,0 +1,45 @@
+name: Diagnose live masterclass endpoint
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-live-masterclass.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Call exact endpoint used by v9
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE='assistara-local-v9/academy.html'
+          KEY=$(python - <<'PY'
+          import re
+          s=open('assistara-local-v9/academy.html',encoding='utf-8').read()
+          m=re.search(r"'apikey':'([^']+)'",s)
+          if not m:
+              raise SystemExit('apikey not found in v9 academy.html')
+          print(m.group(1))
+          PY
+          )
+          URL='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/submit-lead'
+          BODY='{"type":"masterclass","name":"Diagnostic Test","email":"diag-live-20260914@example.com"}'
+          echo '--- POST RESPONSE ---'
+          curl -sS -D headers.txt -o body.txt -w 'HTTP_STATUS=%{http_code}\n' -X POST "$URL" \
+            -H 'Content-Type: application/json' \
+            -H "apikey: $KEY" \
+            -H 'Origin: https://www.getassistara.com' \
+            --data "$BODY"
+          echo '--- HEADERS ---'
+          cat headers.txt
+          echo '--- BODY ---'
+          cat body.txt
+          echo
+          echo '--- PREFLIGHT ---'
+          curl -sS -i -X OPTIONS "$URL" \
+            -H 'Origin: https://www.getassistara.com' \
+            -H 'Access-Control-Request-Method: POST' \
+            -H 'Access-Control-Request-Headers: content-type,apikey'
