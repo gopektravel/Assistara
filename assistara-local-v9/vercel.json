@@ -10,6 +10,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "login.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "academy-apply.html",
       "use": "@vercel/static"
     },
@@ -74,6 +78,14 @@
     {
       "src": "/academy/apply/",
       "dest": "/academy-apply.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/login.html"
     },
     {
       "src": "/academy",
