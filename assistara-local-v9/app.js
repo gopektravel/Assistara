@@ -56,7 +56,7 @@ if(window.matchMedia('(max-width:760px)').matches){
   if(heroSub)heroSub.textContent='Delegate the repeatable work. Keep your time for what moves the business forward.';
 }
 
-const LEAD_ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form';
+const LEAD_ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form-proxy';
 const form=document.getElementById('leadForm');
 const success=document.getElementById('successMessage');
 if(form&&success){
