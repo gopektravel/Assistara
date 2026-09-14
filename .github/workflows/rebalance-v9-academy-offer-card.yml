@@ -1,0 +1,35 @@
+name: Rebalance v9 Academy offer card
+on:
+  push:
+    paths:
+      - '.github/workflows/rebalance-v9-academy-offer-card.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore balanced card and add conversion cues
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          old = subprocess.check_output(['git','show','0ae88acfe3eae3a54efa09230c62e975e3e156f5:assistara-local-v9/academy.html'], text=True)
+          old = old.replace('<p class="price-sub">Founding Cohort price · payment only after acceptance</p>', '<p class="price-sub">Founding Cohort price</p>')
+          old = old.replace('<p class="future-price"><span class="old-price"><s>₱14,900</s></span> Planned standard price after the founding cohort.</p>', '')
+          old = old.replace('<a class="btn btn-yellow full" href="/academy/apply">Apply now →</a>', '<p class="apply-free">Apply for free <span>· Pay only if accepted</span></p><a class="btn btn-yellow full" href="/academy/apply">Apply now →</a>')
+          old = old.replace('.future-price{font-size:15px;color:#ddd;margin:0 0 26px}', '.future-price{font-size:15px;color:#ddd;margin:0 0 26px}.apply-free{margin:8px 0 12px;color:#fff;font-size:13px;font-weight:800;text-align:center}.apply-free span{color:#aaa;font-weight:600}')
+          old = old.replace('<p class="checkout-note"><strong>Only 15 spots.</strong> Once they’re filled, applications close.</p>', '<p class="checkout-note"><strong>Only 15 spots.</strong> Applications close once they’re filled.</p>')
+          Path('assistara-local-v9/academy.html').write_text(old)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Rebalance v9 Academy offer card"
+          git push
