@@ -56,7 +56,7 @@ if(window.matchMedia('(max-width:760px)').matches){
   if(heroSub)heroSub.textContent='Delegate the repeatable work. Keep your time for what moves the business forward.';
 }
 
-const LEAD_ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/submit-lead';
+const LEAD_ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form';
 const form=document.getElementById('leadForm');
 const success=document.getElementById('successMessage');
 if(form&&success){
@@ -77,8 +77,9 @@ if(form&&success){
     button.textContent='Sending…';button.disabled=true;
     success.hidden=true;success.style.setProperty('display','none','important');
     try{
-      const response=await fetch(LEAD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E'},body:JSON.stringify({type:'b2b',name:fd.get('name')||'',email:fd.get('email')||'',company:fd.get('company')||'',time_thieves:fd.get('tasks')||'',support_level:fd.get('hours')||'Not sure yet'})});
-      if(!response.ok)throw new Error('Submission failed');
+      const response=await fetch(LEAD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'b2b',name:fd.get('name')||'',email:fd.get('email')||'',company:fd.get('company')||'',time_thieves:fd.get('tasks')||'',support_level:fd.get('hours')||'Not sure yet'})});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok||!result.ok||!result.emailSent)throw new Error('Submission or email delivery failed');
       button.textContent='Request sent ✓';
       success.hidden=false;success.style.setProperty('display','flex','important');
       form.reset();success.scrollIntoView({behavior:'smooth',block:'nearest'});
