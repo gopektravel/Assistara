@@ -1,0 +1,39 @@
+name: Refine Academy scarcity cue
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/premium-scarcity-cue.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine v9 scarcity styling
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('assistara-local-v9/academy.html')
+          s = p.read_text()
+          old_css = '.checkout-note{font-size:17px;color:#fff;text-align:center;margin:16px 0 0;font-weight:900;letter-spacing:.01em}.checkout-note strong{color:var(--yellow);font-size:20px}'
+          new_css = '.checkout-note{display:flex;align-items:center;justify-content:center;gap:9px;margin:14px 0 0;padding:10px 14px;border:1px solid #353535;border-radius:14px;background:#202020;color:#bdbdbd;font-size:12px;line-height:1.35;font-weight:600;text-align:center}.checkout-note:before{content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 4px rgba(255,213,31,.12)}.checkout-note strong{color:#fff;font-size:13px;font-weight:900}'
+          if old_css not in s:
+              raise SystemExit('Expected current scarcity CSS not found')
+          s = s.replace(old_css, new_css)
+          old = '<p class="checkout-note"><strong>Only 15 spots.</strong> Once they’re filled, applications close.</p>'
+          new = '<p class="checkout-note"><strong>Only 15 spots.</strong> Applications close once they’re filled.</p>'
+          if old not in s:
+              raise SystemExit('Expected scarcity text not found')
+          s = s.replace(old, new)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Refine v9 Academy scarcity cue"
+          git push
