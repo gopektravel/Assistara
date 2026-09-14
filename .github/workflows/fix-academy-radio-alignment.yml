@@ -1,0 +1,38 @@
+name: Fix Academy radio alignment
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/fix-academy-radio-alignment.yml']
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Fix radio controls in both application copies
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in ['academy-apply.html','assistara-local-v9/academy-apply.html']:
+              p=Path(name)
+              if not p.exists():
+                  continue
+              s=p.read_text()
+              old='.choice input{margin-top:3px}'
+              new='.choice input{width:18px;height:18px;min-width:18px;flex:0 0 18px;margin:2px 0 0;padding:0;border:0;border-radius:50%;box-shadow:none;accent-color:#171717}'
+              if old in s:
+                  s=s.replace(old,new)
+              elif new not in s:
+                  s=s.replace('.choice span{line-height:1.45}',new+'.choice span{line-height:1.45}')
+              p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add academy-apply.html assistara-local-v9/academy-apply.html
+          git diff --cached --quiet || git commit -m "Fix Academy application radio alignment"
+          git push
