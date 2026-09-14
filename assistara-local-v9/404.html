@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,follow" />
+  <title>404 | Assistara</title>
+  <link rel="icon" type="image/svg+xml" href="/assistara-logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#171717;
+      --muted:#696969;
+      --yellow:#ffd82f;
+      --paper:#fffdf7;
+      --line:#e9e5dc;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:"DM Sans",sans-serif;background:var(--paper);color:var(--ink)}
+    body{min-height:100vh;display:flex;flex-direction:column}
+    header{width:min(1180px,calc(100% - 40px));margin:0 auto;padding:28px 0}
+    header img{width:150px;height:36px;object-fit:contain;object-position:left center}
+    main{flex:1;display:grid;place-items:center;padding:48px 20px 90px}
+    .wrap{width:min(760px,100%);text-align:center}
+    .code{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 4px rgba(255,216,47,.18)}
+    h1{font-family:"Manrope",sans-serif;font-size:clamp(62px,14vw,132px);line-height:.86;letter-spacing:-.07em;margin:28px 0 24px}
+    h1 span{display:block;font-size:clamp(30px,6vw,54px);letter-spacing:-.05em;line-height:1.02;margin-top:18px}
+    .lead{font-size:clamp(17px,2.3vw,21px);line-height:1.55;color:var(--muted);max-width:610px;margin:0 auto}
+    .egg{margin:30px auto 0;max-width:560px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px 22px;box-shadow:0 14px 40px rgba(23,23,23,.06)}
+    .egg strong{display:block;font-size:16px;margin-bottom:5px}
+    .egg p{margin:0;color:var(--muted);line-height:1.5}
+    .actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:30px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-weight:800;border-radius:13px;padding:14px 20px;transition:transform .16s ease,box-shadow .16s ease}
+    .btn:hover{transform:translateY(-2px)}
+    .primary{background:var(--ink);color:#fff;box-shadow:0 8px 24px rgba(23,23,23,.13)}
+    .secondary{background:var(--yellow);color:var(--ink)}
+    .tiny{margin-top:26px;font-size:12px;color:#9a968c}
+    @media(max-width:560px){header{width:min(100% - 28px,1180px);padding-top:20px}.egg{padding:17px}.actions{flex-direction:column}.btn{width:100%}}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" aria-label="Assistara home"><img src="/assistara-logo.svg" alt="Assistara" /></a>
+  </header>
+
+  <main>
+    <section class="wrap" aria-labelledby="not-found-title">
+      <div class="code"><span class="dot"></span> Page not found</div>
+      <h1 id="not-found-title">404<span>This page clocked out early.</span></h1>
+      <p class="lead">We looked everywhere. The page is gone, the link is confused, and nobody added it to the task tracker.</p>
+
+      <div class="egg">
+        <strong>Official investigation:</strong>
+        <p>Zyra checked. Kia checked. Kia is now blaming Zyra. The page is still missing.</p>
+      </div>
+
+      <div class="actions">
+        <a class="btn primary" href="/">Take me home →</a>
+        <a class="btn secondary" href="/academy">Go to Academy</a>
+      </div>
+      <p class="tiny">If you found this page on purpose, congratulations. You found the Easter egg.</p>
+    </section>
+  </main>
+</body>
+</html>
