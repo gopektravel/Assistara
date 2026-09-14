@@ -1,12 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  { auth: { persistSession: false, autoRefreshToken: false } },
-);
-
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Assistara <forms@getassistara.com>";
 const NOTIFICATION_EMAIL = Deno.env.get("NOTIFICATION_EMAIL") || "notifications@getassistara.com";
@@ -52,6 +47,25 @@ function clean(value: unknown, max = 5000) {
 
 function validEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
+}
+
+async function insertSubmission(table: string, row: Record<string, unknown>) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=id`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_SERVICE_ROLE_KEY,
+      "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "Prefer": "return=representation",
+    },
+    body: JSON.stringify(row),
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !Array.isArray(result) || !result[0]?.id) {
+    console.error(`PostgREST ${table} insert failed`, response.status, result);
+    throw new Error("Database write failed");
+  }
+  return String(result[0].id);
 }
 
 function escapeHtml(value: string) {
@@ -228,17 +242,16 @@ Deno.serve(async (req: Request) => {
       const company = clean(body.company, 300);
       const timeThieves = clean(body.time_thieves, 5000);
       const supportLevel = clean(body.support_level, 300);
-      const { data, error } = await supabase.from("b2b_leads").insert({
+      const id = await insertSubmission("b2b_leads", {
         name,
         email,
         company: company || null,
         time_thieves: timeThieves || null,
         support_level: supportLevel || null,
         source: "website_b2b_form",
-      }).select("id").single();
-      if (error) throw error;
+      });
       submission = {
-        id: data.id,
+        id,
         type,
         name,
         email,
@@ -246,15 +259,14 @@ Deno.serve(async (req: Request) => {
       };
     } else if (type === "masterclass") {
       const phone = clean(body.phone, 100);
-      const { data, error } = await supabase.from("masterclass_signups").insert({
+      const id = await insertSubmission("masterclass_signups", {
         name: name || null,
         email,
         phone: phone || null,
         source: "website_masterclass_form",
         status: "registered",
-      }).select("id").single();
-      if (error) throw error;
-      submission = { id: data.id, type, name, email, details: [["Phone", phone]] };
+      });
+      submission = { id, type, name, email, details: [["Phone", phone]] };
     } else if (type === "academy_application") {
       if (!name) return new Response(JSON.stringify({ ok: false, error: "Name required" }), { status: 400, headers });
       const currentSituation = clean(body.current_situation, 1000);
@@ -264,7 +276,7 @@ Deno.serve(async (req: Request) => {
       const remoteWorkInterest = clean(body.remote_work_interest, 1000);
       const weeklyCommitment = clean(body.weekly_commitment, 500);
       const paymentReadiness = clean(body.payment_readiness, 500);
-      const { data, error } = await supabase.from("academy_applications").insert({
+      const id = await insertSubmission("academy_applications", {
         name,
         email,
         current_situation: currentSituation || null,
@@ -275,10 +287,9 @@ Deno.serve(async (req: Request) => {
         weekly_commitment: weeklyCommitment || null,
         payment_readiness: paymentReadiness || null,
         source: "website_academy_application",
-      }).select("id").single();
-      if (error) throw error;
+      });
       submission = {
-        id: data.id,
+        id,
         type,
         name,
         email,
