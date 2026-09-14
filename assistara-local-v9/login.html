@@ -16,7 +16,7 @@
 .header{padding:18px 0}.nav{min-height:64px;background:#1b1b1b;color:#fff;border-radius:22px;padding:10px 12px 10px 18px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:10px;font:800 19px/1 Manrope}.brand img{width:36px;height:36px}.back{background:#fff;color:#171717;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:800}
 main{min-height:calc(100vh - 100px);display:grid;place-items:center;padding:34px 0 80px}.auth-layout{width:min(960px,100%);display:grid;grid-template-columns:.9fr 1.1fr;overflow:hidden;border-radius:34px;box-shadow:0 34px 90px rgba(69,50,0,.18)}
 .auth-story{background:#171717;color:#fff;padding:54px 46px;display:flex;flex-direction:column;justify-content:space-between;min-height:590px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.13em;color:#a5a5a5}.auth-story h1{font:800 clamp(42px,5vw,64px)/.98 Manrope;letter-spacing:-.055em;margin:18px 0}.auth-story h1 span{color:var(--yellow)}.auth-story p{color:#b9b9b9;font-size:17px;line-height:1.6}.story-note{border-top:1px solid #353535;padding-top:24px;color:#8d8d8d;font-size:13px;line-height:1.5}
-.auth-card{background:var(--cream);padding:46px;min-height:590px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:#ece9e1;border-radius:999px;padding:5px;margin-bottom:34px}.tab{border:0;background:transparent;border-radius:999px;padding:12px 16px;font:800 14px/1 "DM Sans";cursor:pointer;color:#716b63}.tab.active{background:#171717;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.auth-card{background:var(--cream);padding:46px;min-height:590px}
 .auth-card h2{font:800 34px/1.06 Manrope;letter-spacing:-.04em;margin:0 0 10px}.intro{color:var(--muted);line-height:1.55;margin:0 0 28px}.form{display:grid;gap:16px}.field{display:grid;gap:8px}.field span{font-size:13px;font-weight:800}.field input{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;padding:16px;font:500 16px/1.2 "DM Sans";outline:none}.field input:focus{border-color:#bea000;box-shadow:0 0 0 3px rgba(255,213,31,.25)}
 .submit{border:0;border-radius:999px;background:var(--yellow);color:#171717;padding:17px 22px;font:800 15px/1 "DM Sans";cursor:pointer;margin-top:4px;transition:.2s}.submit:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(126,98,0,.18)}.submit:disabled{opacity:.65;cursor:wait;transform:none}
 .message{display:none;border-radius:13px;padding:13px 15px;font-size:13px;font-weight:700;line-height:1.45}.message.show{display:block}.message.success{background:var(--green);color:var(--green-ink);border:1px solid #87d6a7}.message.error{background:var(--red);color:var(--red-ink);border:1px solid #f0a0a0}.fine{color:#89837b;font-size:12px;line-height:1.5;text-align:center;margin:4px 0 0}
@@ -29,20 +29,19 @@ main{min-height:calc(100vh - 100px);display:grid;place-items:center;padding:34px
 <main class="shell">
 <section class="auth-layout">
 <div class="auth-story">
-<div><div class="eyebrow">YOUR ACADEMY ACCOUNT</div><h1>Your next chapter<br><span>starts here.</span></h1><p>Access your Assistara Academy account or create one to begin your path toward your first client.</p></div>
-<div class="story-note">One secure account for your Academy access, progress and future student resources.</div>
+<div><div class="eyebrow">YOUR ACADEMY ACCOUNT</div><h1>Your next chapter<br><span>starts here.</span></h1><p>Log in to access your lessons, progress, assignments and Academy resources.</p></div>
+<div class="story-note">Build skills. Create proof. Get your first client.</div>
 </div>
 <div class="auth-card">
 <div id="authForms">
-<div class="tabs" role="tablist"><button class="tab active" id="loginTab" type="button" role="tab" aria-selected="true">Log in</button><button class="tab" id="signupTab" type="button" role="tab" aria-selected="false">Create account</button></div>
-<h2 id="formTitle">Welcome back.</h2>
-<p class="intro" id="formIntro">Log in with the email and password connected to your Academy account.</p>
+<h2>Welcome back.</h2>
+<p class="intro">Log in with the email and password connected to your Academy account.</p>
 <form class="form" id="authForm">
 <label class="field"><span>Email address</span><input id="email" type="email" autocomplete="email" placeholder="you@email.com" required></label>
 <label class="field"><span>Password</span><input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required></label>
 <button class="submit" id="submitButton" type="submit">Log in</button>
 <div class="message" id="message" role="status" aria-live="polite"></div>
-<p class="fine" id="finePrint">Secure login powered by Supabase.</p>
+<p class="fine">Secure Academy login.</p>
 </form>
 </div>
 <div class="account" id="account">
@@ -59,37 +58,15 @@ main{min-height:calc(100vh - 100px);display:grid;place-items:center;padding:34px
 (() => {
   const client = supabase.createClient("https://jhmmwleejgidrxavzdlq.supabase.co", "sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E");
   const form = document.getElementById("authForm");
-  const loginTab = document.getElementById("loginTab");
-  const signupTab = document.getElementById("signupTab");
-  const title = document.getElementById("formTitle");
-  const intro = document.getElementById("formIntro");
-  const password = document.getElementById("password");
   const button = document.getElementById("submitButton");
   const message = document.getElementById("message");
-  const fine = document.getElementById("finePrint");
   const forms = document.getElementById("authForms");
   const account = document.getElementById("account");
   const accountEmail = document.getElementById("accountEmail");
-  let mode = "login";
 
   function showMessage(text, type) {
     message.textContent = text;
     message.className = "message show " + type;
-  }
-
-  function setMode(nextMode) {
-    mode = nextMode;
-    const signingUp = mode === "signup";
-    loginTab.classList.toggle("active", !signingUp);
-    signupTab.classList.toggle("active", signingUp);
-    loginTab.setAttribute("aria-selected", String(!signingUp));
-    signupTab.setAttribute("aria-selected", String(signingUp));
-    title.textContent = signingUp ? "Create your account." : "Welcome back.";
-    intro.textContent = signingUp ? "Use your email and create a secure password." : "Log in with the email and password connected to your Academy account.";
-    button.textContent = signingUp ? "Create account" : "Log in";
-    fine.textContent = signingUp ? "You may need to confirm your email before logging in." : "Secure login powered by Supabase.";
-    password.autocomplete = signingUp ? "new-password" : "current-password";
-    message.className = "message";
   }
 
   function showAccount(user) {
@@ -98,38 +75,20 @@ main{min-height:calc(100vh - 100px);display:grid;place-items:center;padding:34px
     accountEmail.textContent = user.email || "";
   }
 
-  loginTab.addEventListener("click", () => setMode("login"));
-  signupTab.addEventListener("click", () => setMode("signup"));
-
   form.addEventListener("submit", async event => {
     event.preventDefault();
     message.className = "message";
     button.disabled = true;
+    button.textContent = "Logging in...";
     const email = document.getElementById("email").value.trim();
-    const userPassword = password.value;
-    button.textContent = mode === "signup" ? "Creating account..." : "Logging in...";
+    const password = document.getElementById("password").value;
     try {
-      if (mode === "signup") {
-        const { data, error } = await client.auth.signUp({
-          email,
-          password: userPassword,
-          options: { emailRedirectTo: window.location.origin + "/login" }
-        });
-        if (error) throw error;
-        if (data.session) {
-          showAccount(data.user);
-        } else {
-          showMessage("Account created. Check your email to confirm your account, then log in.", "success");
-          button.textContent = "Create account";
-        }
-      } else {
-        const { data, error } = await client.auth.signInWithPassword({ email, password: userPassword });
-        if (error) throw error;
-        showAccount(data.user);
-      }
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      showAccount(data.user);
     } catch (error) {
-      showMessage(error.message || "Something went wrong. Please try again.", "error");
-      button.textContent = mode === "signup" ? "Create account" : "Log in";
+      showMessage(error.message || "Unable to log in. Check your details and try again.", "error");
+      button.textContent = "Log in";
     } finally {
       button.disabled = false;
     }
