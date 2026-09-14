@@ -1,0 +1,49 @@
+name: Patch v9 Supabase form key
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-v9-supabase-key.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch v9 form requests
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          key = "sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E"
+          files = [
+              Path('assistara-local-v9/academy.html'),
+              Path('assistara-local-v9/academy-apply.html'),
+              Path('assistara-local-v9/app.js'),
+          ]
+          old = "headers:{'Content-Type':'application/json'}"
+          new = f"headers:{{'Content-Type':'application/json','apikey':'{key}'}}"
+          changed = 0
+          for p in files:
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  print(f'No matching header in {p}')
+                  continue
+              text2 = text.replace(old, new)
+              p.write_text(text2, encoding='utf-8')
+              n = text.count(old)
+              changed += n
+              print(f'Patched {p}: {n} request(s)')
+          if changed < 3:
+              raise SystemExit(f'Expected at least 3 patched requests, got {changed}')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "Assistara Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add assistara-local-v9/academy.html assistara-local-v9/academy-apply.html assistara-local-v9/app.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix v9 Supabase form authentication"
+          git push
