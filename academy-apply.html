@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="description" content="Apply for the first Assistara Academy Founding Cohort. Up to 15 applicants will be selected."/>
+<title>Apply | Assistara Academy Founding Cohort</title>
+<link rel="icon" type="image/svg+xml" href="/assistara-logo.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#151515;--cream:#fbfaf6;--yellow:#ffd51f;--muted:#6a655e;--line:#dfdcd5}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:"DM Sans",Arial,sans-serif}.shell{width:min(920px,calc(100% - 28px));margin:auto}.top{padding:22px 0}.brand{display:inline-flex;align-items:center;gap:10px;color:#111;text-decoration:none;font:800 20px/1 Manrope}.brand img{width:38px;height:38px}.hero{padding:48px 0 26px;text-align:center}.eyebrow{display:inline-flex;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:11px;font-weight:800;letter-spacing:.1em}.hero h1{font:800 clamp(44px,7vw,76px)/.98 Manrope;letter-spacing:-.055em;margin:18px auto 16px;max-width:850px}.hero p{font-size:19px;line-height:1.6;color:var(--muted);max-width:700px;margin:0 auto}.facts{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}.fact{background:#171717;color:#fff;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:800}.fact strong{color:var(--yellow)}.form-card{margin:26px auto 70px;background:#fff;border:1px solid var(--line);border-radius:30px;padding:34px;box-shadow:0 24px 70px rgba(0,0,0,.08)}.intro{background:#fff6bf;border-radius:20px;padding:19px 20px;margin-bottom:27px;line-height:1.55}.intro strong{display:block;margin-bottom:4px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.full{grid-column:1/-1}.field{display:grid;gap:8px}.field label,.label{font-size:13px;font-weight:800}.field input,.field textarea,.field select{width:100%;border:1px solid #d7d3cc;border-radius:14px;background:#fff;padding:14px 15px;font:500 15px/1.4 "DM Sans",sans-serif;color:#171717;outline:none}.field textarea{min-height:120px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:#171717;box-shadow:0 0 0 3px rgba(255,213,31,.3)}.choice-wrap{display:grid;gap:10px}.choice{display:flex;gap:11px;align-items:flex-start;border:1px solid #ddd9d2;border-radius:14px;padding:14px;cursor:pointer}.choice input{margin-top:3px}.choice span{line-height:1.45}.price-note{background:#171717;color:#fff;border-radius:22px;padding:22px;margin:26px 0}.price-note small{display:block;color:#aaa;font-weight:800;letter-spacing:.08em;margin-bottom:6px}.price-note strong{font:800 34px/1 Manrope;color:var(--yellow)}.price-note p{margin:9px 0 0;color:#ccc;line-height:1.5;font-size:14px}.submit{width:100%;border:0;border-radius:999px;background:var(--yellow);color:#111;padding:18px 24px;font:800 16px/1 "DM Sans",sans-serif;cursor:pointer}.submit:disabled{opacity:.6;cursor:wait}.fine{font-size:12px;color:#888;text-align:center;line-height:1.5;margin:12px 0 0}.success{display:none;text-align:center;padding:42px 20px}.success.show{display:block}.success .tick{width:56px;height:56px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:var(--yellow);font-size:26px;font-weight:900}.success h2{font:800 36px/1.05 Manrope;margin:0 0 10px}.success p{color:var(--muted);line-height:1.6;max-width:600px;margin:0 auto}.back{display:inline-block;margin-top:24px;color:#111;font-weight:800}@media(max-width:650px){.hero{padding-top:28px}.hero h1{font-size:44px}.hero p{font-size:16px}.form-card{padding:20px;border-radius:24px}.grid{grid-template-columns:1fr}.full{grid-column:auto}.facts{gap:7px}.fact{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="top shell"><a class="brand" href="/academy"><img src="/assistara-logo.svg" alt=""><span>Assistara Academy</span></a></div>
+<main class="shell">
+<section class="hero">
+<div class="eyebrow">FOUNDING COHORT APPLICATION</div>
+<h1>Apply for one of the first 15 spots.</h1>
+<p>We’re keeping the first Assistara Academy cohort intentionally small. We’re looking for beginners who are serious about building a remote career and willing to do the work.</p>
+<div class="facts"><div class="fact"><strong>15</strong> spots maximum</div><div class="fact"><strong>₱6,900</strong> if accepted</div><div class="fact">Payment only after acceptance</div></div>
+</section>
+<section class="form-card">
+<div id="applicationFormWrap">
+<div class="intro"><strong>How it works</strong>Submit your application. We’ll review it for fit. If you’re selected, you’ll receive an acceptance email with your private enrollment and payment link. Applying does not charge you.</div>
+<form id="applicationForm">
+<div class="grid">
+<div class="field"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" required></div>
+<div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+<div class="field full"><label for="situation">What best describes your current situation?</label><select id="situation" name="situation" required><option value="">Choose one</option><option>Employed and looking to transition to remote work</option><option>Currently unemployed / between jobs</option><option>Student / recent graduate</option><option>Freelancing but struggling to get consistent clients</option><option>Already working remotely and want better clients</option><option>Other</option></select></div>
+<div class="field full"><label for="goal">Why do you want to start working remotely?</label><textarea id="goal" name="goal" placeholder="Tell us what you want to change and what remote work would make possible for you." required></textarea></div>
+<div class="field full"><label for="tried">What have you already tried to get a remote job or client?</label><textarea id="tried" name="tried" placeholder="Courses, applications, Upwork, outreach, nothing yet — be honest." required></textarea></div>
+<div class="field full"><label for="obstacle">What is your biggest obstacle right now?</label><textarea id="obstacle" name="obstacle" placeholder="What keeps you from getting your first remote opportunity?" required></textarea></div>
+<div class="field full"><label for="direction">What type of remote work interests you most?</label><input id="direction" name="direction" placeholder="e.g. Virtual assistant, admin, social media, customer support, not sure yet" required></div>
+<div class="field full"><span class="label">Can you commit consistent time every week to complete the Academy and take action?</span><div class="choice-wrap"><label class="choice"><input type="radio" name="commitment" value="Yes" required><span><strong>Yes.</strong> I’m ready to make this a priority.</span></label><label class="choice"><input type="radio" name="commitment" value="Not sure"><span>I’m interested, but I’m not sure I can commit consistently yet.</span></label></div></div>
+</div>
+<div class="price-note"><small>FOUNDING COHORT INVESTMENT</small><strong>₱6,900</strong><p>You do not pay to apply. If selected, you’ll receive an invitation to enroll at the Founding Cohort price.</p></div>
+<div class="field"><span class="label">If selected, would you be ready to join at ₱6,900?</span><div class="choice-wrap"><label class="choice"><input type="radio" name="paymentReadiness" value="Yes, ready at ₱6,900" required><span><strong>Yes, I’m ready.</strong></span></label><label class="choice"><input type="radio" name="paymentReadiness" value="Need payment plan"><span>I’m serious about joining, but I would need a payment plan.</span></label></div></div>
+<div style="height:22px"></div>
+<button class="submit" type="submit">Submit my application →</button>
+<p class="fine">Submitting an application does not guarantee acceptance or charge you. Up to 15 applicants will be selected for the Founding Cohort.</p>
+</form>
+</div>
+<div class="success" id="success"><div class="tick">✓</div><h2>Application received.</h2><p>We’ll review your application for the Assistara Academy Founding Cohort. If you’re selected, we’ll contact you with your acceptance and private enrollment link.</p><a class="back" href="/academy">← Back to Assistara Academy</a></div>
+</section>
+</main>
+<script>
+(()=>{const form=document.getElementById('applicationForm'),wrap=document.getElementById('applicationFormWrap'),success=document.getElementById('success');if(!form)return;form.addEventListener('submit',async e=>{e.preventDefault();const button=form.querySelector('button[type="submit"]');const original=button.textContent;button.disabled=true;button.textContent='Submitting…';const fd=new FormData(form);const payload=new URLSearchParams();payload.set('name',fd.get('name')||'');payload.set('email',fd.get('email')||'');payload.set('company','Assistara Academy — Founding Cohort Application');payload.set('tasks',[`Current situation: ${fd.get('situation')||''}`,`Remote-work goal: ${fd.get('goal')||''}`,`What they tried: ${fd.get('tried')||''}`,`Biggest obstacle: ${fd.get('obstacle')||''}`,`Interested direction: ${fd.get('direction')||''}`].join('\n\n'));payload.set('support',[`Weekly commitment: ${fd.get('commitment')||''}`,`Payment readiness: ${fd.get('paymentReadiness')||''}`,`Founding price shown: PHP 6,900`,`Cohort: Founding Cohort — max 15 spots`].join('\n'));try{await fetch('https://script.google.com/macros/s/AKfycbzrCdpuv2z7BGYEIKOJjDx6V6pzOatdtnQ_xFl6fH8NITuJTmbPuNQtI7gux1EU7-rl/exec',{method:'POST',mode:'no-cors',body:payload});wrap.style.display='none';success.classList.add('show');window.scrollTo({top:0,behavior:'smooth'})}catch(err){button.disabled=false;button.textContent=original;alert('Something went wrong. Please try again.') }})})();
+</script>
+</body>
+</html>
