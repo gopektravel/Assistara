@@ -83,7 +83,7 @@ function firstName(name: string) {
 
 function emailFrame(preview: string, heading: string, content: string, button?: { label: string; href: string }) {
   const action = button
-    ? `<tr><td style="padding:8px 32px 32px"><a href="${button.href}" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-weight:800;padding:14px 22px;border-radius:999px">${button.label}</a></td></tr>`
+    ? `<tr><td style="padding:8px 32px 32px"><a href="${button.href}" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;line-height:1;padding:15px 21px;border:1px solid #e7bd00;border-radius:999px">${button.label}</a></td></tr>`
     : "";
 
   return `<!doctype html>
@@ -94,7 +94,7 @@ function emailFrame(preview: string, heading: string, content: string, button?: 
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f3ef;padding:28px 12px">
     <tr><td align="center">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2dfd7">
-        <tr><td style="background:#171717;color:#ffffff;padding:24px 32px;font-size:20px;font-weight:800"><span style="display:inline-block;background:#ffd51f;color:#151515;border-radius:10px;padding:6px 9px;margin-right:10px">A</span>Assistara</td></tr>
+        <tr><td style="background:#171717;color:#ffffff;padding:20px 32px"><table role="presentation" cellspacing="0" cellpadding="0"><tr><td style="padding-right:12px;vertical-align:middle"><img src="https://www.getassistara.com/assistara-logo.svg" width="42" height="42" alt="" style="display:block;width:42px;height:42px;border:0"></td><td style="vertical-align:middle;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:23px;font-weight:700;line-height:1">Assistara</td></tr></table></td></tr>
         <tr><td style="padding:34px 32px 12px"><h1 style="margin:0;font-size:32px;line-height:1.12;letter-spacing:-0.6px">${escapeHtml(heading)}</h1></td></tr>
         <tr><td style="padding:0 32px 20px;font-size:16px;line-height:1.65;color:#4f4b45">${content}</td></tr>
         ${action}
@@ -139,9 +139,9 @@ function confirmationEmail(submission: StoredSubmission) {
     subject: "We received your request | Assistara",
     replyTo: B2B_REPLY_TO,
     html: emailFrame(
-      "The Assistara team received your request.",
-      "Your request has been received.",
-      `${hello}<p style="margin:0 0 16px">Thank you for telling us where your business needs support. Your request is safely with the Assistara team.</p><p style="margin:0 0 16px"><strong>What happens next?</strong></p><p style="margin:0">We will review your needs, identify the right type of support and contact you at this email address.</p>`,
+      "The Assistara team received your business support request.",
+      "We received your business request.",
+      `${hello}<p style="margin:0 0 16px">Thank you for showing us where your business needs support. Your request is safely with the Assistara team.</p><p style="margin:0 0 16px"><strong>What happens next?</strong></p><p style="margin:0">We will review what your business needs, identify the right type of support and contact you at this email address.</p>`,
       { label: "Visit Assistara", href: "https://www.getassistara.com" },
     ),
   };
