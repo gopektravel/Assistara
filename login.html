@@ -133,7 +133,7 @@ main{min-height:calc(100vh - 100px);display:grid;place-items:center;padding:34px
     if (error) {
       showMessage(message, error.message || "Unable to send the reset email. Please try again.", "error");
     } else {
-      showMessage(message, "Check your inbox. We sent you a secure password reset link.", "success");
+      showMessage(message, "If an Academy account exists for this email, you will receive a secure reset link.", "success");
     }
     forgotButton.disabled = false;
     forgotButton.textContent = "Forgot password?";
