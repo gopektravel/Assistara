@@ -1,0 +1,22 @@
+name: Run Supabase form connection
+on:
+  push:
+    paths:
+      - '.github/workflows/run-connect-supabase-forms.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch forms
+        run: python scripts/connect_supabase_forms.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/app.js assistara-local-v9/academy.html assistara-local-v9/academy-apply.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Route Assistara forms to Supabase"
+          git push
