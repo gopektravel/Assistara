@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Restore application and update Academy offer
         run: |
           python - <<'PY'
@@ -39,4 +41,4 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Restore original Academy application and emphasize 15 spots"
           git push
-# trigger-v2
+# trigger-v3
