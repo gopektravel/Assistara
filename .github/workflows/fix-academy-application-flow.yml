@@ -1,0 +1,64 @@
+name: Fix Academy application flow
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/fix-academy-application-flow.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch Academy flow in both deploy roots
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, shutil
+
+          replacements = {
+            '<h2>Start at the founding price.</h2>':'<h2>Apply for the Founding Cohort.</h2>',
+            '<p>Join the first Assistara Academy cohort at a lower launch price while we build the Academy and Talent Network with our first graduates.</p>':'<p>We’re selecting up to 15 committed beginners for the first Assistara Academy cohort. Apply now. If you’re selected, you’ll receive a private enrollment and payment link.</p>',
+            '<div class="price-badge">FOUNDING PRICE</div>':'<div class="price-badge">FOUNDING COHORT · 15 SPOTS</div>',
+            '<div class="price">₱4,990</div>':'<div class="price">₱6,900</div>',
+            '<p class="price-sub">One-time payment</p>':'<p class="price-sub">Founding Cohort price · payment only after acceptance</p>',
+            '<span class="old-price">Standard price after the founding cohort: ₱7,990.</span>\n<br>\n<strong>Founding members save ₱3,000.</strong>':'<strong>Applications are reviewed for fit and commitment.</strong><br>\nApplying is free and does not charge you.',
+            '<a class="btn btn-yellow full" id="stripeCheckout" href="#checkout">Enroll in Assistara Academy →</a>':'<a class="btn btn-yellow full" href="/academy/apply">Apply for the Founding Cohort →</a>',
+            '<p class="checkout-note">Secure checkout will open through Stripe once the payment link is connected.</p>':'<p class="checkout-note">Up to 15 applicants will be selected. Accepted applicants receive a private enrollment and payment link.</p>',
+            '<span>NOT READY TO ENROLL YET?</span>':'<span>NOT READY TO APPLY YET?</span>'
+          }
+          for name in ['academy.html','assistara-local-v9/academy.html']:
+              p=Path(name)
+              s=p.read_text()
+              for old,new in replacements.items():
+                  s=s.replace(old,new)
+              p.write_text(s)
+
+          # Keep the application page available regardless of which Vercel root directory is configured.
+          src=Path('academy-apply.html')
+          dst=Path('assistara-local-v9/academy-apply.html')
+          dst.write_text(src.read_text())
+
+          for name in ['vercel.json','assistara-local-v9/vercel.json']:
+              p=Path(name)
+              data=json.loads(p.read_text())
+              builds=data.setdefault('builds',[])
+              if not any(b.get('src')=='academy-apply.html' for b in builds):
+                  builds.insert(2, {'src':'academy-apply.html','use':'@vercel/static'})
+              routes=data.setdefault('routes',[])
+              routes=[r for r in routes if r.get('src') not in ['/academy/apply','/academy/apply/']]
+              insert_at=next((i for i,r in enumerate(routes) if r.get('src')=='/academy'),len(routes))
+              routes.insert(insert_at, {'src':'/academy/apply','dest':'/academy-apply.html'})
+              routes.insert(insert_at+1, {'src':'/academy/apply/','dest':'/academy-apply.html'})
+              data['routes']=routes
+              p.write_text(json.dumps(data,indent=2)+"\n")
+          PY
+      - name: Commit patched production sources
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add academy.html academy-apply.html vercel.json assistara-local-v9/academy.html assistara-local-v9/academy-apply.html assistara-local-v9/vercel.json
+          git diff --cached --quiet || git commit -m "Ship Academy founding cohort application flow"
+          git push
