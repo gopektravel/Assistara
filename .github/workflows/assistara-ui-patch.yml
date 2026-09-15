@@ -12,26 +12,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Simplify closing CTA and footer
+      - name: Remove obsolete B2B admin UI
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
-          p=Path('assistara-local-v9/index.html')
+          p=Path('assistara-local-v9/admin.html')
           s=p.read_text(encoding='utf-8')
-          # Keep one visual block only: left-side section copy + a simple CTA, no second card.
-          replacement='''<div class="closing-discovery-cta"><a class="btn btn-dark closing-cta-button" href="https://cal.com/assistara/assistara-discovery-call">Book a Discovery Call <span>→</span></a><span class="closing-cta-note">30 minutes · No obligation</span></div>'''
-          s,n=re.subn(r'<div class="closing-discovery-cta">.*?</div></div></section>',replacement+'</div></section>',s,count=1,flags=re.S)
-          if n!=1: raise SystemExit('Closing CTA block not found safely')
-          # Replace prior injected polish with compact layout. Also tighten the black footer vertically.
-          css='''<style id="closing-cta-polish">.match{grid-template-columns:1fr;gap:30px;max-width:850px}.match-copy{position:static}.closing-discovery-cta{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.closing-cta-button{padding:17px 25px}.closing-cta-note{font-size:13px;font-weight:700;color:#625e59}.assistara-footer-main{padding-top:42px!important;padding-bottom:32px!important}.assistara-footer-bottom{padding-top:18px!important;padding-bottom:0!important}footer{padding-top:0!important;padding-bottom:20px!important}@media(max-width:760px){.match{gap:22px}.closing-discovery-cta{align-items:flex-start;flex-direction:column;gap:12px}.assistara-footer-main{padding-top:34px!important;padding-bottom:26px!important}}</style>'''
-          s=re.sub(r'<style id="closing-cta-polish">.*?</style>',css,s,count=1,flags=re.S)
+          old=s
+          s=s.replace('Manage applicants, students, accounts, webinar reporting and B2B leads.','Manage applicants, students, accounts and webinar reporting.')
+          s=s.replace('<button data-tab="b2b">B2B</button>','')
+          if s==old: raise SystemExit('Expected B2B admin UI not found')
           p.write_text(s,encoding='utf-8')
+          print('Removed visible B2B admin tab and B2B wording')
           PY
       - name: Commit patch
         run: |
           git config user.name "Assistara UI Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/index.html
-          git diff --cached --quiet || git commit -m "Simplify closing CTA and tighten footer"
+          git add assistara-local-v9/admin.html
+          git diff --cached --quiet || git commit -m "Remove obsolete B2B admin tab"
           git push
