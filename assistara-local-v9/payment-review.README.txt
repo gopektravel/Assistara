@@ -1,0 +1,1 @@
+GCash review flow: submit-gcash-payment creates a secure single-use review token and emails Admin. payment-review.html calls review-gcash-payment. The same endpoint is used by Admin quick actions. Database payment_status is the single source of truth: pending, paid, failed.
