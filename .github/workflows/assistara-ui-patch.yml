@@ -1,13 +1,9 @@
 name: Assistara UI patch
-
 on:
   push:
-    paths:
-      - '.github/workflows/assistara-ui-patch.yml'
-
+    paths: ['.github/workflows/assistara-ui-patch.yml']
 permissions:
   contents: write
-
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -16,35 +12,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Replace closing form only
+      - name: Polish closing discovery CTA
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
           p=Path('assistara-local-v9/index.html')
           s=p.read_text(encoding='utf-8')
-          cal='https://cal.com/assistara/assistara-discovery-call'
-          # Keep every section. Replace ONLY the last form on the page (the closing B2B form).
-          forms=list(re.finditer(r'<form\b[^>]*>.*?</form>',s,flags=re.S|re.I))
-          if not forms:
-              raise SystemExit('No form found; refusing to alter any section')
-          m=forms[-1]
-          form=m.group(0)
-          low=form.lower()
-          # Safety: do not touch login/newsletter/search forms.
-          if not any(x in low for x in ['business','company','email','name','match','lead']):
-              raise SystemExit('Last form does not look like B2B form; refusing change')
-          cta=f'''<div class="closing-discovery-cta"><a class="btn btn-yellow" href="{cal}">Book a Discovery Call <span>→</span></a><p>30 minutes · No obligation · Find out what you can take off your plate.</p></div>'''
-          s=s[:m.start()]+cta+s[m.end():]
-          # Existing CTA links should all use Cal.com.
-          s=s.replace('href="#match"',f'href="{cal}"')
+          old='<div class="closing-discovery-cta"><a class="btn btn-yellow" href="https://cal.com/assistara/assistara-discovery-call">Book a Discovery Call <span>→</span></a><p>30 minutes · No obligation · Find out what you can take off your plate.</p></div>'
+          new='''<div class="closing-discovery-cta"><div class="closing-cta-badge"><span></span> 30-MINUTE DISCOVERY CALL</div><h3>Let’s find out what you can<br>stop doing yourself.</h3><p class="closing-cta-copy">Show us what keeps pulling you back into the day-to-day. We’ll help you identify what to delegate and what kind of support would actually make a difference.</p><a class="btn btn-yellow closing-cta-button" href="https://cal.com/assistara/assistara-discovery-call">Book Your Discovery Call <span>→</span></a><div class="closing-cta-meta"><span>✓ No obligation</span><span>✓ Clear next steps</span><span>✓ Built around your business</span></div></div>'''
+          if old not in s: raise SystemExit('Current CTA not found; refusing broad edits')
+          s=s.replace(old,new,1)
+          style='''<style id="closing-cta-polish">.closing-discovery-cta{position:relative;overflow:hidden;background:#171717;color:#fff;border-radius:32px;padding:46px 42px;box-shadow:0 28px 70px rgba(18,18,18,.16);align-self:stretch;display:flex;flex-direction:column;justify-content:center}.closing-discovery-cta:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:#8058ee;filter:blur(90px);opacity:.28;right:-90px;bottom:-110px;pointer-events:none}.closing-cta-badge{position:relative;z-index:1;display:flex;align-items:center;gap:9px;font-size:11px;font-weight:800;letter-spacing:.12em;color:#c9c9c9;margin-bottom:20px}.closing-cta-badge span{width:9px;height:9px;border-radius:50%;background:#ffd51f;box-shadow:0 0 0 5px rgba(255,213,31,.12)}.closing-discovery-cta h3{position:relative;z-index:1;font-size:clamp(30px,3vw,43px);line-height:1.05;letter-spacing:-.04em;margin:0 0 18px}.closing-cta-copy{position:relative;z-index:1;color:#bdbdbd;font-size:16px;line-height:1.65;max-width:560px;margin:0 0 27px}.closing-cta-button{position:relative;z-index:1;width:100%;padding:19px 24px;font-size:16px;box-shadow:0 10px 28px rgba(255,213,31,.18)}.closing-cta-meta{position:relative;z-index:1;display:flex;justify-content:center;gap:17px;flex-wrap:wrap;margin-top:18px;color:#929292;font-size:12px;font-weight:600}@media(max-width:760px){.closing-discovery-cta{padding:32px 24px;border-radius:26px}.closing-discovery-cta h3 br{display:none}.closing-cta-meta{justify-content:flex-start;gap:10px 14px}}</style>'''
+          s=s.replace('</head>',style+'\n</head>',1)
           p.write_text(s,encoding='utf-8')
-          print('SUCCESS: preserved all sections and replaced only final form')
           PY
       - name: Commit patch
         run: |
           git config user.name "Assistara UI Bot"
           git config user.email "actions@users.noreply.github.com"
           git add assistara-local-v9/index.html
-          git diff --cached --quiet || git commit -m "Replace only closing B2B form with discovery CTA"
+          git diff --cached --quiet || git commit -m "Polish closing discovery call CTA"
           git push
