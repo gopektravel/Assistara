@@ -16,33 +16,35 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Wire discovery call CTAs
+      - name: Replace closing form only
         run: |
           python - <<'PY'
           from pathlib import Path
-          p = Path('assistara-local-v9/index.html')
-          s = p.read_text(encoding='utf-8')
-          cal = 'https://cal.com/assistara/assistara-discovery-call'
-          replacements = {
-            'href="#match">Find your virtual assistant →': f'href="{cal}">Book a Discovery Call →',
-            'href="#match">Find my virtual assistant <span>→</span>': f'href="{cal}">Book a Discovery Call <span>→</span>',
-            'href="#match">Start my match →': f'href="{cal}">Book a Discovery Call →',
-            'href="#match">Take care of the rest →': f'href="{cal}">Book a Discovery Call →',
-          }
-          changed = 0
-          for old,new in replacements.items():
-              if old in s:
-                  s = s.replace(old,new)
-                  changed += 1
-          if changed == 0 and cal not in s:
-              raise SystemExit('No expected B2B CTA anchors found')
-          p.write_text(s, encoding='utf-8')
-          print(f'Updated {changed} CTA patterns')
+          import re
+          p=Path('assistara-local-v9/index.html')
+          s=p.read_text(encoding='utf-8')
+          cal='https://cal.com/assistara/assistara-discovery-call'
+          # Keep every section. Replace ONLY the last form on the page (the closing B2B form).
+          forms=list(re.finditer(r'<form\b[^>]*>.*?</form>',s,flags=re.S|re.I))
+          if not forms:
+              raise SystemExit('No form found; refusing to alter any section')
+          m=forms[-1]
+          form=m.group(0)
+          low=form.lower()
+          # Safety: do not touch login/newsletter/search forms.
+          if not any(x in low for x in ['business','company','email','name','match','lead']):
+              raise SystemExit('Last form does not look like B2B form; refusing change')
+          cta=f'''<div class="closing-discovery-cta"><a class="btn btn-yellow" href="{cal}">Book a Discovery Call <span>→</span></a><p>30 minutes · No obligation · Find out what you can take off your plate.</p></div>'''
+          s=s[:m.start()]+cta+s[m.end():]
+          # Existing CTA links should all use Cal.com.
+          s=s.replace('href="#match"',f'href="{cal}"')
+          p.write_text(s,encoding='utf-8')
+          print('SUCCESS: preserved all sections and replaced only final form')
           PY
       - name: Commit patch
         run: |
           git config user.name "Assistara UI Bot"
           git config user.email "actions@users.noreply.github.com"
           git add assistara-local-v9/index.html
-          git diff --cached --quiet || git commit -m "Connect B2B CTAs to Assistara discovery call"
+          git diff --cached --quiet || git commit -m "Replace only closing B2B form with discovery CTA"
           git push
