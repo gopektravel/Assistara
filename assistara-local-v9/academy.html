@@ -37,6 +37,21 @@
   .academy-footer-main{gap:28px;padding:46px 0 34px}.academy-footer-brand .brand{font-size:21px;margin-bottom:16px}.academy-footer-brand .mark{width:38px;height:38px}.academy-footer-brand p{font-size:15px}.academy-footer-links,.academy-footer-contact{gap:11px}.academy-footer-links a{font-size:14px}.academy-footer-cta{width:100%;justify-content:center}
 }
 @media(max-width:390px){.hero h1{font-size:44px}.benefit-grid,.client-steps,.week-grid,.include-grid{grid-template-columns:1fr}.benefit.primary{grid-column:auto}.format-strip{grid-template-columns:1fr}.format-item{min-height:0}.format-item:first-child{grid-column:auto}.format-item:nth-child(3),.format-item:nth-child(5){padding-left:2px;border-left:0}.network-flow{grid-template-columns:1fr}.network-step{font-size:12px}.pass-flow{grid-template-columns:1fr}.pass-step{font-size:10px}}
+
+/* academy-interaction-polish */
+@media (hover:hover) and (pointer:fine){
+  .dream-card,.benefit,.client-step,.network-card,.week,.format-strip,.standard-card,.pass-step,.price-card,.masterclass-return-card{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+  .dream-card:hover,.benefit:hover,.client-step:hover,.network-card:hover,.week:hover,.standard-card:hover,.price-card:hover,.masterclass-return-card:hover{transform:translateY(-5px);box-shadow:0 24px 55px rgba(18,18,18,.13)}
+  .format-strip:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(18,18,18,.12)}
+  .pass-step:hover{transform:translateY(-2px)}
+  .dream-row,.network-step,.format-item,.standard-row,.include{transition:transform .2s ease,background .2s ease}
+  .dream-row:hover,.standard-row:hover{transform:translateX(5px)}
+  .network-step:hover{transform:translateY(-3px);background:#303030}
+  .format-item:hover,.include:hover{transform:translateY(-2px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .dream-card,.benefit,.client-step,.network-card,.week,.format-strip,.standard-card,.pass-step,.price-card,.masterclass-return-card,.dream-row,.network-step,.format-item,.standard-row,.include{transition:none!important;transform:none!important}
+}
 </style>
 <style>
 .masterclass{padding:34px 0 18px}.masterclass-card{background:linear-gradient(135deg,#ffe99a 0%,#ffd93d 48%,#ffc928 100%);border-radius:34px;padding:38px;display:grid;grid-template-columns:1.08fr .92fr;gap:54px;align-items:center;box-shadow:0 22px 55px rgba(77,61,0,.12)}.masterclass-badge{display:inline-flex;background:#171717;color:#fff;border-radius:999px;padding:9px 13px;font:800 11px/1 Manrope;letter-spacing:.11em}.masterclass-copy h2{font:800 clamp(38px,4.4vw,60px)/1.02 Manrope;letter-spacing:-.05em;margin:18px 0 14px;max-width:700px}.masterclass-copy p{margin:0;max-width:660px;color:#4d4631;font-size:18px;line-height:1.58}.masterclass-points{display:flex;gap:18px;flex-wrap:wrap;margin-top:20px;color:#403a29;font-size:13px;font-weight:800}.masterclass-form{background:#171717;color:#fff;border-radius:26px;padding:28px;display:grid;gap:14px}.masterclass-form h3{font:800 25px/1.1 Manrope;margin:0 0 4px}.masterclass-form>p{margin:0 0 4px;color:#aaa;font-size:14px;line-height:1.45}.masterclass-form label{display:grid;gap:7px;color:#d7d7d7;font-size:13px;font-weight:700}.masterclass-form input{width:100%;border:1px solid #3a3a3a;border-radius:13px;background:#242424;color:#fff;padding:15px 16px;font:500 16px/1.2 "DM Sans",sans-serif;outline:none}.masterclass-form input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(255,213,31,.14)}.masterclass-form button{margin-top:3px;min-height:54px;font-family:inherit;font-size:inherit}.masterclass-note{font-size:11px!important;color:#777!important;text-align:center!important}.masterclass-success{display:none;background:#242424;border:1px solid #3b3b3b;border-radius:13px;padding:14px;color:#fff;font-weight:700;line-height:1.45}.masterclass-success.show{display:block}@media(max-width:900px){.masterclass-card{grid-template-columns:1fr;gap:28px}}@media(max-width:620px){.masterclass{padding:18px 0 8px}.masterclass-card{padding:23px;border-radius:26px;gap:24px}.masterclass-copy h2{font-size:36px}.masterclass-copy p{font-size:16px}.masterclass-points{display:grid;gap:8px}.masterclass-form{padding:20px;border-radius:21px}}
