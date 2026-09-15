@@ -1,38 +1,63 @@
 name: Assistara UI patch
+
 on:
   push:
     paths:
       - '.github/workflows/assistara-ui-patch.yml'
+
 permissions:
   contents: write
+
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
       - name: Patch admin resources and Academy hover polish
-        shell: python
         run: |
+          python - <<'PY'
           from pathlib import Path
+
           admin = Path('assistara-local-v9/admin.html')
-          s = admin.read_text()
+          s = admin.read_text(encoding='utf-8')
           if 'class="quick-access"' not in s:
-              s = s.replace('.head p{margin:4px 0 0;color:var(--muted)}','.head p{margin:4px 0 0;color:var(--muted)}.quick-access{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0 2px}.quick-access a{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 13px;text-decoration:none;color:var(--ink);font:700 12px "DM Sans";transition:.2s ease}.quick-access a:hover{transform:translateY(-2px);box-shadow:0 8px 20px #00000010;border-color:#c9c4b9}.quick-access a span{font-size:15px}')
-              s = s.replace('<div class="head"><h1>Admin</h1><p>Assistara operations.</p></div><div class="nav">','<div class="head"><h1>Admin</h1><p>Assistara operations.</p></div><div class="quick-access" aria-label="Resources"><a href="https://mail.nameslink.com/" target="_blank" rel="noopener noreferrer"><span>✉</span>Email</a><a href="https://app.clickup.com/1300450000003242/home" target="_blank" rel="noopener noreferrer"><span>✓</span>ClickUp</a><a href="https://supabase.com/dashboard/project/jhmmwleejgidrxavzdlq/editor" target="_blank" rel="noopener noreferrer"><span>▦</span>Database</a></div><div class="nav">')
-              admin.write_text(s)
+              css_anchor = '.head p{margin:4px 0 0;color:var(--muted)}'
+              html_anchor = '<div class="head"><h1>Admin</h1><p>Assistara operations.</p></div><div class="nav">'
+              if css_anchor not in s or html_anchor not in s:
+                  raise SystemExit('Admin anchor not found')
+              css = '.quick-access{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0 2px}.quick-access a{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 13px;text-decoration:none;color:var(--ink);font:700 12px "DM Sans";transition:.2s ease}.quick-access a:hover{transform:translateY(-2px);box-shadow:0 8px 20px #00000010;border-color:#c9c4b9}.quick-access a span{font-size:15px}'
+              links = '<div class="head"><h1>Admin</h1><p>Assistara operations.</p></div><div class="quick-access" aria-label="Resources"><a href="https://mail.nameslink.com/" target="_blank" rel="noopener noreferrer"><span>✉</span>Email</a><a href="https://app.clickup.com/1300450000003242/home" target="_blank" rel="noopener noreferrer"><span>✓</span>ClickUp</a><a href="https://supabase.com/dashboard/project/jhmmwleejgidrxavzdlq/editor" target="_blank" rel="noopener noreferrer"><span>▦</span>Database</a></div><div class="nav">'
+              s = s.replace(css_anchor, css_anchor + css, 1)
+              s = s.replace(html_anchor, links, 1)
+              admin.write_text(s, encoding='utf-8')
+
           academy = Path('assistara-local-v9/academy.html')
-          a = academy.read_text()
-          if '/* academy-interaction-polish */' not in a:
-              hover = '''\n/* academy-interaction-polish */
-@media (hover:hover) and (pointer:fine){
-.dream-card,.benefit,.client-step,.network-card,.week,.format-strip,.standard-card,.pass-step,.price-card,.masterclass-return-card{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
-.dream-card:hover,.benefit:hover,.client-step:hover,.network-card:hover,.week:hover,.standard-card:hover,.price-card:hover,.masterclass-return-card:hover{transform:translateY(-5px);box-shadow:0 24px 55px rgba(18,18,18,.13)}
-.format-strip:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(18,18,18,.12)}.pass-step:hover{transform:translateY(-2px)}
-.dream-row,.network-step,.format-item,.standard-row,.include{transition:transform .2s ease,background .2s ease}.dream-row:hover,.standard-row:hover{transform:translateX(5px)}.network-step:hover{transform:translateY(-3px);background:#303030}.format-item:hover,.include:hover{transform:translateY(-2px)}}
-@media (prefers-reduced-motion:reduce){.dream-card,.benefit,.client-step,.network-card,.week,.format-strip,.standard-card,.pass-step,.price-card,.masterclass-return-card,.dream-row,.network-step,.format-item,.standard-row,.include{transition:none!important;transform:none!important}}
-'''
+          a = academy.read_text(encoding='utf-8')
+          if 'academy-interaction-polish' not in a:
+              if '</style>' not in a:
+                  raise SystemExit('Academy style anchor not found')
+              hover = '''
+          /* academy-interaction-polish */
+          @media (hover:hover) and (pointer:fine){
+            .dream-card,.benefit,.client-step,.network-card,.week,.format-strip,.standard-card,.pass-step,.price-card,.masterclass-return-card{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+            .dream-card:hover,.benefit:hover,.client-step:hover,.network-card:hover,.week:hover,.standard-card:hover,.price-card:hover,.masterclass-return-card:hover{transform:translateY(-5px);box-shadow:0 24px 55px rgba(18,18,18,.13)}
+            .format-strip:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(18,18,18,.12)}
+            .pass-step:hover{transform:translateY(-2px)}
+            .dream-row,.network-step,.format-item,.standard-row,.include{transition:transform .2s ease,background .2s ease}
+            .dream-row:hover,.standard-row:hover{transform:translateX(5px)}
+            .network-step:hover{transform:translateY(-3px);background:#303030}
+            .format-item:hover,.include:hover{transform:translateY(-2px)}
+          }
+          @media (prefers-reduced-motion:reduce){
+            .dream-card,.benefit,.client-step,.network-card,.week,.format-strip,.standard-card,.pass-step,.price-card,.masterclass-return-card,.dream-row,.network-step,.format-item,.standard-row,.include{transition:none!important;transform:none!important}
+          }
+          '''
               a = a.replace('</style>', hover + '</style>', 1)
-              academy.write_text(a)
+              academy.write_text(a, encoding='utf-8')
+          PY
       - name: Commit patch
         run: |
           git config user.name "Assistara UI Bot"
@@ -40,4 +65,3 @@ jobs:
           git add assistara-local-v9/admin.html assistara-local-v9/academy.html
           git diff --cached --quiet || git commit -m "Add admin resources and Academy hover interactions"
           git push
-# trigger
