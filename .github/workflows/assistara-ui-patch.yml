@@ -12,23 +12,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Remove obsolete B2B admin UI
+      - name: Redesign final CTA
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('assistara-local-v9/admin.html')
+          import re
+          p=Path('assistara-local-v9/index.html')
           s=p.read_text(encoding='utf-8')
-          old=s
-          s=s.replace('Manage applicants, students, accounts, webinar reporting and B2B leads.','Manage applicants, students, accounts and webinar reporting.')
-          s=s.replace('<button data-tab="b2b">B2B</button>','')
-          if s==old: raise SystemExit('Expected B2B admin UI not found')
+          start=s.index('<section class="match-wrap" id="match">')
+          end=s.index('</section>',start)+len('</section>')
+          new='''<section class="match-wrap final-close" id="match"><div class="shell section"><div class="final-close-card"><div class="final-close-copy"><div class="section-kicker">READY WHEN YOU ARE</div><h2>Ready to buy back<br>your time?</h2></div><div class="final-close-action"><a class="btn btn-yellow" href="https://cal.com/assistara/assistara-discovery-call">Book a Discovery Call <span>→</span></a><span>30 minutes · No obligation</span></div></div></div></section>'''
+          s=s[:start]+new+s[end:]
+          css='''<style id="closing-cta-polish">.final-close{background:#f7f5ef}.final-close .section{padding-top:72px;padding-bottom:72px}.final-close-card{background:#171717;color:#fff;border-radius:28px;padding:42px 46px;display:flex;align-items:center;justify-content:space-between;gap:42px}.final-close-copy .section-kicker{color:#aaa49b;margin-bottom:10px}.final-close-copy h2{margin:0;font-size:clamp(38px,4.5vw,60px);line-height:.98;letter-spacing:-.05em}.final-close-action{display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:280px}.final-close-action .btn{width:100%;justify-content:space-between;padding:17px 20px}.final-close-action>span{font-size:12px;color:#aaa49b;font-weight:600;padding-left:2px}.assistara-footer-main{padding-top:40px!important;padding-bottom:28px!important}.assistara-footer-bottom{padding-top:16px!important;padding-bottom:0!important}footer{padding-top:0!important;padding-bottom:18px!important}@media(max-width:760px){.final-close .section{padding-top:48px;padding-bottom:48px}.final-close-card{padding:30px 24px;display:block;border-radius:22px}.final-close-copy h2 br{display:none}.final-close-action{margin-top:28px;min-width:0;width:100%}.assistara-footer-main{padding-top:32px!important;padding-bottom:24px!important}}</style>'''
+          if '<style id="closing-cta-polish">' in s:
+              s=re.sub(r'<style id="closing-cta-polish">.*?</style>',css,s,count=1,flags=re.S)
+          else:
+              s=s.replace('</head>',css+'\n</head>',1)
           p.write_text(s,encoding='utf-8')
-          print('Removed visible B2B admin tab and B2B wording')
           PY
       - name: Commit patch
         run: |
           git config user.name "Assistara UI Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/admin.html
-          git diff --cached --quiet || git commit -m "Remove obsolete B2B admin tab"
+          git add assistara-local-v9/index.html
+          git diff --cached --quiet || git commit -m "Redesign final CTA as compact premium close"
           git push
