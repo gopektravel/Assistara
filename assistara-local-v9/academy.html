@@ -154,8 +154,17 @@ a[href="/masterclass/join/"].btn-yellow{
   .header{padding:8px 0!important}
 }
 </style>
+<style id="contextual-masterclass-sticky">
+/* The original yellow announcement is normal content, not sticky. */
+.topbar{position:static!important;top:auto!important;z-index:auto!important;box-shadow:none!important}
+.header{position:relative!important;top:auto!important}
+#masterclassStickyCta{position:fixed;left:50%;top:10px;transform:translate(-50%,-16px);z-index:1200;background:#ffd51f;color:#111;border-radius:999px;padding:9px 16px;font:800 12px/1.15 "DM Sans",Arial,sans-serif;box-shadow:0 6px 22px rgba(0,0,0,.16);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,transform .18s ease;white-space:nowrap}
+#masterclassStickyCta.is-visible{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0)}
+@media(max-width:620px){#masterclassStickyCta{top:7px;padding:8px 13px;font-size:10px;max-width:calc(100vw - 24px)}}
+</style>
 </head>
 <body>
+<a id="masterclassStickyCta" href="#free-masterclass" aria-label="Save your seat for the free masterclass">Free Masterclass → Save My Seat</a>
 <div class="topbar"><a href="#free-masterclass">Free masterclass: How to Land a Remote Job as a Complete Beginner →</a></div>
 <header class="header">
 <nav class="nav shell">
@@ -481,6 +490,21 @@ Applying is free and does not charge you.
 </footer>
 <script>
 (()=>{const endpoint='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form-proxy';const form=document.getElementById('masterclassForm'),success=document.getElementById('masterclassSuccess');if(!form||!success)return;const button=form.querySelector('button[type="submit"]');form.addEventListener('submit',async event=>{event.preventDefault();const data=new FormData(form);const original=button.textContent;button.textContent='Saving your seat…';button.disabled=true;success.classList.remove('show','error');try{const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'masterclass',name:data.get('name')||'',email:data.get('email')||''})});const result=await response.json().catch(()=>({}));if(!response.ok||!result.ok||!result.emailSent)throw new Error('Submission or email delivery failed');form.reset();button.textContent='Seat saved ✓';success.textContent='You’re on the list. Check your inbox for the next steps.';success.classList.add('show')}catch(error){button.textContent=original;button.disabled=false;success.textContent='Something went wrong. Please try again.';success.classList.add('show','error')}})})();
+</script>
+<script id="contextual-masterclass-sticky-js">
+(function(){
+  var section=document.getElementById('free-masterclass');
+  var cta=document.getElementById('masterclassStickyCta');
+  if(!section||!cta)return;
+  function update(){
+    var r=section.getBoundingClientRect();
+    var passed=r.bottom<=0;
+    cta.classList.toggle('is-visible',passed);
+  }
+  window.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update);
+  update();
+})();
 </script>
 </body>
 </html>
