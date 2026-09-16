@@ -17,36 +17,35 @@ jobs:
           s=p.read_text(encoding='utf-8')
           marker='</head>'
           css='''<style id="academy-mobile-head-polish">
-@media(max-width:620px){
-  .topbar{font-size:10px;padding:8px 12px}
-  .header{padding:8px 0}
-  .nav{min-height:54px;border-radius:16px;padding:7px 8px 7px 11px}
-  .brand{font-size:15px;min-width:0}.brand span{white-space:nowrap}.mark{width:30px;height:30px}
-  .nav .btn{min-width:auto;padding:10px 14px;font-size:11px}
-  .masterclass{padding:10px 0 4px}
-  .masterclass-card{padding:20px 18px 18px;border-radius:22px;gap:18px;box-shadow:0 14px 34px rgba(77,61,0,.10)}
-  .masterclass-badge{font-size:9px;padding:8px 10px}
-  .masterclass-copy h2{font-size:32px;line-height:1.02;letter-spacing:-.045em;margin:14px 0 11px}
-  .masterclass-copy p{font-size:15px;line-height:1.48}
-  .masterclass-points{grid-template-columns:repeat(3,auto);display:grid;gap:5px 8px;margin-top:14px;font-size:10px}
-  .masterclass-form{padding:18px;border-radius:19px;gap:11px}
-  .masterclass-form h3{font-size:22px}.masterclass-form>p{font-size:12px}
-  .masterclass-form label{font-size:12px;gap:6px}.masterclass-form input{min-height:50px;padding:13px 14px;font-size:16px}
-  .masterclass-form button{min-height:52px}.masterclass-note{margin:0!important}
-  .hero{padding:36px 0 54px;gap:22px}.hero h1{font-size:43px;line-height:.96;margin:14px 0 15px}.hero h1 br{display:none}
-  .hero p{font-size:16px;line-height:1.5}.hero-actions{margin-top:20px;gap:11px}.hero-actions .btn{min-height:52px}
-}
-@media(max-width:380px){
-  .brand{font-size:14px}.mark{width:28px;height:28px}.nav .btn{padding:9px 12px}
-  .masterclass-copy h2{font-size:29px}.masterclass-points{grid-template-columns:1fr 1fr}.masterclass-points span:last-child{grid-column:1/-1}
-  .hero h1{font-size:39px}
-}
-</style>'''
-          if 'id="academy-mobile-head-polish"' in s:
-              raise SystemExit('Mobile Academy head polish already present')
-          if marker not in s: raise SystemExit('head marker not found')
-          s=s.replace(marker,css+'\n'+marker,1)
-          p.write_text(s,encoding='utf-8')
+          @media(max-width:620px){
+            .topbar{font-size:10px;padding:8px 12px}
+            .header{padding:8px 0}
+            .nav{min-height:54px;border-radius:16px;padding:7px 8px 7px 11px}
+            .brand{font-size:15px;min-width:0}.brand span{white-space:nowrap}.mark{width:30px;height:30px}
+            .nav .btn{min-width:auto;padding:10px 14px;font-size:11px}
+            .masterclass{padding:10px 0 4px}
+            .masterclass-card{padding:20px 18px 18px;border-radius:22px;gap:18px;box-shadow:0 14px 34px rgba(77,61,0,.10)}
+            .masterclass-badge{font-size:9px;padding:8px 10px}
+            .masterclass-copy h2{font-size:32px;line-height:1.02;letter-spacing:-.045em;margin:14px 0 11px}
+            .masterclass-copy p{font-size:15px;line-height:1.48}
+            .masterclass-points{grid-template-columns:repeat(3,auto);display:grid;gap:5px 8px;margin-top:14px;font-size:10px}
+            .masterclass-form{padding:18px;border-radius:19px;gap:11px}
+            .masterclass-form h3{font-size:22px}.masterclass-form>p{font-size:12px}
+            .masterclass-form label{font-size:12px;gap:6px}.masterclass-form input{min-height:50px;padding:13px 14px;font-size:16px}
+            .masterclass-form button{min-height:52px}.masterclass-note{margin:0!important}
+            .hero{padding:36px 0 54px;gap:22px}.hero h1{font-size:43px;line-height:.96;margin:14px 0 15px}.hero h1 br{display:none}
+            .hero p{font-size:16px;line-height:1.5}.hero-actions{margin-top:20px;gap:11px}.hero-actions .btn{min-height:52px}
+          }
+          @media(max-width:380px){
+            .brand{font-size:14px}.mark{width:28px;height:28px}.nav .btn{padding:9px 12px}
+            .masterclass-copy h2{font-size:29px}.masterclass-points{grid-template-columns:1fr 1fr}.masterclass-points span:last-child{grid-column:1/-1}
+            .hero h1{font-size:39px}
+          }
+          </style>'''
+          if 'id="academy-mobile-head-polish"' not in s:
+              if marker not in s: raise SystemExit('head marker not found')
+              s=s.replace(marker,css+'\n'+marker,1)
+              p.write_text(s,encoding='utf-8')
           PY
       - name: Commit mobile polish
         run: |
