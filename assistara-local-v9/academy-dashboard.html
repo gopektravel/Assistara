@@ -1,1 +1,765 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Academy | Assistara</title><link rel="icon" href="/assistara-logo.svg"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>:root{--ink:#171717;--cream:#f7f5ef;--card:#fff;--yellow:#ffd51f;--line:#e3e0d8;--muted:#716b63}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:"DM Sans",Arial,sans-serif}.loading{min-height:100vh;display:grid;place-items:center;color:var(--muted)}.app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.side{background:#171717;color:#fff;padding:24px 18px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:17px;padding:0 8px 28px}.brand img{width:38px;height:38px}.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:#aaa;text-align:left;padding:12px 14px;border-radius:12px;font:600 14px "DM Sans";cursor:pointer}.nav button.active,.nav button:hover{background:#292929;color:#fff}.nav button.active{box-shadow:inset 3px 0 var(--yellow)}.sidefoot{margin-top:auto;border-top:1px solid #333;padding-top:16px}.profile{font-size:12px;color:#aaa;padding:0 10px 12px;overflow:hidden;text-overflow:ellipsis}.logout{width:100%;border:1px solid #444;background:transparent;color:#fff;border-radius:12px;padding:11px;font:700 13px "DM Sans";cursor:pointer}.main{padding:36px 40px 70px;max-width:1260px;width:100%}.page{display:none}.page.active{display:block}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;color:#7a7369}.hero{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:28px}.hero h1{font-size:clamp(36px,5vw,58px);line-height:1;letter-spacing:-.045em;margin:8px 0 10px}.lead{color:var(--muted);font-size:16px;line-height:1.55;margin:0;max-width:680px}.pill{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:12px;font-weight:700}.grid{display:grid;grid-template-columns:1.4fr .8fr;gap:20px}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px}.dark{background:#171717;color:#fff;border:0}.dark .muted{color:#aaa}.muted{color:var(--muted)}.btn{display:inline-block;border:0;background:var(--yellow);color:#171717;border-radius:999px;padding:13px 18px;font:800 13px "DM Sans";cursor:pointer;text-decoration:none;margin-top:18px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.stat{border:1px solid var(--line);border-radius:16px;padding:16px}.stat b{display:block;font-size:23px}.stat span{font-size:11px;color:var(--muted)}.sectionTitle{display:flex;justify-content:space-between;align-items:center;margin:30px 0 14px}.sectionTitle h2{margin:0;font-size:22px}.modules,.list{display:grid;gap:11px}.module,.item{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;gap:14px;align-items:center}.num{flex:0 0 46px;height:46px;border-radius:14px;background:#f2f0ea;display:grid;place-items:center;font-weight:800}.moduleText{flex:1}.module h3,.item strong{margin:0;font-size:15px}.module p,.item small{display:block;margin:4px 0 0;color:var(--muted);font-size:13px}.status{font-size:11px;font-weight:800;border-radius:999px;padding:7px 9px;background:#f1f1f1;color:#777;white-space:nowrap}.status.open{background:#fff3b2;color:#6c5600}.item>div{flex:1}.item button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;font:700 12px "DM Sans";cursor:pointer}.notice{background:#fff8cf;border:1px solid #eadb82;border-radius:17px;padding:18px;font-size:14px;line-height:1.5}.mobileTop{display:none}@media(max-width:850px){.app{display:block}.side{display:none}.main{padding:16px 16px 55px}.mobileTop{display:flex;background:#171717;color:#fff;border-radius:17px;padding:10px 12px;margin-bottom:24px;align-items:center}.mobileTop img{width:32px;height:32px}.mobileTop strong{display:flex;align-items:center;gap:8px}.hero{display:block}.hero .pill{margin-top:13px}.grid{grid-template-columns:1fr}.module{align-items:flex-start}.status{margin-left:auto}.main{max-width:none}}</style></head><body><div id="loading" class="loading">Loading your Academy...</div><div id="app" class="app" hidden><aside class="side"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><nav class="nav" id="desktopNav"></nav><div class="sidefoot"><div id="profile" class="profile"></div><button class="logout" id="logout">Log out</button></div></aside><main class="main"><div class="mobileTop"><strong><img src="/assistara-logo.svg" alt="Assistara">Assistara Academy</strong></div><section id="home" class="page active"><div class="hero"><div><div class="eyebrow">STUDENT DASHBOARD</div><h1>Welcome, <span class="firstName">student</span>.</h1><p class="lead">Everything you need to build your remote career lives here. Your course, resources and live sessions are all in one place.</p></div><span class="pill">Founding Cohort</span></div><div class="grid"><div class="card dark"><div class="eyebrow" style="color:#aaa">START HERE</div><h2>Your Assistara Academy roadmap</h2><p class="muted">The learning path is ready. Lessons will unlock here as they are published for the founding cohort.</p><button class="btn" data-open="course">View course roadmap</button></div><div class="card"><div class="eyebrow">YOUR PROGRESS</div><div class="stats"><div class="stat"><b>0%</b><span>Course</span></div><div class="stat"><b>0</b><span>Lessons</span></div><div class="stat"><b>6</b><span>Modules</span></div></div></div></div><div class="sectionTitle"><h2>Your learning path</h2><span class="pill">6 modules</span></div><div id="homeModules" class="modules"></div></section><section id="course" class="page"><div class="hero"><div><div class="eyebrow">MY COURSE</div><h1>Zero to Remote.</h1><p class="lead">From choosing your direction to positioning yourself, finding opportunities and landing your first remote role or client.</p></div><span class="pill">0% complete</span></div><div class="notice">Course content is being released for the founding cohort. The full roadmap is already here so you always know what comes next.</div><div class="sectionTitle"><h2>Course curriculum</h2></div><div id="courseModules" class="modules"></div></section><section id="resources" class="page"><div class="hero"><div><div class="eyebrow">RESOURCE LIBRARY</div><h1>Your toolkit.</h1><p class="lead">Templates, worksheets, checklists and opportunity resources will live here.</p></div></div><div id="resourcesList" class="list"></div></section><section id="sessions" class="page"><div class="hero"><div><div class="eyebrow">LIVE SESSIONS</div><h1>Learn together.</h1><p class="lead">Cohort calls, workshops, Q&amp;A sessions and recordings will appear here.</p></div></div><div class="list"><div class="item"><div><strong>Founding Cohort Kickoff</strong><small>Date and joining link will appear here once scheduled.</small></div><span class="status">To be scheduled</span></div><div class="item"><div><strong>Live Q&amp;A</strong><small>Ask questions about remote work, applications and client acquisition.</small></div><span class="status">Coming soon</span></div><div class="item"><div><strong>Session recordings</strong><small>Recordings from completed sessions will be stored here.</small></div><span class="status">Coming soon</span></div></div></section><section id="certificate" class="page"><div class="hero"><div><div class="eyebrow">CERTIFICATE</div><h1>Finish what you started.</h1><p class="lead">Complete the Academy requirements to unlock your certificate of completion.</p></div></div><div class="card"><h2>Certificate of Completion</h2><p class="muted">Locked until the required course modules are completed.</p><span class="status">Locked · 0% complete</span></div></section><section id="settings" class="page"><div class="hero"><div><div class="eyebrow">ACCOUNT</div><h1>Settings.</h1><p class="lead">Manage your Academy access and support.</p></div></div><div class="list"><div class="item"><div><strong>Profile</strong><small id="settingsEmail"></small></div><span class="pill">Active student</span></div><div class="item"><div><strong>Password</strong><small>Send yourself a secure password reset email.</small></div><button id="resetPassword">Reset password</button></div><div class="item"><div><strong>Notifications</strong><small>Course and live-session notification controls will appear here.</small></div><span class="status">Coming soon</span></div><div class="item"><div><strong>Help &amp; support</strong><small>academy@getassistara.com</small></div><a href="mailto:academy@getassistara.com">Contact support</a></div></div><p id="settingsMsg" class="muted"></p></section></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script><script>document.addEventListener('DOMContentLoaded',function(){var loading=document.getElementById('loading'),app=document.getElementById('app');function fail(text){loading.textContent=text}if(!window.supabase){fail('Could not load Academy. Please refresh the page.');return}var client=window.supabase.createClient('https://jhmmwleejgidrxavzdlq.supabase.co','sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E');var pages=[['home','Home'],['course','My course'],['resources','Resources'],['sessions','Live sessions'],['certificate','Certificate'],['settings','Settings']];var modules=[['01','Remote Work Foundations','Understand remote work and choose a direction that fits your skills.'],['02','Turn Your Experience Into Remote Skills','Translate your existing experience into valuable remote skills.'],['03','Build Your Remote Positioning','Build a clear profile, CV and professional story.'],['04','Find the Right Opportunities','Find remote jobs and clients worth pursuing.'],['05','Applications, Outreach & Interviews','Apply strategically, reach out and convert conversations into opportunities.'],['06','Land, Deliver & Grow','Win your first opportunity, deliver well and build momentum.']];var resources=[['Remote Career Roadmap','Your step-by-step Academy action plan.'],['Remote Job & Client Platform List','Curated places to find remote roles and freelance clients.'],['CV & Profile Checklist','Position your experience for remote opportunities.'],['Application & Outreach Templates','Templates for applications, messages and follow-ups.'],['Interview Preparation Workbook','Prepare your stories, proof and interview answers.']];function moduleHTML(){return modules.map(function(m,i){return '<div class="module"><div class="num">'+m[0]+'</div><div class="moduleText"><h3>'+m[1]+'</h3><p>'+m[2]+'</p></div><span class="status '+(i===0?'open':'')+'">'+(i===0?'Preparing lessons':'Coming soon')+'</span></div>'}).join('')}document.getElementById('homeModules').innerHTML=moduleHTML();document.getElementById('courseModules').innerHTML=moduleHTML();document.getElementById('resourcesList').innerHTML=resources.map(function(r){return '<div class="item"><div><strong>'+r[0]+'</strong><small>'+r[1]+'</small></div><span class="status">Coming soon</span></div>'}).join('');function openPage(id){document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('active',p.id===id)});document.querySelectorAll('[data-page]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-page')===id)});window.scrollTo(0,0)}var desktopNav=document.getElementById('desktopNav');desktopNav.innerHTML=pages.map(function(p,i){return '<button data-page="'+p[0]+'" class="'+(i===0?'active':'')+'">'+p[1]+'</button>'}).join('');desktopNav.querySelectorAll('[data-page]').forEach(function(b){b.addEventListener('click',function(){openPage(b.getAttribute('data-page'))})});document.querySelectorAll('[data-open]').forEach(function(b){b.addEventListener('click',function(){openPage(b.getAttribute('data-open'))})});var authTimeout=setTimeout(function(){fail('Your session took too long to load. Please log in again.');setTimeout(function(){location.replace('/login')},1200)},6000);client.auth.getSession().then(function(result){clearTimeout(authTimeout);if(result.error){location.replace('/login');return}var session=result.data&&result.data.session;if(!session){location.replace('/login');return}var user=session.user;var display=(user.user_metadata&&user.user_metadata.name)||user.email||'student';var first=display.split(/\s+/)[0];document.querySelectorAll('.firstName').forEach(function(x){x.textContent=first});document.getElementById('profile').textContent=user.email||'';document.getElementById('settingsEmail').textContent=user.email||'';loading.style.display='none';app.hidden=false}).catch(function(){clearTimeout(authTimeout);location.replace('/login')});document.getElementById('logout').addEventListener('click',function(){client.auth.signOut().finally(function(){location.replace('/login')})});document.getElementById('resetPassword').addEventListener('click',function(){client.auth.getSession().then(function(r){var email=r.data&&r.data.session&&r.data.session.user.email;if(!email)return;return client.auth.resetPasswordForEmail(email,{redirectTo:'https://www.getassistara.com/login'})}).then(function(){document.getElementById('settingsMsg').textContent='Password reset email sent.'}).catch(function(){document.getElementById('settingsMsg').textContent='Could not send reset email. Please contact support.'})})});</script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Academy | Assistara</title>
+    <link rel="icon" href="/assistara-logo.svg" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #171717;
+        --cream: #f7f5ef;
+        --card: #fff;
+        --yellow: #ffd51f;
+        --line: #e3e0d8;
+        --muted: #716b63;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: "DM Sans", Arial, sans-serif;
+      }
+      .loading {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+      }
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 250px 1fr;
+      }
+      .side {
+        background: #171717;
+        color: #fff;
+        padding: 24px 18px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-weight: 800;
+        font-size: 17px;
+        padding: 0 8px 28px;
+      }
+      .brand img {
+        width: 38px;
+        height: 38px;
+      }
+      .nav {
+        display: grid;
+        gap: 6px;
+      }
+      .nav button {
+        border: 0;
+        background: transparent;
+        color: #aaa;
+        text-align: left;
+        padding: 12px 14px;
+        border-radius: 12px;
+        font: 600 14px "DM Sans";
+        cursor: pointer;
+      }
+      .nav button.active,
+      .nav button:hover {
+        background: #292929;
+        color: #fff;
+      }
+      .nav button.active {
+        box-shadow: inset 3px 0 var(--yellow);
+      }
+      .sidefoot {
+        margin-top: auto;
+        border-top: 1px solid #333;
+        padding-top: 16px;
+      }
+      .profile {
+        font-size: 12px;
+        color: #aaa;
+        padding: 0 10px 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .logout {
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 0;
+        background: transparent;
+        color: #aaa;
+        border-radius: 0;
+        padding: 8px 10px;
+        font: 700 13px "DM Sans";
+        cursor: pointer;
+        transition: color 0.16s ease, transform 0.16s ease;
+      }
+      .logout::before {
+        content: "←";
+        font-size: 15px;
+        font-weight: 400;
+      }
+      .logout:hover,
+      .logout:focus-visible {
+        background: transparent;
+        color: var(--yellow);
+        outline: 0;
+        transform: translateX(-2px);
+      }
+      .main {
+        padding: 36px 40px 70px;
+        max-width: 1260px;
+        width: 100%;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: #7a7369;
+      }
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 28px;
+      }
+      .hero h1 {
+        font-size: clamp(36px, 5vw, 58px);
+        line-height: 1;
+        letter-spacing: -0.045em;
+        margin: 8px 0 10px;
+      }
+      .lead {
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.55;
+        margin: 0;
+        max-width: 680px;
+      }
+      .pill {
+        display: inline-flex;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 11px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.4fr 0.8fr;
+        gap: 20px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 24px;
+      }
+      .dark {
+        background: #171717;
+        color: #fff;
+        border: 0;
+      }
+      .dark .muted {
+        color: #aaa;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .btn {
+        display: inline-block;
+        border: 0;
+        background: var(--yellow);
+        color: #171717;
+        border-radius: 999px;
+        padding: 13px 18px;
+        font: 800 13px "DM Sans";
+        cursor: pointer;
+        text-decoration: none;
+        margin-top: 18px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .stat b {
+        display: block;
+        font-size: 23px;
+      }
+      .stat span {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .sectionTitle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 30px 0 14px;
+      }
+      .sectionTitle h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .modules,
+      .list {
+        display: grid;
+        gap: 11px;
+      }
+      .module,
+      .item {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .num {
+        flex: 0 0 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: #f2f0ea;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+      }
+      .moduleText {
+        flex: 1;
+      }
+      .module h3,
+      .item strong {
+        margin: 0;
+        font-size: 15px;
+      }
+      .module p,
+      .item small {
+        display: block;
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .status {
+        font-size: 11px;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 7px 9px;
+        background: #f1f1f1;
+        color: #777;
+        white-space: nowrap;
+      }
+      .status.open {
+        background: #fff3b2;
+        color: #6c5600;
+      }
+      .item > div {
+        flex: 1;
+      }
+      .item button {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 999px;
+        padding: 9px 12px;
+        font: 700 12px "DM Sans";
+        cursor: pointer;
+      }
+      .notice {
+        background: #fff8cf;
+        border: 1px solid #eadb82;
+        border-radius: 17px;
+        padding: 18px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .mobileTop {
+        display: none;
+      }
+      @media (max-width: 850px) {
+        .app {
+          display: block;
+        }
+        .side {
+          display: none;
+        }
+        .main {
+          padding: 16px 16px 55px;
+        }
+        .mobileTop {
+          display: flex;
+          background: #171717;
+          color: #fff;
+          border-radius: 17px;
+          padding: 10px 12px;
+          margin-bottom: 24px;
+          align-items: center;
+        }
+        .mobileTop img {
+          width: 32px;
+          height: 32px;
+        }
+        .mobileTop strong {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .hero {
+          display: block;
+        }
+        .hero .pill {
+          margin-top: 13px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .module {
+          align-items: flex-start;
+        }
+        .status {
+          margin-left: auto;
+        }
+        .main {
+          max-width: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading" class="loading">Loading your Academy...</div>
+    <div id="app" class="app" hidden>
+      <aside class="side">
+        <div class="brand">
+          <img src="/assistara-logo.svg" alt="Assistara" /><span
+            >Assistara Academy</span
+          >
+        </div>
+        <nav class="nav" id="desktopNav"></nav>
+        <div class="sidefoot">
+          <div id="profile" class="profile"></div>
+          <button class="logout" id="logout">Log out</button>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="mobileTop">
+          <strong
+            ><img src="/assistara-logo.svg" alt="Assistara" />Assistara
+            Academy</strong
+          >
+        </div>
+        <section id="home" class="page active">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">STUDENT DASHBOARD</div>
+              <h1>Welcome, <span class="firstName">student</span>.</h1>
+              <p class="lead">
+                Everything you need to build your remote career lives here. Your
+                course, resources and live sessions are all in one place.
+              </p>
+            </div>
+            <span class="pill">Founding Cohort</span>
+          </div>
+          <div class="grid">
+            <div class="card dark">
+              <div class="eyebrow" style="color: #aaa">START HERE</div>
+              <h2>Your Assistara Academy roadmap</h2>
+              <p class="muted">
+                The learning path is ready. Lessons will unlock here as they are
+                published for the founding cohort.
+              </p>
+              <button class="btn" data-open="course">
+                View course roadmap
+              </button>
+            </div>
+            <div class="card">
+              <div class="eyebrow">YOUR PROGRESS</div>
+              <div class="stats">
+                <div class="stat"><b>0%</b><span>Course</span></div>
+                <div class="stat"><b>0</b><span>Lessons</span></div>
+                <div class="stat"><b>6</b><span>Modules</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="sectionTitle">
+            <h2>Your learning path</h2>
+            <span class="pill">6 modules</span>
+          </div>
+          <div id="homeModules" class="modules"></div>
+        </section>
+        <section id="course" class="page">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">MY COURSE</div>
+              <h1>Zero to Remote.</h1>
+              <p class="lead">
+                From choosing your direction to positioning yourself, finding
+                opportunities and landing your first remote role or client.
+              </p>
+            </div>
+            <span class="pill">0% complete</span>
+          </div>
+          <div class="notice">
+            Course content is being released for the founding cohort. The full
+            roadmap is already here so you always know what comes next.
+          </div>
+          <div class="sectionTitle"><h2>Course curriculum</h2></div>
+          <div id="courseModules" class="modules"></div>
+        </section>
+        <section id="resources" class="page">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">RESOURCE LIBRARY</div>
+              <h1>Your toolkit.</h1>
+              <p class="lead">
+                Templates, worksheets, checklists and opportunity resources will
+                live here.
+              </p>
+            </div>
+          </div>
+          <div id="resourcesList" class="list"></div>
+        </section>
+        <section id="sessions" class="page">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">LIVE SESSIONS</div>
+              <h1>Learn together.</h1>
+              <p class="lead">
+                Cohort calls, workshops, Q&amp;A sessions and recordings will
+                appear here.
+              </p>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item">
+              <div>
+                <strong>Founding Cohort Kickoff</strong
+                ><small
+                  >Date and joining link will appear here once scheduled.</small
+                >
+              </div>
+              <span class="status">To be scheduled</span>
+            </div>
+            <div class="item">
+              <div>
+                <strong>Live Q&amp;A</strong
+                ><small
+                  >Ask questions about remote work, applications and client
+                  acquisition.</small
+                >
+              </div>
+              <span class="status">Coming soon</span>
+            </div>
+            <div class="item">
+              <div>
+                <strong>Session recordings</strong
+                ><small
+                  >Recordings from completed sessions will be stored
+                  here.</small
+                >
+              </div>
+              <span class="status">Coming soon</span>
+            </div>
+          </div>
+        </section>
+        <section id="certificate" class="page">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">CERTIFICATE</div>
+              <h1>Finish what you started.</h1>
+              <p class="lead">
+                Complete the Academy requirements to unlock your certificate of
+                completion.
+              </p>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Certificate of Completion</h2>
+            <p class="muted">
+              Locked until the required course modules are completed.
+            </p>
+            <span class="status">Locked · 0% complete</span>
+          </div>
+        </section>
+        <section id="settings" class="page">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">ACCOUNT</div>
+              <h1>Settings.</h1>
+              <p class="lead">Manage your Academy access and support.</p>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item">
+              <div>
+                <strong>Profile</strong><small id="settingsEmail"></small>
+              </div>
+              <span class="pill">Active student</span>
+            </div>
+            <div class="item">
+              <div>
+                <strong>Password</strong
+                ><small>Send yourself a secure password reset email.</small>
+              </div>
+              <button id="resetPassword">Reset password</button>
+            </div>
+            <div class="item">
+              <div>
+                <strong>Notifications</strong
+                ><small
+                  >Course and live-session notification controls will appear
+                  here.</small
+                >
+              </div>
+              <span class="status">Coming soon</span>
+            </div>
+            <div class="item">
+              <div>
+                <strong>Help &amp; support</strong
+                ><small>academy@getassistara.com</small>
+              </div>
+              <a href="mailto:academy@getassistara.com">Contact support</a>
+            </div>
+          </div>
+          <p id="settingsMsg" class="muted"></p>
+        </section>
+      </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var loading = document.getElementById("loading"),
+          app = document.getElementById("app");
+        function fail(text) {
+          loading.textContent = text;
+        }
+        if (!window.supabase) {
+          fail("Could not load Academy. Please refresh the page.");
+          return;
+        }
+        var client = window.supabase.createClient(
+          "https://jhmmwleejgidrxavzdlq.supabase.co",
+          "sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E",
+        );
+        var pages = [
+          ["home", "Home"],
+          ["course", "My course"],
+          ["resources", "Resources"],
+          ["sessions", "Live sessions"],
+          ["certificate", "Certificate"],
+          ["settings", "Settings"],
+        ];
+        var modules = [
+          [
+            "01",
+            "Remote Work Foundations",
+            "Understand remote work and choose a direction that fits your skills.",
+          ],
+          [
+            "02",
+            "Turn Your Experience Into Remote Skills",
+            "Translate your existing experience into valuable remote skills.",
+          ],
+          [
+            "03",
+            "Build Your Remote Positioning",
+            "Build a clear profile, CV and professional story.",
+          ],
+          [
+            "04",
+            "Find the Right Opportunities",
+            "Find remote jobs and clients worth pursuing.",
+          ],
+          [
+            "05",
+            "Applications, Outreach & Interviews",
+            "Apply strategically, reach out and convert conversations into opportunities.",
+          ],
+          [
+            "06",
+            "Land, Deliver & Grow",
+            "Win your first opportunity, deliver well and build momentum.",
+          ],
+        ];
+        var resources = [
+          ["Remote Career Roadmap", "Your step-by-step Academy action plan."],
+          [
+            "Remote Job & Client Platform List",
+            "Curated places to find remote roles and freelance clients.",
+          ],
+          [
+            "CV & Profile Checklist",
+            "Position your experience for remote opportunities.",
+          ],
+          [
+            "Application & Outreach Templates",
+            "Templates for applications, messages and follow-ups.",
+          ],
+          [
+            "Interview Preparation Workbook",
+            "Prepare your stories, proof and interview answers.",
+          ],
+        ];
+        function moduleHTML() {
+          return modules
+            .map(function (m, i) {
+              return (
+                '<div class="module"><div class="num">' +
+                m[0] +
+                '</div><div class="moduleText"><h3>' +
+                m[1] +
+                "</h3><p>" +
+                m[2] +
+                '</p></div><span class="status ' +
+                (i === 0 ? "open" : "") +
+                '">' +
+                (i === 0 ? "Preparing lessons" : "Coming soon") +
+                "</span></div>"
+              );
+            })
+            .join("");
+        }
+        document.getElementById("homeModules").innerHTML = moduleHTML();
+        document.getElementById("courseModules").innerHTML = moduleHTML();
+        document.getElementById("resourcesList").innerHTML = resources
+          .map(function (r) {
+            return (
+              '<div class="item"><div><strong>' +
+              r[0] +
+              "</strong><small>" +
+              r[1] +
+              '</small></div><span class="status">Coming soon</span></div>'
+            );
+          })
+          .join("");
+        function openPage(id) {
+          document.querySelectorAll(".page").forEach(function (p) {
+            p.classList.toggle("active", p.id === id);
+          });
+          document.querySelectorAll("[data-page]").forEach(function (b) {
+            b.classList.toggle("active", b.getAttribute("data-page") === id);
+          });
+          window.scrollTo(0, 0);
+        }
+        var desktopNav = document.getElementById("desktopNav");
+        desktopNav.innerHTML = pages
+          .map(function (p, i) {
+            return (
+              '<button data-page="' +
+              p[0] +
+              '" class="' +
+              (i === 0 ? "active" : "") +
+              '">' +
+              p[1] +
+              "</button>"
+            );
+          })
+          .join("");
+        desktopNav.querySelectorAll("[data-page]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            openPage(b.getAttribute("data-page"));
+          });
+        });
+        document.querySelectorAll("[data-open]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            openPage(b.getAttribute("data-open"));
+          });
+        });
+        var authTimeout = setTimeout(function () {
+          fail("Your session took too long to load. Please log in again.");
+          setTimeout(function () {
+            location.replace("/login");
+          }, 1200);
+        }, 6000);
+        client.auth
+          .getSession()
+          .then(function (result) {
+            clearTimeout(authTimeout);
+            if (result.error) {
+              location.replace("/login");
+              return;
+            }
+            var session = result.data && result.data.session;
+            if (!session) {
+              location.replace("/login");
+              return;
+            }
+            var user = session.user;
+            var display =
+              (user.user_metadata && user.user_metadata.name) ||
+              user.email ||
+              "student";
+            var first = display.split(/\s+/)[0];
+            document.querySelectorAll(".firstName").forEach(function (x) {
+              x.textContent = first;
+            });
+            document.getElementById("profile").textContent = user.email || "";
+            document.getElementById("settingsEmail").textContent =
+              user.email || "";
+            loading.style.display = "none";
+            app.hidden = false;
+          })
+          .catch(function () {
+            clearTimeout(authTimeout);
+            location.replace("/login");
+          });
+        document
+          .getElementById("logout")
+          .addEventListener("click", function () {
+            client.auth.signOut().finally(function () {
+              location.replace("/login");
+            });
+          });
+        document
+          .getElementById("resetPassword")
+          .addEventListener("click", function () {
+            client.auth
+              .getSession()
+              .then(function (r) {
+                var email =
+                  r.data && r.data.session && r.data.session.user.email;
+                if (!email) return;
+                return client.auth.resetPasswordForEmail(email, {
+                  redirectTo: "https://www.getassistara.com/login",
+                });
+              })
+              .then(function () {
+                document.getElementById("settingsMsg").textContent =
+                  "Password reset email sent.";
+              })
+              .catch(function () {
+                document.getElementById("settingsMsg").textContent =
+                  "Could not send reset email. Please contact support.";
+              });
+          });
+      });
+    </script>
+  </body>
+</html>
