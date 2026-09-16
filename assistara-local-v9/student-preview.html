@@ -92,22 +92,32 @@
         padding: 0 10px 12px;
       }
       .logout {
-        width: 100%;
-        border: 1px solid #444;
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 0;
         background: transparent;
-        color: #fff;
-        border-radius: 12px;
-        padding: 11px;
+        color: #aaa;
+        border-radius: 0;
+        padding: 8px 10px;
         font:
           700 13px "DM Sans",
           sans-serif;
         cursor: pointer;
+        transition: color 0.16s ease, transform 0.16s ease;
+      }
+      .logout::before {
+        content: "←";
+        font-size: 15px;
+        font-weight: 400;
       }
       .logout:hover,
       .logout:focus-visible {
         background: transparent;
-        border-color: var(--yellow);
         color: var(--yellow);
+        outline: 0;
+        transform: translateX(-2px);
       }
       .main {
         padding: 42px;
