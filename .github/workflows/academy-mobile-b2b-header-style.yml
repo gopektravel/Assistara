@@ -1,0 +1,44 @@
+name: Match Academy mobile header to B2B
+on:
+  push:
+    paths: ['.github/workflows/academy-mobile-b2b-header-style.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Match mobile header sizing and typography
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/academy.html')
+          s=p.read_text(encoding='utf-8')
+          css='''<style id="academy-mobile-b2b-header-style">
+          /* Mobile header follows the cleaner B2B mobile proportions. Desktop untouched. */
+          @media(max-width:760px){
+            .header{padding:0!important;background:#fbfaf6!important;position:relative!important;top:auto!important}
+            .header .shell{width:calc(100% - 40px)!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important}
+            .header .nav{min-height:76px!important;margin:0 auto!important;padding:18px 0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;justify-content:space-between!important}
+            .header .brand{font:800 20px/1 Manrope,sans-serif!important;gap:10px!important;color:#171717!important;padding-left:2px!important}
+            .header .mark{width:36px!important;height:36px!important;flex:0 0 36px!important}
+            .header .navlinks{display:none!important}
+            .header .nav>.btn{min-width:72px!important;height:36px!important;min-height:36px!important;padding:0 15px!important;border-radius:18px!important;background:#171717!important;color:#fff!important;font:700 12.5px/1 'DM Sans',sans-serif!important;box-shadow:0 5px 16px rgba(0,0,0,.10)!important}
+          }
+          @media(max-width:380px){
+            .header .shell{width:calc(100% - 30px)!important}
+            .header .brand{font-size:18px!important}.header .mark{width:34px!important;height:34px!important;flex-basis:34px!important}
+          }
+          </style>'''
+          if 'id="academy-mobile-b2b-header-style"' not in s:
+              s=s.replace('</head>',css+'\n</head>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "Assistara UI Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet || git commit -m "Match Academy mobile header to B2B style"
+          git push
