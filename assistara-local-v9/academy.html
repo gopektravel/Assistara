@@ -138,6 +138,22 @@ a[href="/masterclass/join/"].btn-yellow{
   .masterclass-form button[type="submit"],.masterclass-form .btn-yellow{bottom:10px!important}
 }
 </style>
+<style id="topbar-sticky-final">
+/* FINAL: only the small yellow masterclass CTA at the very top is sticky. */
+.topbar{position:sticky!important;top:0!important;z-index:1000!important;margin:0!important;box-shadow:0 2px 8px rgba(0,0,0,.08)!important}
+.header{position:relative!important;top:auto!important;z-index:20!important}
+.masterclass-form button[type="submit"],.masterclass-form .btn-yellow,a[href="/masterclass/join"].btn-yellow,a[href="/masterclass/join/"].btn-yellow{position:static!important;top:auto!important;bottom:auto!important}
+@media(min-width:621px){
+  .topbar{padding:8px 16px!important;font-size:12px!important;line-height:18px!important}
+  .header{padding:14px 0!important}
+  .nav{min-height:64px!important;padding:10px 12px 10px 18px!important}
+  .hero{padding-top:78px!important}
+}
+@media(max-width:620px){
+  .topbar{padding:6px 10px!important;font-size:9px!important;line-height:13px!important;min-height:25px!important}
+  .header{padding:8px 0!important}
+}
+</style>
 </head>
 <body>
 <div class="topbar"><a href="#free-masterclass">Free masterclass: How to Land a Remote Job as a Complete Beginner →</a></div>
