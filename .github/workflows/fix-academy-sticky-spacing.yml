@@ -1,0 +1,48 @@
+name: Fix Academy sticky spacing
+on:
+  push:
+    paths: ['.github/workflows/fix-academy-sticky-spacing.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix sticky spacing
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/academy.html')
+          s=p.read_text(encoding='utf-8')
+          css='''<style id="academy-sticky-spacing-fix">
+          /* Keep the yellow masterclass strip visible without creating a large blank header. */
+          .topbar{position:sticky;top:0;z-index:60;margin:0}
+          .header{position:sticky;top:38px;z-index:50;margin:0;padding:10px 0;background:rgba(251,250,246,.96)}
+          @media(min-width:621px){
+            .topbar{padding:8px 16px;line-height:18px}
+            .header{top:34px;padding:10px 0}
+            .nav{min-height:58px;padding-top:7px;padding-bottom:7px}
+            .hero{padding-top:58px}
+          }
+          @media(max-width:620px){
+            .topbar{padding:6px 10px;font-size:9px;line-height:13px;min-height:25px}
+            .header{top:25px;padding:5px 0;background:rgba(251,250,246,.98)}
+            .header .shell{width:calc(100% - 20px)}
+            .nav{min-height:48px;border-radius:14px;padding:5px 7px 5px 9px}
+            .mark{width:27px;height:27px}.brand{font-size:13px;gap:7px}
+            .nav .btn{padding:8px 11px;font-size:10px}
+            .masterclass{padding-top:8px}
+          }
+          </style>'''
+          if 'id="academy-sticky-spacing-fix"' not in s:
+              s=s.replace('</head>',css+'\n</head>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "Assistara UI Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet || git commit -m "Fix Academy sticky header spacing"
+          git push
