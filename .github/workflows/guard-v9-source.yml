@@ -1,0 +1,20 @@
+name: Guard V9 source of truth
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  prevent-duplicate-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require V9 as the only deployment source
+        run: |
+          test -f assistara-local-v9/vercel.json
+          for file in vercel.json admin.html academy.html academy-live.html login.html index.html student-preview.html; do
+            if test -e "$file"; then
+              echo "Duplicate root deployment file blocked: $file"
+              exit 1
+            fi
+          done
