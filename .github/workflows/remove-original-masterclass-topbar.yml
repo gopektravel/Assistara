@@ -1,0 +1,28 @@
+name: Remove original masterclass top bar
+on:
+  push:
+    paths: ['.github/workflows/remove-original-masterclass-topbar.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove original top message and simplify bubble
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/academy.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('<div class="topbar"><a href="#free-masterclass">Free masterclass: How to Land a Remote Job as a Complete Beginner →</a></div>\n','',1)
+          s=s.replace('Free Masterclass → Save My Seat','Free Masterclass →')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "Assistara UI Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add assistara-local-v9/academy.html
+          git diff --cached --quiet || git commit -m "Remove redundant masterclass top message"
+          git push
