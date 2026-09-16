@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex,nofollow" />
     <title>Admin | Assistara</title>
     <link rel="icon" href="/assistara-logo.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
       :root {
         --ink: #171717;
@@ -26,7 +27,7 @@
         margin: 0;
         background: var(--cream);
         color: var(--ink);
-        font-family: Arial, sans-serif;
+        font-family: "DM Sans", Arial, sans-serif;
       }
       .shell {
         width: min(1120px, calc(100% - 28px));
@@ -245,7 +246,8 @@
         color: var(--greenInk);
         border: 1px solid #b9e4c8;
       }
-      .badge.pending {
+      .badge.pending,
+      .badge.payment_pending {
         background: var(--orange);
         color: #8a4b00;
         border: 1px solid #f1c889;
@@ -578,7 +580,8 @@
           ["followup_sent", "no_response"].includes(
             x.gcash_followup_status || "",
           );
-        return `<div class="card"><div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="badges">${badge(x.decision || x.status || "new")}${badge(unverified ? "unverified_payment" : x.payment_status || "not_requested")}</div></div>${x.gcash_reference ? `<div class="detail"><b>GCash reference:</b> ${esc(x.gcash_reference)}${unverified ? "<br><b>Payment:</b> Unverified payment. Final follow-up sent." : ""}</div>` : ""}<div class="actions">${unverified ? `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>` : ""}${!x.decision ? `<button class="accept" onclick="decision('${x.id}','accepted')">Accept + email</button><button onclick="decision('${x.id}','declined')">Decline + email</button>` : ""}${x.decision === "accepted" ? `<button onclick="decision('${x.id}','accepted',true)">Resend acceptance</button>` : ""}${x.payment_status === "paid" ? `<button class="success" onclick="onboard('${x.id}')">Send account setup</button>` : ""}<button class="danger" onclick="deleteApplication('${x.id}')">Delete application</button></div></div>`;
+        const paymentLabel = unverified ? "unverified_payment" : x.payment_status === "pending" ? "payment_pending" : x.payment_status || "not_requested";
+        return `<div class="card"><div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="badges">${badge(x.decision || x.status || "new")}${badge(paymentLabel)}</div></div>${x.gcash_reference ? `<div class="detail"><b>GCash reference:</b> ${esc(x.gcash_reference)}${unverified ? "<br><b>Payment:</b> Unverified payment. Final follow-up sent." : ""}</div>` : ""}<div class="actions">${unverified ? `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>` : ""}${!x.decision ? `<button class="accept" onclick="decision('${x.id}','accepted')">Accept + email</button><button onclick="decision('${x.id}','declined')">Decline + email</button>` : ""}${x.decision === "accepted" ? `<button onclick="decision('${x.id}','accepted',true)">Resend acceptance</button>` : ""}${x.payment_status === "paid" ? `<button class="success" onclick="onboard('${x.id}')">Send account setup</button>` : ""}<button class="danger" onclick="deleteApplication('${x.id}')">Delete application</button></div></div>`;
       }
       function studentCard(x) {
         const suspended = !!x.suspended_at;
