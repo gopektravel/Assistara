@@ -1,2 +1,539 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Test Student Portal | Assistara</title><link rel="icon" href="/assistara-logo.svg"><style>:root{--ink:#171717;--cream:#f7f5ef;--yellow:#ffd51f;--line:#e3e0d8;--muted:#716b63}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.45 Arial,sans-serif}.app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.side{background:#171717;color:#fff;padding:24px 18px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;margin-bottom:28px}.brand img{width:38px}.tag{font-size:11px;letter-spacing:.1em;font-weight:800;color:#ffd51f;margin-bottom:8px}.nav{display:grid;gap:5px}.nav button{border:0;background:transparent;color:#aaa;text-align:left;padding:12px;border-radius:11px;font-weight:700;cursor:pointer}.nav button.active{background:#292929;color:#fff}.side a{display:block;margin-top:24px;color:#fff;font-size:13px}.main{padding:42px;max-width:1180px}.page{display:none}.page.active{display:block}.hero{display:flex;justify-content:space-between;gap:20px;align-items:start}.hero h1{font-size:clamp(38px,5vw,58px);letter-spacing:-.05em;line-height:1;margin:8px 0}.lead{max-width:650px;color:var(--muted);font-size:17px}.pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:12px;font-weight:700}.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:18px;margin-top:28px}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px}.dark{background:#171717;color:#fff;border:0}.muted{color:var(--muted)}.dark .muted{color:#aaa}.button{display:inline-block;margin-top:16px;background:var(--yellow);color:#171717;border:0;border-radius:999px;padding:12px 17px;font-weight:800;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{border:1px solid var(--line);border-radius:14px;padding:15px}.stat b{display:block;font-size:24px}.stat span{font-size:11px;color:var(--muted)}.sectionTitle{margin:30px 0 14px;font-size:22px}.list{display:grid;gap:11px}.item{background:#fff;border:1px solid var(--line);border-radius:17px;padding:17px;display:flex;gap:14px;align-items:center}.num{width:42px;height:42px;border-radius:13px;background:#f2f0ea;display:grid;place-items:center;font-weight:800}.item div{flex:1}.item b{display:block}.item small{color:var(--muted)}.status{font-size:11px;font-weight:800;border-radius:999px;padding:7px 9px;background:#f1f1f1}.notice{margin-top:22px;background:#fff8cf;border:1px solid #eadb82;border-radius:16px;padding:17px}@media(max-width:780px){.app{display:block}.side{padding:16px}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap}.main{padding:24px 16px}.grid{grid-template-columns:1fr}.hero{display:block}.hero .pill{display:inline-block;margin-top:12px}}</style></head><body><script>if(!sessionStorage.getItem('assistara_admin_token'))location.replace('/admin')</script><div class="app"><aside class="side"><div class="brand"><img src="/assistara-logo.svg" alt=""><span>Assistara Academy</span></div><div class="tag">ADMIN TEST VIEW</div><nav class="nav" id="nav"></nav><a href="/admin">← Back to Admin Console</a></aside><main class="main"><section class="page active" id="home"><div class="hero"><div><div class="tag" style="color:#716b63">STUDENT DASHBOARD · TEST ACCOUNT</div><h1>Welcome, Jesse.</h1><p class="lead">This is the Academy experience your students enter after their account is created.</p></div><span class="pill">Founding Cohort</span></div><div class="grid"><div class="card dark"><div class="tag">START HERE</div><h2>Your Assistara Academy roadmap</h2><p class="muted">The learning path, resources and sessions will live here for enrolled students.</p><button class="button" data-page="course">View course roadmap</button></div><div class="card"><div class="tag" style="color:#716b63">YOUR PROGRESS</div><div class="stats"><div class="stat"><b>0%</b><span>Course</span></div><div class="stat"><b>0</b><span>Lessons</span></div><div class="stat"><b>6</b><span>Modules</span></div></div></div></div><h2 class="sectionTitle">Your learning path</h2><div id="modules" class="list"></div></section><section class="page" id="course"><div class="hero"><div><div class="tag" style="color:#716b63">MY COURSE</div><h1>Zero to Remote.</h1><p class="lead">A structured path from choosing your direction to landing remote work or clients.</p></div><span class="pill">0% complete</span></div><div class="notice">Test view: course lessons will unlock here as the founding cohort content is published.</div><h2 class="sectionTitle">Course curriculum</h2><div id="courseModules" class="list"></div></section><section class="page" id="resources"><div class="hero"><div><div class="tag" style="color:#716b63">RESOURCE LIBRARY</div><h1>Your toolkit.</h1><p class="lead">Templates, checklists and opportunity resources live here.</p></div></div><div id="resourcesList" class="list"></div></section><section class="page" id="sessions"><div class="hero"><div><div class="tag" style="color:#716b63">LIVE SESSIONS</div><h1>Learn together.</h1><p class="lead">Cohort calls, workshops, Q&amp;A sessions and recordings will appear here.</p></div></div><div class="notice">No live sessions are scheduled yet.</div></section><section class="page" id="certificate"><div class="hero"><div><div class="tag" style="color:#716b63">CERTIFICATE</div><h1>Finish what you started.</h1><p class="lead">Complete the Academy requirements to unlock your certificate.</p></div></div><div class="card"><b>Certificate of Completion</b><p class="muted">Locked until the required course modules are completed.</p><span class="status">Locked · 0% complete</span></div></section></main></div><script>const pages=[['home','Home'],['course','My course'],['resources','Resources'],['sessions','Live sessions'],['certificate','Certificate']],modules=[['01','Remote Work Foundations','Understand remote work and choose a direction that fits your skills.'],['02','Turn Your Experience Into Remote Skills','Translate your existing experience into valuable remote skills.'],['03','Build Your Remote Positioning','Build a clear profile, CV and professional story.'],['04','Find the Right Opportunities','Find remote jobs and clients worth pursuing.'],['05','Applications, Outreach & Interviews','Apply strategically, reach out and convert conversations into opportunities.'],['06','Land, Deliver & Grow','Win your first opportunity, deliver well and build momentum.']];const nav=document.getElementById('nav');nav.innerHTML=pages.map((p,i)=>'<button class="'+(!i?'active':'')+'" data-page="'+p[0]+'">'+p[1]+'</button>').join('');const row=m=>'<div class="item"><div class="num">'+m[0]+'</div><div><b>'+m[1]+'</b><small>'+m[2]+'</small></div><span class="status">Coming soon</span></div>';document.getElementById('modules').innerHTML=modules.map(row).join('');document.getElementById('courseModules').innerHTML=modules.map(row).join('');document.getElementById('resourcesList').innerHTML=[['Remote Career Roadmap','Your step-by-step action plan.'],['Remote Job & Client Platform List','Curated places to find work.'],['CV & Profile Checklist','Position your experience for remote opportunities.'],['Application & Outreach Templates','Messages and follow-ups.']].map(x=>'<div class="item"><div><b>'+x[0]+'</b><small>'+x[1]+'</small></div><span class="status">Coming soon</span></div>').join('');function open(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===id));scrollTo(0,0)}document.querySelectorAll('[data-page]').forEach(x=>x.onclick=()=>open(x.dataset.page));</script></body></html>
-
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Test Student Portal | Assistara</title>
+    <link rel="icon" href="/assistara-logo.svg" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #171717;
+        --cream: #f7f5ef;
+        --yellow: #ffd51f;
+        --line: #e3e0d8;
+        --muted: #716b63;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font:
+          15px/1.45 "DM Sans",
+          Arial,
+          sans-serif;
+      }
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 250px 1fr;
+      }
+      .side {
+        background: #171717;
+        color: #fff;
+        padding: 24px 18px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 17px;
+        margin-bottom: 28px;
+      }
+      .brand img {
+        width: 38px;
+      }
+      .tag {
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        font-weight: 800;
+        color: #ffd51f;
+        margin-bottom: 8px;
+      }
+      .nav {
+        display: grid;
+        gap: 5px;
+      }
+      .nav button {
+        border: 0;
+        background: transparent;
+        color: #aaa;
+        text-align: left;
+        padding: 12px;
+        border-radius: 11px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .nav button.active {
+        background: #292929;
+        color: #fff;
+      }
+      .sidefoot {
+        margin-top: auto;
+        border-top: 1px solid #333;
+        padding-top: 16px;
+      }
+      .profile {
+        color: #aaa;
+        font-size: 12px;
+        padding: 0 10px 12px;
+      }
+      .logout {
+        width: 100%;
+        border: 1px solid #444;
+        background: transparent;
+        color: #fff;
+        border-radius: 12px;
+        padding: 11px;
+        font:
+          700 13px "DM Sans",
+          sans-serif;
+        cursor: pointer;
+      }
+      .main {
+        padding: 42px;
+        max-width: 1180px;
+      }
+      .mobileTop {
+        display: none;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: start;
+      }
+      .hero h1 {
+        font-size: clamp(38px, 5vw, 58px);
+        letter-spacing: -0.05em;
+        line-height: 1;
+        margin: 8px 0;
+      }
+      .lead {
+        max-width: 650px;
+        color: var(--muted);
+        font-size: 17px;
+      }
+      .pill {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 11px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.35fr 0.85fr;
+        gap: 18px;
+        margin-top: 28px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 24px;
+      }
+      .dark {
+        background: #171717;
+        color: #fff;
+        border: 0;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .dark .muted {
+        color: #aaa;
+      }
+      .button {
+        display: inline-block;
+        margin-top: 16px;
+        background: var(--yellow);
+        color: #171717;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 17px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 15px;
+      }
+      .stat b {
+        display: block;
+        font-size: 24px;
+      }
+      .stat span {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .sectionTitle {
+        margin: 30px 0 14px;
+        font-size: 22px;
+      }
+      .list {
+        display: grid;
+        gap: 11px;
+      }
+      .item {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        padding: 17px;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .num {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        background: #f2f0ea;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+      }
+      .item div {
+        flex: 1;
+      }
+      .item b {
+        display: block;
+      }
+      .item small {
+        color: var(--muted);
+      }
+      .status {
+        font-size: 11px;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 7px 9px;
+        background: #f1f1f1;
+      }
+      .notice {
+        margin-top: 22px;
+        background: #fff8cf;
+        border: 1px solid #eadb82;
+        border-radius: 16px;
+        padding: 17px;
+      }
+      @media (max-width: 780px) {
+        .app {
+          display: block;
+        }
+        .side {
+          display: none;
+        }
+        .main {
+          padding: 24px 16px;
+        }
+        .mobileTop {
+          display: flex;
+          background: #171717;
+          color: #fff;
+          border-radius: 17px;
+          padding: 10px 12px;
+          margin-bottom: 24px;
+          align-items: center;
+        }
+        .mobileTop strong {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .mobileTop img {
+          width: 32px;
+          height: 32px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .hero {
+          display: block;
+        }
+        .hero .pill {
+          display: inline-block;
+          margin-top: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      if (!sessionStorage.getItem("assistara_admin_token"))
+        location.replace("/admin");
+    </script>
+    <div class="app">
+      <aside class="side">
+        <div class="brand">
+          <img src="/assistara-logo.svg" alt="" /><span>Assistara Academy</span>
+        </div>
+        <nav class="nav" id="nav"></nav>
+        <div class="sidefoot">
+          <div class="profile">test@assistara.com</div>
+          <button class="logout" id="logout">Log out</button>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="mobileTop">
+          <strong
+            ><img src="/assistara-logo.svg" alt="Assistara" />Assistara
+            Academy</strong
+          >
+        </div>
+        <section class="page active" id="home">
+          <div class="hero">
+            <div>
+              <div class="tag" style="color: #716b63">STUDENT DASHBOARD</div>
+              <h1>Welcome, Test.</h1>
+              <p class="lead">
+                Everything you need to build your remote career lives here. Your
+                course, resources and live sessions are all in one place.
+              </p>
+            </div>
+            <span class="pill">Founding Cohort</span>
+          </div>
+          <div class="grid">
+            <div class="card dark">
+              <div class="tag">START HERE</div>
+              <h2>Your Assistara Academy roadmap</h2>
+              <p class="muted">
+                The learning path, resources and sessions will live here for
+                enrolled students.
+              </p>
+              <button class="button" data-page="course">
+                View course roadmap
+              </button>
+            </div>
+            <div class="card">
+              <div class="tag" style="color: #716b63">YOUR PROGRESS</div>
+              <div class="stats">
+                <div class="stat"><b>0%</b><span>Course</span></div>
+                <div class="stat"><b>0</b><span>Lessons</span></div>
+                <div class="stat"><b>6</b><span>Modules</span></div>
+              </div>
+            </div>
+          </div>
+          <h2 class="sectionTitle">Your learning path</h2>
+          <div id="modules" class="list"></div>
+        </section>
+        <section class="page" id="course">
+          <div class="hero">
+            <div>
+              <div class="tag" style="color: #716b63">MY COURSE</div>
+              <h1>Zero to Remote.</h1>
+              <p class="lead">
+                A structured path from choosing your direction to landing remote
+                work or clients.
+              </p>
+            </div>
+            <span class="pill">0% complete</span>
+          </div>
+          <div class="notice">
+            Course content is being released for the founding cohort. The full
+            roadmap is already here so you always know what comes next.
+          </div>
+          <h2 class="sectionTitle">Course curriculum</h2>
+          <div id="courseModules" class="list"></div>
+        </section>
+        <section class="page" id="resources">
+          <div class="hero">
+            <div>
+              <div class="tag" style="color: #716b63">RESOURCE LIBRARY</div>
+              <h1>Your toolkit.</h1>
+              <p class="lead">
+                Templates, checklists and opportunity resources live here.
+              </p>
+            </div>
+          </div>
+          <div id="resourcesList" class="list"></div>
+        </section>
+        <section class="page" id="sessions">
+          <div class="hero">
+            <div>
+              <div class="tag" style="color: #716b63">LIVE SESSIONS</div>
+              <h1>Learn together.</h1>
+              <p class="lead">
+                Cohort calls, workshops, Q&amp;A sessions and recordings will
+                appear here.
+              </p>
+            </div>
+          </div>
+          <div class="notice">No live sessions are scheduled yet.</div>
+        </section>
+        <section class="page" id="certificate">
+          <div class="hero">
+            <div>
+              <div class="tag" style="color: #716b63">CERTIFICATE</div>
+              <h1>Finish what you started.</h1>
+              <p class="lead">
+                Complete the Academy requirements to unlock your certificate.
+              </p>
+            </div>
+          </div>
+          <div class="card">
+            <b>Certificate of Completion</b>
+            <p class="muted">
+              Locked until the required course modules are completed.
+            </p>
+            <span class="status">Locked · 0% complete</span>
+          </div>
+        </section>
+        <section class="page" id="settings">
+          <div class="hero">
+            <div>
+              <div class="tag" style="color: #716b63">ACCOUNT</div>
+              <h1>Settings.</h1>
+              <p class="lead">Manage your Academy access and support.</p>
+            </div>
+          </div>
+          <div class="list">
+            <div class="item">
+              <div><b>Profile</b><small>test@assistara.com</small></div>
+              <span class="pill">Active student</span>
+            </div>
+            <div class="item">
+              <div>
+                <b>Password</b
+                ><small
+                  >Password reset is available to enrolled students.</small
+                >
+              </div>
+              <button class="button" style="margin: 0">Reset password</button>
+            </div>
+            <div class="item">
+              <div>
+                <b>Help &amp; support</b><small>academy@getassistara.com</small>
+              </div>
+              <a href="mailto:academy@getassistara.com">Contact support</a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script>
+      const pages = [
+          ["home", "Home"],
+          ["course", "My course"],
+          ["resources", "Resources"],
+          ["sessions", "Live sessions"],
+          ["certificate", "Certificate"],
+          ["settings", "Settings"],
+        ],
+        modules = [
+          [
+            "01",
+            "Remote Work Foundations",
+            "Understand remote work and choose a direction that fits your skills.",
+          ],
+          [
+            "02",
+            "Turn Your Experience Into Remote Skills",
+            "Translate your existing experience into valuable remote skills.",
+          ],
+          [
+            "03",
+            "Build Your Remote Positioning",
+            "Build a clear profile, CV and professional story.",
+          ],
+          [
+            "04",
+            "Find the Right Opportunities",
+            "Find remote jobs and clients worth pursuing.",
+          ],
+          [
+            "05",
+            "Applications, Outreach & Interviews",
+            "Apply strategically, reach out and convert conversations into opportunities.",
+          ],
+          [
+            "06",
+            "Land, Deliver & Grow",
+            "Win your first opportunity, deliver well and build momentum.",
+          ],
+        ];
+      const nav = document.getElementById("nav");
+      nav.innerHTML = pages
+        .map(
+          (p, i) =>
+            '<button class="' +
+            (!i ? "active" : "") +
+            '" data-page="' +
+            p[0] +
+            '">' +
+            p[1] +
+            "</button>",
+        )
+        .join("");
+      const row = (m) =>
+        '<div class="item"><div class="num">' +
+        m[0] +
+        "</div><div><b>" +
+        m[1] +
+        "</b><small>" +
+        m[2] +
+        '</small></div><span class="status">Coming soon</span></div>';
+      document.getElementById("modules").innerHTML = modules.map(row).join("");
+      document.getElementById("courseModules").innerHTML = modules
+        .map(row)
+        .join("");
+      document.getElementById("resourcesList").innerHTML = [
+        ["Remote Career Roadmap", "Your step-by-step action plan."],
+        ["Remote Job & Client Platform List", "Curated places to find work."],
+        [
+          "CV & Profile Checklist",
+          "Position your experience for remote opportunities.",
+        ],
+        ["Application & Outreach Templates", "Messages and follow-ups."],
+      ]
+        .map(
+          (x) =>
+            '<div class="item"><div><b>' +
+            x[0] +
+            "</b><small>" +
+            x[1] +
+            '</small></div><span class="status">Coming soon</span></div>',
+        )
+        .join("");
+      function open(id) {
+        document
+          .querySelectorAll(".page")
+          .forEach((x) => x.classList.toggle("active", x.id === id));
+        document
+          .querySelectorAll("[data-page]")
+          .forEach((x) => x.classList.toggle("active", x.dataset.page === id));
+        scrollTo(0, 0);
+      }
+      document
+        .querySelectorAll("[data-page]")
+        .forEach((x) => (x.onclick = () => open(x.dataset.page)));
+      document.getElementById("logout").onclick = () =>
+        location.replace("/admin");
+    </script>
+  </body>
+</html>
