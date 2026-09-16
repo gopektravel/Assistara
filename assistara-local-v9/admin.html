@@ -75,21 +75,22 @@
         color: var(--ink);
       }
       .top #logout {
-        min-height: auto;
-        border-color: transparent;
-        background: transparent;
-        color: #b7b7b7;
-        border-radius: 0;
-        padding: 8px 5px;
+        min-height: 40px;
+        border-color: #3c3c3c;
+        background: #2a2a2a;
+        color: #fff;
+        border-radius: 999px;
+        padding: 9px 15px;
         box-shadow: none;
-        transition: color 0.16s ease, transform 0.16s ease;
+        transition: background 0.16s ease, border-color 0.16s ease;
       }
       .top #logout:hover,
       .top #logout:focus-visible {
-        background: transparent;
-        color: var(--yellow);
+        background: #383838;
+        border-color: #515151;
+        color: #fff;
         outline: 0;
-        transform: translateX(-2px);
+        transform: none;
       }
       .login {
         max-width: 460px;
