@@ -113,6 +113,31 @@
   .masterclass{padding-top:8px}
 }
 </style>
+<style id="sticky-only-signup-cta">
+/* Restore the page/header to normal flow. Only the small yellow signup CTA stays on screen. */
+.topbar{position:static!important;top:auto!important;z-index:auto!important;margin:0!important}
+.header{position:relative!important;top:auto!important;z-index:20!important}
+@media(min-width:621px){
+  .topbar{padding:10px 16px!important;line-height:normal!important}
+  .header{padding:14px 0!important}
+  .nav{min-height:64px!important;padding:10px 12px 10px 18px!important}
+  .hero{padding-top:78px!important}
+}
+/* Keep the actual signup button visible, not the whole yellow announcement/header area. */
+.masterclass-form button[type="submit"],
+.masterclass-form .btn-yellow,
+a[href="/masterclass/join"].btn-yellow,
+a[href="/masterclass/join/"].btn-yellow{
+  position:sticky!important;
+  bottom:12px!important;
+  z-index:70!important;
+}
+@media(max-width:620px){
+  .topbar{padding:8px 10px!important;font-size:10px!important;line-height:14px!important;min-height:0!important}
+  .header{padding:6px 0!important}
+  .masterclass-form button[type="submit"],.masterclass-form .btn-yellow{bottom:10px!important}
+}
+</style>
 </head>
 <body>
 <div class="topbar"><a href="#free-masterclass">Free masterclass: How to Land a Remote Job as a Complete Beginner →</a></div>
