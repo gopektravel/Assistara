@@ -19,6 +19,7 @@
     { "src": "sitemap.xml", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
     { "src": "mobile-polish.css", "use": "@vercel/static" },
+    { "src": "manrope-lock.css", "use": "@vercel/static" },
     { "src": "app.js", "use": "@vercel/static" },
     { "src": "assistara-logo.svg", "use": "@vercel/static" },
     { "src": "assistara-icon-exact.png", "use": "@vercel/static" }
@@ -26,6 +27,7 @@
   "routes": [
     { "src": "/styles.css", "dest": "/styles.css" },
     { "src": "/mobile-polish.css", "dest": "/mobile-polish.css" },
+    { "src": "/manrope-lock.css", "dest": "/manrope-lock.css" },
     { "src": "/app.js", "dest": "/app.js" },
     { "src": "/assistara-logo.svg", "dest": "/assistara-logo.svg" },
     { "src": "/assistara-icon-exact.png", "dest": "/assistara-icon-exact.png" },
