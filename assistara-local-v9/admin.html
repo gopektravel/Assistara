@@ -662,8 +662,10 @@
             [web.filter((x) => x.application_id).length, "Applied"],
             [web.filter((x) => x.purchased).length, "Purchased"],
           ]);
-          $("cards").innerHTML =
-            '<div class="card">Webinar funnel is connected and reporting from Supabase.</div>';
+          const w = web.filter(match);
+          $("cards").innerHTML = w.length
+            ? w.map((x) => `<div class="card"><div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}${x.phone ? " · " + esc(x.phone) : ""}</div></div><div class="badges">${badge(x.attended ? "Attended" : "Registered")}${x.application_id ? badge("Applied") : ""}${x.purchased ? badge("Purchased") : ""}</div></div><div class="detail"><b>Registered:</b> ${x.created_at ? new Date(x.created_at).toLocaleString() : "—"}${x.source ? "<br><b>Source:</b> " + esc(x.source) : ""}${x.utm_source ? "<br><b>Campaign source:</b> " + esc(x.utm_source) : ""}${x.tracking_token ? "<br><b>Tracking:</b> " + esc(x.tracking_token) : ""}</div></div>`).join("")
+            : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
         stat([
@@ -826,7 +828,7 @@
           alert(e.message);
         }
       };
-      document.querySelectorAll(".nav button").forEach(
+      document.querySelectorAll(".nav button[data-tab]").forEach(
         (b) =>
           (b.onclick = () => {
             tab = b.dataset.tab;
