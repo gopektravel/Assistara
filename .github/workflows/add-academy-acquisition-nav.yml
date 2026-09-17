@@ -1,4 +1,4 @@
-name: Add Academy acquisition to admin
+name: Keep acquisition tool labels correct
 on:
   push:
     paths:
@@ -10,26 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add Academy acquisition navigation
+        with:
+          ref: main
+      - name: Fix acquisition tool labels
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('assistara-local-v9/admin.html')
-          s=p.read_text()
-          old='''          ><button data-tab="webinar">Free webinar</button\n          ><button data-tab="b2b">B2B</button>'''
-          new='''          ><button data-tab="webinar">Free webinar</button\n          ><button type="button" onclick="location.href='/admin/acquisition'">Academy acquisition</button\n          ><button data-tab="b2b">B2B</button>'''
-          if old not in s:
-              raise SystemExit('Expected admin nav block not found')
-          s=s.replace(old,new,1)
-          old_desc='Applications, payments and B2B discovery calls.'
-          new_desc='Applications, students, Academy acquisition and B2B discovery calls.'
-          s=s.replace(old_desc,new_desc,1)
-          p.write_text(s)
+          admin=Path('assistara-local-v9/admin.html')
+          s=admin.read_text()
+          s=s.replace('>Free webinar</button', '>Webinar Signups</button')
+          s=s.replace('>Academy acquisition</button', '>Acquisition Tool</button')
+          s=s.replace('Applications, students, Academy acquisition and B2B discovery calls.', 'Applications, students, acquisition tracking and B2B discovery calls.')
+          admin.write_text(s)
+
+          acq=Path('assistara-local-v9/admin-acquisition.html')
+          s=acq.read_text()
+          s=s.replace('<title>Academy Acquisition | Assistara Admin</title>', '<title>Acquisition Tool | Assistara Admin</title>')
+          s=s.replace('<h1>Academy acquisition</h1>', '<h1>Acquisition Tool</h1>')
+          s=s.replace('<h2>Create Academy tracking link</h2>', '<h2>Create tracking link</h2>')
+          acq.write_text(s)
           PY
-      - name: Commit patch
+      - name: Commit labels
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9/admin.html
-          git diff --cached --quiet || git commit -m "Show Academy acquisition in admin"
-          git push
+          git add assistara-local-v9/admin.html assistara-local-v9/admin-acquisition.html
+          git diff --cached --quiet || git commit -m "Rename Webinar Signups and Acquisition Tool"
+          git push origin main
