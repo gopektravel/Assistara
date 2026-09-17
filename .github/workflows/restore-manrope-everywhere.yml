@@ -1,0 +1,82 @@
+name: Restore Manrope everywhere in V9
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore-manrope-everywhere.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore-font:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Remove DM Sans and restore Manrope across V9
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path('assistara-local-v9')
+          text_exts = {'.html', '.css', '.js', '.json', '.md', '.svg'}
+          changed = []
+
+          for path in root.rglob('*'):
+              if not path.is_file() or path.suffix.lower() not in text_exts:
+                  continue
+              try:
+                  original = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+
+              updated = original
+              updated = updated.replace('DM Sans', 'Manrope')
+              updated = updated.replace('DM+Sans', 'Manrope')
+
+              # Normalize the common fallback stack so every control inherits the same face.
+              updated = updated.replace('"Manrope",Arial,sans-serif', '"Manrope",sans-serif')
+              updated = updated.replace("'Manrope',Arial,sans-serif", "'Manrope',sans-serif")
+
+              if updated != original:
+                  path.write_text(updated, encoding='utf-8')
+                  changed.append(str(path))
+
+          print('Changed files:')
+          for p in changed:
+              print(' -', p)
+
+          # Hard guard: the unwanted font must not remain anywhere in the deployable V9 source.
+          leftovers = []
+          for path in root.rglob('*'):
+              if not path.is_file() or path.suffix.lower() not in text_exts:
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              if 'DM Sans' in text or 'DM+Sans' in text:
+                  leftovers.append(str(path))
+
+          if leftovers:
+              raise SystemExit('DM Sans still exists in: ' + ', '.join(leftovers))
+          PY
+
+      - name: Commit font restoration
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No font changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9
+          git commit -m "Restore Manrope across Assistara V9"
+          git push origin main
