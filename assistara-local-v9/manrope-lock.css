@@ -1,0 +1,21 @@
+/* Assistara permanent typography lock — loaded after page styles. */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+html,
+body,
+body *,
+body *::before,
+body *::after,
+button,
+button::before,
+button::after,
+input,
+input::placeholder,
+textarea,
+textarea::placeholder,
+select,
+option,
+optgroup,
+label {
+  font-family: "Manrope", sans-serif !important;
+}
