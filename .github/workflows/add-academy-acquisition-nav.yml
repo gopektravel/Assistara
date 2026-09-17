@@ -1,0 +1,35 @@
+name: Add Academy acquisition to admin
+on:
+  push:
+    paths:
+      - '.github/workflows/add-academy-acquisition-nav.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add Academy acquisition navigation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assistara-local-v9/admin.html')
+          s=p.read_text()
+          old='''          ><button data-tab="webinar">Free webinar</button\n          ><button data-tab="b2b">B2B</button>'''
+          new='''          ><button data-tab="webinar">Free webinar</button\n          ><button type="button" onclick="location.href='/admin/acquisition'">Academy acquisition</button\n          ><button data-tab="b2b">B2B</button>'''
+          if old not in s:
+              raise SystemExit('Expected admin nav block not found')
+          s=s.replace(old,new,1)
+          old_desc='Applications, payments and B2B discovery calls.'
+          new_desc='Applications, students, Academy acquisition and B2B discovery calls.'
+          s=s.replace(old_desc,new_desc,1)
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assistara-local-v9/admin.html
+          git diff --cached --quiet || git commit -m "Show Academy acquisition in admin"
+          git push
