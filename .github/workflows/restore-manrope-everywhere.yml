@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'assistara-local-v9/**'
       - '.github/workflows/restore-manrope-everywhere.yml'
 
 permissions:
@@ -27,11 +28,10 @@ jobs:
 
           root = Path('assistara-local-v9')
           text_exts = {'.html', '.css', '.js', '.json', '.md', '.svg'}
-
-          # One global lock file, loaded last on every HTML page.
           lock = root / 'manrope-lock.css'
-          lock.write_text('''/* Assistara typography lock: Manrope is the only UI font. */
-html, body, body *, button, input, textarea, select, option, label, a, p, span, div, section, article, header, footer, nav, main, aside, h1, h2, h3, h4, h5, h6, strong, b, small, em, i, output, table, thead, tbody, tr, th, td, ul, ol, li, form, fieldset, legend, summary, details, dialog, [class], [id], [class]::before, [class]::after, [id]::before, [id]::after {
+          lock.write_text('''/* Assistara permanent typography lock. */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+html, body, body *, body *::before, body *::after, button, button::before, button::after, input, input::placeholder, textarea, textarea::placeholder, select, option, optgroup, label, a, p, span, div, section, article, header, footer, nav, main, aside, h1, h2, h3, h4, h5, h6, strong, b, small, em, i, output, table, thead, tbody, tr, th, td, ul, ol, li, form, fieldset, legend, summary, details, dialog, [class], [id], [class]::before, [class]::after, [id]::before, [id]::after {
   font-family: "Manrope", sans-serif !important;
 }
 ''', encoding='utf-8')
@@ -43,14 +43,18 @@ html, body, body *, button, input, textarea, select, option, label, a, p, span, 
                   original = path.read_text(encoding='utf-8')
               except UnicodeDecodeError:
                   continue
-              updated = original.replace('DM Sans', 'Manrope').replace('DM+Sans', 'Manrope')
-              if path.suffix.lower() == '.html' and 'manrope-lock.css' not in updated:
-                  tag = '<link rel="stylesheet" href="/manrope-lock.css" />'
-                  updated = re.sub(r'</head>', tag + '\n</head>', updated, count=1, flags=re.I)
+              updated = original
+              updated = updated.replace('DM Sans', 'Manrope').replace('DM+Sans', 'Manrope')
+              updated = updated.replace('""Manrope",sans-serif"', '"Manrope",sans-serif')
+              updated = updated.replace("''Manrope',sans-serif'", "'Manrope',sans-serif")
+              if path.suffix.lower() == '.html':
+                  tag = '<link rel="stylesheet" href="/manrope-lock.css?v=20260917-2" />'
+                  updated = re.sub(r'<link[^>]+href=["\']/manrope-lock\.css[^"\']*["\'][^>]*>', tag, updated, flags=re.I)
+                  if 'manrope-lock.css' not in updated:
+                      updated = re.sub(r'</head>', tag + '\n</head>', updated, count=1, flags=re.I)
               if updated != original:
                   path.write_text(updated, encoding='utf-8')
 
-          # Hard guard: every HTML page must load the lock and forbidden font names cannot survive.
           errors = []
           for path in root.rglob('*'):
               if not path.is_file() or path.suffix.lower() not in text_exts:
