@@ -1,0 +1,76 @@
+name: Fix time worth calculator USD
+on:
+  push:
+    paths: ['.github/workflows/fix-time-worth-calculator-usd.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix calculator logic and USD display
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('assistara-local-v9/index.html')
+          s = index.read_text(encoding='utf-8')
+          replacements = {
+              'id="valueOut">€100</output>': 'id="valueOut">$100</output>',
+              'id="delegateOut">€28</output>': 'id="delegateOut">$28</output>',
+              'id="valueYear">€52,000</strong>': 'id="valueYear">$52,000</strong>',
+              'id="netYear">€37,440</strong>': 'id="netYear">$37,440</strong>',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Expected calculator markup not found: {old}')
+              s = s.replace(old, new, 1)
+          index.write_text(s, encoding='utf-8')
+
+          app = Path('assistara-local-v9/app.js')
+          js = app.read_text(encoding='utf-8')
+          marker = '/* Time-worth calculator: keep outputs live and use USD everywhere. */'
+          if marker not in js:
+              js += r'''
+
+/* Time-worth calculator: keep outputs live and use USD everywhere. */
+(()=>{
+  const root=document.getElementById('savingsCalculator');
+  if(!root)return;
+  const hours=root.querySelector('#hoursRange');
+  const value=root.querySelector('#valueRange');
+  const delegate=root.querySelector('#delegateRange');
+  const hoursOut=root.querySelector('#hoursOut');
+  const valueOut=root.querySelector('#valueOut');
+  const delegateOut=root.querySelector('#delegateOut');
+  const timeYear=root.querySelector('#timeYear');
+  const valueYear=root.querySelector('#valueYear');
+  const netYear=root.querySelector('#netYear');
+  if(!hours||!value||!hoursOut||!valueOut||!timeYear||!valueYear)return;
+  const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
+  const render=()=>{
+    const h=Math.max(0,Number(hours.value)||0);
+    const v=Math.max(0,Number(value.value)||0);
+    const d=delegate?Math.max(0,Number(delegate.value)||0):0;
+    const annualHours=h*52;
+    hoursOut.textContent=`${h} hrs`;
+    valueOut.textContent=usd(v);
+    if(delegateOut)delegateOut.textContent=usd(d);
+    timeYear.textContent=`${annualHours.toLocaleString('en-US')} hrs`;
+    valueYear.textContent=usd(annualHours*v);
+    if(netYear)netYear.textContent=usd(annualHours*Math.max(0,v-d));
+  };
+  [hours,value,delegate].filter(Boolean).forEach(el=>el.addEventListener('input',render));
+  render();
+})();
+'''
+              app.write_text(js, encoding='utf-8')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "Assistara UI Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add assistara-local-v9/index.html assistara-local-v9/app.js
+          git diff --cached --quiet || git commit -m "Fix time worth calculator and use USD"
+          git push
