@@ -1,6 +1,7 @@
 name: Fix time worth calculator USD
 on:
   push:
+    branches: [main]
     paths: ['.github/workflows/fix-time-worth-calculator-usd.yml']
 permissions:
   contents: write
@@ -9,68 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix calculator logic and USD display
+        with:
+          ref: main
+      - name: Patch calculator
         run: |
           python - <<'PY'
           from pathlib import Path
-
-          index = Path('assistara-local-v9/index.html')
-          s = index.read_text(encoding='utf-8')
-          replacements = {
-              'id="valueOut">€100</output>': 'id="valueOut">$100</output>',
-              'id="delegateOut">€28</output>': 'id="delegateOut">$28</output>',
-              'id="valueYear">€52,000</strong>': 'id="valueYear">$52,000</strong>',
-              'id="netYear">€37,440</strong>': 'id="netYear">$37,440</strong>',
-          }
-          for old, new in replacements.items():
-              if old not in s:
-                  raise SystemExit(f'Expected calculator markup not found: {old}')
-              s = s.replace(old, new, 1)
-          index.write_text(s, encoding='utf-8')
-
-          app = Path('assistara-local-v9/app.js')
-          js = app.read_text(encoding='utf-8')
-          marker = '/* Time-worth calculator: keep outputs live and use USD everywhere. */'
-          if marker not in js:
-              js += r'''
-
-/* Time-worth calculator: keep outputs live and use USD everywhere. */
-(()=>{
-  const root=document.getElementById('savingsCalculator');
-  if(!root)return;
-  const hours=root.querySelector('#hoursRange');
-  const value=root.querySelector('#valueRange');
-  const delegate=root.querySelector('#delegateRange');
-  const hoursOut=root.querySelector('#hoursOut');
-  const valueOut=root.querySelector('#valueOut');
-  const delegateOut=root.querySelector('#delegateOut');
-  const timeYear=root.querySelector('#timeYear');
-  const valueYear=root.querySelector('#valueYear');
-  const netYear=root.querySelector('#netYear');
-  if(!hours||!value||!hoursOut||!valueOut||!timeYear||!valueYear)return;
-  const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
-  const render=()=>{
-    const h=Math.max(0,Number(hours.value)||0);
-    const v=Math.max(0,Number(value.value)||0);
-    const d=delegate?Math.max(0,Number(delegate.value)||0):0;
-    const annualHours=h*52;
-    hoursOut.textContent=`${h} hrs`;
-    valueOut.textContent=usd(v);
-    if(delegateOut)delegateOut.textContent=usd(d);
-    timeYear.textContent=`${annualHours.toLocaleString('en-US')} hrs`;
-    valueYear.textContent=usd(annualHours*v);
-    if(netYear)netYear.textContent=usd(annualHours*Math.max(0,v-d));
-  };
-  [hours,value,delegate].filter(Boolean).forEach(el=>el.addEventListener('input',render));
-  render();
-})();
-'''
-              app.write_text(js, encoding='utf-8')
+          p=Path('assistara-local-v9/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('id="valueOut">€100</output>','id="valueOut">$100</output>')
+          s=s.replace('id="delegateOut">€28</output>','id="delegateOut">$28</output>')
+          s=s.replace('id="valueYear">€52,000</strong>','id="valueYear">$52,000</strong>')
+          s=s.replace('id="netYear">€37,440</strong>','id="netYear">$37,440</strong>')
+          script='''<script id="time-worth-usd-fix">(function(){var r=document.getElementById('savingsCalculator');if(!r)return;var h=r.querySelector('#hoursRange'),v=r.querySelector('#valueRange'),d=r.querySelector('#delegateRange'),ho=r.querySelector('#hoursOut'),vo=r.querySelector('#valueOut'),do_=r.querySelector('#delegateOut'),ty=r.querySelector('#timeYear'),vy=r.querySelector('#valueYear'),ny=r.querySelector('#netYear');function usd(n){return '$'+Math.round(n).toLocaleString('en-US')}function render(){var hv=Number(h.value)||0,vv=Number(v.value)||0,dv=d?(Number(d.value)||0):0,annual=hv*52;ho.textContent=hv+' hrs';vo.textContent=usd(vv);if(do_)do_.textContent=usd(dv);ty.textContent=annual.toLocaleString('en-US')+' hrs';vy.textContent=usd(annual*vv);if(ny)ny.textContent=usd(annual*Math.max(0,vv-dv))}[h,v,d].filter(Boolean).forEach(function(x){x.addEventListener('input',render)});render()})();</script>'''
+          if 'id="time-worth-usd-fix"' not in s:
+              s=s.replace('</body>',script+'\n</body>',1)
+          s=s.replace('/app.js?v=20260912-2030','/app.js?v=20260917-USD-FIX')
+          p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit fix
+      - name: Commit
         run: |
           git config user.name "Assistara UI Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/index.html assistara-local-v9/app.js
-          git diff --cached --quiet || git commit -m "Fix time worth calculator and use USD"
-          git push
+          git add assistara-local-v9/index.html
+          git diff --cached --quiet || git commit -m "Fix live time worth calculator in USD"
+          git push origin main
