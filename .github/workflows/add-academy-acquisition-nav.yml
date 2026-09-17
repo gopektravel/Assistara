@@ -1,4 +1,4 @@
-name: Keep acquisition tool labels correct
+name: Keep acquisition tracker connected
 on:
   push:
     paths:
@@ -12,28 +12,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Fix acquisition tool labels
+      - name: Connect Acquisition Tracker in admin
         run: |
           python - <<'PY'
           from pathlib import Path
           admin=Path('assistara-local-v9/admin.html')
           s=admin.read_text()
           s=s.replace('>Free webinar</button', '>Webinar Signups</button')
-          s=s.replace('>Academy acquisition</button', '>Acquisition Tool</button')
+          s=s.replace('>Academy acquisition</button', '>Acquisition Tracker</button')
+          s=s.replace('>Acquisition Tool</button', '>Acquisition Tracker</button')
+          s=s.replace("onclick=\"location.href='/admin/acquisition'\">Acquisition Tool</button", "onclick=\"location.href='/admin/acquisition'\">Acquisition Tracker</button")
           s=s.replace('Applications, students, Academy acquisition and B2B discovery calls.', 'Applications, students, acquisition tracking and B2B discovery calls.')
           admin.write_text(s)
-
-          acq=Path('assistara-local-v9/admin-acquisition.html')
-          s=acq.read_text()
-          s=s.replace('<title>Academy Acquisition | Assistara Admin</title>', '<title>Acquisition Tool | Assistara Admin</title>')
-          s=s.replace('<h1>Academy acquisition</h1>', '<h1>Acquisition Tool</h1>')
-          s=s.replace('<h2>Create Academy tracking link</h2>', '<h2>Create tracking link</h2>')
-          acq.write_text(s)
           PY
-      - name: Commit labels
+      - name: Commit admin navigation
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9/admin.html assistara-local-v9/admin-acquisition.html
-          git diff --cached --quiet || git commit -m "Rename Webinar Signups and Acquisition Tool"
+          git add assistara-local-v9/admin.html
+          git diff --cached --quiet || git commit -m "Connect Acquisition Tracker in admin"
           git push origin main
