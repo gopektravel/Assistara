@@ -442,6 +442,55 @@
         .callGrid {
           grid-template-columns: 1fr;
         }
+        .adminHead {
+          display: block;
+        }
+        .adminHead h1 {
+          margin-bottom: 6px;
+        }
+        .quick {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          width: 100%;
+          margin-top: 18px;
+        }
+        .quick a {
+          min-height: 42px;
+          width: 100%;
+          justify-content: center;
+          gap: 7px;
+          padding: 9px 10px;
+          border: 1px solid var(--line);
+          background: #fff;
+          border-radius: 12px;
+          font-size: 12px;
+        }
+        .quick svg {
+          width: 16px;
+          height: 16px;
+          flex: 0 0 16px;
+        }
+        .nav {
+          gap: 6px;
+          padding: 6px;
+          border-radius: 14px;
+          scrollbar-width: none;
+        }
+        .nav::-webkit-scrollbar {
+          display: none;
+        }
+        .nav button {
+          flex: 0 0 auto;
+          padding: 10px 12px;
+          border-radius: 9px;
+          font-size: 12px;
+        }
+        .nav button.active {
+          border-bottom: 0;
+          background: #171717;
+          color: #fff;
+        }
       }
     </style>
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
