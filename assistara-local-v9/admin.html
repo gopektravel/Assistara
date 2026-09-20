@@ -702,7 +702,7 @@
           const w = visibleWeb.filter(match);
           const sourceFor=x=>{if(!x.tracking_token)return "Website visitor";const t=String(x.tracking_token).trim();const link=acquisitionLinks.find(l=>String(l.token||"").trim()===t||String(l.id||"").trim()===t);return link?(link.channel+" → "+link.placement+(link.label?" · "+link.label:"")):"Website visitor"};
           $("cards").innerHTML = w.length
-            ? w.map((x,i) => {const source=sourceFor(x);return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div><div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}')">Delete signup</button></div></div></div>`}).join("")
+            ? w.map((x,i) => {const source=sourceFor(x);return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div><div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
@@ -853,8 +853,8 @@
           alert(e.message);
         }
       };
-      window.deleteWebinarSignup = async (id) => {
-        if (!confirm("Permanently delete this webinar signup? This cannot be undone.")) return;
+      window.deleteWebinarSignup = async (id, name, email) => {
+        if (!confirm(`Are you sure you want to delete ${name} - ${email}?`)) return;
         try {
           await req("delete_signup", { id });
           toast("Webinar signup deleted");
