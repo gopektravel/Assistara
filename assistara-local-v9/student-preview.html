@@ -282,10 +282,7 @@
           align-items: center;
           gap: 8px;
         }
-        .mobileTop img {
-          width: 32px;
-          height: 32px;
-        }
+        .mobileTop img{width:32px;height:32px}.mobileTop{position:sticky;top:10px;z-index:20;justify-content:space-between;gap:10px}.mobileMenuBtn{border:0;background:#292929;color:#fff;width:40px;height:40px;border-radius:11px;font:800 20px Manrope;cursor:pointer}.mobileMenu{display:none;position:fixed;inset:0;z-index:30;background:#171717;color:#fff;padding:20px 16px 28px;overflow:auto}.mobileMenu.open{display:flex;flex-direction:column}.mobileMenuHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.mobileMenuHead strong{display:flex;align-items:center;gap:8px}.mobileMenuHead img{width:34px;height:34px}.mobileClose{border:0;background:#292929;color:#fff;width:40px;height:40px;border-radius:11px;font:800 18px Manrope;cursor:pointer}.mobileNav{display:grid;gap:7px}.mobileNav button{border:0;background:transparent;color:#bbb;text-align:left;padding:14px 13px;border-radius:12px;font:700 15px Manrope;cursor:pointer}.mobileNav button.active{background:#292929;color:#fff}.mobileMenuFoot{margin-top:auto;border-top:1px solid #333;padding-top:16px;color:#aaa;font-size:12px}body.menuOpen{overflow:hidden}
         .grid {
           grid-template-columns: 1fr;
         }
@@ -317,13 +314,7 @@
         </div>
       </aside>
       <main class="main">
-        <div class="mobileTop">
-          <strong
-            ><img src="/assistara-logo.svg" alt="Assistara" />Assistara
-            Academy</strong
-          >
-        </div>
-        <section class="page active" id="home">
+        <div class="mobileTop"><strong><img src="/assistara-logo.svg" alt="Assistara" />Assistara Academy</strong><button class="mobileMenuBtn" id="mobileMenuBtn" aria-label="Open navigation" aria-expanded="false">☰</button></div><div class="mobileMenu" id="mobileMenu"><div class="mobileMenuHead"><strong><img src="/assistara-logo.svg" alt="" />Assistara Academy</strong><button class="mobileClose" id="mobileClose" aria-label="Close navigation">✕</button></div><nav class="mobileNav" id="mobileNav"></nav><div class="mobileMenuFoot"><div style="padding:0 10px 8px">test@assistara.com</div><button class="logout" id="mobileLogout">Log out</button></div></div><section class="page active" id="home">
           <div class="hero">
             <div>
               <div class="tag" style="color: #716b63">STUDENT DASHBOARD</div>
@@ -512,6 +503,12 @@
             "</button>",
         )
         .join("");
+      mobileNav.innerHTML=nav.innerHTML;
+      function openPage(id){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x.dataset.page===id));mobileMenu.classList.remove("open");document.body.classList.remove("menuOpen");mobileMenuBtn.setAttribute("aria-expanded","false");window.scrollTo({top:0,behavior:"smooth"})}
+      mobileMenuBtn.onclick=()=>{mobileMenu.classList.add("open");document.body.classList.add("menuOpen");mobileMenuBtn.setAttribute("aria-expanded","true")};
+      mobileClose.onclick=()=>openPage(document.querySelector(".page.active")?.id||"home");
+      mobileLogout.onclick=()=>logout.click();
+      mobileNav.onclick=e=>{let b=e.target.closest("[data-page]");if(b)openPage(b.dataset.page)};
       const row = (m) =>
         '<div class="item"><div class="num">' +
         m[0] +
