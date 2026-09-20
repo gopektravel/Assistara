@@ -10,8 +10,12 @@ async function acquisition(b:any){
   if(visit){
     const r=await fetch(`${U}/rest/v1/acquisition_visits?id=eq.${encodeURIComponent(visit)}&select=visitor_id,tracking_token`,{headers:{apikey:K,Authorization:`Bearer ${K}`}});
     const j=await r.json().catch(()=>[]);
-    visitor=visitor||String(j?.[0]?.visitor_id||'');
-    return {visit,visitor,token:token||String(j?.[0]?.tracking_token||'')};
+    if(j?.[0]){
+      visitor=visitor||String(j[0].visitor_id||'');
+      return {visit,visitor,token:token||String(j[0].tracking_token||'')};
+    }
+    // Ignore stale attribution IDs left in a browser after test-data cleanup.
+    visit='';
   }
   if(token){
     const lr=await fetch(`${U}/rest/v1/acquisition_links?token=eq.${encodeURIComponent(token)}&is_active=eq.true&select=id,token&limit=1`,{headers:{apikey:K,Authorization:`Bearer ${K}`}});
