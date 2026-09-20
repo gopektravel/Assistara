@@ -561,6 +561,7 @@
         web = [],
         b2b = [],
         accounts = [],
+        acquisitionLinks = [],
         tab = "applicants";
       const $ = (x) => document.getElementById(x),
         esc = (s) =>
@@ -699,8 +700,9 @@
             [web.filter((x) => x.purchased).length, "Purchased"],
           ]);
           const w = web.filter(match);
+          const sourceFor=x=>{const link=acquisitionLinks.find(l=>String(l.token||"")===String(x.tracking_token||""));return link?(link.channel+" → "+link.placement+(link.label?" · "+link.label:"")):"Website visitor"};
           $("cards").innerHTML = w.length
-            ? w.map((x,i) => {const source=x.utm_source||x.source||(x.tracking_token?"Tracking link":"Website visitor");return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}${x.tracking_token?"<br><b>Tracking link/code:</b> "+esc(x.tracking_token):"<br><b>Tracking:</b> No tracking link"}</div></div></div>`}).join("")
+            ? w.map((x,i) => {const source=sourceFor(x);return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}${x.tracking_token?"<br><b>Tracking link/code:</b> "+esc(x.tracking_token):"<br><b>Tracking:</b> No tracking link"}</div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
@@ -725,6 +727,7 @@
         apps = d.applications || [];
         web = d.signups || [];
         b2b = d.b2b || [];
+        try { const a=await fetch("https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"list"})}); const aj=await a.json(); acquisitionLinks=a.ok?(aj.links||[]):[] } catch { acquisitionLinks=[] }
         try {
           accounts = (await req("list", {}, ACC)).accounts || [];
         } catch {
