@@ -678,7 +678,7 @@
           return;
         }
         if (tab === "students") {
-          const s = apps.filter((x) => x.auth_user_id).filter(match);
+          const studentIds=new Set(accounts.map(a=>String(a.id||'')));const s = apps.filter((x) => x.auth_user_id && studentIds.has(String(x.auth_user_id))).filter(match);
           stat([
             [s.length, "Students"],
             [s.filter((x) => !x.suspended_at).length, "Active"],
@@ -846,7 +846,7 @@
       window.deleteAccount = async (id) => {
         if (!confirm("Delete this Academy login account?")) return;
         try {
-          await req("delete_account", { id });
+          await req("delete_account", { id }, ACC);
           toast("Account deleted");
           await load();
         } catch (e) {
