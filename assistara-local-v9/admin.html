@@ -217,6 +217,14 @@
         background: var(--yellow);
         border-color: #e6ba00;
       }
+      .signupGoal { background:#171717; color:#fff; border-radius:16px; padding:16px; margin:0 0 14px; }
+      .signupGoalTop { display:flex; justify-content:space-between; align-items:end; gap:12px; }
+      .signupGoalTop b { font-size:24px; }
+      .signupGoalTop span { font-size:12px; color:#c9c5bc; }
+      .signupGoalTrack { height:12px; background:#353535; border-radius:999px; overflow:hidden; margin-top:11px; }
+      .signupGoalFill { height:100%; background:var(--yellow); border-radius:999px; }
+      .signupSource { cursor:pointer; }
+      .signupSource .studentBody { font-size:12px; }
       .stats {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -530,7 +538,7 @@
         </div>
         <div id="pendingBox"></div>
         <input id="search" class="search" placeholder="Search..." />
-        <div id="stats" class="stats"></div>
+        <div id="signupGoal"></div><div id="stats" class="stats"></div>
         <div id="cards" class="cards"></div>
       </section>
     </div>
@@ -682,6 +690,8 @@
           return;
         }
         if (tab === "webinar") {
+          const goal=400,pct=Math.min(100,Math.round((web.length/goal)*100));
+          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${web.length} / ${goal}</b><div><span>Webinar signup goal</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
           stat([
             [web.length, "Registered"],
             [web.filter((x) => x.attended).length, "Attended"],
@@ -690,10 +700,11 @@
           ]);
           const w = web.filter(match);
           $("cards").innerHTML = w.length
-            ? w.map((x) => `<div class="card"><div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}${x.phone ? " · " + esc(x.phone) : ""}</div></div><div class="badges">${badge(x.attended ? "Attended" : "Registered")}${x.application_id ? badge("Applied") : ""}${x.purchased ? badge("Purchased") : ""}</div></div><div class="detail"><b>Registered:</b> ${x.created_at ? new Date(x.created_at).toLocaleString() : "—"}${x.source ? "<br><b>Source:</b> " + esc(x.source) : ""}${x.utm_source ? "<br><b>Campaign source:</b> " + esc(x.utm_source) : ""}${x.tracking_token ? "<br><b>Tracking:</b> " + esc(x.tracking_token) : ""}</div></div>`).join("")
+            ? w.map((x,i) => {const source=x.utm_source||x.source||(x.tracking_token?"Tracking link":"Website visitor");return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}${x.tracking_token?"<br><b>Tracking link/code:</b> "+esc(x.tracking_token):"<br><b>Tracking:</b> No tracking link"}</div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
+        $("signupGoal").innerHTML="";
         stat([
           [b2b.length, "Leads"],
           [b2b.filter((x) => x.status === "responded").length, "Responded"],
