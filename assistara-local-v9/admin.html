@@ -691,18 +691,18 @@
           return;
         }
         if (tab === "webinar") {
-          const goal=400,pct=Math.min(100,Math.round((web.length/goal)*100));
-          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${web.length} / ${goal}</b><div><span>Webinar signup goal</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
+          const visibleWeb=web.filter(x=>!/^diag(?:nostic)?[-_]/i.test(String(x.email||""))&&!/diagnostic/i.test(String(x.name||""))&&!/diagnostic/i.test(String(x.source||""))),goal=400,pct=Math.min(100,Math.round((visibleWeb.length/goal)*100));
+          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${visibleWeb.length} / ${goal}</b><div><span>Webinar signup goal</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
           stat([
-            [web.length, "Registered"],
-            [web.filter((x) => x.attended).length, "Attended"],
-            [web.filter((x) => x.application_id).length, "Applied"],
-            [web.filter((x) => x.purchased).length, "Purchased"],
+            [visibleWeb.length, "Registered"],
+            [visibleWeb.filter((x) => x.attended).length, "Attended"],
+            [visibleWeb.filter((x) => x.application_id).length, "Applied"],
+            [visibleWeb.filter((x) => x.purchased).length, "Purchased"],
           ]);
-          const w = web.filter(match);
-          const sourceFor=x=>{const link=acquisitionLinks.find(l=>String(l.token||"")===String(x.tracking_token||""));return link?(link.channel+" → "+link.placement+(link.label?" · "+link.label:"")):"Website visitor"};
+          const w = visibleWeb.filter(match);
+          const sourceFor=x=>{if(!x.tracking_token)return "Website visitor";const t=String(x.tracking_token).trim();const link=acquisitionLinks.find(l=>String(l.token||"").trim()===t||String(l.id||"").trim()===t);return link?(link.channel+" → "+link.placement+(link.label?" · "+link.label:"")):"Website visitor"};
           $("cards").innerHTML = w.length
-            ? w.map((x,i) => {const source=sourceFor(x);return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}${x.tracking_token?"<br><b>Tracking link/code:</b> "+esc(x.tracking_token):"<br><b>Tracking:</b> No tracking link"}</div></div></div>`}).join("")
+            ? w.map((x,i) => {const source=sourceFor(x);return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
