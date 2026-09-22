@@ -521,14 +521,18 @@
       mobileClose.onclick=()=>{mobileMenu.classList.remove("open");document.body.classList.remove("menuOpen");mobileMenuBtn.setAttribute("aria-expanded","false")};
       mobileLogout.onclick=()=>logout.click();
       mobileNav.onclick=e=>{let b=e.target.closest("[data-page]");if(b)openPage(b.dataset.page)};
-      const row = (m) =>
+      const row = (m, i) =>
         '<div class="item"><div class="num">' +
         m[0] +
         "</div><div><b>" +
         m[1] +
         "</b><small>" +
         m[2] +
-        '</small></div><span class="status">Coming soon</span></div>';
+        '</small></div>' +
+        (i === 0
+          ? '<a class="button" style="margin:0;text-decoration:none" href="/academy/lesson-1?preview=1">Open Lesson 1</a>'
+          : '<span class="status">Coming soon</span>') +
+        '</div>';
       document.getElementById("modules").innerHTML = modules.map(row).join("");
       document.getElementById("courseModules").innerHTML = modules
         .map(row)
