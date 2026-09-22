@@ -545,7 +545,7 @@
         const progress='<div class="moduleProgress"><div class="progressTrack" aria-label="Module '+(i+1)+' lesson progress"><div class="progressFill" style="width:'+pct+'%"></div></div><span class="progressLabel">'+completed+' of '+total+' lessons</span></div>';
         return '<div class="item moduleRow"><div class="moduleNum">'+m[0]+'</div>'+progress+
           '<div><b>'+m[1]+'</b><small>'+m[2]+'</small></div>'+
-          (i===0?'<a class="button" style="text-decoration:none" href="/academy/module-1?preview=1">Open Module →</a>':'<span class="status">Coming soon</span>')+
+          (i===0?'<a class="button" style="text-decoration:none" href="/academy/module-1?preview=1">Open Module →</a>':'<span class="status">Locked · Pass Module '+i+' gate</span>')+
           '</div>';
       };
       document.getElementById("modules").innerHTML = modules.map(row).join("");
