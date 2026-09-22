@@ -747,9 +747,10 @@
               return;
             }
             var user = session.user;
-            var lesson1State = {};
-            try { lesson1State = JSON.parse(localStorage.getItem("assistara_m1_l1_student_"+user.id)||"{}"); } catch(e) {}
-            var completedLessons = lesson1State.completed ? 1 : 0;
+            var completedLessons = [1,2,3,4,5].reduce(function(total,n){
+              try { return total + (JSON.parse(localStorage.getItem("assistara_m1_l"+n+"_student_"+user.id)||"{}").completed ? 1 : 0); }
+              catch(e) { return total; }
+            },0);
             document.getElementById("homeModules").innerHTML = moduleHTML(completedLessons);
             document.getElementById("courseModules").innerHTML = moduleHTML(completedLessons);
             var display =
