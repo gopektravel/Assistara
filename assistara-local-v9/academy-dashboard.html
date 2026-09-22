@@ -458,19 +458,11 @@
               <div class="eyebrow">RESOURCE LIBRARY</div>
               <h1>Your toolkit.</h1>
               <p class="lead">
-                Templates, worksheets, checklists and opportunity resources will
-                live here.
+                Your Academy tools, templates, worksheets and checklists live here.
               </p>
             </div>
           </div>
           <div id="resourcesList" class="list"></div>
-        </section>
-        <section id="tools" class="page">
-          <div class="hero"><div><div class="eyebrow">ACADEMY TOOLS</div><h1>Tools that move you forward.</h1><p class="lead">Practical tools to turn what you learn into action.</p></div></div>
-          <div class="list">
-            <div class="item"><div><strong>Client Finder</strong><small>Discover client sources, save opportunities and track your personal hunt from saved to client won.</small></div><a class="btn" style="margin:0" href="/client-finder">Open tool</a></div>
-            <div class="item"><div><strong>More Academy tools</strong><small>New tools will appear here as they are released.</small></div><span class="status">Coming soon</span></div>
-          </div>
         </section>
         <section id="sessions" class="page">
           <div class="hero">
@@ -598,7 +590,6 @@
           ["home", "Home"],
           ["course", "My course"],
           ["resources", "Resources"],
-          ["tools", "Tools"],
           ["sessions", "Live sessions"],
           ["certificate", "Certificate"],
           ["settings", "Settings"],
@@ -610,23 +601,11 @@
           ["04","Landing Your First Client","Build your offer, find opportunities, pitch yourself and turn conversations into your first client.","4 modules"],
         ];
         var resources = [
-          ["Remote Career Roadmap", "Your step-by-step Academy action plan."],
-          [
-            "Remote Job & Client Platform List",
-            "Curated places to find remote roles and freelance clients.",
-          ],
-          [
-            "CV & Profile Checklist",
-            "Position your experience for remote opportunities.",
-          ],
-          [
-            "Application & Outreach Templates",
-            "Templates for applications, messages and follow-ups.",
-          ],
-          [
-            "Interview Preparation Workbook",
-            "Prepare your stories, proof and interview answers.",
-          ],
+          ["Client Finder","Find client sources, save opportunities and track your client hunt.","tool","/client-finder"],
+          ["Remote Career Roadmap","Your step-by-step Academy action plan.","resource",""],
+          ["CV & Profile Checklist","Position your experience for remote opportunities.","resource",""],
+          ["Application & Outreach Templates","Templates for applications, messages and follow-ups.","resource",""],
+          ["Interview Preparation Workbook","Prepare your stories, proof and interview answers.","resource",""]
         ];
         function moduleHTML() {
           return modules.map(function (m, i) {
@@ -638,17 +617,12 @@
         }
         document.getElementById("homeModules").innerHTML = moduleHTML();
         document.getElementById("courseModules").innerHTML = moduleHTML();
-        document.getElementById("resourcesList").innerHTML = resources
-          .map(function (r) {
-            return (
-              '<div class="item"><div><strong>' +
-              r[0] +
-              "</strong><small>" +
-              r[1] +
-              '</small></div><span class="status">Coming soon</span></div>'
-            );
-          })
-          .join("");
+        document.getElementById("resourcesList").innerHTML = resources.map(function (r) {
+          var action = r[2] === "tool"
+            ? '<a class="btn" style="margin:0" href="'+r[3]+'">Open tool</a>'
+            : '<span class="status">Coming soon</span>';
+          return '<div class="item"><div><strong>'+r[0]+'</strong><small>'+r[1]+'</small></div>'+action+'</div>';
+        }).join("");
         function openPage(id) {
           document.querySelectorAll(".page").forEach(function (p) {
             p.classList.toggle("active", p.id === id);
