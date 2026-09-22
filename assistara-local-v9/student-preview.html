@@ -258,7 +258,7 @@
       .moduleRow small{display:block;margin-top:4px;line-height:1.4}
       .moduleRow .button{margin:0;padding:8px 12px;font-size:11px;min-height:0;white-space:nowrap}
       .moduleRow:first-child{border-color:#d8cf9c}
-      .moduleProgress{margin-top:10px;display:grid;grid-template-columns:minmax(120px,240px) auto;gap:10px;align-items:center}
+      .moduleProgress{margin:0 0 0 auto;display:grid;grid-template-columns:minmax(170px,1fr) auto;gap:10px;align-items:center;flex:0 1 340px;min-width:250px}
       .progressTrack{height:7px;background:#ece9e1;border-radius:999px;overflow:hidden}
       .progressFill{height:100%;background:var(--yellow);border-radius:999px}
       .progressLabel{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
@@ -311,6 +311,7 @@
         .moduleRow{align-items:flex-start;flex-wrap:wrap;padding:13px 14px}
         .moduleRow .moduleNum{flex:0 0 26px;width:26px;padding-top:3px}
         .moduleRow>div:not(.moduleNum){flex:1 1 calc(100% - 40px)}
+        .moduleRow .moduleProgress{order:3;flex:1 1 100%;min-width:0;margin:8px 0 0 38px}
         .moduleRow .status,.moduleRow .button,.moduleRow>a.button{margin-left:38px;width:auto;text-align:center;margin-top:0!important}
         .item:not(.moduleRow) .status{margin-left:auto}
         .sectionTitle{margin-top:24px}
@@ -543,7 +544,7 @@
         m[1] +
         "</b><small>" +
         m[2] +
-        '</small>'+progress+'</div>' +
+        '</small></div>'+progress +
         (i === 0
           ? '<a class="button" style="text-decoration:none" href="/academy/module-1?preview=1">Open Module →</a>'
           : '<span class="status">Coming soon</span>') +
