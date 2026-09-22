@@ -652,11 +652,11 @@
                 m[1] +
                 "</h3><p>" +
                 m[2] +
-                '</p></div><span class="status ' +
-                (i === 0 ? "open" : "") +
-                '">' +
-                (i === 0 ? "Preparing lessons" : "Coming soon") +
-                "</span></div>"
+                '</p></div>' +
+                (i === 0
+                  ? '<a class="btn" style="margin:0;white-space:nowrap" href="/academy/lesson-1">Open Lesson 1</a>'
+                  : '<span class="status">Coming soon</span>') +
+                "</div>"
               );
             })
             .join("");
