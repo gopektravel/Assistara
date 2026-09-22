@@ -18,15 +18,15 @@ main{max-width:1080px;margin:auto;padding:42px 22px 80px}.eyebrow{font-size:11px
 </style><link rel="stylesheet" href="/manrope-lock.css?v=20260917-3">
 </head>
 <body><div id="loading" class="loading">Loading Lesson 1...</div><div id="app" hidden>
-<header class="top"><div class="topin"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><a class="back" id="backLink" href="/academy/dashboard">← Back to course</a></div></header>
+<header class="top"><div class="topin"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><a class="back" id="backLink" href="/academy/module-1">← Back to module</a></div></header>
 <main>
 <section class="hero"><div class="eyebrow">MODULE 1 · LESSON 1</div><h1>From Employee to Freelancer: Own the Outcome</h1><p class="lead">Learn to look beyond a literal instruction, understand the useful result the client needs, take appropriate responsibility, and recognize where your authority ends.</p><div class="principle">Think beyond the task. Don't automatically work beyond the task.</div></section>
 
 <section class="section"><div class="sectionhead"><span class="step">1</span><h2>Video Lesson</h2></div><div class="video"><div><div class="icon">✦</div><h3>Coming soon</h3><p>The recorded lesson will appear here.</p></div></div></section>
 
 <section class="section"><div class="sectionhead"><span class="step">2</span><h2>Learning Materials</h2></div><div class="resources">
-<div class="card resource"><span class="tag">LESSON TEACHING MATERIAL</span><h3>Teaching Presentation</h3><p>Follow the visual lesson material used to teach task vs outcome, responsibility, authority and professional ownership.</p><a class="btn" target="_blank" rel="noopener" href="https://docs.google.com/presentation/d/15defyACy3m_X8RKQ6p4qtHTsdXyh_GPV/edit?usp=drivesdk&ouid=100150800557351047640&rtpof=true&sd=true">Open presentation ↗</a></div>
-<div class="card resource"><span class="tag">PRACTICAL JOB AID</span><h3>Student Guide</h3><p>Keep this quick reference open during client work. It includes the four-question framework, worksheet and pre-action checklist.</p><a class="btn" target="_blank" rel="noopener" href="https://drive.google.com/file/d/14V4xBpX1MfCzX-NX9YOWXkjkHw0hy5xW/view?usp=drivesdk">Open student guide ↗</a></div>
+<div class="card resource"><span class="tag">LESSON TEACHING MATERIAL</span><h3>Teaching Presentation</h3><p>Follow the visual lesson material used to teach task vs outcome, responsibility, authority and professional ownership.</p><a class="btn" download="Assistara_Academy_M1_L1_Teaching_Presentation.pptx" href="/downloads/Assistara_Academy_M1_L1_Teaching_Presentation.pptx">Download Presentation ↓</a></div>
+<div class="card resource"><span class="tag">PRACTICAL JOB AID</span><h3>Student Guide</h3><p>Keep this quick reference open during client work. It includes the four-question framework, worksheet and pre-action checklist.</p><a class="btn" download="Assistara_Academy_M1_L1_Student_Guide.pdf" href="/downloads/Assistara_Academy_M1_L1_Student_Guide.pdf">Download Student Guide ↓</a></div>
 </div></section>
 
 <section class="section" id="practice"><div class="sectionhead"><span class="step">3</span><h2>Practice</h2></div><div class="card"><div class="eyebrow">YOUR WORKING FRAMEWORK</div><div class="framework"><div class="fw">TASK</div><div class="fw">OUTCOME</div><div class="fw">RESPONSIBILITY</div><div class="fw">DON'T ASSUME</div></div><p class="lead" style="font-size:14px">Work through all six cases. Your answers save automatically on this device. There can be more than one defensible professional response.</p></div>
@@ -69,7 +69,7 @@ function quizDone(){return qs.every((q,i)=>+state.quiz[i]===q.correct)}
 function updateCompletion(){updateScore();let ready=practiceDone()&&quizDone(),b=document.getElementById("submitEvidence"),s=document.getElementById("completionState");b.disabled=!ready||state.submitted;s.className="state "+(state.submitted?"done":ready?"ready":"");s.textContent=state.submitted?"Evidence submitted — human review required":ready?"Evidence ready to submit":"Evidence incomplete";b.textContent=state.submitted?"Evidence submitted":"Submit evidence for review"}
 document.getElementById("submitEvidence").onclick=()=>{if(practiceDone()&&quizDone()){state.submitted=true;state.submittedAt=new Date().toISOString();save()}else document.getElementById("remediation").classList.add("show")};
 async function auth(){
-if(preview){if(!sessionStorage.getItem("assistara_admin_token")){location.replace("/admin");return}document.getElementById("backLink").href="/academy/test-portal";userKey=keyBase;load();start();return}
+if(preview){if(!sessionStorage.getItem("assistara_admin_token")){location.replace("/admin");return}document.getElementById("backLink").href="/academy/module-1?preview=1";userKey=keyBase;load();start();return}
 if(!window.supabase){location.replace("/login");return}let client=window.supabase.createClient("https://jhmmwleejgidrxavzdlq.supabase.co","sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E");let r=await client.auth.getSession();let session=r.data&&r.data.session;if(!session){location.replace("/login");return}userKey=keyBase+"_"+session.user.id;load();start()}
 function start(){renderCases();renderQuiz();updateCompletion();document.getElementById("loading").style.display="none";document.getElementById("app").hidden=false}
 auth().catch(()=>location.replace(preview?"/admin":"/login"));
