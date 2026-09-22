@@ -669,7 +669,7 @@
           }).join("");
         }
         function certificateGateHTML(){return '<div class="module"><div class="num">07</div><div class="moduleProgress"><div class="progressTrack" aria-label="Certificate gate"><div class="progressFill" style="width:0%"></div></div><span class="progressLabel">Final gate</span></div><div class="moduleText"><h3>Certificate Gate — Final Exam</h3><p>Complete the full Academy, then pass the final exam to earn your Assistara Academy certificate.</p></div><span class="status">Locked · Complete Modules 1–6</span></div>'}
-        document.getElementById("homeModules").innerHTML = moduleHTML(0);
+        document.getElementById("homeModules").innerHTML = moduleHTML(0)+certificateGateHTML();
         document.getElementById("courseModules").innerHTML = moduleHTML(0)+certificateGateHTML();
         document.getElementById("resourcesList").innerHTML = resources
           .map(function (r) {
