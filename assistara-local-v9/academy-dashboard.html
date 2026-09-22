@@ -604,8 +604,8 @@
           ],
           [
             "03",
-            "Core Admin Delivery",
-            "Handle client inboxes, calendars and files with clarity and care.",
+            "Build Your Remote Positioning",
+            "Build a clear profile, CV and professional story.",
           ],
           [
             "04",
@@ -645,7 +645,6 @@
         function moduleHTML() {
           return modules
             .map(function (m, i) {
-              var pilot = i === 2;
               return (
                 '<div class="module"><div class="num">' +
                 m[0] +
@@ -653,11 +652,11 @@
                 m[1] +
                 "</h3><p>" +
                 m[2] +
-                '</p></div>' +
-                (pilot
-                  ? '<a class="btn" style="margin:0" href="/academy/lessons/client-inbox-workflow">Open pilot lesson</a>'
-                  : '<span class="status ' + (i === 0 ? "open" : "") + '">' + (i === 0 ? "Preparing lessons" : "Coming soon") + "</span>") +
-                "</div>"
+                '</p></div><span class="status ' +
+                (i === 0 ? "open" : "") +
+                '">' +
+                (i === 0 ? "Preparing lessons" : "Coming soon") +
+                "</span></div>"
               );
             })
             .join("");
