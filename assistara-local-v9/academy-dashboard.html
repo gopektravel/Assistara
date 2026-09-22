@@ -670,7 +670,7 @@
             var progress='<div class="moduleProgress"><div class="progressTrack" aria-label="Module '+(i+1)+' lesson progress"><div class="progressFill" style="width:'+pct+'%"></div></div><span class="progressLabel">'+completed+' of '+total+' lessons</span></div>';
             return '<div class="module"><div class="num">'+m[0]+'</div>'+progress+
               '<div class="moduleText"><h3>'+m[1]+'</h3><p>'+m[2]+'</p></div>'+
-              (i===0?'<a class="btn" href="/academy/module-1">Open Module →</a>':'<span class="status">Coming soon</span>')+
+              (i===0?'<a class="btn" href="/academy/module-1">Open Module →</a>':'<span class="status">Locked · Pass Module '+i+' gate</span>')+
               '</div>';
           }).join("");
         }
