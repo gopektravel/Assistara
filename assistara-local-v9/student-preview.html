@@ -550,7 +550,7 @@
           '</div>';
       };
       const certificateGate=()=>'<div class="item moduleRow"><div class="moduleNum">07</div><div class="moduleProgress"><div class="progressTrack" aria-label="Certificate gate"><div class="progressFill" style="width:0%"></div></div><span class="progressLabel">Final gate</span></div><div><b>Certificate Gate — Final Exam</b><small>Complete the full Academy, then pass the final exam to earn your Assistara Academy certificate.</small></div><span class="status">Locked · Complete Modules 1–6</span></div>';
-      document.getElementById("modules").innerHTML = modules.map(row).join("");
+      document.getElementById("modules").innerHTML = modules.map(row).join("")+certificateGate();
       document.getElementById("courseModules").innerHTML = modules.map(row).join("")+certificateGate();
       document.getElementById("resourcesList").innerHTML = [
         ["Remote Career Roadmap", "Your step-by-step action plan."],
