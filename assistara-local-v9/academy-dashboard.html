@@ -594,11 +594,39 @@
           ["certificate", "Certificate"],
           ["settings", "Settings"],
         ];
-        var modules = [
-          ["01","Freelancing Foundations","Build the mindset, core VA skills and professional workflows clients expect.","6 modules"],
-          ["02","Creative & Digital Marketing Skills","Build practical, sellable skills across branding, design, content and digital marketing.","10 modules"],
-          ["03","AI & Digital Systems","Use AI, automation and modern digital tools to work faster and deliver more value.","4 modules"],
-          ["04","Landing Your First Client","Build your offer, find opportunities, pitch yourself and turn conversations into your first client.","4 modules"],
+        var curriculum = [
+          {n:"01",title:"Freelancing Foundations",desc:"Build the mindset, core VA skills and professional workflows clients expect.",modules:[
+            ["Freelancing & Virtual Assistance Basics",["What is Freelancing? What is Virtual Assistance?","Employee vs. Freelancer Mindset","VA Niches & Specializations","Remote Work Expectations & Client Communication"]],
+            ["Core VA Skills",["Time Management & Productivity","Communication & Professionalism","Problem-Solving & Critical Thinking","Managing Multiple Clients & Workload"]],
+            ["Admin & Executive Support",["Google Workspace Navigation","Email Management","Calendar Management","File Management"]],
+            ["Customer Support & Business Operations",["Customer Service","Sales","Travel Research & Booking"]],
+            ["Market Research & Data Organization",["AI Research & Creating a Customer Avatar","Tools for Manual Market Research","Organizing Your Findings"]],
+            ["Project Management for VAs",["Project & Business Management for VAs","Client Project Management with ClickUp","Client Project Management with Trello","Client Project Management with Notion"]]
+          ]},
+          {n:"02",title:"Creative & Digital Marketing Skills",desc:"Build practical, sellable skills across branding, design, content and digital marketing.",modules:[
+            ["Build Your VA Brand",["Canva Navigation: Colors, Elements & Fonts","Create Your Profile Picture","Create Your Facebook & LinkedIn Cover","Create Your Email Signature"]],
+            ["Canva Design & Visual Branding",["Build a Brand Strategy for Clients","Create a Logo","Build a Brand Kit & Guidelines"]],
+            ["Social Media Management",["Introduction to Social Media Marketing","Set Up a Facebook Page","Meta Business Suite Navigation","Social Media Analytics & Measurement"]],
+            ["Content Planning & Workflow",["AI Content Planning & Strategy","Content Planning with ClickUp","Content Planning with Asana","Content Planning with Google Sheets"]],
+            ["Social Media Content Design",["The Power of Visuals","Create Engaging Social Media Graphics"]],
+            ["Video Editing",["Create Your VA Video Introduction","Social Media Video Editing"]],
+            ["Meta Ads Fundamentals",["Set Up Meta Business Manager & Ads","Set Up a Meta Business Page","Create Your First Facebook Ad Campaign","Facebook Ad Payment Structure","Read Meta Ads Results"]],
+            ["Influencer Marketing",["Influencer Collaboration & Sourcing","Finding Influencers"]],
+            ["Funnels & Lead Conversion",["Landing Pages & Lead Magnets","Sales Page Copywriting for Clients","Sales Page Copywriting for VAs","High-Converting Funnel Design"]],
+            ["Email Marketing",["Buy Your Own Domain","Create Your First Email Marketing Campaign"]]
+          ]},
+          {n:"03",title:"AI & Digital Systems",desc:"Use AI, automation and modern digital tools to work faster and deliver more value.",modules:[
+            ["AI for VAs",["Types of AI","How to Not Be Replaced by AI","Prompt Engineering Basics","Customize Your ChatGPT","Create GPTs"]],
+            ["Automation & Workflow Optimization",["Introduction to Automation Tools","Create a GPT Tutor","Write Like a Human with AI","Bulk Create with Canva + ChatGPT","AI Social Posts & Images","Write Blog Posts & TikTok Scripts with AI"]],
+            ["SEO & Content Optimization",["What is SEO?","Keyword Research","Social Media SEO"]],
+            ["Podcast Management",["Understanding the Modern Podcast","Your Role as a Podcast VA","Audio & Video Editing Tools","Publishing & Promotion"]]
+          ]},
+          {n:"04",title:"Landing Your First Client",desc:"Build your offer, find opportunities, pitch yourself and turn conversations into your first client.",modules:[
+            ["Choose Your Niche & Offer",["Choose Your Niche","Create Your Offer","Where to Find Clients","Inbound vs. Outbound Client Getting"]],
+            ["Portfolio & Profile Optimization",["Personal Branding for Freelancers","Create a Strong Portfolio","Optimize Freelancer Profiles","Price Your Services"]],
+            ["Lead Generation & Outreach",["Content Creation for Client-Getting","Create Your Lead Magnet","List Building","Cold Email & DM Strategies","Submit Job Applications on Upwork"]],
+            ["Winning Your First Client",["Prepare Before the Call","VA Interview Questions & Winning Answers","Create a Discovery Call Script","Create a Proposal","Build Unshakeable Confidence"]]
+          ]}
         ];
         var resources = [
           ["Client Finder","Find client sources, save opportunities and track your client hunt.","tool","/client-finder"],
@@ -607,16 +635,25 @@
           ["Application & Outreach Templates","Templates for applications, messages and follow-ups.","resource",""],
           ["Interview Preparation Workbook","Prepare your stories, proof and interview answers.","resource",""]
         ];
-        function moduleHTML() {
-          return modules.map(function (m, i) {
-            var progress='<div class="moduleProgress"><div class="progressTrack" aria-label="Phase '+(i+1)+' progress"><div class="progressFill" style="width:0%"></div></div><span class="progressLabel">0% complete</span></div>';
-            return '<div class="module"><div class="num">PHASE '+m[0]+'</div>'+progress+
-              '<div class="moduleText"><h3>'+m[1]+'</h3><p>'+m[2]+'</p><p style="font-size:11px;font-weight:800;margin-top:7px">'+m[3]+'</p></div>'+
-              '<span class="status">'+(i===0?'Ready to build':'Coming next')+'</span></div>';
+        function phaseHTML() {
+          return curriculum.map(function(p,i){
+            var count=p.modules.reduce(function(n,m){return n+m[1].length},0);
+            return '<button class="phaseCard module" data-phase="'+i+'" style="width:100%;text-align:left;cursor:pointer;font-family:Manrope"><div class="num">PHASE '+p.n+'</div><div class="moduleProgress"><div class="progressTrack"><div class="progressFill" style="width:0%"></div></div><span class="progressLabel">0% complete</span></div><div class="moduleText"><h3>'+p.title+'</h3><p>'+p.desc+'</p><p style="font-size:11px;font-weight:800;margin-top:7px">'+p.modules.length+' modules · '+count+' classes</p></div><span class="btn" style="margin:0">Open Phase →</span></button>';
           }).join("");
         }
-        document.getElementById("homeModules").innerHTML = moduleHTML();
-        document.getElementById("courseModules").innerHTML = moduleHTML();
+        function openPhase(i){
+          var p=curriculum[i], host=document.getElementById("courseModules");
+          host.innerHTML='<button id="backPhases" style="border:0;background:transparent;font:700 13px Manrope;cursor:pointer;padding:0 0 14px">← All phases</button><div class="sectionTitle" style="margin-top:0"><h2>Phase '+p.n+' · '+p.title+'</h2></div>'+p.modules.map(function(m,mi){
+            return '<div class="module" style="display:block"><div style="display:flex;gap:12px;align-items:center"><div class="num">MODULE '+(mi+1)+'</div><div class="moduleText"><h3>'+m[0]+'</h3><p>'+m[1].length+' classes</p></div><button class="btn openModule" data-module="'+mi+'" style="margin:0">View classes →</button></div><div class="classList" id="classes-'+mi+'" hidden style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">'+m[1].map(function(x,ci){return '<div class="item" style="border:0;border-radius:10px;padding:9px 4px"><span class="num">'+(ci+1)+'</span><div><strong>'+x+'</strong><small>Class '+(ci+1)+'</small></div><span class="status">Coming soon</span></div>'}).join("")+'</div></div>';
+          }).join("");
+          document.getElementById("backPhases").onclick=function(){host.innerHTML=phaseHTML();bindPhases();};
+          host.querySelectorAll(".openModule").forEach(function(b){b.onclick=function(){var el=document.getElementById("classes-"+b.dataset.module);el.hidden=!el.hidden;b.textContent=el.hidden?"View classes →":"Hide classes ↑";};});
+          openPage("course");
+        }
+        function bindPhases(){document.querySelectorAll("[data-phase]").forEach(function(b){b.onclick=function(){openPhase(Number(b.dataset.phase));};});}
+        document.getElementById("homeModules").innerHTML = phaseHTML();
+        document.getElementById("courseModules").innerHTML = phaseHTML();
+        bindPhases();
         document.getElementById("resourcesList").innerHTML = resources.map(function (r) {
           var action = r[2] === "tool"
             ? '<a class="btn" style="margin:0" href="'+r[3]+'">Open tool</a>'
@@ -677,8 +714,8 @@
             }
             var user = session.user;
             var completedLessons = 0;
-            document.getElementById("homeModules").innerHTML = moduleHTML();
-            document.getElementById("courseModules").innerHTML = moduleHTML();
+            document.getElementById("homeModules").innerHTML = phaseHTML();
+            document.getElementById("courseModules").innerHTML = phaseHTML();
             var display =
               (user.user_metadata && user.user_metadata.name) ||
               user.email ||
