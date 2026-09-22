@@ -267,6 +267,10 @@
       .module h3 {font-size:16px;letter-spacing:-.015em}
       .module .btn{margin:0;padding:8px 12px;font-size:11px;box-shadow:none}
       .module:first-child{border-color:#d8cf9c}
+      .moduleProgress{margin-top:10px;display:grid;grid-template-columns:minmax(120px,260px) auto;gap:10px;align-items:center}
+      .progressTrack{height:7px;background:#ece9e1;border-radius:999px;overflow:hidden}
+      .progressFill{height:100%;background:var(--yellow);border-radius:999px;transition:width .2s ease}
+      .progressLabel{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
 
       .module p,
       .item small {
@@ -654,9 +658,13 @@
             "Prepare your stories, proof and interview answers.",
           ],
         ];
-        function moduleHTML() {
+        function moduleHTML(completedLessons) {
+          var done = Math.max(0, Math.min(5, completedLessons || 0));
           return modules
             .map(function (m, i) {
+              var progress = i === 0
+                ? '<div class="moduleProgress"><div class="progressTrack" aria-label="Module 1 lesson progress"><div class="progressFill" style="width:'+(done*20)+'%"></div></div><span class="progressLabel">'+done+' of 5 lessons</span></div>'
+                : '';
               return (
                 '<div class="module"><div class="num">' +
                 m[0] +
@@ -664,17 +672,17 @@
                 m[1] +
                 "</h3><p>" +
                 m[2] +
-                '</p></div>' +
+                '</p>' + progress + '</div>' +
                 (i === 0
-                  ? '<a class="btn" style="margin:0;white-space:nowrap" href="/academy/module-1">Open Module</a>'
+                  ? '<a class="btn" href="/academy/module-1">Open Module →</a>'
                   : '<span class="status">Coming soon</span>') +
                 "</div>"
               );
             })
             .join("");
         }
-        document.getElementById("homeModules").innerHTML = moduleHTML();
-        document.getElementById("courseModules").innerHTML = moduleHTML();
+        document.getElementById("homeModules").innerHTML = moduleHTML(0);
+        document.getElementById("courseModules").innerHTML = moduleHTML(0);
         document.getElementById("resourcesList").innerHTML = resources
           .map(function (r) {
             return (
@@ -739,6 +747,11 @@
               return;
             }
             var user = session.user;
+            var lesson1State = {};
+            try { lesson1State = JSON.parse(localStorage.getItem("assistara_m1_l1_student_"+user.id)||"{}"); } catch(e) {}
+            var completedLessons = lesson1State.completed ? 1 : 0;
+            document.getElementById("homeModules").innerHTML = moduleHTML(completedLessons);
+            document.getElementById("courseModules").innerHTML = moduleHTML(completedLessons);
             var display =
               (user.user_metadata && user.user_metadata.name) ||
               user.email ||
