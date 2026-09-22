@@ -651,10 +651,11 @@
           openPage("course");
         }
         function bindPhases(){document.querySelectorAll("[data-phase]").forEach(function(b){b.onclick=function(){openPhase(Number(b.dataset.phase));};});}
-        document.getElementById("homeModules").innerHTML = phaseHTML();
-        document.getElementById("courseModules").innerHTML = phaseHTML();
+        var homeModulesEl=document.getElementById("homeModules"), courseModulesEl=document.getElementById("courseModules"), resourcesListEl=document.getElementById("resourcesList");
+        if(homeModulesEl) homeModulesEl.innerHTML=phaseHTML();
+        if(courseModulesEl) courseModulesEl.innerHTML=phaseHTML();
         bindPhases();
-        document.getElementById("resourcesList").innerHTML = resources.map(function (r) {
+        if(resourcesListEl) resourcesListEl.innerHTML = resources.map(function (r) {
           var action = r[2] === "tool"
             ? '<a class="btn" style="margin:0" href="'+r[3]+'">Open tool</a>'
             : '<span class="status">Coming soon</span>';
@@ -670,10 +671,8 @@
           window.scrollTo(0, 0);
         }
         var mobileNav = document.createElement("div");
-        mobileNav.className="nav";
-        mobileNav.style.cssText="display:none;margin:0 0 20px;background:#171717;padding:8px;border-radius:14px";
-        mobileNav.id="mobileNav";
-        document.querySelector(".mobileTop").insertAdjacentElement("afterend",mobileNav);
+        mobileNav.className="nav"; mobileNav.style.cssText="display:none;margin:0 0 20px;background:#171717;padding:8px;border-radius:14px"; mobileNav.id="mobileNav";
+        var mobileTopEl=document.querySelector(".mobileTop"); if(mobileTopEl) mobileTopEl.insertAdjacentElement("afterend",mobileNav);
         var desktopNav = document.getElementById("desktopNav");
         desktopNav.innerHTML = pages
           .map(function (p, i) {
@@ -696,8 +695,7 @@
         mobileNav.innerHTML=pages.map(function(p,i){return '<button data-page="'+p[0]+'" class="'+(i===0?'active':'')+'">'+p[1]+'</button>';}).join("");
         mobileNav.querySelectorAll("[data-page]").forEach(function(b){b.addEventListener("click",function(){openPage(b.dataset.page);mobileNav.style.display="none";});});
         var mobileTop=document.querySelector(".mobileTop");
-        mobileTop.style.cursor="pointer";
-        mobileTop.onclick=function(){if(window.innerWidth<=850) mobileNav.style.display=mobileNav.style.display==="grid"?"none":"grid";};
+        if(mobileTop){mobileTop.style.cursor="pointer";mobileTop.onclick=function(){if(window.innerWidth<=850) mobileNav.style.display=mobileNav.style.display==="grid"?"none":"grid";};}
         document.querySelectorAll("[data-open]").forEach(function (b) {
           b.addEventListener("click", function () {
             openPage(b.getAttribute("data-open"));
