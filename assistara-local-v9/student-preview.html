@@ -258,7 +258,7 @@
       .moduleRow small{display:block;margin-top:4px;line-height:1.4}
       .moduleRow .button{margin:0;padding:8px 12px;font-size:11px;min-height:0;white-space:nowrap}
       .moduleRow:first-child{border-color:#d8cf9c}
-      .moduleProgress{margin:0 0 0 auto;display:grid;grid-template-columns:minmax(170px,1fr) auto;gap:10px;align-items:center;flex:0 1 340px;min-width:250px}
+      .moduleProgress{margin:0;display:grid;grid-template-columns:minmax(150px,1fr) auto;gap:10px;align-items:center;flex:1 1 320px;min-width:230px}
       .progressTrack{height:7px;background:#ece9e1;border-radius:999px;overflow:hidden}
       .progressFill{height:100%;background:var(--yellow);border-radius:999px}
       .progressLabel{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
@@ -311,7 +311,8 @@
         .moduleRow{align-items:flex-start;flex-wrap:wrap;padding:13px 14px}
         .moduleRow .moduleNum{flex:0 0 26px;width:26px;padding-top:3px}
         .moduleRow>div:not(.moduleNum){flex:1 1 calc(100% - 40px)}
-        .moduleRow .moduleProgress{order:3;flex:1 1 100%;min-width:0;margin:8px 0 0 38px}
+        .moduleRow .moduleProgress{order:2;flex:1 1 calc(100% - 40px);min-width:0;margin:8px 0 0 38px}
+        .moduleRow>div:not(.moduleNum):not(.moduleProgress){order:3}
         .moduleRow .status,.moduleRow .button,.moduleRow>a.button{margin-left:38px;width:auto;text-align:center;margin-top:0!important}
         .item:not(.moduleRow) .status{margin-left:auto}
         .sectionTitle{margin-top:24px}
@@ -536,19 +537,14 @@
       mobileLogout.onclick=()=>logout.click();
       mobileNav.onclick=e=>{let b=e.target.closest("[data-page]");if(b)openPage(b.dataset.page)};
       const completedLessons=[1,2,3,4,5].reduce((total,n)=>{try{return total+(JSON.parse(localStorage.getItem("assistara_m1_l"+n+"_test")||"{}").completed?1:0)}catch(e){return total}},0);
-      const row = (m, i) => {
-        const progress=i===0?'<div class="moduleProgress"><div class="progressTrack" aria-label="Module 1 lesson progress"><div class="progressFill" style="width:'+(completedLessons*20)+'%"></div></div><span class="progressLabel">'+completedLessons+' of 5 lessons</span></div>':'';
-        return '<div class="item moduleRow"><div class="moduleNum">' +
-        m[0] +
-        "</div><div><b>" +
-        m[1] +
-        "</b><small>" +
-        m[2] +
-        '</small></div>'+progress +
-        (i === 0
-          ? '<a class="button" style="text-decoration:none" href="/academy/module-1?preview=1">Open Module →</a>'
-          : '<span class="status">Coming soon</span>') +
-        '</div>';
+      const counts=[5,6,5,5,6,5];
+      const row=(m,i)=>{
+        const total=counts[i],completed=i===0?completedLessons:0,pct=total?Math.round((completed/total)*100):0;
+        const progress='<div class="moduleProgress"><div class="progressTrack" aria-label="Module '+(i+1)+' lesson progress"><div class="progressFill" style="width:'+pct+'%"></div></div><span class="progressLabel">'+completed+' of '+total+' lessons</span></div>';
+        return '<div class="item moduleRow"><div class="moduleNum">'+m[0]+'</div>'+progress+
+          '<div><b>'+m[1]+'</b><small>'+m[2]+'</small></div>'+
+          (i===0?'<a class="button" style="text-decoration:none" href="/academy/module-1?preview=1">Open Module →</a>':'<span class="status">Coming soon</span>')+
+          '</div>';
       };
       document.getElementById("modules").innerHTML = modules.map(row).join("");
       document.getElementById("courseModules").innerHTML = modules.map(row).join("");
