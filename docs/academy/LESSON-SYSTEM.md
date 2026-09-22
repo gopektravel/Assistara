@@ -44,7 +44,7 @@ Optional. Include only when they have practical value. Avoid resource clutter.
 
 ## 4. Teaching-slide system
 
-Slides are the visual teaching counterpart of the lesson, not a transcript.
+Slides are the visual teaching counterpart of the lesson, not a transcript. **This standard defines a visual language, not a fixed layout library.** Each lesson deck must be composed around what that lesson is teaching; new diagrams, workflows, screenshots, comparisons, scenarios and visual structures are encouraged whenever they improve understanding.
 
 - 16:9
 - Manrope only
@@ -53,13 +53,16 @@ Slides are the visual teaching counterpart of the lesson, not a transcript.
 - strong whitespace and large typography
 - clean diagrams and visual storytelling
 - minimal text
-- one brand lockup per slide: **[Assistara logo] ASSISTARA ACADEMY**
-- preserve the logo artwork, including the black internal A
+- one brand lockup per slide: **[REAL Assistara logo] ASSISTARA ACADEMY**
+- always use the approved Assistara logo file from Brand Assets; never recreate, redraw, approximate, type, or simulate the logo
+- preserve the approved logo geometry and artwork, including the black internal A
 - no repeated Assistara branding on a slide
 
-Slide count follows the material. Class 1 has six slides; six is not a template requirement.
+Slide count and composition follow the educational material. Class 1 has six slides; neither six slides nor its individual layouts are template requirements. Do not duplicate a fixed set of slides and replace the text.
 
 The written lesson carries detail. Slides teach visually. Do not paste lesson paragraphs into slides.
+
+**Deck workflow:** understand lesson → identify teaching ideas → choose the best visual representation for each idea → design a custom slide sequence in the Assistara visual language → render → visually inspect → revise. Do **not** open a six-slide template and merely replace text.
 
 ## 5. Source-material rule
 
@@ -121,7 +124,7 @@ The shared renderer owns presentation and behavior. Do not perform a risky rewri
 - [ ] Same Academy visual language and lesson hierarchy
 - [ ] Manrope throughout
 - [ ] Slide deck matches Academy design language
-- [ ] One Assistara Academy lockup per slide
+- [ ] One Assistara Academy lockup per slide using the real approved Brand Assets logo
 - [ ] Content grounded in approved source
 - [ ] Quick Check tests taught material
 - [ ] Optional resources exist only when useful
