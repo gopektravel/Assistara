@@ -413,8 +413,7 @@
               <div class="eyebrow" style="color: #aaa">START HERE</div>
               <h2>Your Assistara Academy roadmap</h2>
               <p class="muted">
-                The learning path is ready. Lessons will unlock here as they are
-                published for the founding cohort.
+                Your Academy is organized into four phases, taking you from freelancing foundations to landing your first client.
               </p>
               <button class="btn" data-open="course">
                 View course roadmap
@@ -424,14 +423,14 @@
               <div class="eyebrow">YOUR PROGRESS</div>
               <div class="stats">
                 <div class="stat"><b>0%</b><span>Course</span></div>
-                <div class="stat"><b>0</b><span>Lessons</span></div>
-                <div class="stat"><b>6</b><span>Modules</span></div>
+                <div class="stat"><b>0</b><span>Classes</span></div>
+                <div class="stat"><b>4</b><span>Phases</span></div>
               </div>
             </div>
           </div>
           <div class="sectionTitle">
             <h2>Your learning path</h2>
-            <span class="pill">6 modules</span>
+            <span class="pill">4 phases</span>
           </div>
           <div id="homeModules" class="modules"></div>
         </section>
@@ -448,8 +447,7 @@
             <span class="pill">0% complete</span>
           </div>
           <div class="notice">
-            Course content is being released for the founding cohort. The full
-            roadmap is already here so you always know what comes next.
+            The Academy follows four phases. Each phase contains modules, and each module contains focused classes.
           </div>
           <div class="sectionTitle"><h2>Course curriculum</h2></div>
           <div id="courseModules" class="modules"></div>
@@ -606,36 +604,10 @@
           ["settings", "Settings"],
         ];
         var modules = [
-          [
-            "01",
-            "Working Like a Professional Freelancer",
-            "Think, communicate, take ownership, and understand the client.",
-          ],
-          [
-            "02",
-            "Remote Client Operations",
-            "Learn to function reliably inside a remote business and execute essential client workflows.",
-          ],
-          [
-            "03",
-            "Build a Marketable Service Skill",
-            "Choose a realistic starter service direction based on demonstrated ability and become genuinely useful at it.",
-          ],
-          [
-            "04",
-            "Turn Your Skill Into Proof & an Offer",
-            "Turn demonstrated capability into credible proof, a clear service offer, professional positioning, scope and pricing.",
-          ],
-          [
-            "05",
-            "Find, Approach & Win Clients",
-            "Identify suitable prospects, conduct outreach, handle client conversations and move through discovery and proposal.",
-          ],
-          [
-            "06",
-            "Deliver Like a Professional",
-            "Onboard, deliver, communicate progress, handle feedback and revisions, recover from mistakes, and manage scope and boundaries.",
-          ],
+          ["01","Freelancing Foundations","Build the mindset, core VA skills and professional workflows clients expect.","6 modules"],
+          ["02","Creative & Digital Marketing Skills","Build practical, sellable skills across branding, design, content and digital marketing.","10 modules"],
+          ["03","AI & Digital Systems","Use AI, automation and modern digital tools to work faster and deliver more value.","4 modules"],
+          ["04","Landing Your First Client","Build your offer, find opportunities, pitch yourself and turn conversations into your first client.","4 modules"],
         ];
         var resources = [
           ["Remote Career Roadmap", "Your step-by-step Academy action plan."],
@@ -656,21 +628,16 @@
             "Prepare your stories, proof and interview answers.",
           ],
         ];
-        function moduleHTML(completedLessons) {
-          var counts = [5,6,5,5,6,5];
-          var done = Math.max(0, Math.min(5, completedLessons || 0));
+        function moduleHTML() {
           return modules.map(function (m, i) {
-            var total=counts[i], completed=i===0?done:0, pct=total?Math.round((completed/total)*100):0;
-            var progress='<div class="moduleProgress"><div class="progressTrack" aria-label="Module '+(i+1)+' lesson progress"><div class="progressFill" style="width:'+pct+'%"></div></div><span class="progressLabel">'+completed+' of '+total+' lessons</span></div>';
-            return '<div class="module"><div class="num">'+m[0]+'</div>'+progress+
-              '<div class="moduleText"><h3>'+m[1]+'</h3><p>'+m[2]+'</p></div>'+
-              (i===0?'<a class="btn" href="/academy/module-1">Open Module →</a>':'<span class="status">Locked · Pass Module '+i+' gate</span>')+
-              '</div>';
+            var progress='<div class="moduleProgress"><div class="progressTrack" aria-label="Phase '+(i+1)+' progress"><div class="progressFill" style="width:0%"></div></div><span class="progressLabel">0% complete</span></div>';
+            return '<div class="module"><div class="num">PHASE '+m[0]+'</div>'+progress+
+              '<div class="moduleText"><h3>'+m[1]+'</h3><p>'+m[2]+'</p><p style="font-size:11px;font-weight:800;margin-top:7px">'+m[3]+'</p></div>'+
+              '<span class="status">'+(i===0?'Ready to build':'Coming next')+'</span></div>';
           }).join("");
         }
-        function certificateGateHTML(){return '<div class="module"><div class="num">07</div><div class="moduleProgress"><div class="progressTrack" aria-label="Certificate gate"><div class="progressFill" style="width:0%"></div></div><span class="progressLabel">Final gate</span></div><div class="moduleText"><h3>Certificate Gate — Final Exam</h3><p>Complete the full Academy, then pass the final exam to earn your Assistara Academy certificate.</p></div><span class="status">Locked · Complete Modules 1–6</span></div>'}
-        document.getElementById("homeModules").innerHTML = moduleHTML(0)+certificateGateHTML();
-        document.getElementById("courseModules").innerHTML = moduleHTML(0)+certificateGateHTML();
+        document.getElementById("homeModules").innerHTML = moduleHTML();
+        document.getElementById("courseModules").innerHTML = moduleHTML();
         document.getElementById("resourcesList").innerHTML = resources
           .map(function (r) {
             return (
@@ -735,12 +702,9 @@
               return;
             }
             var user = session.user;
-            var completedLessons = [1,2,3,4,5].reduce(function(total,n){
-              try { return total + (JSON.parse(localStorage.getItem("assistara_m1_l"+n+"_student_"+user.id)||"{}").completed ? 1 : 0); }
-              catch(e) { return total; }
-            },0);
-            document.getElementById("homeModules").innerHTML = moduleHTML(completedLessons);
-            document.getElementById("courseModules").innerHTML = moduleHTML(completedLessons);
+            var completedLessons = 0;
+            document.getElementById("homeModules").innerHTML = moduleHTML();
+            document.getElementById("courseModules").innerHTML = moduleHTML();
             var display =
               (user.user_metadata && user.user_metadata.name) ||
               user.email ||
