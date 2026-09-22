@@ -521,7 +521,9 @@
       mobileClose.onclick=()=>{mobileMenu.classList.remove("open");document.body.classList.remove("menuOpen");mobileMenuBtn.setAttribute("aria-expanded","false")};
       mobileLogout.onclick=()=>logout.click();
       mobileNav.onclick=e=>{let b=e.target.closest("[data-page]");if(b)openPage(b.dataset.page)};
-      const row = (m) =>
+      const row = (m) => m[0] === "03"
+        ? '<div class="item"><div class="num">' + m[0] + '</div><div><b>Core Admin Delivery</b><small>Preview the completed pilot lesson: Build a Client Inbox Workflow.</small></div><a class="status" href="/academy/lessons/client-inbox-workflow?preview=1">Open pilot</a></div>'
+        :
         '<div class="item"><div class="num">' +
         m[0] +
         "</div><div><b>" +

@@ -1,18 +1,460 @@
-{  "version": 2,  "builds": [    { "src": "index.html", "use": "@vercel/static" }, { "src": "academy.html", "use": "@vercel/static" }, { "src": "login.html", "use": "@vercel/static" }, { "src": "admin.html", "use": "@vercel/static" }, { "src": "admin-acquisition.html", "use": "@vercel/static" }, { "src": "academy-apply.html", "use": "@vercel/static" }, { "src": "student-preview.html", "use": "@vercel/static" }, { "src": "client-finder.html", "use": "@vercel/static" }, { "src": "academy-checkout.html", "use": "@vercel/static" }, { "src": "academy-payment-success.html", "use": "@vercel/static" }, { "src": "academy-onboarding.html", "use": "@vercel/static" }, { "src": "academy-dashboard.html", "use": "@vercel/static" }, { "src": "beta-account.html", "use": "@vercel/static" }, { "src": "masterclass-join.html", "use": "@vercel/static" }, { "src": "live.html", "use": "@vercel/static" }, { "src": "404.html", "use": "@vercel/static" }, { "src": "robots.txt", "use": "@vercel/static" }, { "src": "sitemap.xml", "use": "@vercel/static" }, { "src": "styles.css", "use": "@vercel/static" }, { "src": "mobile-polish.css", "use": "@vercel/static" }, { "src": "manrope-lock.css", "use": "@vercel/static" }, { "src": "app.js", "use": "@vercel/static" }, { "src": "assistara-logo.svg", "use": "@vercel/static" }, { "src": "assistara-icon-exact.png", "use": "@vercel/static" }  ],  "headers": [
-    { "source": "/academy/apply", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
-    { "source": "/academy/checkout", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy-checkout.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy/onboarding", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy-onboarding.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy/payment-success", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy/dashboard", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy/test-portal", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy/tools/client-finder", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/academy/beta-account", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/admin/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/login", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
-    { "source": "/masterclass/join", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/live", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
-    { "source": "/payment-review.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "academy.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "login.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin-acquisition.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "academy-apply.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "student-preview.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "client-finder.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "academy-checkout.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "academy-payment-success.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "academy-onboarding.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "academy-dashboard.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "academy/lessons/client-inbox-workflow.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/academy/assistara-client-inbox-workflow-checklist.pdf",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/academy/assistara-client-inbox-workflow-lesson-slides.pdf",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/academy/assistara-client-inbox-workflow-teaching-deck.pptx",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "beta-account.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "masterclass-join.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "live.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "404.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "robots.txt",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sitemap.xml",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "styles.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "mobile-polish.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "manrope-lock.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "app.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assistara-logo.svg",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assistara-icon-exact.png",
+      "use": "@vercel/static"
+    }
   ],
-  "routes": [    { "src": "/styles.css", "dest": "/styles.css" }, { "src": "/mobile-polish.css", "dest": "/mobile-polish.css" }, { "src": "/manrope-lock.css", "dest": "/manrope-lock.css" }, { "src": "/app.js", "dest": "/app.js" }, { "src": "/assistara-logo.svg", "dest": "/assistara-logo.svg" }, { "src": "/assistara-icon-exact.png", "dest": "/assistara-icon-exact.png" }, { "src": "/robots.txt", "dest": "/robots.txt" }, { "src": "/sitemap.xml", "dest": "/sitemap.xml" },    { "src": "/a/(?<ref>[^/]+)", "dest": "/academy.html?ref=$ref" }, { "src": "/a/(?<ref>[^/]+)/", "dest": "/academy.html?ref=$ref" }, { "src": "/b/(?<ref>[^/]+)", "dest": "/index.html?ref=$ref" }, { "src": "/b/(?<ref>[^/]+)/", "dest": "/index.html?ref=$ref" },    { "src": "/admin", "dest": "/admin.html" }, { "src": "/admin/", "dest": "/admin.html" }, { "src": "/admin/acquisition", "dest": "/admin-acquisition.html" }, { "src": "/admin/acquisition/", "dest": "/admin-acquisition.html" }, { "src": "/academy/beta-account", "dest": "/beta-account.html" }, { "src": "/academy/beta-account/", "dest": "/beta-account.html" }, { "src": "/academy/dashboard", "dest": "/academy-dashboard.html" }, { "src": "/academy/dashboard/", "dest": "/academy-dashboard.html" }, { "src": "/academy/test-portal", "dest": "/student-preview.html" }, { "src": "/academy/test-portal/", "dest": "/student-preview.html" }, { "src": "/academy/tools/client-finder", "dest": "/client-finder.html" }, { "src": "/academy/tools/client-finder/", "dest": "/client-finder.html" }, { "src": "/client-finder", "dest": "/client-finder.html" }, { "src": "/client-finder/", "dest": "/client-finder.html" }, { "src": "/academy/onboarding", "dest": "/academy-onboarding.html" }, { "src": "/academy/onboarding/", "dest": "/academy-onboarding.html" }, { "src": "/masterclass/join", "dest": "/masterclass-join.html" }, { "src": "/masterclass/join/", "dest": "/masterclass-join.html" }, { "src": "/masterclass-join.html", "dest": "/masterclass-join.html" }, { "src": "/live", "dest": "/live.html" }, { "src": "/live/", "dest": "/live.html" }, { "src": "/live.html", "dest": "/live.html" }, { "src": "/academy/payment-success", "dest": "/academy-payment-success.html" }, { "src": "/academy/payment-success/", "dest": "/academy-payment-success.html" }, { "src": "/academy/checkout", "dest": "/academy-checkout.html" }, { "src": "/academy/checkout/", "dest": "/academy-checkout.html" }, { "src": "/academy/apply", "dest": "/academy-apply.html" }, { "src": "/academy/apply/", "dest": "/academy-apply.html" }, { "src": "/login", "dest": "/login.html" }, { "src": "/login.html", "dest": "/login.html" }, { "src": "/academy", "dest": "/academy.html" }, { "src": "/academy.html", "dest": "/academy.html" }, { "src": "/", "dest": "/index.html" }, { "src": "/(.*)", "dest": "/404.html" }  ]}
+  "headers": [
+    {
+      "source": "/academy/apply",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/academy/checkout",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy-checkout.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy/onboarding",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy-onboarding.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy/payment-success",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy/dashboard",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy/test-portal",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy/tools/client-finder",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/academy/beta-account",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/login",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/masterclass/join",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/live",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/payment-review.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "src": "/styles.css",
+      "dest": "/styles.css"
+    },
+    {
+      "src": "/mobile-polish.css",
+      "dest": "/mobile-polish.css"
+    },
+    {
+      "src": "/manrope-lock.css",
+      "dest": "/manrope-lock.css"
+    },
+    {
+      "src": "/app.js",
+      "dest": "/app.js"
+    },
+    {
+      "src": "/assistara-logo.svg",
+      "dest": "/assistara-logo.svg"
+    },
+    {
+      "src": "/assistara-icon-exact.png",
+      "dest": "/assistara-icon-exact.png"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/robots.txt"
+    },
+    {
+      "src": "/sitemap.xml",
+      "dest": "/sitemap.xml"
+    },
+    {
+      "src": "/a/(?<ref>[^/]+)",
+      "dest": "/academy.html?ref=$ref"
+    },
+    {
+      "src": "/a/(?<ref>[^/]+)/",
+      "dest": "/academy.html?ref=$ref"
+    },
+    {
+      "src": "/b/(?<ref>[^/]+)",
+      "dest": "/index.html?ref=$ref"
+    },
+    {
+      "src": "/b/(?<ref>[^/]+)/",
+      "dest": "/index.html?ref=$ref"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/admin/",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/admin/acquisition",
+      "dest": "/admin-acquisition.html"
+    },
+    {
+      "src": "/admin/acquisition/",
+      "dest": "/admin-acquisition.html"
+    },
+    {
+      "src": "/academy/beta-account",
+      "dest": "/beta-account.html"
+    },
+    {
+      "src": "/academy/beta-account/",
+      "dest": "/beta-account.html"
+    },
+    {
+      "src": "/academy/dashboard",
+      "dest": "/academy-dashboard.html"
+    },
+    {
+      "src": "/academy/dashboard/",
+      "dest": "/academy-dashboard.html"
+    },
+    {
+      "src": "/academy/lessons/client-inbox-workflow",
+      "dest": "/academy/lessons/client-inbox-workflow.html"
+    },
+    {
+      "src": "/academy/lessons/client-inbox-workflow/",
+      "dest": "/academy/lessons/client-inbox-workflow.html"
+    },
+    {
+      "src": "/assets/academy/assistara-client-inbox-workflow-checklist.pdf",
+      "dest": "/assets/academy/assistara-client-inbox-workflow-checklist.pdf"
+    },
+    {
+      "src": "/assets/academy/assistara-client-inbox-workflow-lesson-slides.pdf",
+      "dest": "/assets/academy/assistara-client-inbox-workflow-lesson-slides.pdf"
+    },
+    {
+      "src": "/assets/academy/assistara-client-inbox-workflow-teaching-deck.pptx",
+      "dest": "/assets/academy/assistara-client-inbox-workflow-teaching-deck.pptx"
+    },
+    {
+      "src": "/academy/test-portal",
+      "dest": "/student-preview.html"
+    },
+    {
+      "src": "/academy/test-portal/",
+      "dest": "/student-preview.html"
+    },
+    {
+      "src": "/academy/tools/client-finder",
+      "dest": "/client-finder.html"
+    },
+    {
+      "src": "/academy/tools/client-finder/",
+      "dest": "/client-finder.html"
+    },
+    {
+      "src": "/client-finder",
+      "dest": "/client-finder.html"
+    },
+    {
+      "src": "/client-finder/",
+      "dest": "/client-finder.html"
+    },
+    {
+      "src": "/academy/onboarding",
+      "dest": "/academy-onboarding.html"
+    },
+    {
+      "src": "/academy/onboarding/",
+      "dest": "/academy-onboarding.html"
+    },
+    {
+      "src": "/masterclass/join",
+      "dest": "/masterclass-join.html"
+    },
+    {
+      "src": "/masterclass/join/",
+      "dest": "/masterclass-join.html"
+    },
+    {
+      "src": "/masterclass-join.html",
+      "dest": "/masterclass-join.html"
+    },
+    {
+      "src": "/live",
+      "dest": "/live.html"
+    },
+    {
+      "src": "/live/",
+      "dest": "/live.html"
+    },
+    {
+      "src": "/live.html",
+      "dest": "/live.html"
+    },
+    {
+      "src": "/academy/payment-success",
+      "dest": "/academy-payment-success.html"
+    },
+    {
+      "src": "/academy/payment-success/",
+      "dest": "/academy-payment-success.html"
+    },
+    {
+      "src": "/academy/checkout",
+      "dest": "/academy-checkout.html"
+    },
+    {
+      "src": "/academy/checkout/",
+      "dest": "/academy-checkout.html"
+    },
+    {
+      "src": "/academy/apply",
+      "dest": "/academy-apply.html"
+    },
+    {
+      "src": "/academy/apply/",
+      "dest": "/academy-apply.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/academy",
+      "dest": "/academy.html"
+    },
+    {
+      "src": "/academy.html",
+      "dest": "/academy.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/404.html"
+    }
+  ]
+}
