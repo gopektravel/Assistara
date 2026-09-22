@@ -268,7 +268,7 @@
       .module h3 {font-size:16px;letter-spacing:-.015em}
       .module .btn{margin:0;padding:8px 12px;font-size:11px;box-shadow:none}
       .module:first-child{border-color:#d8cf9c}
-      .moduleProgress{margin:0 0 0 auto;display:grid;grid-template-columns:minmax(170px,1fr) auto;gap:10px;align-items:center;flex:0 1 360px;min-width:260px}
+      .moduleProgress{margin:0;display:grid;grid-template-columns:minmax(150px,1fr) auto;gap:10px;align-items:center;flex:1 1 340px;min-width:240px}
       .progressTrack{height:7px;background:#ece9e1;border-radius:999px;overflow:hidden}
       .progressFill{height:100%;background:var(--yellow);border-radius:999px;transition:width .2s ease}
       .progressLabel{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
@@ -359,7 +359,8 @@
         }
         .module .num{flex:0 0 26px;padding-top:3px}
         .moduleText{min-width:0;flex:1 1 calc(100% - 40px)}
-        .moduleProgress{order:3;flex:1 1 100%;min-width:0;margin:8px 0 0 38px}
+        .moduleProgress{order:2;flex:1 1 calc(100% - 40px);min-width:0;margin:8px 0 0 38px}
+        .moduleText{order:3}
         .module .status,.module .btn{margin-left:38px}
 
         .status {
@@ -661,27 +662,16 @@
           ],
         ];
         function moduleHTML(completedLessons) {
+          var counts = [5,6,5,5,6,5];
           var done = Math.max(0, Math.min(5, completedLessons || 0));
-          return modules
-            .map(function (m, i) {
-              var progress = i === 0
-                ? '<div class="moduleProgress"><div class="progressTrack" aria-label="Module 1 lesson progress"><div class="progressFill" style="width:'+(done*20)+'%"></div></div><span class="progressLabel">'+done+' of 5 lessons</span></div>'
-                : '';
-              return (
-                '<div class="module"><div class="num">' +
-                m[0] +
-                '</div><div class="moduleText"><h3>' +
-                m[1] +
-                "</h3><p>" +
-                m[2] +
-                '</p></div>' + progress +
-                (i === 0
-                  ? '<a class="btn" href="/academy/module-1">Open Module →</a>'
-                  : '<span class="status">Coming soon</span>') +
-                "</div>"
-              );
-            })
-            .join("");
+          return modules.map(function (m, i) {
+            var total=counts[i], completed=i===0?done:0, pct=total?Math.round((completed/total)*100):0;
+            var progress='<div class="moduleProgress"><div class="progressTrack" aria-label="Module '+(i+1)+' lesson progress"><div class="progressFill" style="width:'+pct+'%"></div></div><span class="progressLabel">'+completed+' of '+total+' lessons</span></div>';
+            return '<div class="module"><div class="num">'+m[0]+'</div>'+progress+
+              '<div class="moduleText"><h3>'+m[1]+'</h3><p>'+m[2]+'</p></div>'+
+              (i===0?'<a class="btn" href="/academy/module-1">Open Module →</a>':'<span class="status">Coming soon</span>')+
+              '</div>';
+          }).join("");
         }
         document.getElementById("homeModules").innerHTML = moduleHTML(0);
         document.getElementById("courseModules").innerHTML = moduleHTML(0);
