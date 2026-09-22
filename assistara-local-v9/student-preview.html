@@ -534,8 +534,7 @@
       mobileClose.onclick=()=>{mobileMenu.classList.remove("open");document.body.classList.remove("menuOpen");mobileMenuBtn.setAttribute("aria-expanded","false")};
       mobileLogout.onclick=()=>logout.click();
       mobileNav.onclick=e=>{let b=e.target.closest("[data-page]");if(b)openPage(b.dataset.page)};
-      let lesson1State={};try{lesson1State=JSON.parse(localStorage.getItem("assistara_m1_l1_test")||"{}")}catch(e){}
-      const completedLessons=lesson1State.completed?1:0;
+      const completedLessons=[1,2,3,4,5].reduce((total,n)=>{try{return total+(JSON.parse(localStorage.getItem("assistara_m1_l"+n+"_test")||"{}").completed?1:0)}catch(e){return total}},0);
       const row = (m, i) => {
         const progress=i===0?'<div class="moduleProgress"><div class="progressTrack" aria-label="Module 1 lesson progress"><div class="progressFill" style="width:'+(completedLessons*20)+'%"></div></div><span class="progressLabel">'+completedLessons+' of 5 lessons</span></div>':'';
         return '<div class="item moduleRow"><div class="moduleNum">' +
