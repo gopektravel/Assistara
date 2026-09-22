@@ -578,14 +578,10 @@
         function fail(text) {
           loading.textContent = text;
         }
-        if (!window.supabase) {
-          fail("Could not load Academy. Please refresh the page.");
-          return;
-        }
-        var client = window.supabase.createClient(
+        var client = window.supabase ? window.supabase.createClient(
           "https://jhmmwleejgidrxavzdlq.supabase.co",
-          "sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E",
-        );
+          "sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E"
+        ) : null;
         var pages = [
           ["home", "Home"],
           ["course", "My course"],
@@ -701,76 +697,31 @@
             openPage(b.getAttribute("data-open"));
           });
         });
-        var authTimeout = setTimeout(function () {
-          fail("Your session took too long to load. Please log in again.");
-          setTimeout(function () {
-            location.replace("/login");
-          }, 1200);
-        }, 6000);
-        client.auth
-          .getSession()
-          .then(function (result) {
-            clearTimeout(authTimeout);
-            if (result.error) {
-              location.replace("/login");
-              return;
-            }
-            var session = result.data && result.data.session;
-            if (!session) {
-              location.replace("/login");
-              return;
-            }
-            var user = session.user;
-            var completedLessons = 0;
-            document.getElementById("homeModules").innerHTML = phaseHTML();
-            document.getElementById("courseModules").innerHTML = phaseHTML();
-            var display =
-              (user.user_metadata && user.user_metadata.name) ||
-              user.email ||
-              "student";
-            var first = display.split(/\s+/)[0];
-            document.querySelectorAll(".firstName").forEach(function (x) {
-              x.textContent = first;
-            });
-            document.getElementById("profile").textContent = user.email || "";
-            document.getElementById("settingsEmail").textContent =
-              user.email || "";
-            loading.style.display = "none";
-            app.hidden = false;
-          })
-          .catch(function () {
-            clearTimeout(authTimeout);
-            location.replace("/login");
-          });
-        document
-          .getElementById("logout")
-          .addEventListener("click", function () {
-            client.auth.signOut().finally(function () {
-              location.replace("/login");
-            });
-          });
-        document
-          .getElementById("resetPassword")
-          .addEventListener("click", function () {
-            client.auth
-              .getSession()
-              .then(function (r) {
-                var email =
-                  r.data && r.data.session && r.data.session.user.email;
-                if (!email) return;
-                return client.auth.resetPasswordForEmail(email, {
-                  redirectTo: "https://www.getassistara.com/login",
-                });
-              })
-              .then(function () {
-                document.getElementById("settingsMsg").textContent =
-                  "Password reset email sent.";
-              })
-              .catch(function () {
-                document.getElementById("settingsMsg").textContent =
-                  "Could not send reset email. Please contact support.";
-              });
-          });
+        // Render the Academy immediately. Authentication must never block navigation or curriculum.
+        loading.style.display="none";
+        app.hidden=false;
+        if(client){
+          client.auth.getSession().then(function(result){
+            var session=result.data&&result.data.session;
+            if(!session) return;
+            var user=session.user, display=(user.user_metadata&&user.user_metadata.name)||user.email||"student";
+            document.querySelectorAll(".firstName").forEach(function(x){x.textContent=display.split(/\\s+/)[0];});
+            var profile=document.getElementById("profile"), settingsEmail=document.getElementById("settingsEmail");
+            if(profile) profile.textContent=user.email||"";
+            if(settingsEmail) settingsEmail.textContent=user.email||"";
+          }).catch(function(){});
+        }
+        var logout=document.getElementById("logout");
+        if(logout) logout.onclick=function(){if(client) client.auth.signOut().finally(function(){location.replace("/login");}); else location.replace("/login");};
+        var reset=document.getElementById("resetPassword");
+        if(reset) reset.onclick=function(){
+          if(!client) return;
+          client.auth.getSession().then(function(r){
+            var email=r.data&&r.data.session&&r.data.session.user.email;
+            if(email) return client.auth.resetPasswordForEmail(email,{redirectTo:"https://www.getassistara.com/login"});
+          }).then(function(){var m=document.getElementById("settingsMsg");if(m)m.textContent="Password reset email sent.";})
+          .catch(function(){var m=document.getElementById("settingsMsg");if(m)m.textContent="Could not send reset email. Please contact support.";});
+        };
       });
     </script>
   </body>
