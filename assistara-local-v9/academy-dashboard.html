@@ -240,18 +240,20 @@
         background: #fff;
         border: 1px solid var(--line);
         border-radius: 18px;
-        padding: 18px;
+        padding: 13px 16px;
         display: flex;
-        gap: 14px;
+        gap: 12px;
         align-items: center;
       }
-      .num {
-        flex: 0 0 46px;
-        height: 46px;
-        border-radius: 14px;
-        background: #f2f0ea;
-        display: grid;
-        place-items: center;
+      .module .num {
+        flex: 0 0 30px;
+        height: auto;
+        border-radius: 0;
+        background: transparent;
+        display: block;
+        font-size: 11px;
+        letter-spacing: .08em;
+        color: #8b857b;
         font-weight: 800;
       }
       .moduleText {
@@ -262,6 +264,10 @@
         margin: 0;
         font-size: 15px;
       }
+      .module h3 {font-size:16px;letter-spacing:-.015em}
+      .module .btn{margin:0;padding:8px 12px;font-size:11px;box-shadow:none}
+      .module:first-child{border-color:#d8cf9c}
+
       .module p,
       .item small {
         display: block;
@@ -343,7 +349,13 @@
         }
         .module {
           align-items: flex-start;
+          flex-wrap: wrap;
+          padding: 13px 14px;
         }
+        .module .num{flex:0 0 26px;padding-top:3px}
+        .moduleText{min-width:0;flex:1 1 calc(100% - 40px)}
+        .module .status,.module .btn{margin-left:38px}
+
         .status {
           margin-left: auto;
         }
