@@ -669,6 +669,11 @@
           });
           window.scrollTo(0, 0);
         }
+        var mobileNav = document.createElement("div");
+        mobileNav.className="nav";
+        mobileNav.style.cssText="display:none;margin:0 0 20px;background:#171717;padding:8px;border-radius:14px";
+        mobileNav.id="mobileNav";
+        document.querySelector(".mobileTop").insertAdjacentElement("afterend",mobileNav);
         var desktopNav = document.getElementById("desktopNav");
         desktopNav.innerHTML = pages
           .map(function (p, i) {
@@ -688,6 +693,11 @@
             openPage(b.getAttribute("data-page"));
           });
         });
+        mobileNav.innerHTML=pages.map(function(p,i){return '<button data-page="'+p[0]+'" class="'+(i===0?'active':'')+'">'+p[1]+'</button>';}).join("");
+        mobileNav.querySelectorAll("[data-page]").forEach(function(b){b.addEventListener("click",function(){openPage(b.dataset.page);mobileNav.style.display="none";});});
+        var mobileTop=document.querySelector(".mobileTop");
+        mobileTop.style.cursor="pointer";
+        mobileTop.onclick=function(){if(window.innerWidth<=850) mobileNav.style.display=mobileNav.style.display==="grid"?"none":"grid";};
         document.querySelectorAll("[data-open]").forEach(function (b) {
           b.addEventListener("click", function () {
             openPage(b.getAttribute("data-open"));
