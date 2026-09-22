@@ -310,12 +310,13 @@
         .stat{padding:12px 9px}.stat b{font-size:21px}
         .item{align-items:flex-start;flex-wrap:wrap;padding:15px;gap:11px}
         .item>div{min-width:0}
-        .moduleRow{align-items:flex-start;flex-wrap:wrap;padding:13px 14px}
-        .moduleRow .moduleNum{flex:0 0 26px;width:26px;padding-top:3px}
-        .moduleRow>div:not(.moduleNum){flex:1 1 calc(100% - 40px)}
-        .moduleRow .moduleProgress{order:2;flex:1 1 calc(100% - 40px);min-width:0;margin:8px 0 0 38px}
-        .moduleRow>div:not(.moduleNum):not(.moduleProgress){order:3}
-        .moduleRow .status,.moduleRow .button,.moduleRow>a.button{margin-left:38px;width:auto;text-align:center;margin-top:0!important}
+        .moduleRow{display:grid;grid-template-columns:28px minmax(0,1fr);gap:9px 10px;align-items:center;padding:14px}
+        .moduleRow .moduleNum{grid-column:1;grid-row:1;width:28px;padding:0;align-self:center}
+        .moduleRow .moduleProgress{grid-column:2;grid-row:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;width:100%;min-width:0;margin:0}
+        .moduleRow>div:not(.moduleNum):not(.moduleProgress){grid-column:1 / -1;grid-row:2;min-width:0}
+        .moduleRow .status,.moduleRow .button,.moduleRow>a.button{grid-column:1 / -1;grid-row:3;justify-self:start;margin:0!important;width:auto;text-align:left}
+        .moduleRow .progressLabel{font-size:10px}
+        .moduleRow .status{white-space:normal}
         .item:not(.moduleRow) .status{margin-left:auto}
         .sectionTitle{margin-top:24px}
         .mobileTop{margin-bottom:20px}
