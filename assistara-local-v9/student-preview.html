@@ -227,14 +227,15 @@
         gap: 14px;
         align-items: center;
       }
-      .num {
-        width: 42px;
-        height: 42px;
-        border-radius: 13px;
-        background: #f2f0ea;
-        display: grid;
-        place-items: center;
-        font-weight: 800;
+      .moduleNum {
+        flex: 0 0 30px;
+        width:30px;
+        height:auto;
+        background:transparent;
+        font-size:11px;
+        letter-spacing:.08em;
+        color:#8b857b;
+        font-weight:800;
       }
       .item div {
         flex: 1;
@@ -252,6 +253,11 @@
         padding: 7px 9px;
         background: #f1f1f1;
       }
+      .moduleRow{padding:13px 16px;gap:12px}
+      .moduleRow b{font-size:16px;letter-spacing:-.015em}
+      .moduleRow small{display:block;margin-top:4px;line-height:1.4}
+      .moduleRow .button{margin:0;padding:8px 12px;font-size:11px;min-height:0;white-space:nowrap}
+      .moduleRow:first-child{border-color:#d8cf9c}
       .notice {
         margin-top: 22px;
         background: #fff8cf;
@@ -297,9 +303,12 @@
         .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
         .stat{padding:12px 9px}.stat b{font-size:21px}
         .item{align-items:flex-start;flex-wrap:wrap;padding:15px;gap:11px}
-        .item .num{flex:0 0 42px}.item>div:not(.num){min-width:0;flex:1 1 calc(100% - 55px)}
-        .item .status{margin-left:53px}
-        .item .button,.item>a.button{width:100%;text-align:center;margin-top:4px!important}
+        .item>div{min-width:0}
+        .moduleRow{align-items:flex-start;flex-wrap:wrap;padding:13px 14px}
+        .moduleRow .moduleNum{flex:0 0 26px;width:26px;padding-top:3px}
+        .moduleRow>div:not(.moduleNum){flex:1 1 calc(100% - 40px)}
+        .moduleRow .status,.moduleRow .button,.moduleRow>a.button{margin-left:38px;width:auto;text-align:center;margin-top:0!important}
+        .item:not(.moduleRow) .status{margin-left:auto}
         .sectionTitle{margin-top:24px}
         .mobileTop{margin-bottom:20px}
         .button{min-height:44px}
@@ -522,7 +531,7 @@
       mobileLogout.onclick=()=>logout.click();
       mobileNav.onclick=e=>{let b=e.target.closest("[data-page]");if(b)openPage(b.dataset.page)};
       const row = (m, i) =>
-        '<div class="item"><div class="num">' +
+        '<div class="item moduleRow"><div class="moduleNum">' +
         m[0] +
         "</div><div><b>" +
         m[1] +
