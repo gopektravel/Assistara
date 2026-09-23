@@ -289,6 +289,46 @@
  #resources .resource,#settings .resource{grid-template-columns:32px minmax(0,1fr)}
  #resources .resource .btn,#resources .resource .status,#settings .resource .btn,#settings .resource .pill{grid-column:2;justify-self:start;margin-top:3px}
 }
+
+/* Per-class mobile visual optimization — Lessons 1–9 */
+@media(max-width:850px){
+ /* Shared lesson canvas */
+ .lessonShell{--lesson-gap:10px}.lessonSection{overflow:hidden}
+ .lessonThesis{margin:12px 0;padding:15px;border-radius:15px}.lessonThesis h3{font-size:17px}.lessonThesis p{font-size:12px!important}
+ .shiftCompare{display:grid;grid-template-columns:1fr;gap:7px;margin:12px 0}.shiftSide{padding:13px 14px;border-radius:14px}.shiftSide strong{font-size:14px;margin-bottom:4px}.shiftArrow{height:22px;min-height:22px;font-size:18px;transform:rotate(90deg)}
+ .workflow{display:grid;grid-template-columns:1fr;gap:7px;margin:12px 0;counter-reset:mobileflow}.workflowStep{display:grid;grid-template-columns:30px 1fr;gap:1px 9px;align-items:start;padding:11px 12px;border-radius:13px}.workflowStep b{grid-row:1/3;width:26px;height:26px;margin:0;font-size:10px}.workflowStep strong{font-size:12px;line-height:1.35}.workflowStep small{font-size:10px;margin-top:2px;line-height:1.35}
+ .messageExample{padding:13px 14px;margin:11px 0;border-radius:14px}.messageExample .messageLabel{font-size:9px;margin-bottom:6px}.messageExample blockquote{font-size:13px;line-height:1.55}
+ .ownershipFormula{grid-template-columns:1fr;gap:6px;margin:12px 0}.ownershipFormula div{padding:11px 12px;border-radius:12px;font-size:12px;text-align:left}
+ /* Lesson 3: service lanes + signal path */
+ .laneExplorer{grid-template-columns:1fr;gap:8px;margin:12px 0}.lane{padding:14px;border-radius:15px}.lane h3{font-size:15px;margin-bottom:4px}.serviceChips{gap:5px;margin-top:9px}.serviceChips span{padding:6px 8px;font-size:9px}
+ .signalPath{grid-template-columns:1fr;gap:6px;margin:12px 0}.signal{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:8px;padding:10px 12px;border-radius:12px}.signal b{margin:0;font-size:9px}.signal p{margin:0!important;font-size:11px!important}
+ /* Lesson 5: weekly focus + energy */
+ .weekMap{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:12px 0}.weekMap>div{padding:11px 12px;border-radius:13px}.weekMap b{font-size:11px}.weekMap small{font-size:9px;margin-top:3px}
+ .focusStage{margin:0;padding:16px 14px!important;border-radius:16px}.focusSplit{grid-template-columns:1fr;gap:7px}.focusSplit>div:not(.focusArrow){padding:12px 13px;border-radius:13px}.focusArrow{height:20px;font-size:17px}.focusSplit small{font-size:10px;margin-top:4px}
+ .energyTrack{height:92px;gap:6px;margin:14px 0 8px;padding:0 4px}.energyTrack span{border-radius:8px 8px 0 0}
+ /* Lesson 8: workload planning */
+ .workloadDecision{grid-template-columns:1fr;gap:8px;margin-top:12px}.workloadFacts,.workloadOrder{gap:6px}.workloadFact,.workloadOrderRow{padding:11px 12px;border-radius:12px;font-size:11px}.workloadFact b,.workloadOrderRow b{font-size:12px}
+ .workloadAsk{max-width:none;padding:12px 13px;border-radius:13px;font-size:12px}
+ .workloadSystem{grid-template-columns:1fr;gap:7px;margin-top:12px}.workloadSystemItem{display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;padding:11px 12px;border-radius:13px;font-size:11px}.workloadSystemItem .flowArrow{margin:0;font-size:17px}
+ .workloadSwitch{gap:10px;margin-top:12px}.workloadLane{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;overflow:visible}.workloadBlock{min-width:0;padding:8px 4px;border-radius:9px;font-size:9px}.workloadBlock.buffer{font-size:8px}
+ .workloadScenario{grid-template-columns:1fr;gap:7px;margin-top:12px}.workloadClient{padding:12px 13px;border-radius:13px;font-size:11px}.workloadClient .tag{font-size:9px;margin-bottom:5px}
+ .workloadDecisionFlow{grid-template-columns:1fr;gap:6px;margin-top:10px}.workloadDecisionStep{padding:11px 12px;border-radius:12px;font-size:11px}
+ .workloadRecovery{grid-template-columns:1fr;gap:5px;margin-top:12px}.workloadRecoveryStep{min-height:0;padding:11px 12px;border-radius:13px;font-size:11px}.workloadRecoveryArrow{height:18px;font-size:17px}
+ /* Lesson 9: Google Workspace visuals */
+ .workspaceMap{display:grid;grid-template-columns:1fr;gap:7px;margin-top:12px}.workspaceHub{order:-1;padding:13px;border-radius:14px;font-size:12px}.workspaceSpokes{display:grid;grid-template-columns:1fr 1fr;gap:6px}.workspaceNode{padding:10px;border-radius:11px}.workspaceNode strong{font-size:11px}.workspaceNode small{font-size:9px;margin-top:2px}
+ .permissionLadder{grid-template-columns:1fr;gap:6px;margin-top:11px}.permission{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:center;padding:10px 12px;border-radius:12px}.permission strong{font-size:12px}.permission small{font-size:10px;margin:0;line-height:1.35}
+ .workspaceFlow{grid-template-columns:1fr;gap:6px;margin-top:12px}.workspaceFlowStep{display:grid;grid-template-columns:26px 1fr;gap:0 8px;padding:10px 11px;border-radius:12px}.workspaceFlowStep b{grid-row:1/3;font-size:9px}.workspaceFlowStep strong{font-size:11px;margin:0}.workspaceFlowStep small{font-size:9px}
+ .sheetDemo{grid-template-columns:1fr;gap:9px;margin-top:12px}.sheetGrid{overflow:hidden}.sheetCell{min-height:34px;font-size:8px;padding:2px}.sheetTips{gap:5px}.sheetTip{padding:9px 10px;border-radius:10px;font-size:10px}
+ .formsFlow{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:11px}.formsStep{padding:10px 7px;border-radius:11px;font-size:10px}
+ .miniDecision{padding:12px;border-radius:13px;margin-top:11px}
+ .calendarDemo{grid-template-columns:1fr;gap:8px;margin-top:12px}.calendarGrid{padding:11px;border-radius:13px}.calendarAllDay{padding:7px;font-size:10px;margin:6px 0 8px}.calendarHour{padding:7px 0;font-size:9px}.calendarBlock{padding:7px;margin-left:42px;font-size:10px}.workspaceChecklist{padding:12px 13px;border-radius:13px;font-size:11px}.workspaceChecklist div{padding:6px 0}
+}
+@media(max-width:390px){
+ .weekMap{grid-template-columns:1fr 1fr}
+ .workspaceSpokes{grid-template-columns:1fr 1fr}
+ .workloadLane{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .formsFlow{grid-template-columns:1fr 1fr}
+}
 </style></head><body>
 <div id="loading" class="loading">Loading your Academy...</div>
 <div id="app" class="app" hidden><aside class="side"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><nav class="nav" id="desktopNav"></nav><div class="sidefoot"><div id="profile" class="profile"></div><button class="logout" id="logout">← Log out</button></div></aside>
