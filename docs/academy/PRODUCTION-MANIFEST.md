@@ -1251,3 +1251,36 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA advances the manifest.
 - following_class_not_started: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1).
+
+
+### p1m6c4 INDEPENDENT DOUBLE-CHECK — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- previous_BUILD_CONTENT_VISUAL_FUNCTIONAL_claims_trusted: no.
+- source_reread: yes — original Phase 1 Module 6 Lesson 4 read again in full through the Phase 1 congratulations/transition copy.
+- actual_outputs_reopened: latest main learner implementation plus actual canonical learner PDF Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t.
+- source_to_written_lesson: PASS — why Notion; customized client dashboard/project-HQ framing; Page/Sub-Pages/Databases; Client Dashboard→Organized Sections→Custom views; Task Tracker; Notes & Docs / Meeting Notes; conditional Content Calendar; Resources & Files Hub; daily status/note/archive/toggle-callout habits; workspace-cleanliness/work-ethic takeaway; simple Task List/Content Calendar/Project Dashboard templates; and clarity-over-complexity are all preserved.
+- duplication_handling: PASS — the guidebook contains overlapping “Pages to Include” and “Must-Have Pages” lists; the learner lesson consolidates them without losing the distinct source details instead of repeating near-identical sections.
+- invented_material_audit: PASS — dashboard labels/sample task names are visual examples only; they do not introduce assessed workflows or unsupported Notion claims.
+- difficulty_sequence: PASS — why → structure → client pages → daily habits → templates/complexity rule is beginner-appropriate and follows the source's conceptual order.
+- learner_internal_terminology: PASS — no guidebook/production/QA terminology exposed.
+- final_PDF_render: actual 6-page canonical PDF rendered again at 120 DPI and inspected page-by-page plus as a 6-page contact sheet.
+- final_PDF_visual_result: PASS — no clipping, overflow, off-canvas objects, malformed Assistara logo/Academy lockup, broken wrapping, unreadable text, harmful empty space or confusing page order found. Pages visibly use six distinct treatments: editorial cover, client-dashboard concept, hierarchy, client-home stack, daily maintenance sequence, and simple-template/clarity synthesis.
+- PDF_content_match: PASS — Page 2 project-HQ framing, Page 3 Page/Sub-Pages/Databases hierarchy, Page 4 workspace pages, Page 5 all four daily habits, and Page 6 simple templates + clarity rule match the source and current written lesson.
+- resources: PASS — none exposed; source does not provide a separate reusable resource body that warrants an additional file.
+- quick_check: PASS — five questions are source-grounded and unambiguous; no answer depends on decorative dashboard examples.
+- completion: PASS structurally — completed state clears transient lesson22 quiz state; centralized markClassComplete persists p1m6c4; authenticated loadProgress restores completion after refresh.
+- progression: PASS — p1m6c4 completes Module 6 / Phase 1 coursework and moves Phase 1 to Ready for Exam; it does not unlock Phase 2 without a passed Phase 1 exam.
+- skills: PASS — Notion maps legitimately to p1m6c4 and reaches Demonstrated after the required learning milestone, not Verified without the separate optional challenge.
+- Test_Student_Portal: PASS structurally after the prior functional fix — p1m6c4qa and p1m6c4done states exist with the correct prerequisite chain; p1m6c4done adds C4 and therefore represents Phase 1 coursework complete / exam-ready state.
+- responsive_UX: PASS by implementation inspection — Notion structure/pages/habits and the simulated Notion window collapse for <=700px; tap targets for answers/slides meet the class-specific minimums; no class-specific fixed-width horizontal overflow defect found.
+- preview_download: PASS structurally — lesson22 still points to the inspected canonical PDF ID and canonical filename through the shared preview/download helper.
+- regression_check: PASS — prior lesson dispatches remain intact; p1m6c4 is scoped to Module 6/Class 4 and no curriculum identity/order change was found.
+- fixes_this_double_check: none required. The current implementation/PDF already passed the independently repeated source, output, progression and responsive checks; making a gratuitous change would increase regression risk.
+- live_external_limit: connected Vercel authorization remains unavailable (zero teams/projects in the immediately preceding functional check), so deployed browser/device interaction is still NOT VERIFIED LIVE.
+- double_check_result: PASS.
+- status_remains: LIVE BUT NEEDS QA.
+- same_class_ready_for: FINAL QA.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA.
+- following_class_not_started: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1).
