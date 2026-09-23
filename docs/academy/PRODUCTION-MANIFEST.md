@@ -179,3 +179,23 @@ Initialization note: direct production browser verification was blocked because 
 - mobile_tested: no — live browser unavailable; responsive CSS inspected/fixed.
 - known_issues: no remaining reproducible implementation defect found in the available static/database environment. Live browser-dependent gates remain blocked specifically by Vercel project/team authorization.
 - functional_UX_fix_commits: ab919e61f9bd29dc29a811786b55c3e544bc8858, 5a9384636a447281ec18516642a399b24f02ef64
+
+
+### p1m5c1 double-check pass — 2026-09-23
+- queue_advanced: no
+- same_class_retained: yes — p1m5c1 AI Research & Creating a Customer Avatar.
+- source_reread_again: yes — original Phase 1 guidebook Module 5 introduction + complete Lesson 1 through the Lesson 2 boundary.
+- written_lesson_rechecked_against_source: yes — goal/audience/insights, four source prompt patterns, six named research tools/purposes, competitor types, competitor inspection signals and summary prompt remain represented in the learner lesson; Quick Check remains source-supported.
+- actual_current_learner_PDF_downloaded_and_rendered: yes — Drive ID 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q; all pages rendered locally rather than trusting prior reports.
+- meaningful_slide_issue_found: yes — despite the previous content-audit note, the actual learner PDF omitted the six named research tools entirely and showed only 3 of the source's 4 concrete ChatGPT prompt patterns.
+- slide_fix: updated the retained Google Slides source to include the fourth source prompt and added a dedicated research-tools page containing all six source tools with their source-stated purposes: Glasp, BuzzSumo, Exploding Topics, AnswerThePublic, Google Trends and Ubersuggest.
+- slide_reexport_after_fix: yes.
+- rendered_PDF_reinspection_after_fix: yes — 9/9 pages rendered and visually inspected. No clipping, overlap, canvas escape or broken typography observed; the new tools page is readable and the four prompt patterns fit inside the prompt surface.
+- learner_PDF_replaced_in_place_after_fix: yes — same Drive ID preserved: 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q; updated size 49,748 bytes; modified 2026-09-23T15:48:35Z.
+- resources_rechecked: no optional class-specific resource is present, so no resource artifact is missing from the implemented class.
+- quick_check_rechecked: yes by implementation/source inspection — 5 questions remain aligned to taught material; all-at-once answer/check/retry/pass state machine unchanged from the functional QA pass.
+- completion_progression_rechecked: yes by implementation inspection — centralized p1m5c1 completion persistence and sequential p1m5c2 unlock remain unchanged; no unrelated progression code modified in this pass.
+- responsive_UX_rechecked: learner PDF is 16:9 and readable at contact-sheet/mobile-preview scale; p1m5c1 responsive lesson CSS from the prior functional pass remains scoped to marketResearchLesson. Live viewport interaction is still blocked.
+- live_browser_limitation_unchanged: connected Vercel still lacks authorization to the production project/team, so browser-dependent production checks (actual preview iframe load, download response, authenticated completion+refresh persistence, desktop/mobile taps/navigation) cannot honestly be promoted to passed.
+- remaining_known_issue: only the explicit external live-browser authorization limitation above; no additional source/content/slide defect remained after this correction pass.
+- ready_for_FINAL_QA: yes, with live-production gates still explicitly blocked rather than falsely passed.
