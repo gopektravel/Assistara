@@ -1174,3 +1174,26 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_unchanged: p1m6c4.
 - next_build_pointer_unchanged: p1m6c4 until FINAL QA advances the manifest.
 - following_class_not_started: yes.
+
+
+### p1m6c4 INDEPENDENT CONTENT AUDIT — 2026-09-24 (latest pass)
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- previous_claims_trusted: no.
+- original_source_reread: yes — original Phase 1 Module 6 Lesson 4 read again in full, including the Phase 1 completion message.
+- actual_learner_class_inspected: yes — latest lesson22 metadata, written lesson, Quick Check and completed-state copy inspected directly.
+- source_coverage: core Notion teaching remains complete: one flexible workspace; customized organization/clean dashboard; Page/Sub-Pages/Databases; Client Dashboard → Organized Sections → Custom views; Task Tracker; Notes/Meeting Notes; relevant Content Calendar; Resources & Files Hub; daily status/note/archive/toggle-callout habits; simple templates; start-simple/clarity-over-complexity rule.
+- meaningful_issue_1: the illustrative Notion dashboard said “One place for the work, conversations and files.” The source teaches projects, notes, files and databases/tracking, not a conversation system. Corrected to “One place for projects, notes, files and tracking.”
+- meaningful_issue_2: the learner completed state omitted the source's explicit Phase 1 completion transition (“You’ve Built Your Foundation”) and the source-grounded preview of Phase 2 skills. Restored this transition while preserving the Academy's actual Phase 1 Exam gate: learners are told that after passing the Phase 1 Exam, Phase 2 moves into VA branding, social media content, marketing fundamentals, beginner-friendly practice, video editing, Facebook Ads, and sample work for a portfolio.
+- implementation_fix_commit: 64d84faea8b2329e95a1ee4f3a3f35ab5828a476.
+- quick_check_audit: PASS — five questions remain unambiguous and directly supported by the source. No question depends on illustrative dashboard copy or unsupported material.
+- invented_material_audit: PASS after fix — concrete Acme Studio/task labels remain presentation examples only; they do not introduce an assessed workflow or factual claim beyond the source.
+- teaching_sequence: PASS — why Notion → basic setup → client workspace pages → daily habits → simple templates → completion/next-phase transition.
+- difficulty: PASS — beginner-level recognition/application; no unsupported advanced Notion configuration.
+- internal_source_or_production_language: none exposed to learners.
+- slides_content_alignment: PASS for content scope — canonical deck covers the five instructional source sections; the completion transition remains appropriately in the class completion state rather than being forced into the teaching deck.
+- post_fix_reread: yes — corrected learner copy re-fetched from latest main and checked against the original guidebook.
+- status_remains: LIVE BUT NEEDS QA.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA.
+- following_class_not_started: p2m1c1.
