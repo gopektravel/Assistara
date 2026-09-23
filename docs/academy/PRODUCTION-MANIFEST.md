@@ -11,12 +11,12 @@ Drive source root: Assistara / 05 Assistara Academy / Course Material / Original
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current class under production/QA: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2)
-Build state: implementation + learner PDF slides created; independent QA still required.
-NEXT BUILD: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2)
-Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 2: Client Project Management ClickUp
-Previous completed queue class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1) — BUILT + FINAL LOCAL QA.
-Queue rule: p1m6c1 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p1m6c2; this FINAL QA did not build it.
+Current class under production/QA: P1 M6 C3 — Client Project Management with Trello (p1m6c3)
+Build state: NOT BUILT — selected as the next production target after p1m6c2 passed FINAL LOCAL QA.
+NEXT BUILD: P1 M6 C3 — Client Project Management with Trello (p1m6c3)
+Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 3: Client Project Management Trello
+Previous completed queue class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) — BUILT + FINAL LOCAL QA.
+Queue rule: p1m6c2 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p1m6c3; this FINAL QA did not build it.
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
@@ -52,7 +52,7 @@ M5 Market Research & Data Organization
 - p1m5c3 Organizing Your Findings — BUILT + FINAL LOCAL QA
 M6 Project Management for VAs
 - p1m6c1 Project & Business Management for VAs — BUILT + FINAL LOCAL QA
-- p1m6c2 Client Project Management with ClickUp — LIVE BUT NEEDS QA
+- p1m6c2 Client Project Management with ClickUp — BUILT + FINAL LOCAL QA
 - p1m6c3 Client Project Management with Trello — NOT BUILT
 - p1m6c4 Client Project Management with Notion — NOT BUILT
 
@@ -818,3 +818,25 @@ Initialization note: direct production browser verification was blocked because 
 - same_class_ready_for: FINAL QA.
 - current_class_remains: p1m6c2.
 - next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
+
+
+### p1m6c2 FINAL INDEPENDENT QA — 2026-09-24
+- final_gate_class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
+- previous_claims_trusted: no — latest manifest, latest main, original Phase 1 guidebook Lesson 2 and actual final learner PDF were independently reopened.
+- source_fidelity: PASS — final lesson preserves why ClickUp is useful for client work; shared workspace/alignment; missed-deadline/lost-file/email benefit; clean-board professionalism; Workspace→Spaces→Folders→Lists; Company→Project→To-Do Lists analogy; all four client-project sections with Content Calendar condition and optional Progress Tracker; trust-at-start takeaway; morning check; three statuses; task comments instead of separate emails; assigned-task deliverables; consistency benefit; and all three taught automations.
+- learner_class: PASS — correct Phase 1 / Module 6 / Class 2 identity, established video Coming Soon state, five source-faithful teaching sections, no learner-facing internal production/source terminology and no unsupported advanced ClickUp workflow.
+- final_learner_PDF: Drive ID 1C_-uTyJKnM-_cS_Ehsbw4lTmLhl_3HVa; 6 pages; 40,449 bytes; modified 2026-09-23T19:30:53.605Z.
+- final_PDF_visual_gate: PASS — actual final PDF was downloaded, rendered page-by-page at 120 DPI and visually inspected as a 6-page contact sheet. No clipping, overflow, off-canvas objects, broken wrapping, malformed logo/lockup or unreadable type found. Slide 4 visibly contains the restored project-section conditions/details and slide 5 visibly contains the restored daily-habit details.
+- resources: PASS — no optional resource is exposed; the source contains no separate reusable template/file body that warrants one.
+- quick_check: PASS — 5 source-supported questions; all answers required before grading; feedback after submission; correct answers lock; wrong answers remain retryable; Check Answers Again path exists; 5/5 required before Complete Class.
+- completion: PASS structurally — centralized markClassComplete(p1m6c2), authenticated academy_class_progress upsert, loadProgress refresh path, and completed-class stale quiz state reset are present.
+- progression: PASS — p1m6c2 completion unlocks p1m6c3 only; Module 6 remains incomplete; Phase 1 exam remains locked; completed state labels Trello as Coming soon and Continue returns to Module 6 rather than opening unbuilt content.
+- skills: PASS — existing ClickUp skill mapping legitimately includes p1m6c2 and records Learning rather than falsely claiming Demonstrated/Verified competence.
+- responsive_static_gate: PASS — class layouts collapse at <=700px; min-width hardening is present; hierarchy/project/routine layouts stack; automation rows stack; slide action target >=44px; answer targets >=48px; no class-specific fixed-width horizontal-overflow defect found.
+- regression_check: PASS by latest-main inspection — prior lesson dispatches/navigation remain intact; p1m6c2 adds only its own Module 6/Class 2 route and scoped styling.
+- live_external_gate: NOT VERIFIED — connected Vercel authorization still returns zero authorized teams/projects. Actual deployed Test Student Portal clicks, Drive iframe interaction/download response, authenticated Complete→refresh→reopen behavior and physical desktop/mobile interaction cannot be honestly claimed as live-tested.
+- final_status: BUILT + FINAL LOCAL QA.
+- queue_advanced: yes, manifest only.
+- next_NOT_BUILT_class: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
+- next_build_target: p1m6c3.
+- p1m6c3_built_in_this_pass: no.
