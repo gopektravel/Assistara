@@ -1103,3 +1103,33 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA.
 - following_class_not_started: p2m1c1.
+
+
+### p1m6c4 INDEPENDENT FUNCTIONAL / UX QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- latest_manifest_and_main_reread: yes.
+- class_identity_and_opening: PASS by implementation inspection — Phase 1 / Module 6 / Class 4 of 4; openClass dispatches p1m6c4 through renderLesson22 only after centralized sequential gating confirms prior coursework is complete.
+- video_state: PASS — established 16:9 non-playable “Lesson video coming soon” state with the correct Notion class title.
+- written_lesson_rendering: PASS by implementation inspection — five Notion teaching sections render before the Quick Check and match the content-QA-corrected learner lesson.
+- slide_preview_download: PASS structurally — corrected learner PDF ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t is wired through the shared preview helper; helper provides loading state, Drive preview iframe, load transition, canonical PDF download, close button, backdrop close, Escape close and scroll-position restoration.
+- optional_resources: none; no per-class resource interaction exists to fail.
+- quick_check_rendering_and_selection: PASS — five questions; selection state is isolated to lesson22; Check Answers is disabled until all five are answered.
+- incorrect_answer_and_feedback_path: PASS by code-path inspection — submitted wrong answers receive wrong/bad styling and “Try again” plus the source-grounded explanation; correct submitted answers are disabled/locked.
+- retry_path: PASS — changing a wrong answer clears lesson22Submitted and rerenders; after a failed submission the action label is Check Answers Again.
+- successful_pass: PASS — 5/5 is required before Complete Class appears.
+- complete_class: PASS structurally — Complete Class disables while saving and calls centralized markClassComplete(p1m6c4); failed persistence restores the button.
+- completion_persistence: PASS structurally — Supabase academy_class_progress schema independently rechecked: user_id uuid NOT NULL, class_key text NOT NULL, completed boolean NOT NULL, completed_at timestamptz, updated_at timestamptz. Shared loadProgress/markClassComplete architecture remains the persistence path.
+- refresh_and_completed_reopen: PASS structurally — loadProgress repopulates completed class keys after authenticated refresh; renderLesson22 detects completed state and clears stale transient quiz state before rendering the saved completion view.
+- next_unlock_and_phase_progression: PASS — p1m6c4 is the last Phase 1 class. Completing it finishes Module 6/Phase 1 coursework and unlocks the Phase 1 Exam; it does not unlock Phase 2 directly. The completion CTA returns to the Phase 1 view so the exam is the next progression gate.
+- skills: PASS — existing Notion skill maps to p1m6c4. Completion moves that learning milestone to Demonstrated under the established Skills model; no Verified state is granted without a Skill Challenge.
+- Academy_navigation_and_surrounding_pages: PASS by static regression inspection — prior class dispatches remain intact; p1m6c4 adds only the Module 6/Class 4 dispatch. Shared My Course / My Skills / Resources / Live Sessions / Certificate / Settings architecture remains present.
+- responsive_static_QA: PASS — notionLesson applies min-width hardening at <=700px; dashboard/structure/pages/habits grids collapse to one column; slide action target >=44px; answer targets >=48px. No class-specific fixed-width horizontal-overflow defect found.
+- responsive_slide_experience: PASS structurally — shared modal/iframe path is used with the corrected landscape 16:9 PDF and shared mobile modal rules.
+- regressions_found: none reproducible in the locally/verifiably inspectable functional paths; no code change required in this pass.
+- live_external_limit: connected Vercel authorization still returns zero teams/projects. Therefore actual deployed Test Student Portal class opening, iframe page navigation/download response, real answer clicking, wrong-answer/retry/pass, authenticated Complete Class→refresh→reopen persistence, Phase 1 Exam click-through, surrounding-page browser navigation, and physical desktop/mobile overflow/tap behavior remain NOT VERIFIED LIVE.
+- functional_QA_result: PASS for locally/verifiably inspectable paths; blocked live checks explicitly remain NOT VERIFIED.
+- status_remains: LIVE BUT NEEDS QA — DOUBLE-CHECK / FINAL QA remain.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA.
+- following_class_not_started: p2m1c1.
