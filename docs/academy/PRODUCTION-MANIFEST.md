@@ -840,3 +840,29 @@ Initialization note: direct production browser verification was blocked because 
 - next_NOT_BUILT_class: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
 - next_build_target: p1m6c3.
 - p1m6c3_built_in_this_pass: no.
+
+
+### PERIODIC ACADEMY REGRESSION CHECK — 2026-09-24
+- queue_advanced: no.
+- queue_position_preserved: P1 M6 C3 — Client Project Management with Trello (p1m6c3) remains the current/NEXT BUILD target and remains NOT BUILT.
+- scope: shared Academy architecture after the recent Phase 1 class-production batch; no new class authored and curriculum identity/order unchanged.
+- curriculum_rendering: PASS — canonical 4-phase curriculum still renders in the intended module/class order; Module 6 remains Project & Business Management for VAs → ClickUp → Trello → Notion.
+- navigation: PASS by implementation inspection — shared page navigation, phase/module/class breadcrumbs and class dispatch remain centralized; built classes 1–20 retain explicit lesson routes while unbuilt classes fall through to the Coming soon class state.
+- sequential_class_module_unlocking: PASS — classes require the previous class; modules require the previous module to be fully complete.
+- shared_phase_unlock_regression_found: isPhaseUnlocked previously checked only the immediately preceding phase exam. In normal progression this usually behaves correctly, but inconsistent/corrupt/imported exam state could unlock a later phase without every earlier phase being passed. This violated the stated sequential architecture invariant.
+- shared_phase_unlock_fix: isPhaseUnlocked now requires every prior phase exam to exist and be passed before a later phase unlocks.
+- regression_fix_commit: 4a4b0384718d654c53ddfb95183738c3dd863018.
+- fix_retest: latest main re-fetched; Phase 1 always unlocks, Phase 2 requires Phase 1 pass, Phase 3 requires Phase 1+2 passes, Phase 4 requires Phase 1+2+3 passes. Existing normal preview states remain compatible because passed2/passed3/passed4 already populate the earlier passed exams.
+- completion_persistence: PASS structurally — academy_class_progress schema independently rechecked in Supabase: user_id uuid NOT NULL, class_key text NOT NULL, completed boolean NOT NULL, completed_at timestamptz, updated_at timestamptz. Shared loadProgress reads completed=true keys; markClassComplete upserts through the centralized persistence path.
+- quick_check_shared_behavior: PASS by cross-class architecture inspection — recent classes continue using the established all-answers-before-grade / feedback / retry / all-correct-before-complete pattern; no shared grading helper regression found. Per-class quiz state remains intentionally isolated.
+- slide_preview_download_architecture: PASS structurally — shared modal uses a Drive preview iframe, loading state, canonical file ID download, close button, backdrop close, Escape close and scroll restoration. Recent p1m6c2 final PDF is still a valid concrete learner artifact and its content visibly follows the established Academy deck structure. 
+- resources: PASS structurally — global Resources page/build path remains separate from optional per-class resources; no broken new C2 resource was introduced because C2 intentionally has none.
+- skills_integration: PASS — skill state derives from actual completed class keys and phase gating; Learning/Demonstrated/Verified remain distinct. Trello/Notion mappings still point to p1m6c3/p1m6c4 without falsely granting completion.
+- test_student_portal: QA preview-state architecture remains present, including p1m6c2qa and p1m6c2done. The phase-unlock hardening was checked against the simulated passed-phase states.
+- responsive_layout: PASS by shared CSS/static inspection — Academy uses viewport meta, mobile navigation, mobile slide modal sizing, stacked lesson layouts and class-specific responsive rules; no new shared fixed-width regression identified in this pass.
+- actual_output_inspected: the latest final p1m6c2 learner PDF from the just-completed batch was available and inspected in the preceding final gate; it contains the expected Phase 1 / Module 6 / Class 2 identity and final project-section/daily-habit teaching content.
+- live_external_limit: connected Vercel authorization still returns zero teams/projects. Therefore deployed Test Student Portal navigation, actual iframe/download HTTP behavior, authenticated refresh persistence and real-device desktop/mobile interactions remain NOT VERIFIED LIVE in this regression pass.
+- regression_check_result: PASS after the shared phase-unlock hardening.
+- current_class_unchanged: p1m6c3.
+- next_build_unchanged: p1m6c3.
+- p1m6c3_built_in_this_pass: no.
