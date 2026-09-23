@@ -1197,3 +1197,29 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA.
 - following_class_not_started: p2m1c1.
+
+
+### p1m6c4 INDEPENDENT VISUAL / SLIDE PDF QA — 2026-09-24 (latest pass)
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- binding_slide_standard_reread: yes.
+- actual_learner_PDF_opened: yes — canonical Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t, 6 pages, 43,969 bytes.
+- actual_PDF_rendered: yes — all six pages rendered at 120 DPI and inspected page-by-page and as a contact sheet.
+- source_deck_cross_check: Google Slides source ID 1WYRG0QfxLJQKalA3XFTKD55utKkAvJea8QcSAaEJo-8 independently reopened; its six-page order and learner PDF order both read Cover → Why Notion → Basic Setup → Client Workspace Pages → Daily Habits → Simple Templates.
+- clipping_overflow_wrapping: PASS — no text or teaching object visibly clips, escapes its canvas, or collides with the brand lockup.
+- margins_alignment: PASS — safe margins are consistent; text and visual systems sit on stable grids with no accidental edge crowding.
+- typography_hierarchy: PASS — context labels remain secondary, headlines are phone-viewer readable, body copy is concise enough for the embedded viewer, and teaching signals retain stronger hierarchy than supporting text.
+- brand_fidelity: PASS — real Assistara square logo/Academy lockup appears consistently top-right; near-black, cream, Assistara yellow and restrained supporting pastel states match the Academy language.
+- composition_variety: PASS — six pages use distinct teaching treatments rather than one repeated card template: editorial cover, workspace category map, Page/Sub-pages/Database hierarchy, client-home stack, daily operating sequence, and template/clarity synthesis.
+- visual_teaching: PASS — each page uses a treatment appropriate to the concept. The hierarchy slide shows containment/depth, client pages show a workspace stack, daily habits show an ordered maintenance loop, and the final page makes the source's clarity-over-complexity rule visually dominant.
+- accidental_empty_space: none judged harmful; whitespace is purposeful and supports the editorial Academy style.
+- weak_or_generic_diagrams: none requiring correction in this pass.
+- PDF_page_order: PASS — the previously corrected canonical artifact now opens in the intended pedagogical order; no recurrence of the earlier page-order corruption.
+- preview_download_wiring: verified structurally on latest main — lesson22.slidesFileId remains 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t and the lesson action uses the canonical P1 M6 C4 Notion PDF filename, so learner preview/download points to the inspected artifact.
+- visual_fixes_this_pass: none required after independent inspection; changing the deck would be gratuitous rather than corrective.
+- live_browser_preview_click: NOT VERIFIED — connected Vercel authorization still exposes zero Assistara teams/projects, so deployed iframe interaction is outside the available environment.
+- visual_QA_result: PASS for the actual canonical learner PDF.
+- status_remains: LIVE BUT NEEDS QA.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA.
+- following_class_not_started: p2m1c1.
