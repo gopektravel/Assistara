@@ -338,6 +338,19 @@
 .resourceCopy{min-width:0}.resourceCopy strong{display:block}.resourceCopy small{display:block;margin-top:3px}
 @media(max-width:850px){#resources .resourceTool{grid-template-columns:42px minmax(0,1fr) auto!important;gap:10px!important;padding:12px!important}.resourcePictogram{width:42px;height:42px;border-radius:13px}.resourcePictogram svg{width:22px;height:22px}}
 @media(max-width:390px){#resources .resourceTool{grid-template-columns:40px minmax(0,1fr)!important}.resourcePictogram{width:40px;height:40px}.resourceTool>.btn,.resourceTool>.status{grid-column:2!important;justify-self:start;margin-top:3px}}
+
+/* Mobile menu — compact viewport-safe navigation */
+@media(max-width:850px){
+ .main{position:relative;overflow-x:clip}
+ .mobileTop{width:100%;max-width:100%;box-sizing:border-box}
+ .mobileNav.open{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;position:absolute;left:var(--mobile-gutter);right:var(--mobile-gutter);top:62px;width:auto;max-width:calc(100% - (var(--mobile-gutter) * 2));box-sizing:border-box;margin:0;padding:7px;background:#171717;border:1px solid #333;border-radius:15px;box-shadow:0 18px 42px rgba(0,0,0,.22);overflow:hidden}
+ .mobileNav button{width:100%;min-width:0;min-height:42px;padding:9px 10px;border-radius:10px;font-size:11px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+ .mobileNav button.active{box-shadow:inset 3px 0 var(--yellow)}
+}
+@media(max-width:360px){
+ .mobileNav.open{grid-template-columns:1fr}
+ .mobileNav button{min-height:38px;padding:8px 10px}
+}
 </style></head><body>
 <div id="loading" class="loading">Loading your Academy...</div>
 <div id="app" class="app" hidden><aside class="side"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><nav class="nav" id="desktopNav"></nav><div class="sidefoot"><div id="profile" class="profile"></div><button class="logout" id="logout">← Log out</button></div></aside>
