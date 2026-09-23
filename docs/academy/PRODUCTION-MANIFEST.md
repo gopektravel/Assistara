@@ -481,3 +481,31 @@ Initialization note: direct production browser verification was blocked because 
 - status: LIVE BUT NEEDS QA — functional/UX code-path QA complete with one reproduced UX fix; live-production interaction remains explicitly unverified because of access limitations; double-check and FINAL QA still pending.
 - current_class_remains: p1m5c3.
 - next_class_not_started: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
+
+
+### p1m5c3 DOUBLE-CHECK — 2026-09-24
+- queue_advanced: no.
+- class: P1 M5 C3 — Organizing Your Findings (p1m5c3).
+- master_manifest_and_latest_main_reread: yes.
+- original_source_reread_independently: yes — Phase 1 guidebook Lesson 3 reread through the Module 6 boundary. Source contains the supplied AI synthesis prompt; simple Market Research Report in Google Docs, Notion, or Slides; clean/focused instruction; six suggested report sections with definitions; and only a Notes reference to a Mother’s Day sample, with no sample content supplied.
+- source_to_written_lesson_issue_found: yes. The first written section still contained invented raw-research examples (“Trend notes / Competitor screenshots / Customer comments / AI summaries”) and extra handoff framing (“Do not hand the client a pile of research / key patterns / useful findings”) that are not stated in this lesson source.
+- content_fix: removed the invented raw-research/client-handoff block. The opening now follows the source directly: create a simple Market Research Report; use Google Docs, Notion, or Slides; keep it clean and focused; organize it into the six suggested sections.
+- content_fix_commit: 1903e07029e001381906dcf4f0031c38f8230afa.
+- post_fix_content_recheck: latest main re-fetched and corrected renderLesson18 copy verified against the original guidebook. Six section names/meanings, the supplied AI prompt and Mother’s Day campaign-idea instruction remain intact.
+- actual_learner_PDF_downloaded_again: yes — Drive ID 1eKtj3F9y9My2qLnegkpZDQCF2-fodEiB; 40,674 bytes; 6 landscape 16:9 pages.
+- actual_PDF_rendered_again: yes — all 6 pages rendered from the current Drive-backed learner PDF at 120 DPI and individually inspected, not inferred from slide code/source.
+- rendered_PDF_findings: no meaningful remaining visual defect found. Real Assistara logo/Academy lockup is present; hierarchy, contrast, margins and wrapping are clean; no clipping/overlap/canvas escape/broken glyphs found. Pages 1–6 all inspected. No slide modification was required in this double-check, so there was no affected slide requiring a post-edit rerender beyond the full current-PDF render performed here.
+- PDF_text_extraction_cross_check: yes — extracted text confirms title/class identity, six suggested sections, source AI prompt, clean/focused final check and next-module label.
+- slides_source_fidelity: acceptable after independent comparison; deck stays within the source’s report organization, six sections, prompt, clean/focused instruction and specific-recommendations framing. No sample/template was invented from the source’s Notes-only sample reference.
+- resources: no optional class resource exists; this remains appropriate because the guidebook does not actually provide the referenced Mother’s Day sample content in the lesson section.
+- quick_check_recheck: 4 questions independently reread; all assess explicit source content only (report format, Target Audience Insights, Competitor Highlights, Actionable Takeaways). Check Answers gating/retry/pass logic remains intact after the prior UX fix.
+- completion_recheck: completed-state fix remains on latest main; a completed learner no longer sees a fresh unanswered quiz. Completion persistence still uses academy_class_progress through centralized markClassComplete/loadProgress.
+- progression_recheck: p1m5c3 remains the third/final Module 5 class; p1m5c3done completes Module 5 and unlocks Module 6, but does not complete Phase 1 because Module 6 remains. Continue points to Module 6.
+- skills_recheck: Market Research remains mapped to p1m5c1+p1m5c2+p1m5c3; this class can move it to Demonstrated, not Verified.
+- responsive_UX_recheck: p1m5c3-specific layouts collapse appropriately on <=700px; report header wraps; report canvas/navigation/page become mobile layouts; min-width hardening prevents child-driven overflow; slide action and answers retain >=44/48px mobile touch targets.
+- regression_scope: no unrelated code changed in this pass.
+- live_production_limitations: unchanged and still explicit. Connected Vercel account exposes zero authorized teams/projects, so authenticated live Test Student Portal interaction, production Drive iframe navigation/download clicks, persisted completion+refresh and physical mobile-browser checks cannot be honestly marked live-passed.
+- known_fixable_issues_after_double_check: none found in the source, written lesson, current rendered learner PDF, resources, Quick Check, completion/progression or responsive implementation after the correction above.
+- ready_for_FINAL_QA: yes, with live-production/browser gates still separately blocked by the stated Vercel authorization limitation.
+- current_class_remains: p1m5c3.
+- next_class_not_started: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
