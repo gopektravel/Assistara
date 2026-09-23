@@ -1049,3 +1049,33 @@ Initialization note: direct production browser verification was blocked because 
 - status: LIVE BUT NEEDS QA.
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA advances it.
+
+
+### p1m6c4 INDEPENDENT CONTENT QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- previous_BUILD_claims_trusted: no.
+- original_source_reread: yes — Phase 1_ AI-Powered VA Guidebook.pdf → Module 6 → Lesson 4: Client Project Management Notion, through the Phase 1 completion boundary.
+- actual_learner_implementation_inspected: yes — lesson22 metadata, full renderLesson22 written lesson, Quick Check and completion state on latest main.
+- actual_learner_PDF_inspected_for_content: yes — canonical PDF Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t and source deck 1WYRG0QfxLJQKalA3XFTKD55utKkAvJea8QcSAaEJo-8.
+- meaningful_content_issue_found: BUILD merged the source's two overlapping client-page lists too aggressively. It retained Meeting Notes but dropped the earlier source's broader Notes & Docs framing and its explicit SOP example. This weakened useful source coverage in both the written lesson and slide 4.
+- written_lesson_fix: client page changed from MEETING NOTES / important conversations to NOTES & DOCS / meeting summaries · SOPs · important conversations, preserving both source formulations without adding a new workflow.
+- objective_fix: objective 3 now explicitly recognizes Notes & Docs / Meeting Notes. Objective 5 was tightened from “when the client actually needs it” to the source's exact rule “add complexity only if needed.”
+- template_section_fix: removed the unnecessary invented day-one/elaborate-system phrasing and replaced it with source-grounded starting points: Task Lists, Content Calendars and Project Dashboards; add complexity only if needed.
+- slide_fix: canonical slide 4 now teaches NOTES & DOCS — meeting summaries, SOPs + important conversations; Resources & Files Hub also preserves the source's Google Drive links / brand-assets examples while retaining quick-access-to-important-files framing.
+- slide_source_updated: Google Slides ID 1WYRG0QfxLJQKalA3XFTKD55utKkAvJea8QcSAaEJo-8.
+- learner_PDF_replaced_in_place: yes — Drive ID remains 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t; corrected PDF size 40,699 bytes; modified 2026-09-23T21:11:51.969Z.
+- affected_slide_render_verification: corrected page 4 rendered at 120 DPI after export and visually inspected; restored text fits with no clipping/overflow/broken wrapping.
+- source_coverage_after_fix: PASS — one-workspace rationale; flexible/custom dashboard framing; Page/Sub-Pages/Databases; Client Dashboard→Organized Sections→Custom Views; Task Tracker; Notes & Docs / Meeting Notes including meeting summaries, SOPs and important conversations; conditional Content Calendar; Resources & Files Hub including Drive links/brand assets; all four daily habits; work-ethic cleanliness takeaway; simple Task List/Content Calendar/Project Dashboard templates; start-simple/add-only-if-needed rule; clarity-over-over-complication.
+- invented_material_audit: PASS after fixes — presentation labels are explanatory only and do not introduce an unsupported Notion procedure.
+- teaching_sequence: PASS — why Notion → setup structure → client workspace pages → daily habits → simple templates.
+- difficulty: PASS — beginner recognition/application only; no unsupported advanced Notion configuration.
+- internal_source_or_production_terminology: none exposed to learners.
+- quick_check: PASS — five questions are source-grounded, unambiguous and aligned with the final lesson; no answer depends on invented material.
+- phase_completion_copy: treated as progression/completion context, not as an extra assessed Notion teaching concept.
+- implementation_fix_commits: 54785cf8b5a7913c463d3bcc4c75f19669041d7d; a73a8891342dadcd6739e1e9c43159e989c6f99f.
+- content_QA_result: PASS after fixes.
+- status_remains: LIVE BUT NEEDS QA — VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA.
+- following_class_not_started: p2m1c1.
