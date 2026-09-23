@@ -10,9 +10,11 @@ Drive source root: Assistara / 05 Assistara Academy / Course Material / Original
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current last code-built class: P1 M4 C3 — Travel Research & Booking (p1m4c3)
-NEXT: P1 M5 C1 — AI Research & Creating a Customer Avatar (p1m5c1)
-Source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 1: AI Research & Creating a Customer Avatar
+Current class under production/QA: P1 M5 C1 — AI Research & Creating a Customer Avatar (p1m5c1)
+Build state: implementation + learner PDF slides created; independent/live QA still required.
+NEXT BUILD AFTER FINAL QA ADVANCES QUEUE: P1 M5 C2 — Tools for Manual Market Research (p1m5c2)
+Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 1: AI Research & Creating a Customer Avatar
+Next source after queue advance: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5 → Lesson 2: Tools for Manual Market Research
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
@@ -42,7 +44,7 @@ M4 Customer Support & Business Operations
 - p1m4c2 Sales — LIVE BUT NEEDS QA
 - p1m4c3 Travel Research & Booking — LIVE BUT NEEDS QA
 M5 Market Research & Data Organization
-- p1m5c1 AI Research & Creating a Customer Avatar — NOT BUILT
+- p1m5c1 AI Research & Creating a Customer Avatar — LIVE BUT NEEDS QA
 - p1m5c2 Tools for Manual Market Research — NOT BUILT
 - p1m5c3 Organizing Your Findings — NOT BUILT
 M6 Project Management for VAs
@@ -92,3 +94,20 @@ For every class update these gates independently:
 - known_issues: text
 
 Initialization note: direct production browser verification was blocked because the connected Vercel account currently has no authorized teams/projects and the public URL could not be fetched through the available web path. Therefore no class was promoted to LIVE + VERIFIED during initialization. Do not infer QA from code/assets alone.
+
+
+### p1m5c1 QA record — AI Research & Creating a Customer Avatar
+- source_read: yes — entire Lesson 1 section read from Phase 1 guidebook, including module context, AI research workflow and competitor research.
+- written_lesson: yes
+- slides_created: yes — canonical learner-facing 16:9 PDF in Drive, file ID 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q
+- slides_rendered_visual_QA: yes — all 8 pages rendered; initial wrapping/overflow issues were corrected and re-rendered.
+- slide_preview_download_tested: no — wired to existing Drive preview/download architecture but not independently tested in deployed learner UI.
+- quick_check_tested: no — 5-question all-at-once Quick Check implemented using established pattern; runtime interaction QA pending.
+- wrong_answer_retry_tested: no
+- completion_persistence_tested: no — uses centralized markClassComplete / academy_class_progress path; live persistence QA pending.
+- next_unlock_tested: no — expected next class p1m5c2 via centralized sequential unlocking; runtime QA pending.
+- desktop_tested: no
+- mobile_tested: no
+- live_production_tested: no
+- known_issues: Connected Vercel account still does not expose the production project/team, so deployment/live browser verification could not be completed in this build pass. Source Google Slides file is retained in the same Module 5 Drive folder; learner-facing artifact is the exported PDF.
+- implementation_commit: 0b8ef5e873bf1fde9542bbfb58b3ece2374f46f3
