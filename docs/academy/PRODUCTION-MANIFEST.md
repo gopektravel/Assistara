@@ -896,3 +896,29 @@ Initialization note: direct production browser verification was blocked because 
 - status: LIVE BUT NEEDS QA.
 - current_class_remains: p1m6c3.
 - following_class_not_built: p1m6c4.
+
+
+### p1m6c3 INDEPENDENT CONTENT QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C3 — Client Project Management with Trello (p1m6c3) only.
+- previous_BUILD_claims_trusted: no.
+- original_source_reread: yes — Phase 1 Module 6 Lesson 3, “Client Project Management Trello,” read again in full through the Lesson 4 boundary.
+- actual_learner_implementation_inspected: yes — lesson21 metadata, all five written teaching sections, Quick Check and completion copy on latest main.
+- source_coverage_written_lesson: PASS — preserves Visual Progress = Clear Progress; boards/lists/cards as movable digital sticky notes; at-a-glance project view; suitability for simple visual tracking; visible progress→trust; Board→Lists→Cards with source examples; Project→Stages→Tasks analogy; To-Do/In Progress/Completed/Resources; all four daily habits; moving cards as visible proof; Calendar View, Due Date Reminders, Drive/Dropbox integration; and the clean-simple-board/100-apps takeaway.
+- meaningful_content_issue_found_1: lesson21 learning objective 1 described visual clarity but omitted the source’s explicit client-trust outcome. Fixed objective to include that visual progress can build client trust.
+- meaningful_content_issue_found_2: BUILD slide simplification omitted three useful source takeaways from the canonical teaching PDF: visible progress→client trust on the WHY page, moving cards as visible proof on DAILY HABITS, and the “you do not need 100 apps / simple board can make you stand out” takeaway on POWER-UPS. Restored all three in the source deck.
+- slide_source: Google Slides ID 1QXG467gcnQKOZm3UyRIUyGhvWR6CmC3M3n9QZTY1maQ.
+- corrected_learner_PDF: replaced in place at Drive ID 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy; 6 pages; 40,544 bytes.
+- corrected_PDF_content_verification: exported corrected deck, rendered all 6 pages at 120 DPI, and inspected the actual output. Correct order is Cover → Why Trello → Basic Structure → Must-Have Lists → Daily Habits → Power-Ups. Restored source takeaways are visibly present without clipping/overflow.
+- invented_material_audit: PASS — concrete examples on the lesson page (“Client Content Calendar,” “To-Do · In Progress · Done,” “Write caption for Instagram post #1”) come directly from the guidebook. No unsupported Trello workflow, advanced setup, or external feature claim was added.
+- teaching_sequence: PASS — key shift/why → structure → board lists → daily habits → efficiency features follows the guidebook and is beginner-appropriate.
+- internal_source_production_terminology: none exposed to learners.
+- quick_check: PASS — five questions are unambiguous and source-grounded: why Trello, Board→Lists→Cards, required client lists, card movement, and taught efficiency feature. No assessed answer depends on invented material.
+- useful_source_examples_omitted: no meaningful omission remains after corrections.
+- resources: none; source does not provide a separate reusable template/file body, so no resource is warranted.
+- post_fix_reread: yes — affected lesson metadata and corrected slide output rechecked against the original source.
+- implementation_fix_commit: 8549b19587564a76584b4f9fa7568a0def8082bf.
+- content_QA_result: PASS after corrections.
+- status_remains: LIVE BUT NEEDS QA — independent VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
+- current_class_remains: p1m6c3.
+- next_class_not_started: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
