@@ -760,3 +760,32 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — functional/UX QA, double-check and FINAL QA remain.
 - current_class_remains: p1m6c2.
 - next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
+
+
+### p1m6c2 INDEPENDENT FUNCTIONAL / UX QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) only.
+- latest_manifest_and_main_reread: yes.
+- class_identity_and_opening: passed by implementation inspection — Phase 1 / Module 6 / Class 2 of 4; openClass dispatches p1m6c2 only after centralized sequential gating confirms Module 6 is unlocked and p1m6c1 is completed.
+- video_state: passed — established non-playable 16:9 “Lesson video coming soon” state; no fake playable video.
+- written_lesson_rendering: passed by implementation inspection — five source-grounded ClickUp sections render in the learner class.
+- slide_preview_download: passed structurally — corrected learner PDF ID 1C_-uTyJKnM-_cS_Ehsbw4lTmLhl_3HVa is wired to shared preview helper; helper provides loading state, Drive preview iframe, load transition, canonical PDF download, close button, backdrop close, Escape close and scroll restoration.
+- optional_resources: none; no resource interaction exists to break.
+- quick_check_behavior: passed by code-path inspection — five questions; all five answers required before Check Answers enables; submission shows correct/wrong styling plus feedback; correct submitted answers lock; wrong answers remain changeable; changing a wrong answer clears submitted state; Check Answers Again is available; 5/5 required before Complete Class.
+- reproduced_completed_reopen_issue: lesson20 kept its in-memory Quick Check selections/submitted state after completion. The completed CSS hid the quiz, so this was not visually obvious, but reopening the completed class in the same SPA session retained stale assessment state. Fixed renderLesson20 to clear lesson20Selections and lesson20Submitted whenever p1m6c2 is already completed.
+- fix_commit: cf69fda6817b5e82fbd940af836e92e196daf19f.
+- post_fix_retest: latest main re-fetched; completed-state reset executes before answered/correctCount are calculated, while unfinished learner selections still remain intact during normal rerenders/retries.
+- completion_persistence: passed structurally — markClassComplete(p1m6c2) uses centralized academy_class_progress upsert with onConflict user_id,class_key; independent Supabase schema check confirms composite primary key (user_id,class_key) and user_id foreign key. loadProgress reloads completed class keys for authenticated learners after refresh.
+- completed_reopen: passed structurally after fix — completed class clears stale quiz state, hides the redundant quiz and shows the saved completion moment.
+- next_class_unlock: passed — completion of p1m6c2 unlocks p1m6c3 sequentially only. Completed state labels Client Project Management with Trello as Coming soon and Continue returns to Module 6 instead of opening unbuilt C3.
+- module_phase_progression: passed structurally — p1m6c2 does not complete Module 6 because C3/C4 remain incomplete; Phase 1 exam remains locked until all Phase 1 coursework is complete.
+- skills: legitimate — existing ClickUp skill includes p1m6c2 (and later p2m4c2). Completing this class therefore changes ClickUp from Available to Learning rather than falsely marking it Demonstrated/Verified.
+- QA_preview_states: passed by inspection — p1m6c2qa completes Modules 1–5 plus p1m6c1; p1m6c2done additionally completes p1m6c2, allowing C3 to become the sequential current class.
+- Academy_navigation_and_surrounding_routes: passed by static regression inspection — prior lesson routes remain present; p1m6c2 adds only Module 6/Class 2 dispatch. Shared course/navigation binding remains centralized.
+- responsive_static_QA: passed — class-specific layouts collapse at <=700px; ClickUp hub, hierarchy, project board and routine become single-column; automation rows stack; min-width hardening is present; slide action target >=44px and answer targets >=48px. No class-specific fixed width was found that should force horizontal overflow.
+- responsive_slide_experience: shared modal/iframe path is used with the corrected 16:9 PDF; actual physical-device interaction remains a live check.
+- live_production_limitations: connected Vercel account still returns zero authorized teams/projects. Therefore actual deployed Test Student Portal class opening, iframe page navigation/download response, answer clicking, wrong-answer/retry/pass, authenticated Complete Class→refresh→reopen persistence, surrounding-page browser navigation, and real desktop/mobile overflow/tap behavior could not be honestly live-tested in this environment.
+- functional_QA_result: PASS for all locally/verifiably inspectable paths after the completed-reopen state fix; blocked live checks remain explicitly NOT VERIFIED.
+- status_remains: LIVE BUT NEEDS QA — double-check and FINAL QA remain.
+- current_class_remains: p1m6c2.
+- next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
