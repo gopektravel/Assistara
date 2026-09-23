@@ -12,7 +12,7 @@ Drive production root: Assistara / 05 Assistara Academy / Course Material / Prod
 
 ## Queue position
 Current class under production/QA: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2)
-Build state: NOT BUILT — selected as the next production target after p1m6c1 passed FINAL LOCAL QA.
+Build state: implementation + learner PDF slides created; independent QA still required.
 NEXT BUILD: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2)
 Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 2: Client Project Management ClickUp
 Previous completed queue class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1) — BUILT + FINAL LOCAL QA.
@@ -52,7 +52,7 @@ M5 Market Research & Data Organization
 - p1m5c3 Organizing Your Findings — BUILT + FINAL LOCAL QA
 M6 Project Management for VAs
 - p1m6c1 Project & Business Management for VAs — BUILT + FINAL LOCAL QA
-- p1m6c2 Client Project Management with ClickUp — NOT BUILT
+- p1m6c2 Client Project Management with ClickUp — LIVE BUT NEEDS QA
 - p1m6c3 Client Project Management with Trello — NOT BUILT
 - p1m6c4 Client Project Management with Notion — NOT BUILT
 
@@ -687,3 +687,31 @@ Initialization note: direct production browser verification was blocked because 
 - next_NOT_BUILT_class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
 - next_class_built_during_this_pass: no.
 - next_production_target_set: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
+
+
+### p1m6c2 BUILD — 2026-09-24
+- queue_advanced: no.
+- class_built: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) only.
+- manifest_authority_checked_first: yes — p1m6c2 was the exact NEXT BUILD target.
+- original_source_read_before_authoring: yes — Phase 1 guidebook Module 6 Lesson 2 read in full through the Lesson 3 boundary.
+- source_scope: why ClickUp for client work; shared workspace/alignment; avoiding missed deadlines/lost files/email back-and-forth; clean-board professionalism; Workspace→Spaces→Folders→Lists hierarchy; Task List/Resource Folder/Content Calendar/optional Progress Tracker; daily task/status/comment/deliverable habits; simple auto-assignment/reminder/comment-notification automations.
+- standards_inspected: docs/academy/LESSON-SYSTEM.md; docs/academy/VISUAL-LESSON-STANDARD.md; assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md; current Academy implementation and established Module 6 deck branding/lockup.
+- learner_implementation: lesson20 added to assistara-local-v9/academy-dashboard.html with established video Coming Soon state, five source-grounded written teaching sections, slide action, Quick Check and completion state.
+- written_visual_teaching: shared-workspace hub; ClickUp hierarchy map; client-project board sections; daily four-step routine; automation trigger→action rows.
+- quick_check: 5 questions covering ClickUp purpose, hierarchy, optional Progress Tracker, daily habits and due-date automation. All selections required before grading; established correct-lock/wrong-retry behavior; 5/5 required before Complete Class.
+- completion_progression: centralized markClassComplete(p1m6c2); completion unlocks p1m6c3 sequentially; completed-state C3 is explicitly Coming soon and Continue returns to Module 6 rather than opening unbuilt Trello content.
+- skill_mapping: existing ClickUp skill already includes p1m6c2; no new skill invented.
+- optional_resource: none — the source teaches setup/habits but does not provide a reusable template/file body that justifies a separate download.
+- production_folder: existing Module 6 production folder 1VLhFaxztGQdJswovPbjK3v5x9p-3u3cu.
+- Slides_source: 1s-xDvuX4gHQIhwHBqZWZj99eVmpqKlZC1Yv_SEsEUwA.
+- learner_PDF: 1C_-uTyJKnM-_cS_Ehsbw4lTmLhl_3HVa — Assistara_Academy_P1_M6_C2_Client_Project_Management_with_ClickUp_Lesson_Slides.pdf.
+- slide_story: 6 pages — cover/shared workspace; why ClickUp; hierarchy; must-have project sections; daily habits; automations.
+- branding: real approved Assistara logo/Academy lockup inherited from the established corrected Module 6 source; Manrope and Academy palette retained.
+- build_render_QA: exported learner PDF and rendered all 6 pages at 120 DPI during build. All pages were visually inspected; no clipping/overflow was found. Build deck is source-faithful, but independent visual QA should still challenge its composition because it uses the established Module 6 deck geometry as a starting surface.
+- responsive_implementation: class-specific ClickUp visual layouts collapse to one column at <=700px; hierarchy stacks; automation rows stack; slide action >=44px; answers >=48px.
+- QA_preview_states: p1m6c2qa and p1m6c2done added. Build caught and fixed missing earlier-module prerequisites in Module 6 QA preview states; p1m6c1/p1m6c2 QA states now establish Modules 1–5 complete before testing Module 6.
+- implementation_commits: 96008bfe9cd88c8ff96610eaa2a7b9b19f1866ed; preview-prerequisite fix 2c47890c94f9a4aa3b2e456a96010643ffe1c3b3.
+- live_production_tested: no — connected Vercel authorization limitation remains; deployed authenticated browser/device behavior is not claimed.
+- status: LIVE BUT NEEDS QA.
+- current_class_remains: p1m6c2.
+- next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
