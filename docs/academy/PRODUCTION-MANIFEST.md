@@ -10,12 +10,12 @@ Drive source root: Assistara / 05 Assistara Academy / Course Material / Original
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current class under production/QA: P1 M5 C2 — Tools for Manual Market Research (p1m5c2)
-Build state: implementation + learner PDF slides created; independent/live QA still required.
-NEXT BUILD AFTER FINAL QA ADVANCES QUEUE: P1 M5 C3 — Organizing Your Findings (p1m5c3)
-Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 2: Tools for Manual Market Research
-Next source after queue advance: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5 → Lesson 3: Organizing Your Findings
-Queue rule: remain parked on p1m5c2 until its FINAL QA advances the manifest. Do not build p1m5c3 before that.
+Current class under production/QA: P1 M5 C3 — Organizing Your Findings (p1m5c3)
+Build state: NOT BUILT — selected as the next production target after p1m5c2 passed FINAL LOCAL QA.
+NEXT BUILD: P1 M5 C3 — Organizing Your Findings (p1m5c3)
+Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 3: Organizing Your Findings
+Previous completed queue class: P1 M5 C2 — Tools for Manual Market Research (p1m5c2) — BUILT + FINAL LOCAL QA.
+Queue rule: p1m5c2 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p1m5c3; this FINAL QA did not build it.
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
@@ -47,7 +47,7 @@ M4 Customer Support & Business Operations
 - p1m4c3 Travel Research & Booking — LIVE BUT NEEDS QA
 M5 Market Research & Data Organization
 - p1m5c1 AI Research & Creating a Customer Avatar — BUILT + FINAL LOCAL QA
-- p1m5c2 Tools for Manual Market Research — LIVE BUT NEEDS QA
+- p1m5c2 Tools for Manual Market Research — BUILT + FINAL LOCAL QA
 - p1m5c3 Organizing Your Findings — NOT BUILT
 M6 Project Management for VAs
 - p1m6c1 Project & Business Management for VAs — NOT BUILT
@@ -349,3 +349,35 @@ Initialization note: direct production browser verification was blocked because 
 - live_browser_limitation_unchanged: actual production browser interaction remains blocked by the connected Vercel account lacking authorization to the deployment project/team; this pass does not falsely promote those gates.
 - known_fixable_issues_after_double_check: none found in the source, written lesson, final rendered PDF, resources, Quick Check, completion/progression or responsive implementation after the page-5 correction.
 - ready_for_FINAL_QA: yes, with live-production/browser gates still separately blocked.
+
+
+### p1m5c2 FINAL independent QA — 2026-09-24
+- final_gate_completed: yes.
+- final_QA_class: P1 M5 C2 — Tools for Manual Market Research (p1m5c2).
+- previous_pass_claims_trusted_without_recheck: no.
+- original_source_reread: yes — Lesson 2 reread independently through the Lesson 3 boundary.
+- source_to_final_lesson: passed — final lesson teaches exactly the four source-defined research places/purposes and does not introduce an unsupported research framework: Exploding Topics = rising trends across industries; AnswerThePublic = questions people ask online; Google Trends = search interest over time; Social Media Comment Sections = real conversations for customer opinions, struggles and desires.
+- learner_facing_class_inspected: yes — final lesson17 implementation independently inspected on current main, including title/phase/module/class labeling, written sections, video placeholder, slide action, Quick Check and completion state.
+- final_production_PDF_downloaded_again: yes — Drive ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X; 90,045 bytes; modified 2026-09-23T16:30:54.778Z.
+- final_PDF_rendered_again: yes — all 5 pages rendered from the actual current production PDF at 120 DPI during FINAL QA.
+- final_PDF_visual_inspection: passed — all 5 pages inspected; the corrected page-5 dark text/lockup on sage is present; no clipping, overflow, canvas escape, broken wrapping, malformed logo or unreadable teaching copy found. Visual sequence retains distinct sage/cream/dark/dark/yellow page states.
+- resources: passed — no optional class-specific resource is implemented or required; no dead resource control.
+- quick_check: passed by final implementation inspection — 4 questions map directly to the four source purposes; all answers required before checking; correct/wrong states, locked correct answers, retry of incorrect answers, Check Answers Again, all-correct gate and Complete Class path remain correctly wired.
+- completion_and_persistence: passed for locally/verifiably testable implementation — Complete Class awaits centralized markClassComplete(p1m5c2); production persistence upserts academy_class_progress on (user_id,class_key), rolls back optimistic completion on failure, and persisted completion is loaded into the centralized completed Set.
+- progression: passed by final implementation inspection — p1m5c2 completion unlocks only p1m5c3, leaves Module 5 at 2/3, does not unlock Module 6 or advance Phase 1, and Market Research remains Learning at 2/3 until p1m5c3.
+- responsive_behavior: passed for locally/verifiably testable implementation — p1m5c2-specific manualSignalMap collapses to one column below 700px; consolidated Academy mobile rules constrain lesson width, actions, class cards, quiz controls and slide modal sizing; no class-specific fixed-width regression found.
+- surrounding_regression_check: passed by implementation inspection — centralized class/module/phase gating and Academy navigation remain unchanged; p1m5c2-specific changes do not alter unrelated class routes.
+- new_fixable_problem_found_in_FINAL_QA: no.
+- known_fixable_defects_forwarded: none.
+- live_external_gates_blocked: yes — connected Vercel account still does not authorize the production Assistara deployment project/team, so actual deployed-browser class opening, Drive iframe interaction/download response, authenticated learner completion→refresh→reopen, and real desktop/mobile viewport interaction are NOT marked verified.
+- live_production_tested: no.
+- slide_preview_download_live_tested: no — wiring verified; deployed interaction blocked externally.
+- quick_check_live_clicked: no — state machine verified in current implementation; deployed interaction blocked externally.
+- completion_persistence_real_authenticated_refresh_tested: no — persistence implementation/schema verified; deployed authenticated browser test blocked externally.
+- desktop_live_viewport_tested: no.
+- mobile_live_viewport_tested: no.
+- final_status: BUILT + FINAL LOCAL QA.
+- queue_advanced_after_final_gate: yes.
+- next_NOT_BUILT_class: P1 M5 C3 — Organizing Your Findings (p1m5c3).
+- next_source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5 → Lesson 3: Organizing Your Findings.
+- next_class_built_during_this_pass: no.
