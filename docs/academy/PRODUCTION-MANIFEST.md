@@ -715,3 +715,26 @@ Initialization note: direct production browser verification was blocked because 
 - status: LIVE BUT NEEDS QA.
 - current_class_remains: p1m6c2.
 - next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
+
+
+### p1m6c2 INDEPENDENT CONTENT QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) only.
+- previous_build_claims_trusted: no.
+- original_source_reread: yes — Phase 1 Module 6 Lesson 2 read in full through the Lesson 3 boundary.
+- actual_learner_implementation_inspected: yes — lesson20 definition, objectives, written lesson, Quick Check and completion copy on latest main.
+- source_coverage: passed after audit — shared workspace/alignment; missed-deadline/lost-file/email benefit; professional/organized/dependable board signal; Workspace→Spaces→Folders→Lists; Company→Project→To-Do Lists analogy; Task List; Resource Folder; conditional Content Calendar; optional Progress Tracker; setup/trust; morning task check; three taught statuses; task comments instead of separate emails; direct deliverable upload; consistency benefit; auto-assignment; due-date reminders; client-comment notifications; mental-clutter benefit.
+- content_fix_1: lesson description said “updates” where the source explicitly says “conversations”; changed to “tasks, deadlines, files, conversations and simple automations.”
+- content_fix_2: objective 3 previously said “Set up” all four sections, which overstated the source because Content Calendar is conditional (“if managing social media or launches”) and Progress Tracker is optional. Reframed objective to “Recognize the core sections…” and preserved those conditions explicitly.
+- invented_material_audit: the concrete board labels/examples (“Launch email sequence”, “Publishing plan”, “Who owns what?”, etc.) are presentation examples only and do not introduce a new workflow or assessed claim. No unsupported major framework was found.
+- teaching_sequence: passed — why ClickUp → hierarchy → project sections → daily habits → automations follows the guidebook's own sequence.
+- difficulty: passed — beginner-level recognition/application; no unsupported advanced ClickUp configuration steps.
+- internal_source_terminology: none found in learner-facing p1m6c2 copy or Quick Check.
+- quick_check: passed — five questions are source-grounded and unambiguous; no question depends on invented examples. Q3 correctly tests that Progress Tracker is optional; Q4 tests the complete daily habit set; Q5 tests a taught automation.
+- omitted_source_workflows_examples: none meaningful after audit.
+- implementation_fix_commit: 4b0d64d769a331e04c1c4fcac6e1671cb62864ab.
+- post_fix_reread: yes — affected lesson20 metadata/objectives re-fetched from latest main and verified against source.
+- slide_note: the deck already uses “conversations” in the why-ClickUp page and preserves conditional/optional wording for Content Calendar/Progress Tracker, so no slide-content change was required in this content pass.
+- status_remains: LIVE BUT NEEDS QA — independent visual/PDF QA, functional/UX QA, double-check and FINAL QA remain.
+- current_class_remains: p1m6c2.
+- next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
