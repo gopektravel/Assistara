@@ -1,140 +1,222 @@
-# Assistara Academy — Canonical Lesson System
+# Assistara Academy — Lesson Style & Production Guide
 
 **Status:** Canonical production standard  
-**Reference implementation:** Phase 1 → Module 1 → Class 1 — **What is Freelancing? What is Virtual Assistance?**  
 **Reference UI:** `assistara-local-v9/academy-dashboard.html`
 
-> Before changing the shared lesson system or building a new class, inspect the current Class 1 implementation. Archived/obsolete Class 1 assets are not references.
+> Classes 1–4 are examples of this system in use, not page templates. Inspect current implementations for quality and interaction behavior, then design each new class from its approved source and learning outcome.
 
-## 1. Academy hierarchy and progression
+## 1. Core principle
 
-Academy → Phase → Module → Class.
+Academy → Phase → Module → Class. Progression remains sequential: class completion → module progression → phase completion → Phase Exam → next phase → Final Academy Exam → certificate.
 
-Progression is sequential: class completion → module progression → phase completion → Phase Exam → next phase → Final Academy Exam → certificate.
+Every Assistara Academy class is custom-designed around its learning outcome using a shared design system and reusable teaching components.
 
-A class must never bypass the existing phase/module/class gating.
+Design from the content outward:
 
-## 2. Canonical teaching-class anatomy
+**approved source → learning outcome → what the learner must understand/do → best teaching method → best lesson structure → best visual presentation → best knowledge check → responsive implementation → QA**
 
-A normal teaching class uses the same visual and interaction language as the reference Class 1 while allowing the teaching content to determine the number and type of sections.
+Never start with a template and force the material into it.
 
-**Identity:** phase, module, class number, title, concise description, completion state.
+**Consistency** means shared brand, hierarchy, spacing, typography, navigation, feedback, progress behavior, accessibility and polish.
 
-**Video:** standard 16:9 teaching-video area. Until recorded, use the established Coming Soon treatment.
+**Sameness** means repeating the same section count, cards, lesson length, slide count, question count, layout or interaction pattern. We want consistency, not sameness.
 
-**Written lesson:** structured sections beneath the video. Prefer meaningful explanations, examples, comparisons, diagrams, callouts, workflows, scenarios, and practical examples over walls of text. Do not force every class into the same number of sections.
+## 2. What stays consistent
 
-**Lesson Slides:** normal teaching classes have a corresponding teaching deck. Use the established compact Lesson Slides trigger. It opens the existing lightbox with loading state, embedded preview, viewer masking, floating Download, and Close controls. Do not expose production/source folders.
+- Assistara visual language: Manrope, cream, near-black, Assistara yellow, restrained sage/peach
+- real approved Assistara logo only
+- Phase → Module → Class context and clear completion state
+- established Academy navigation and progression
+- premium video area when the lesson has a teaching video; until recorded, use the intentional Coming Soon treatment
+- written learning experience
+- established compact Lesson Slides trigger and lightbox for normal teaching decks
+- meaningful completion requirement
+- progress persistence and sequential unlocking
+- accessible interaction patterns and clear feedback
+- polished desktop and mobile experience
 
-**Quick Check:** required for a normal teaching class, normally 3–5 source-grounded questions/scenarios. All questions are visible; selecting does not grade immediately; Check Answers becomes available after required answers are selected; correct responses lock; incorrect responses remain retryable; Check Answers Again supports retry; full pass exposes Complete Class; completion persists and unlocks progression according to Academy rules.
+These are family resemblance, not a fixed anatomy.
 
-## 3. Conditional elements — never add by habit
+## 3. What is content-driven
 
-### Student Guide / Workbook / PDF
-Optional. Create only when it materially helps the student execute a workflow, complete an exercise, use a checklist/template, retain reference information, or perform something outside the lesson. Do not create a PDF merely for consistency.
+### Lesson length and written structure
+There is no target length or section count. Do not pad simple lessons or compress complex ones. A lesson may use explanations, comparisons, processes, frameworks, step-by-step workflows, scenarios, conversations, before/after examples, annotated screenshots, decision trees, checklists, interactive examples, mini case studies, demonstrations, tool walkthroughs, practice, or reflection. Use only what teaches the topic well. Do not force numbered sections.
+
+### Slides
+There is no target slide count. Three, five, seven, ten, twelve, or another count is valid when every slide earns its place. Slides are the visual teaching counterpart, not a transcript.
+
+### Understanding / Quick Check
+There is no fixed question count. Use the smallest source-grounded assessment that gives meaningful evidence of the important learning outcomes. Depending on the lesson, use multiple choice, scenarios, best-next-action, identify-the-mistake, stronger-response choices, ordering, matching, true/false when genuinely useful, mini workflow decisions, tool understanding, or a practical challenge. Do not add interaction types merely for variety.
+
+When the existing Quick Check primitive is appropriate: all required items are visible; selecting does not grade immediately; Check Answers activates after required responses are complete; correct responses lock; incorrect responses remain retryable; full pass exposes Complete Class; completion persists and unlocks progression.
+
+### Resources
+Never automatic. Create a PDF, workbook, checklist, template, or other download only when the learner would genuinely benefit from using it outside the lesson.
 
 ### Skill mapping
-Optional. Map only when the class genuinely develops or demonstrates an existing Academy skill. Never attach arbitrary skills to populate My Skills. Skill lifecycle remains Locked → Available → Learning → Demonstrated → Verified. Skill Challenges are separate from class Quick Checks.
+Never automatic. Map only when a class genuinely develops or demonstrates an existing Academy skill. Never invent a skill merely to populate My Skills.
 
-### Practical exercise
-Optional. Add when practice materially improves learning. Introductory/conceptual classes do not need forced exercises.
+### Variation
+Do not make lessons different merely to appear different. If the same component is genuinely the best teaching tool twice, reuse it.
 
-### Templates / checklists / resources
-Optional. Include only when they have practical value. Avoid resource clutter.
+## 4. Reusable building blocks, not a giant template
 
-## 4. Teaching-slide system
+Reusable components are encouraged for:
 
-Slides are the visual teaching counterpart of the lesson, not a transcript. **This standard defines a visual language, not a fixed layout library.** Each lesson deck must be composed around what that lesson is teaching; new diagrams, workflows, screenshots, comparisons, scenarios and visual structures are encouraged whenever they improve understanding.
+- lesson identity/header
+- video shell
+- slide resource
+- buttons
+- assessment primitives
+- progress UI
+- feedback
+- completion states
+
+The content composition must remain flexible. Do not build one generic renderer that forces every lesson into the same anatomy.
+
+## 5. Teaching-slide visual system
+
+The deck follows the same content-first rule.
 
 - 16:9
 - Manrope only
-- Assistara cream, near-black, Assistara yellow
+- cream / near-black / Assistara yellow
 - restrained peach/sage accents
 - strong whitespace and large typography
 - clean diagrams and visual storytelling
 - minimal text
 - one brand lockup per slide: **[REAL Assistara logo] ASSISTARA ACADEMY**
-- always use the approved Assistara logo file from Brand Assets; never recreate, redraw, approximate, type, or simulate the logo
-- preserve the approved logo geometry and artwork, including the black internal A
-- no repeated Assistara branding on a slide
+- use the approved logo from Brand Assets; never recreate, redraw, approximate, type, or simulate it
+- preserve the black internal A
+- no repeated Assistara branding on one slide
 
-Slide count and composition follow the educational material. Class 1 has six slides; neither six slides nor its individual layouts are template requirements. Do not duplicate a fixed set of slides and replace the text.
+Choose layouts from the material: process diagrams, screenshots/UI callouts, comparisons, conversations, scenarios, data, frameworks, demonstrations, or other structures when they improve understanding.
 
-The written lesson carries detail. Slides teach visually. Do not paste lesson paragraphs into slides.
+**Deck workflow:** understand lesson → identify teaching ideas → choose the best visual representation → design a custom sequence in the Assistara visual language → render every slide → visually inspect → revise.
 
-**Deck workflow:** understand lesson → identify teaching ideas → choose the best visual representation for each idea → design a custom slide sequence in the Assistara visual language → render → visually inspect → revise. Do **not** open a six-slide template and merely replace text.
+Never open a fixed deck and replace text.
 
-## 5. Source-material rule
+## 6. Source-material rule
 
 Production workflow:
 
-**approved source → learning objective → written lesson → teaching slides → Quick Check → justified optional resources/skills → QA**
+**approved source → learning objective → teaching experience → slides → understanding check → justified optional resources/skills → QA**
 
 Read the approved source before authoring. Assessment must test what the class actually teaches. Do not silently invent major curriculum claims. Internal terms such as “original guidebook,” “source PDF,” and “source material” must never appear in student-facing copy.
 
-## 6. Future reusable lesson data contract
+## 7. Conditional elements
 
-When the Academy renderer is extracted/refactored, future classes should primarily provide structured data rather than copied page markup:
+**Student guide / workbook / PDF:** optional; create only when it materially helps execution, practice, reference, or a reusable workflow.
 
-- `classKey`
-- phase/module/class identifiers
-- title and description
-- learning objectives
-- lesson sections
-- video state/source
-- slides preview/download source
-- Quick Check questions and feedback
-- optional skill mappings
-- optional resources
-- optional practical exercise
-- completion requirements
+**Practical exercise:** optional; add when doing the work materially improves learning.
 
-The shared renderer owns presentation and behavior. Do not perform a risky rewrite merely for abstraction; preserve working Class 1 behavior first.
+**Templates/checklists/resources:** optional; include only when practically useful.
 
-## 7. Production workflow for every new class
+**Skill Challenge:** separate from the class understanding check and optional for verification unless the curriculum explicitly changes that rule.
+
+## 8. Production workflow
 
 ### Before building
 1. Identify exact phase/module/class.
-2. Read approved source material.
-3. Define the learning outcome.
-4. Decide whether any existing Academy skills genuinely apply.
-5. Decide whether supporting resources are genuinely useful.
+2. Read the approved source.
+3. Define what the learner must understand or be able to do.
+4. Choose the best teaching structure for that outcome.
+5. Decide what assessment evidence is actually needed.
+6. Decide whether existing skills or resources genuinely apply.
 
 ### Build
-1. Written lesson.
-2. Teaching slides.
-3. Quick Check.
-4. Optional exercise/resources only when justified.
-5. Skill mapping only when justified.
+1. Compose the written/interactive teaching experience.
+2. Build a content-driven teaching deck.
+3. Build the appropriate understanding/completion check.
+4. Add practice/resources only when justified.
+5. Add skill mapping only when justified.
 
 ### QA
-1. Content accuracy.
-2. Lesson visual consistency.
+1. Content accuracy and source fidelity.
+2. Teaching structure fits the topic rather than a template.
 3. Slides rendered and visually inspected.
-4. Quick Check tested.
+4. Assessment tested.
 5. Completion persistence tested.
-6. Next-class unlock tested.
+6. Next-class/module unlock tested.
 7. Desktop tested.
-8. Tablet tested.
-9. Mobile tested.
-10. Production deployment checked.
+8. Tablet tested where available.
+9. Mobile tested at approximately 375px, 390px and 430px.
+10. Production deployment checked where tooling permits.
 
-## 8. Before Shipping Any New Class
+Never claim a QA step passed unless it was actually performed.
 
-- [ ] Same Academy visual language and lesson hierarchy
-- [ ] Manrope throughout
-- [ ] Slide deck matches Academy design language
-- [ ] One Assistara Academy lockup per slide using the real approved Brand Assets logo
-- [ ] Content grounded in approved source
-- [ ] Quick Check tests taught material
-- [ ] Optional resources exist only when useful
-- [ ] Skills mapped only when justified
-- [ ] Slides preview and download work
-- [ ] Completion persistence works
-- [ ] Progression/unlock works
-- [ ] Desktop/tablet/mobile QA complete
-- [ ] No internal/source terminology exposed to students
+## 9. Mobile production standard
 
-## 9. Scope guard
+A class must be comfortable to learn from on mobile, not merely technically responsive.
 
-Class 1 is the reference implementation, not a mandate that every lesson have identical content, slide count, resources, skills, or exercises. Preserve the system; adapt the teaching package to what the lesson actually needs.
+Check:
+
+- headings and paragraph measure
+- cards, comparisons and grids
+- assessment answers and selected states
+- feedback placement
+- buttons and at least comfortable touch targets
+- progress bars and resource controls
+- video placeholder/player
+- completion and next-step states
+- margins, padding and vertical rhythm
+- long text wrapping
+- clipping and horizontal overflow
+
+Stack or recompose teaching layouts when that improves comprehension. Do not squeeze desktop UI onto mobile.
+
+The learner should always understand: **Where am I? What am I learning? What do I do next?**
+
+The embedded slide lightbox must also remain usable on mobile: preview fits viewport, Close and Download remain reachable, loading works, controls do not collide, and opening/closing does not create broken scrolling.
+
+## 10. Module audit rule
+
+Before expanding a module, audit its existing classes against their approved sources.
+
+For each class ask:
+
+1. What is the real learning outcome?
+2. What concepts matter?
+3. What should the learner remember or be able to do?
+4. Does the current structure teach that efficiently?
+5. Is the page copying another class unnecessarily?
+6. Is anything important missing or redundant?
+7. Does the assessment produce useful evidence?
+8. Is its question count justified?
+9. Do the slides support rather than repeat the lesson?
+10. Are resources and skill mappings justified?
+11. Does progression work?
+12. Is the experience genuinely comfortable on mobile?
+
+Do not change something merely to make classes look different.
+
+## 11. Shipping checklist
+
+- [ ] content grounded in approved source
+- [ ] structure chosen for this lesson, not inherited mechanically
+- [ ] no fixed section/slide/question count imposed
+- [ ] Manrope and Assistara visual language
+- [ ] real approved logo in slides
+- [ ] slides rendered and visually inspected
+- [ ] assessment tests taught material
+- [ ] optional resources exist only when useful
+- [ ] skill mapping only when justified
+- [ ] preview/download works
+- [ ] completion persists
+- [ ] progression/unlock works
+- [ ] desktop/mobile QA actually performed
+- [ ] no internal/source terminology exposed
+
+## 12. Core rule
+
+Do not ask:
+
+**“How do I fit this lesson into our template?”**
+
+Ask:
+
+**“What is the clearest, most useful and most engaging way to teach THIS lesson?”**
+
+Then express that answer through the Assistara design system.
+
+Every lesson should belong to Assistara. Every lesson does not need to look the same.
