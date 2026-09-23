@@ -11,12 +11,12 @@ Drive source root: Assistara / 05 Assistara Academy / Course Material / Original
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current class under production/QA: P1 M6 C3 — Client Project Management with Trello (p1m6c3)
-Build state: implementation + learner PDF slides created; independent CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
-NEXT BUILD: P1 M6 C3 — Client Project Management with Trello (p1m6c3)
-Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 3: Client Project Management Trello
-Previous completed queue class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) — BUILT + FINAL LOCAL QA.
-Queue rule: p1m6c2 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p1m6c3; this FINAL QA did not build it.
+Current class under production/QA: P1 M6 C4 — Client Project Management with Notion (p1m6c4)
+Build state: NOT BUILT — selected as the next production target after p1m6c3 passed FINAL LOCAL QA.
+NEXT BUILD: P1 M6 C4 — Client Project Management with Notion (p1m6c4)
+Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 4: Client Project Management Notion
+Previous completed queue class: P1 M6 C3 — Client Project Management with Trello (p1m6c3) — BUILT + FINAL LOCAL QA.
+Queue rule: p1m6c3 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p1m6c4; this FINAL QA did not build it.
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
@@ -53,7 +53,7 @@ M5 Market Research & Data Organization
 M6 Project Management for VAs
 - p1m6c1 Project & Business Management for VAs — BUILT + FINAL LOCAL QA
 - p1m6c2 Client Project Management with ClickUp — BUILT + FINAL LOCAL QA
-- p1m6c3 Client Project Management with Trello — LIVE BUT NEEDS QA
+- p1m6c3 Client Project Management with Trello — BUILT + FINAL LOCAL QA
 - p1m6c4 Client Project Management with Notion — NOT BUILT
 
 ### Phase 2 — Creative & Digital Marketing Skills
@@ -997,3 +997,26 @@ Initialization note: direct production browser verification was blocked because 
 - same_class_ready_for: FINAL QA.
 - current_class_remains: p1m6c3.
 - next_class_not_started: p1m6c4.
+
+
+### p1m6c3 FINAL INDEPENDENT QA — 2026-09-24
+- final_gate_class: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
+- previous_claims_trusted: no — latest manifest/main, original Phase 1 guidebook Lesson 3, actual learner PDF, source deck, Supabase persistence schema and Vercel authorization state were independently reopened.
+- source_fidelity: PASS — final lesson preserves Visual Progress = Clear Progress; boards/lists/cards and digital-sticky-note framing; project-at-a-glance and client-trust rationale; Board→Lists→Cards with source examples; To-Do/In Progress/Completed/Resources; all four daily habits; visible-proof takeaway; Calendar View, Due Date Reminders and Google Drive/Dropbox; and the clean-simple-board takeaway.
+- learner_class: PASS — correct Phase 1 / Module 6 / Class 3 identity, established video Coming Soon state, five source-grounded teaching sections, no exposed internal production terminology, no unsupported advanced Trello workflow.
+- final_learner_PDF: Drive ID 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy; 6 pages; 40,595 bytes; modified 2026-09-23T20:42:18.668Z.
+- final_PDF_visual_gate: PASS — actual final learner PDF was downloaded and rendered page-by-page at 120 DPI; all 6 pages visually inspected as a contact sheet. No clipping, overflow, off-canvas objects, broken wrapping, malformed logo/Academy lockup or unreadable teaching text found. Slide 4 correctly separates WORK FLOW (To-Do→In Progress→Completed) from REFERENCE LIST (Resources), avoiding the false implication that Resources is a status stage.
+- resources: PASS — none exposed; source provides no separate reusable template/file body warranting an additional resource.
+- quick_check: PASS — 5 source-supported questions; all answers required before grading; correct/wrong styling and explanatory feedback; correct answers lock; wrong answers retry; failed submission can Check Answers Again; 5/5 required before Complete Class.
+- completion_persistence: PASS structurally — centralized markClassComplete(p1m6c3) persists through academy_class_progress; independent Supabase schema check confirms user_id/class_key/completed/completed_at/updated_at structure; loadProgress provides authenticated refresh restoration; completed render clears transient quiz state.
+- progression: PASS — p1m6c3 unlocks p1m6c4 only; Module 6 remains incomplete until C4; Phase 1 exam remains locked; completion names Notion as the next class but does not open unbuilt content.
+- completed_navigation: PASS after prior hardening — Continue explicitly restores current.module=5 before rendering Module 6.
+- skills: PASS — Trello maps exactly to p1m6c3, so completion legitimately reaches Demonstrated; Verified still requires the separate optional Skill Challenge.
+- responsive_static_gate: PASS — Trello lesson min-width hardening, mobile single-column board/structure/list/routine/power-up layouts, rotated flow arrows, >=44px slide action and >=48px answer targets are present; no Trello-specific fixed-width horizontal-overflow defect found.
+- regression_check: PASS by latest-main inspection — previous lesson routes and centralized Academy navigation remain present; p1m6c3 adds only its intended Module 6/Class 3 implementation and scoped styling.
+- live_external_gate: NOT VERIFIED — connected Vercel authorization still returns zero teams/projects. Actual deployed Test Student Portal clicks, iframe/download HTTP behavior, authenticated Complete→refresh→reopen, surrounding-page browser navigation and physical desktop/mobile interaction cannot be honestly claimed as live-tested.
+- final_status: BUILT + FINAL LOCAL QA.
+- queue_advanced: yes, manifest only.
+- next_NOT_BUILT_class: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
+- next_build_target: p1m6c4.
+- p1m6c4_built_in_this_pass: no.
