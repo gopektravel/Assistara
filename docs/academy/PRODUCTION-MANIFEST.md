@@ -111,3 +111,20 @@ Initialization note: direct production browser verification was blocked because 
 - live_production_tested: no
 - known_issues: Connected Vercel account still does not expose the production project/team, so deployment/live browser verification could not be completed in this build pass. Source Google Slides file is retained in the same Module 5 Drive folder; learner-facing artifact is the exported PDF.
 - implementation_commit: 0b8ef5e873bf1fde9542bbfb58b3ece2374f46f3
+
+
+### p1m5c1 independent content audit — 2026-09-23
+- queue_advanced: no
+- original_source_reread: yes — Module 5 introduction plus the entire Lesson 1 section through the Lesson 2 boundary.
+- learner_class_inspected: yes — written lesson, objectives, Quick Check and learner slide PDF.
+- major_issue_found: the first build invented a detailed customer-avatar framework even though the source lesson title mentions “Creating a Customer Avatar” but the actual source section does not provide a separate avatar-building method.
+- fix: removed the invented avatar framework and replaced it with source-supported target-audience/customer research inputs only.
+- major_issue_found: the first build added an AI-verification/evidence workflow that is sensible general advice but is not taught by this source section.
+- fix: removed it from the source-grounded class and Quick Check.
+- omissions_fixed: restored the source's four concrete ChatGPT prompt patterns, all six named research tools with their stated purposes, direct vs audience competitor distinction, the full competitor inspection checklist, and the competitor-summary prompt.
+- learner_terminology_check: passed — no internal production/source-audit language intentionally exposed in the p1m5c1 learner lesson.
+- quick_check_content_alignment: passed by inspection — all five questions now test concepts explicitly taught in the source-backed lesson.
+- slides_content_alignment: corrected; all 8 pages re-exported and rendered after edits. Final montage inspection found no clipping or broken layout.
+- learner_pdf_replaced_in_place: yes — Drive file ID remains 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q.
+- content_audit_commit: 29b6d8055661bb3d13d021a8e2730bf48c746f37
+- remaining_QA: runtime Quick Check interaction, wrong-answer retry, completion persistence, next unlock, desktop/mobile and live-production verification remain independent QA gates.
