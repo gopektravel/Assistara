@@ -455,3 +455,29 @@ Initialization note: direct production browser verification was blocked because 
 - live_preview_download_interaction: not tested — existing production Vercel authorization limitation remains and is not falsely marked passed.
 - status: LIVE BUT NEEDS QA — visual/PDF QA complete; functional/UX, double-check and FINAL QA still pending.
 - next_class_not_started: p1m6c1.
+
+
+### p1m5c3 INDEPENDENT FUNCTIONAL / UX QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M5 C3 — Organizing Your Findings (p1m5c3).
+- implementation_inspected_on_latest_main: yes.
+- identity_and_opening: verified in implementation — Phase 1 / Module 5 / Class 3 of 3; openClass routes p1m5c3 to renderLesson18 only when sequential gating allows it.
+- video_state: verified — established 16:9 non-fake “Lesson video coming soon” state.
+- written_lesson_rendering: verified structurally; lesson contains research→report teaching, six report sections, AI synthesis prompt, report anatomy and Quick Check.
+- slides: verified wiring to corrected Drive PDF 1eKtj3F9y9My2qLnegkpZDQCF2-fodEiB; preview uses Drive preview iframe with loading state, close/Escape behavior and preserved return scroll; download uses the same Drive ID and canonical PDF filename.
+- optional_resources: none for this class; no broken/fabricated resource link exists.
+- quick_check_logic: verified in code — 4 questions; Check Answers disabled until all four have selections; submitted answers mark correct/wrong and show feedback; already-correct answers are locked on retry while wrong answers can be changed; changing a wrong answer clears submitted state; Check Answers Again is available; all 4 correct is required before Complete Class appears.
+- completion_persistence: verified implementation and database contract — markClassComplete upserts p1m5c3 into public.academy_class_progress with onConflict user_id,class_key; database has PRIMARY KEY (user_id,class_key) and user_id FK to auth.users(id) ON DELETE CASCADE; loadProgress reloads completed class keys for the authenticated user after refresh.
+- progression: verified — p1m5c3 is final Module 5 class; Module 6 unlocks only when all Module 5 classes are complete; p1m5c3 completion makes Module 5 complete and Continue routes to Module 6. Phase 1 does not complete here because Module 6 still remains.
+- preview_QA_states: p1m5c3qa correctly completes Modules 1–4 + p1m5c1 + p1m5c2 while leaving p1m5c3 current; p1m5c3done adds p1m5c3 and therefore unlocks Module 6.
+- skills_integration: legitimate existing Market Research skill mapping requires p1m5c1 + p1m5c2 + p1m5c3; completing this class changes that skill from Learning to Demonstrated only when all three are complete. No fake skill verification is awarded; Verified remains tied to a separate skill challenge.
+- regression_review: surrounding centralized class/module/phase gating and navigation inspected; p1m5c3 uses the established functions rather than introducing a parallel progression path.
+- reproduced_UX_issue: reopening a completed p1m5c3 still displayed the full unanswered Quick Check above the saved completion state, making a completed learner appear to need to answer it again.
+- fix: completed p1m5c3 now presents a saved-completion message and hides the redundant quiz while retaining lesson review and Continue to Module 6. Mobile hardening also added min-width:0 for lesson descendants, wrapping for the report-canvas header, and >=44px/48px touch targets for the slide action and answers.
+- fix_commit: 9126157d0d100fa7765f35db0e5e6483fad9ec1c.
+- post_fix_recheck: latest main re-fetched; completed-state CSS/markup, p1m5c3 preview states, openClass route and Market Research skill mapping confirmed present after the change.
+- responsive_static_QA: desktop/mobile CSS inspected; p1m5c3 two-column findings flow collapses to one column; raw→report collapses vertically; report canvas collapses to one column; report navigation becomes two columns; report page becomes one column; added overflow/tap hardening above.
+- live_production_limitations: live browser interaction could not be performed. Connected Vercel account returns zero authorized teams, so no Assistara project/deployment is available through the connector; direct external fetch of https://getassistara.com/academy/test-portal is also inaccessible in the available web environment. Therefore actual production clicks for class opening, Drive iframe navigation/loading, download, wrong-answer retry, Complete Class, authenticated persistence/refresh, mobile device layout and surrounding-page navigation are NOT marked as live-passed.
+- status: LIVE BUT NEEDS QA — functional/UX code-path QA complete with one reproduced UX fix; live-production interaction remains explicitly unverified because of access limitations; double-check and FINAL QA still pending.
+- current_class_remains: p1m5c3.
+- next_class_not_started: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
