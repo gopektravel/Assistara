@@ -12,7 +12,7 @@ Drive production root: Assistara / 05 Assistara Academy / Course Material / Prod
 
 ## Queue position
 Current class under production/QA: P1 M6 C1 — Project & Business Management for VAs (p1m6c1)
-Build state: NOT BUILT — selected as the next production target after p1m5c3 passed FINAL LOCAL QA.
+Build state: implementation + learner PDF slides created; independent QA still required.
 NEXT BUILD: P1 M6 C1 — Project & Business Management for VAs (p1m6c1)
 Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 1: Project & Business Management for VAs
 Previous completed queue class: P1 M5 C3 — Organizing Your Findings (p1m5c3) — BUILT + FINAL LOCAL QA.
@@ -51,7 +51,7 @@ M5 Market Research & Data Organization
 - p1m5c2 Tools for Manual Market Research — BUILT + FINAL LOCAL QA
 - p1m5c3 Organizing Your Findings — BUILT + FINAL LOCAL QA
 M6 Project Management for VAs
-- p1m6c1 Project & Business Management for VAs — NOT BUILT
+- p1m6c1 Project & Business Management for VAs — LIVE BUT NEEDS QA
 - p1m6c2 Client Project Management with ClickUp — NOT BUILT
 - p1m6c3 Client Project Management with Trello — NOT BUILT
 - p1m6c4 Client Project Management with Notion — NOT BUILT
@@ -537,3 +537,29 @@ Initialization note: direct production browser verification was blocked because 
 - next_NOT_BUILT_class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
 - next_class_built_during_this_pass: no.
 - next_production_target_set: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
+
+
+### p1m6c1 BUILD — 2026-09-24
+- queue_advanced: no.
+- class_built: P1 M6 C1 — Project & Business Management for VAs (p1m6c1) only.
+- original_source_read_before_authoring: yes — Phase 1 guidebook, Module 6, Lesson 1 read in full through the Lesson 2 boundary.
+- source_scope: why project management matters for VAs; simple systems; Trello/ClickUp/Notion/Google Calendar as source-listed tool options; breaking big projects into smaller doable tasks; core responsibilities (tasks/deadlines, follow-up reminders, proactive client updates, on/before-deadline delivery); three phases (Plan, Execute, Review & Adjust); business-partner mindset and the source question about making the project smoother/faster.
+- standards_inspected: docs/academy/LESSON-SYSTEM.md; docs/academy/VISUAL-LESSON-STANDARD.md; assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md; current Academy implementation and established p1m5 lesson/progression patterns.
+- learner_implementation: lesson19 added with established Coming Soon video state, five source-grounded teaching sections, visual teaching components, Lesson Slides action, five-question Quick Check, centralized completion persistence and completed-state behavior.
+- quick_check: 5 questions covering organization/client expectations, breaking down big projects, four core responsibilities, Plan→Execute→Review & Adjust, and business-partner mindset. All required before grading; established retry/pass/Complete Class behavior reused.
+- progression: openClass now routes Phase 1 / Module 6 / Class 1 to renderLesson19. Completion uses centralized markClassComplete(p1m6c1), which sequentially unlocks p1m6c2. Completion Continue returns to Module 6 rather than opening the still-unbuilt following class.
+- QA_states: p1m6c1qa (Modules 1–5 complete; C1 current) and p1m6c1done (adds p1m6c1; C2 unlocked) added to Test Student Portal.
+- skill_mapping: none added. The class teaches general project-management habits, while existing tool-specific Academy skills begin with later ClickUp/Trello/Notion classes.
+- optional_resource: none — source does not provide a reusable template/checklist body that justifies a separate download.
+- production_folder_created: Module 6 — Project Management for VAs, Drive ID 1VLhFaxztGQdJswovPbjK3v5x9p-3u3cu.
+- slide_source: native Google Slides ID 1Wdh9MlPzEY_bi9kuzgtHBai7FENak-WkLh9XWnj5EYM, stored in Module 6 production folder.
+- learner_PDF: Drive ID 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ; filename Assistara_Academy_P1_M6_C1_Project_and_Business_Management_for_VAs_Lesson_Slides.pdf; stored in Module 6 production folder.
+- slide_count: 6.
+- slide_story: 1) class cover / organize→track→update; 2) why organization matters across multiple tasks/clients; 3) simple systems + break big projects down; 4) four core responsibilities + proactive communication; 5) Plan→Execute→Review & Adjust; 6) business-partner mindset and source reflection question.
+- slide_branding: real approved Assistara logo inherited from the approved corrected Academy source deck; consistent Assistara Academy lockup; Manrope visual system; 16:9 PDF.
+- build_render_QA: learner PDF exported and rendered page-by-page during build; weak pages must still receive independent visual/PDF QA before FINAL QA.
+- implementation_commits: 620fd5dbd26ad800d476261c4d1cbb5d8eedac8a; b2efbff9fcf503354e5903adc1e1a1334c269385.
+- live_production_tested: no — connected Vercel authorization limitation remains; do not treat this build as live verified.
+- status: LIVE BUT NEEDS QA — BUILD complete; independent content, visual/PDF, functional/UX, double-check and FINAL QA remain.
+- current_class_remains: p1m6c1.
+- next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
