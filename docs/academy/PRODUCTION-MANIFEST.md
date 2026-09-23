@@ -1367,3 +1367,31 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — FUNCTIONAL / DOUBLE-CHECK / FINAL QA remain.
 - current_and_NEXT_BUILD_pointer_remains: p2m1c1 until FINAL QA.
 - next_class_not_started: p2m1c2 Create Your Profile Picture.
+
+
+### p2m1c1 INDEPENDENT FUNCTIONAL / UX QA — 2026-09-24
+- queue_advanced: no.
+- class: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1) only.
+- latest_manifest_and_main_reread: yes.
+- class_identity_and_opening: PASS by implementation inspection — Phase 2 / Module 1 / Class 1 of 4; openClass dispatches p2m1c1 to renderLesson23 only after centralized Phase 2 gating.
+- video_state: PASS — established 16:9 “Lesson video coming soon” state; no fake playable video.
+- written_lesson_rendering: PASS by implementation inspection — six learner-facing teaching sections render, including the content-QA-restored service example and Canva keyboard-shortcuts reference.
+- slide_preview_download: PASS structurally — lesson23 points to learner PDF Drive ID 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi; shared preview helper provides loading state, Drive iframe preview, canonical PDF download, close button, backdrop close, Escape close and scroll restoration.
+- optional_resources: none; no downloadable class resource interaction exists. The source-supplied Canva keyboard-shortcuts guide is an inline external reference with target=_blank and rel=noopener.
+- quick_check_behavior: PASS by code-path inspection — five questions; all five required before Check Answers enables; submission applies correct/wrong state plus feedback; correctly answered choices lock; wrong answers remain selectable; changing a wrong answer resets submitted state; Check Answers Again appears after a failed submission; 5/5 exposes Complete Class.
+- completion_persistence: PASS structurally — markClassComplete(p2m1c1) uses centralized academy_class_progress upsert; independent Supabase schema check confirms user_id/class_key/completed/completed_at/updated_at persistence fields; loadProgress reloads completed=true keys after authenticated refresh.
+- completed_reopen: PASS structurally — renderLesson23 clears transient quiz state whenever p2m1c1 is already completed and renders the saved completion state.
+- next_class_unlock: PASS — completing p2m1c1 unlocks only p2m1c2 Create Your Profile Picture; completion copy marks it Coming soon and Continue returns to Module 1 rather than opening unbuilt content.
+- module_phase_progression: PASS — p2m1c1 does not complete Module 1; later Phase 2 modules and Phase 2 exam remain gated by sequential completion.
+- skills: PASS — existing Canva mapping is [p2m1c1,p2m2c1], so completing this class yields Learning (1 of 2 relevant milestones), not a false Demonstrated/Verified state.
+- shared_navigation_and_surrounding_pages: PASS by static regression inspection — prior class dispatches remain intact; p2m1c1 adds only the Phase 2/Module 1/Class 1 route; shared Course/Resources/Skills navigation architecture remains centralized.
+- responsive_static_QA: PASS — canvaNavLesson has min-width hardening at <=700px; direction/type/harmony flows stack; palette/tips become one column; Canva navigation mockup becomes one column; answer buttons are >=48px and slide action >=44px. No class-specific fixed width was found that should force horizontal overflow.
+- functional_regression_found: Test Student Portal had no dedicated p2m1c1 QA states, so the newly built Phase 2 class could not be isolated as current/completed from the admin preview selector without using broad phase states.
+- functional_fix: added p2m1c1qa and p2m1c1done preview modes. Both complete Phase 1 and add a passed Phase 1 exam so Phase 2 legitimately unlocks; p2m1c1done additionally completes p2m1c1 so p2m1c2 becomes the sequential next class. Added both states to the Test Student Portal selector.
+- functional_fix_commit: ca4c92a54568ff2baaf455c9e296d751de65f2ff.
+- post_fix_retest: latest main re-fetched; previewState now constructs the required Phase 1 coursework + passed exam for both C1 states, and only the done state adds p2m1c1. Selector options are present.
+- live_external_limit: connected Vercel authorization still returns zero teams/projects. Therefore actual deployed Test Student Portal class opening, external Canva-link click, Drive iframe navigation/download response, answer clicking, wrong-answer/retry/pass, authenticated Complete→refresh→reopen persistence and physical desktop/mobile tap/overflow behavior remain NOT VERIFIED LIVE.
+- functional_QA_result: PASS for all locally/verifiably inspectable paths after adding dedicated Phase 2 QA preview states.
+- status_remains: LIVE BUT NEEDS QA — DOUBLE-CHECK and FINAL QA remain.
+- current_and_NEXT_BUILD_pointer_remains: p2m1c1.
+- next_class_not_started: p2m1c2 Create Your Profile Picture.
