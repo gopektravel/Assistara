@@ -219,6 +219,76 @@
  #phaseJourney .phaseCurrent small{font-size:10px;color:var(--muted)}
  #home>.sectionTitle:has(+ #skillsSnapshot){margin-top:20px}
 }
+
+/* Academy-wide mobile polish — dashboard quality baseline */
+@media(max-width:850px){
+ .page:not(#home)>.hero{padding:2px 0 13px;margin:0 0 12px;border-bottom:1px solid var(--line)}
+ .page:not(#home)>.hero h1{font-size:27px!important;line-height:1.05;margin:5px 0 6px!important}
+ .page:not(#home)>.hero .lead{font-size:12px;line-height:1.45;max-width:38ch}
+ .page:not(#home)>.hero>.pill,.page:not(#home)>.hero>span.pill{font-size:9px;padding:7px 9px}
+ #courseView>.notice{margin-bottom:12px;padding:11px 12px}
+ #courseView>.sectionTitle{margin:14px 0 9px}
+ #courseView>.sectionTitle h2{font-size:18px}
+ #courseView>.stack{gap:7px}
+ #courseView>.stack>.phaseCard,#courseView>.stack>.moduleCard{padding:13px 14px;border-radius:15px}
+ #courseView .phaseMeta{font-size:9px;letter-spacing:.08em}
+ #courseView .phaseCard h3,#courseView .moduleCard h3{font-size:15px;margin:4px 0}
+ #courseView .phaseCard p,#courseView .moduleCard p{font-size:11px;line-height:1.35;margin:3px 0}
+ #courseView .phaseCard .progress,#courseView .moduleCard .progress{margin-top:7px}
+ #courseView .phaseCard .btn,#courseView .moduleCard .btn{min-height:38px;padding:8px 12px;font-size:10px}
+ #courseView .exam{margin-top:10px;padding:13px}.exam h3{font-size:15px;margin:4px 0}.exam p{font-size:11px;line-height:1.4}
+ #courseView .crumbs{margin-bottom:8px}
+ #courseView .classCard{padding:12px 13px;border-radius:14px;grid-template-columns:28px minmax(0,1fr) auto;align-items:center}
+ #courseView .classNo{width:28px;height:28px;font-size:10px;grid-row:auto}
+ #courseView .classBody h3{font-size:13px;margin:0 0 2px;line-height:1.3}
+ #courseView .classBody p{font-size:10px;margin:0}
+ #courseView .classCard .btn{grid-column:auto;min-height:38px;padding:8px 11px;font-size:10px}
+ #courseView .classCard .status{grid-column:auto;font-size:9px}
+ .lessonShell .lessonSection{padding-top:22px;padding-bottom:22px}
+ .lessonShell .lessonSection>.eyebrow{margin-bottom:4px}
+ .lessonShell .lessonSection h2{font-size:20px}
+ .lessonShell .conceptGrid .concept{padding:13px}
+ .lessonShell .concept h3{font-size:14px;margin:0 0 4px}
+ .lessonShell .keyCallout{padding:14px}.lessonShell .keyCallout strong{font-size:13px}
+ .lessonShell .workflowStep,.lessonShell .workspaceFlowStep,.lessonShell .workloadSystemItem,.lessonShell .workloadDecisionStep{border-radius:13px}
+ .lessonShell .quiz{margin-top:10px}.lessonShell .question{border-radius:14px}
+ .lessonShell .completeMoment{padding:15px;margin-top:12px}
+ .lessonFooterNav{position:relative}
+ #skills .skillsHeader{display:flex;overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px;scrollbar-width:none}
+ #skills .skillsHeader::-webkit-scrollbar{display:none}
+ #skills .skillMetric{flex:0 0 auto}
+ #skills .skillGrid{grid-template-columns:1fr;gap:7px}
+ #skills .skill{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:4px 10px;padding:12px 13px}
+ #skills .skillTop{display:contents}
+ #skills .skillEmoji{grid-column:1;grid-row:1/3;width:38px;height:38px;font-size:19px}
+ #skills .skillBadge{grid-column:3;grid-row:1;font-size:8px;padding:5px 7px;white-space:nowrap}
+ #skills .skill>strong{grid-column:2;grid-row:1;font-size:13px}
+ #skills .skill>small{grid-column:2/4;grid-row:2;font-size:10px;line-height:1.35}
+ #skills .skill>.resource{grid-column:2/4;grid-row:3;padding:9px 10px;margin-top:4px}
+ #skills .skillUnlock{padding:12px 13px;border-radius:14px;margin-bottom:9px}
+ #skills .skillUnlock strong{font-size:11px}#skills .skillUnlock small{font-size:10px}
+ #resources .stack{gap:7px}
+ #resources .resource,#settings .resource{display:grid;grid-template-columns:34px minmax(0,1fr) auto;padding:11px 12px;gap:9px;border-radius:14px}
+ #resources .resource:before,#settings .resource:before{width:34px;height:34px}
+ #resources .resource>div,#settings .resource>div{min-width:0}
+ #resources .resource strong,#settings .resource strong{font-size:13px}
+ #resources .resource small,#settings .resource small{font-size:10px;line-height:1.35}
+ #resources .resource .btn,#settings .resource .btn{min-height:38px;padding:8px 11px;font-size:10px}
+ #sessions .notice{padding:14px;border-radius:14px}
+ #certificate>.grid{grid-template-columns:1fr;gap:8px}
+ #certificate>.grid>.card{padding:14px;border-radius:15px}
+ #certificate .card h2{font-size:17px;margin:0 0 10px}
+ #certificate .req{padding:8px 0;font-size:11px}
+ #certificate .dot{width:25px;height:25px}
+ #settings .stack{gap:7px}
+ .slideFrameShell{max-height:calc(100dvh - env(safe-area-inset-top))}
+}
+@media(max-width:390px){
+ #courseView .classCard{grid-template-columns:27px minmax(0,1fr)}
+ #courseView .classCard .btn,#courseView .classCard .status{grid-column:2;justify-self:start;margin-top:4px}
+ #resources .resource,#settings .resource{grid-template-columns:32px minmax(0,1fr)}
+ #resources .resource .btn,#resources .resource .status,#settings .resource .btn,#settings .resource .pill{grid-column:2;justify-self:start;margin-top:3px}
+}
 </style></head><body>
 <div id="loading" class="loading">Loading your Academy...</div>
 <div id="app" class="app" hidden><aside class="side"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><nav class="nav" id="desktopNav"></nav><div class="sidefoot"><div id="profile" class="profile"></div><button class="logout" id="logout">← Log out</button></div></aside>
