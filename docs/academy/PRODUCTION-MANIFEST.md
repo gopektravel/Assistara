@@ -977,3 +977,23 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — DOUBLE-CHECK and FINAL QA remain.
 - current_class_remains: p1m6c3.
 - next_class_not_started: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
+
+
+### p1m6c3 INDEPENDENT DOUBLE-CHECK — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C3 — Client Project Management with Trello (p1m6c3) only.
+- source_reread: yes — original Phase 1 Module 6 Lesson 3 reread in full.
+- actual_outputs_reopened: latest learner implementation, actual learner PDF, and rendered PDF pages.
+- source_to_written_lesson: PASS — key shift/trust rationale, Board→Lists→Cards with examples, four lists, four daily habits, visible-proof takeaway, three Power-Ups/integrations and clean-board takeaway are present without unsupported advanced instruction.
+- quick_check_resources_completion_progression_responsive: PASS for locally/verifiably inspectable paths. No optional resource is warranted. Centralized persistence remains used; p1m6c3 unlocks p1m6c4 only; Trello skill mapping is legitimate; Trello layouts stack at <=700px.
+- live_external_limit: Vercel authorization still exposes zero teams/projects, so deployed browser/device interaction remains NOT VERIFIED LIVE.
+- meaningful_issue_found: slide 4 visually placed RESOURCES after COMPLETED with an arrow, implying Resources was a workflow stage. The source defines Resources as a peer reference list, not a work-status stage.
+- correction: slide 4 now separates WORK FLOW (TO-DO → IN PROGRESS → COMPLETED) from REFERENCE LIST (RESOURCES).
+- affected_page_rendered_after_fix: yes — corrected page 4 rendered at 120 DPI; hierarchy is clear with no clipping/overflow/broken wrapping.
+- canonical_PDF_replaced_in_place: yes — Drive ID 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy preserved; corrected size 40,595 bytes.
+- preview_download_wiring: remains valid because the canonical PDF ID is unchanged.
+- double_check_result: PASS after slide 4 semantic correction.
+- status_remains: LIVE BUT NEEDS QA.
+- same_class_ready_for: FINAL QA.
+- current_class_remains: p1m6c3.
+- next_class_not_started: p1m6c4.
