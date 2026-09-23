@@ -10,15 +10,16 @@ Drive source root: Assistara / 05 Assistara Academy / Course Material / Original
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current class under production/QA: P1 M5 C1 — AI Research & Creating a Customer Avatar (p1m5c1)
-Build state: implementation + learner PDF slides created; independent/live QA still required.
-NEXT BUILD AFTER FINAL QA ADVANCES QUEUE: P1 M5 C2 — Tools for Manual Market Research (p1m5c2)
-Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 1: AI Research & Creating a Customer Avatar
-Next source after queue advance: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5 → Lesson 2: Tools for Manual Market Research
+Current production target: P1 M5 C2 — Tools for Manual Market Research (p1m5c2)
+Build state: NOT BUILT — selected by the completed FINAL QA of p1m5c1. The next automated BUILD prompt may build this class.
+Previous class final-QA complete: P1 M5 C1 — AI Research & Creating a Customer Avatar (p1m5c1)
+Current source for next build: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 2: Tools for Manual Market Research
+Queue rule: p1m5c2 is the NEXT production target only; it was not built or modified during p1m5c1 FINAL QA.
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
-- LIVE BUT NEEDS QA: implementation/assets exist and are intended for production, but this initialization could not directly complete live browser verification.
+- BUILT + FINAL LOCAL QA: implementation/content/assets passed all locally/verifiably testable final-QA gates, while explicitly listed external/live browser gates remain blocked and are not claimed as verified.
+- LIVE BUT NEEDS QA: implementation/assets exist and are intended for production, but final QA has not been completed.
 - PARTIALLY BUILT: some implementation/assets exist but class is not ready.
 - NOT BUILT: no class implementation found.
 
@@ -44,7 +45,7 @@ M4 Customer Support & Business Operations
 - p1m4c2 Sales — LIVE BUT NEEDS QA
 - p1m4c3 Travel Research & Booking — LIVE BUT NEEDS QA
 M5 Market Research & Data Organization
-- p1m5c1 AI Research & Creating a Customer Avatar — LIVE BUT NEEDS QA
+- p1m5c1 AI Research & Creating a Customer Avatar — BUILT + FINAL LOCAL QA
 - p1m5c2 Tools for Manual Market Research — NOT BUILT
 - p1m5c3 Organizing Your Findings — NOT BUILT
 M6 Project Management for VAs
@@ -199,3 +200,33 @@ Initialization note: direct production browser verification was blocked because 
 - live_browser_limitation_unchanged: connected Vercel still lacks authorization to the production project/team, so browser-dependent production checks (actual preview iframe load, download response, authenticated completion+refresh persistence, desktop/mobile taps/navigation) cannot honestly be promoted to passed.
 - remaining_known_issue: only the explicit external live-browser authorization limitation above; no additional source/content/slide defect remained after this correction pass.
 - ready_for_FINAL_QA: yes, with live-production gates still explicitly blocked rather than falsely passed.
+
+
+### p1m5c1 FINAL independent QA — 2026-09-23
+- queue_advanced: yes — after this final gate only.
+- final_class: P1 M5 C1 — AI Research & Creating a Customer Avatar (p1m5c1).
+- source_read: yes — original Phase 1 guidebook Module 5 introduction and complete Lesson 1 through the Lesson 2 boundary independently rechecked.
+- written_lesson: yes — final learner copy covers the source-defined research goal/audience/needed-insights step, all four source ChatGPT prompt patterns, all six named research tools and purposes, direct vs audience competitors, the competitor inspection checklist, reviews and the source competitor-summary prompt.
+- final_source_fidelity_fix: yes — removed the remaining implication that the source teaches a separate customer-avatar framework. The final lesson now explicitly states that the source title names customer-avatar creation but the body supplies only customer-focused research inputs; no unsupported avatar method is invented.
+- slides_created: yes — final learner-facing landscape 16:9 PDF remains linked at Drive ID 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q.
+- slides_rendered_visual_QA: yes — final corrected export rendered at 150 DPI, 9/9 pages visually inspected. No clipping, overlap, broken glyphs, canvas escape or malformed brand lockup found.
+- final_slide_source_fidelity_fix: yes — competitor slide removed unsupported “repeated objections / unmet needs” additions and now stays with source-supported reviews plus the source-supported AI summary purpose; customer-avatar slide now transparently states the source limitation instead of inventing a framework.
+- production_PDF_replaced_in_place: yes — same Drive ID preserved; final size 49,793 bytes; modified 2026-09-23T15:55:15Z.
+- resources: passed — no optional class-specific learner resource is required or implemented; the only learner artifact is the lesson-slide PDF and no dead resource link is introduced.
+- quick_check_tested: yes by independent source + implementation/state-machine inspection — 5/5 questions are taught by the final lesson; all-answer requirement, answer checking, correct-answer locking, wrong-answer retry/reset, all-correct gate and Complete Class exposure are present.
+- wrong_answer_retry_tested: yes by state-machine inspection — incorrect answer changes clear submitted state and allow re-check; already-correct submitted answers are locked.
+- completion_logic_tested: yes by implementation inspection — completion calls centralized markClassComplete("p1m5c1") and only renders completion after a successful save.
+- completion_persistence_tested: no — real authenticated Supabase write + refresh/reopen remains an external live-browser check.
+- next_unlock_tested: yes by progression implementation inspection — p1m5c1 is the prerequisite for p1m5c2; completed state routes Continue to Class 2; p1m5c2 remains intentionally Coming Soon until built.
+- responsive_behavior_static_QA: yes — p1m5c1-specific marketResearchLesson CSS and consolidated Academy mobile rules collapse the workflow/tool/competitor grids and protect against horizontal overflow.
+- desktop_tested: no — actual production viewport/browser interaction remains blocked.
+- mobile_tested: no — actual production mobile viewport/tap interaction remains blocked.
+- slide_preview_download_tested: no — production click/iframe/download response remains blocked; file ID + preview/download wiring is correct by implementation inspection.
+- live_production_tested: no — connected Vercel account still does not authorize the production project/team.
+- regression_check: passed for locally inspectable scope — changes are limited to p1m5c1 learner copy/slide source plus this manifest; centralized navigation/progression and surrounding class routing were not altered in the final pass.
+- known_issues: no known fixable local/source/content/slide defect remains. Blocked checks are limited to real production browser/Vercel authorization and authenticated Supabase persistence behavior.
+- final_QA_code_commit: fa1dde337966a34e3d144bba3fc4d4467e51b2ee
+- final_status: BUILT + FINAL LOCAL QA. Not promoted to LIVE + VERIFIED because the explicitly blocked live-production gates were not performed.
+- next_NOT_BUILT_class: P1 M5 C2 — Tools for Manual Market Research (p1m5c2).
+- next_production_target_set: p1m5c2.
+- next_class_built_in_this_pass: no.
