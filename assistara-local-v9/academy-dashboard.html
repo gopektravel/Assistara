@@ -257,28 +257,27 @@
 .csDontDo{display:grid;grid-template-columns:1fr 42px 1fr;align-items:center;gap:12px;margin-top:20px}.csDontDo>div{padding:22px;border-radius:20px;background:#f5ddd2}.csDontDo>div:last-child{background:#ddebdc}.csDontDo small,.csDontDo b{display:block}.csDontDo small{margin-bottom:8px}.csDontDo i{text-align:center;font-size:25px}
 .csChannelGrid{grid-template-columns:repeat(2,1fr)}.csChannelGrid>div:nth-child(1){background:var(--yellow)}.csChannelGrid>div:nth-child(2){background:#ddebdc}.csChannelGrid>div:nth-child(3){background:#dfe8f7}.csChannelGrid>div:nth-child(4){background:#f5ddd2}
 .csToolCloud{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.csToolCloud span{padding:11px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:750}.csBot{background:#f8f5ec!important}.csBotFlow,.csLoopFlow{display:flex;align-items:center;gap:10px;margin-top:20px}.csBotFlow span{flex:1;text-align:center;padding:18px 10px;border-radius:16px;background:#fff;border:1px solid var(--line);font-weight:850;font-size:11px}.csBotFlow span:nth-of-type(2){background:var(--yellow)}.csLoopFlow>div{flex:1;padding:18px 12px;border-radius:17px;background:#dfe8f7}.csLoopFlow>div:nth-of-type(2){background:var(--yellow)}.csLoopFlow>div:nth-of-type(3){background:#ddebdc}.csLoopFlow>div:nth-of-type(4){background:#f5ddd2}.csLoopFlow b,.csLoopFlow span{display:block}.csLoopFlow b{font-size:20px}.csLoopFlow span{font-size:10px;font-weight:850;margin-top:9px}
-/* Customer Service Quick Check */
-.csLesson .quiz{display:grid;gap:16px;margin-top:22px;counter-reset:csquiz}
-.csLesson .quizBar{height:10px;margin:14px 0 24px;background:#e8e2d8;border-radius:999px}
-.csLesson .quizBar>span{background:var(--yellow)}
-.csLesson .quiz .question{position:relative;padding:24px;border:1px solid #ddd6ca;border-radius:22px;background:#fff;box-shadow:0 8px 24px rgba(30,25,18,.045);overflow:hidden}
-.csLesson .quiz .question:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#171717}
-.csLesson .quiz .question .eyebrow{color:#8b847a;font-size:9px;letter-spacing:.13em;margin-bottom:8px}
-.csLesson .quiz .question h3{font-size:18px;line-height:1.42;margin:0 0 18px;color:#171717;max-width:760px}
-.csLesson .answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.csLesson .answer{position:relative;display:flex;align-items:flex-start;gap:10px;width:100%;min-height:64px;padding:14px 16px;border:1px solid #ded8cd;border-radius:15px;background:#faf8f3;color:#171717;font:700 13px/1.45 Manrope;box-shadow:none}
-.csLesson .answer:hover:not(:disabled){transform:none;background:#fff;border-color:#aaa297;box-shadow:0 5px 14px rgba(30,25,18,.06)}
-.csLesson .answer .radioMark{flex:0 0 24px;width:24px;height:24px;display:grid;place-items:center;border:1px solid #c8c0b4;border-radius:50%;font-size:12px;line-height:1;background:#fff;color:#171717}
-.csLesson .answer.selected{background:#fff8cf;border-color:#d4b931;box-shadow:0 0 0 2px rgba(255,216,77,.2)}
-.csLesson .answer.selected .radioMark{background:#171717;border-color:#171717;color:#ffd84d}
-.csLesson .answer.correct{background:#edf7eb;border-color:#93bf8f}.csLesson .answer.correct .radioMark{background:#2f6b39;border-color:#2f6b39;color:#fff}
-.csLesson .answer.wrong{background:#fff0eb;border-color:#d98f79}.csLesson .answer.wrong .radioMark{background:#8d3d2e;border-color:#8d3d2e;color:#fff}
-.csLesson .feedback{margin-top:14px;padding:12px 14px;border-radius:12px;background:#f4f1e9;color:#5f594f;font-size:12px;line-height:1.55}
-.csLesson .quizSubmit{margin-top:20px;padding:20px 22px;border-radius:22px;background:#171717;box-shadow:0 14px 34px rgba(23,23,23,.14)}
-.csLesson .quizSubmit b{font-size:16px}.csLesson .quizSubmit small{color:#c6c0b7;line-height:1.45}
-.csLesson .quizSubmit .btn{min-width:170px;background:var(--yellow);color:#171717;border-color:var(--yellow);box-shadow:none}
-.csLesson .checkBtn[disabled]{background:#403f3b!important;color:#888!important;border-color:#403f3b!important;opacity:1}
-@media(max-width:700px){.csLesson .quiz{gap:12px}.csLesson .quiz .question{padding:19px 16px;border-radius:18px}.csLesson .quiz .question h3{font-size:16px;margin-bottom:15px}.csLesson .answers{grid-template-columns:1fr;gap:8px}.csLesson .answer{min-height:54px;padding:13px 12px;font-size:13px}.csLesson .quizSubmit{padding:18px;gap:14px}.csLesson .quizSubmit .btn{width:100%;min-height:50px}}
+/* Customer Service Quick Check - uses actual lessonQuiz / lessonQ markup */
+.csLesson .lessonQuiz{display:grid;gap:18px;margin:26px 0 22px}
+.csLesson .lessonQ{position:relative;padding:25px 24px 24px 30px;border:1px solid #ddd6ca;border-radius:22px;background:#fff;box-shadow:0 9px 28px rgba(30,25,18,.05);overflow:hidden}
+.csLesson .lessonQ:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--yellow)}
+.csLesson .lessonQ>b{display:block;margin:0 0 18px;color:#171717;font-size:17px;line-height:1.48;letter-spacing:-.01em}
+.csLesson .lessonOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.csLesson .lessonOption{width:100%;min-width:0;min-height:62px;padding:14px 16px;border:1px solid #ddd6ca;border-radius:15px;background:#faf8f3;color:#171717;text-align:left;font:700 13px/1.45 Manrope;cursor:pointer;white-space:normal;overflow-wrap:anywhere;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.csLesson .lessonOption:hover:not(:disabled){background:#fff;border-color:#aaa297;box-shadow:0 5px 16px rgba(30,25,18,.06)}
+.csLesson .lessonOption.selected{background:#fff8cf;border-color:#c6a900;box-shadow:0 0 0 2px rgba(255,216,77,.2)}
+.csLesson .lessonQ.correct{border-color:#9bc797;background:#fbfff9}.csLesson .lessonQ.correct:before{background:#5b9961}
+.csLesson .lessonQ.wrong{border-color:#df9b87;background:#fffaf8}.csLesson .lessonQ.wrong:before{background:#bd6953}
+.csLesson .lessonQ.correct .lessonOption.selected{background:#e9f6e7;border-color:#77a873}
+.csLesson .lessonQ.wrong .lessonOption.selected{background:#fff0eb;border-color:#d98f79}
+.csLesson .lessonFeedback{margin-top:14px;padding:12px 14px;border-radius:12px;background:#f4f1e9;color:#5f594f;font-size:12px;line-height:1.55}
+.csLesson #checkAnswers13{display:flex;align-items:center;justify-content:center;min-width:180px;min-height:50px;margin-top:4px;padding:13px 22px;border-radius:14px;font-size:13px;font-weight:900}
+.csLesson #checkAnswers13:disabled{background:#e5e0d7!important;color:#9b9489!important;border-color:#e5e0d7!important;opacity:1;cursor:not-allowed;box-shadow:none}
+.csLesson .lessonResult{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px;padding:18px 20px;border-radius:18px;background:#171717;color:#fff}
+.csLesson .lessonResult b{font-size:15px}.csLesson .lessonResult span{font-size:12px;color:#c8c2b8}
+.csLesson .lessonResult.pass{background:#1e4d2a}.csLesson .lessonResult.retry{background:#5f3026}
+.csLesson #continueM4Class2{margin-top:14px;min-height:50px;padding:13px 20px;border-radius:14px}
+@media(max-width:700px){.csLesson .lessonQuiz{gap:12px;margin-top:20px}.csLesson .lessonQ{padding:19px 16px 18px 21px;border-radius:18px}.csLesson .lessonQ>b{font-size:16px;line-height:1.45;margin-bottom:15px}.csLesson .lessonOptions{grid-template-columns:1fr;gap:8px}.csLesson .lessonOption{min-height:54px;padding:13px 14px;font-size:13px}.csLesson #checkAnswers13,.csLesson #continueM4Class2{width:100%}.csLesson .lessonResult{align-items:flex-start;flex-direction:column}}
 
 @media(max-width:700px){.csInbox,.csCareGrid,.csCallFlow,.csSteps,.csChannelGrid{grid-template-columns:1fr}.csCare{padding:24px 18px!important}.csCareGrid{gap:10px;margin-top:20px}.csCareGrid>div{grid-template-columns:54px 1fr;column-gap:14px;min-height:0;padding:18px}.csCareGrid strong{width:50px;height:50px;border-radius:15px;font-size:26px}.csCareGrid span{font-size:15px}.csCareGrid>div{min-height:0}.csChat>div{max-width:92%}.csDontDo{grid-template-columns:1fr}.csDontDo i{transform:rotate(90deg)}.csBotFlow,.csLoopFlow{flex-direction:column;align-items:stretch}.csBotFlow i,.csLoopFlow i{transform:rotate(90deg);text-align:center}.csLoopFlow>div{width:100%}.csMailTop{flex-direction:column}.csToolCloud span{flex:1 1 44%;text-align:center}}
 </style></head><body>
