@@ -602,3 +602,31 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — functional/UX, double-check and FINAL QA still remain.
 - current_class_remains: p1m6c1.
 - next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
+
+
+### p1m6c1 INDEPENDENT FUNCTIONAL / UX QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
+- latest_main_and_manifest_reread: yes.
+- class_identity_and_opening: passed by implementation inspection — Phase 1 / Module 6 / Class 1 of 4, openClass route is gated by centralized isClassUnlocked and dispatches only p1m6c1 to renderLesson19.
+- video_state: passed — established non-playable 16:9 “Lesson video coming soon” state; no fake video.
+- written_lesson_rendering: passed by implementation inspection after content QA; all five source-grounded teaching sections remain in renderLesson19.
+- slides_preview_download: passed by implementation inspection — lesson19 points to corrected PDF Drive ID 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ; shared preview helper provides Drive preview iframe, loading state, iframe load transition, close button, backdrop close, Escape close, scroll restoration and canonical .pdf download filename.
+- optional_resources: none, so no resource interaction exists to break.
+- quick_check_behavior: passed by code-path inspection — five questions; answer buttons update selection; all five required before Check Answers enables; submission marks correct/wrong and displays feedback; a correct submitted answer is locked; changing a wrong answer clears submitted state for retry; Check Answers Again is available after failed submission; 5/5 is required before Complete Class appears.
+- completion_persistence: passed structurally — markClassComplete(p1m6c1) uses centralized academy_class_progress upsert with onConflict user_id,class_key; Supabase independently confirms composite primary key (user_id,class_key) and user_id foreign key; loadProgress reloads completed class keys for authenticated learners after refresh.
+- completed_reopen: passed by implementation inspection — completed state hides the redundant quiz via quizCompleteState and shows saved completion state + completion moment.
+- reproduced_UX_issue: completed copy previously said “continue to ClickUp” even though p1m6c2 is intentionally still unbuilt. This could imply usable ClickUp content. Fixed to “continue to the next class” and the unlocked p1m6c2 label now explicitly carries “Coming soon.” Continue still returns to the Module 6 view rather than opening unbuilt content.
+- UX_fix_commit: 5998caa270afd0539dad0d4bce0d50fc88897a08.
+- post_fix_retest: latest main re-fetched; corrected completion copy, Coming soon state and Module 6 return behavior verified in renderLesson19.
+- progression: passed structurally — p1m6c1 requires Module 5 completion; completing it unlocks p1m6c2 only; Module 6 remains incomplete and Phase 1 exam remains locked until all four Module 6 classes are complete.
+- preview_QA_states: p1m6c1qa establishes Modules 1–5 complete with C1 current; p1m6c1done additionally completes p1m6c1, making C2 sequentially unlocked.
+- skills: no p1m6c1 skill mapping exists; this avoids falsely demonstrating ClickUp/Trello/Notion before their dedicated classes. Existing ClickUp mapping starts at p1m6c2/p2m4c2.
+- surrounding_navigation_regression_check: centralized openClass routes for prior 18 rebuilt classes remain present; p1m6c1 adds only the Module 6/Class 1 dispatch. Module/phase gating remains centralized.
+- responsive_static_QA: class-specific layouts collapse to one column at <=700px; child min-width hardening is present; two-column responsibility board becomes one column; flow arrows are transformed between stacked cards; slide action has >=44px target and answers >=48px. No class-specific fixed width was found that should force horizontal overflow.
+- responsive_slide_experience: preview helper uses the shared responsive slide modal/iframe path and corrected 16:9 PDF. Actual device interaction remains a live check, not claimed here.
+- live_production_limitations: connected Vercel account still returns zero authorized teams/projects. Therefore actual deployed Test Student Portal clicks, real iframe load/page navigation/download response, wrong-answer/retry interaction, authenticated Complete Class→refresh→reopen persistence, surrounding-page browser navigation, and real desktop/mobile overflow/tap behavior could not be honestly live-tested in this environment.
+- functional_QA_result: PASS for all locally/verifiably inspectable paths after the completion-copy fix; live browser/device checks remain explicitly NOT VERIFIED.
+- status_remains: LIVE BUT NEEDS QA — double-check and FINAL QA remain.
+- current_class_remains: p1m6c1.
+- next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
