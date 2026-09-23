@@ -273,3 +273,22 @@ Initialization note: direct production browser verification was blocked because 
 - written_lesson_commit: 301493e55657235e8592275bb84c463546601b95
 - remaining_QA: independent visual/slide PDF QA, functional/UX QA, double-check and FINAL QA still required; live browser gates remain subject to the existing Vercel authorization limitation.
 - known_content_issues_after_audit: none found within the source-supported scope.
+
+
+### p1m5c2 independent visual / slide PDF QA — 2026-09-23
+- queue_advanced: no
+- binding_slide_standard_reread: yes.
+- canonical_reference_compared: yes — P1 M3 C1 Google Workspace Navigation production PDF inspected as the quality/art-direction reference, not as a layout template.
+- actual_learner_pdf_inspected: yes — final learner artifact Drive ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X.
+- pages_rendered_and_inspected_before_fixes: 5/5.
+- issues_found: corrected content deck was visually under-art-directed versus the standard: all five pages used essentially the same warm-cream foundation; cover had no topic-specific visual device; rhythm between pages was weak; the final social-comments page had an undersized lower information surface with excessive unused space; overall deck silhouette felt too template-like despite being readable.
+- fixes: redesigned cover as a near-black editorial page with a yellow four-signal research panel; changed Exploding Topics page to a decisive full-yellow teaching state; changed AnswerThePublic + Google Trends comparison to a near-black foundation while preserving its two-surface comparison; changed social-comment page to soft sage and enlarged/repositioned its conversation/customer-signal surface; retained the source-faithful manual-research map on cream for contrast and sequence.
+- real_logo_and_lockup: retained existing approved real Assistara logo/Academy lockup and consistent top-right placement; no rebuilt/fake logo introduced.
+- pages_rendered_and_inspected_after_fixes: 5/5 at full render and phone/contact-sheet scale.
+- final_visual_result: no clipping, overflow, bad wrapping, canvas escape, malformed logo or unreadable small copy observed; deck now has distinct page silhouettes and cream/dark/yellow/sage rhythm while remaining source-faithful.
+- learner_pdf_regenerated: yes — 90,055 bytes.
+- learner_pdf_replaced_in_place: yes — Drive ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X preserved.
+- preview_download_wiring_verified_in_code: yes — lesson17.slidesFileId points to the corrected Drive ID and openLessonSlidesPreview uses the canonical .pdf filename.
+- live_preview_download_interaction_tested: no — remains a later functional/live QA gate.
+- slides_rendered_visual_QA: yes.
+- remaining_QA: functional/UX QA, double-check and FINAL QA. Queue remains parked on p1m5c2.
