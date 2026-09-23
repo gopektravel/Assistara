@@ -160,53 +160,58 @@
   .lessonResourceArrow{flex:0 0 auto}
 }
 
-/* Email Management mobile composition: preserve scale, reorganize content */
+/* Email Management mobile composition: vertical, no sideways scrolling */
 @media(max-width:700px){
-  .lessonShell{max-width:none;width:100%}
+  .lessonShell{max-width:none;width:100%;min-width:0}
   .lessonHead{padding:24px 20px!important;border-radius:24px}
   .lessonHead h1{font-size:40px;line-height:1.02}
   .lessonHead .lead{font-size:16px;line-height:1.6}
   .lessonVideo{border-radius:22px;padding:24px;min-height:210px}
   .lessonVideo .play{width:68px;height:68px}
-  .lessonActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 0 6px}
-  .lessonActions>span,.lessonActions>a,.lessonActions>button{min-height:48px;width:100%;display:flex!important;align-items:center;justify-content:center;text-align:center;white-space:normal}
-  .lessonSection{padding:34px 0}
+  .lessonActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 0 6px;min-width:0}
+  .lessonActions>span,.lessonActions>a,.lessonActions>button{min-width:0;min-height:48px;width:100%;display:flex!important;align-items:center;justify-content:center;text-align:center;white-space:normal;overflow-wrap:anywhere}
+  .lessonSection{padding:34px 0;min-width:0}
   .lessonSection h2{font-size:28px;line-height:1.08;margin-bottom:16px}
-  .lessonSection p{font-size:16px;line-height:1.68}
-  .emailTriage{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:4px 2px 14px;margin-left:-2px;margin-right:-2px}
-  .emailTriage .emailStep{flex:0 0 84%;min-height:145px;padding:20px;scroll-snap-align:start}
-  .emailTriage .emailArrow{display:none}
-  .emailLabels{grid-template-columns:1fr 1fr;gap:12px}
-  .emailLabel{min-height:112px;padding:18px}
-  .emailCompare{grid-template-columns:1fr 1fr;gap:10px}
-  .emailChoice{padding:18px 15px;min-height:150px}
-  .emailAnatomy{padding:8px 18px;margin-top:20px}
-  .emailLine{grid-template-columns:1fr;gap:5px;padding:16px 0}
+  .lessonSection p{font-size:16px;line-height:1.68;overflow-wrap:anywhere}
+  .emailTriage{display:grid;grid-template-columns:1fr;gap:0;margin-top:20px;min-width:0}
+  .emailTriage .emailStep{min-width:0;min-height:0;padding:20px;border-radius:18px}
+  .emailTriage .emailArrow{display:block;transform:none;text-align:center;height:38px;line-height:38px;font-size:0}
+  .emailTriage .emailArrow:after{content:"↓";font-size:24px;font-weight:800;color:var(--muted)}
+  .emailLabels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+  .emailLabel{min-width:0;min-height:112px;padding:18px;overflow-wrap:anywhere}
+  .emailCompare{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .emailChoice{min-width:0;padding:18px 15px;min-height:150px;overflow-wrap:anywhere}
+  .emailAnatomy{padding:8px 18px;margin-top:20px;min-width:0}
+  .emailLine{grid-template-columns:1fr;gap:5px;padding:16px 0;min-width:0}
   .emailLine b{font-size:11px}
-  .emailRouting{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding-bottom:12px}
-  .emailRoute{flex:0 0 78%;min-height:150px;padding:20px;scroll-snap-align:start}
-  .emailFollow{padding:24px 20px;border-radius:22px}
-  .emailInbox{border-radius:18px;overflow:visible;background:transparent;border:0;display:grid;gap:10px}
-  .emailInboxRow{grid-template-columns:1fr auto;grid-template-areas:"sender tag" "subject subject";gap:7px 10px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
+  .emailLine>*{min-width:0;overflow-wrap:anywhere}
+  .emailRouting{display:grid;grid-template-columns:1fr;gap:12px;margin-top:18px;min-width:0}
+  .emailRoute{min-width:0;min-height:0;padding:20px;border-radius:18px;position:relative;overflow:hidden}
+  .emailRoute:before{display:block;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--muted);margin-bottom:9px}
+  .emailRoute:nth-child(1):before{content:"VISIBILITY"}
+  .emailRoute:nth-child(2):before{content:"PRIVACY"}
+  .emailRoute:nth-child(3):before{content:"CONTEXT + ACTION"}
+  .emailFollow{padding:24px 20px;border-radius:22px;min-width:0}
+  .emailInbox{border:0;border-radius:0;background:transparent;overflow:visible;margin-top:18px;display:grid;gap:10px;min-width:0}
+  .emailInboxRow{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"sender tag" "subject subject";gap:7px 10px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff;align-items:start}
   .emailInboxRow.hot{background:#fff8cf}
-  .emailInboxRow>strong:first-child{grid-area:sender}
-  .emailInboxRow>small{grid-area:subject;font-size:13px;line-height:1.45}
-  .emailInboxRow>*:last-child{grid-area:tag;justify-self:end}
-  .quiz{gap:16px}
-  .question{padding:20px 17px;border-radius:18px}
-  .question h3{font-size:16px;line-height:1.5}
-  .answer{padding:15px 14px;min-height:50px;font-size:14px;line-height:1.4}
-  .quizSubmit{padding:20px;border-radius:20px}
-  .completeMoment{padding:24px 20px;border-radius:22px}
+  .emailInboxRow>strong:first-child{grid-area:sender;min-width:0}
+  .emailInboxRow>small{grid-area:subject;min-width:0;font-size:13px;line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+  .emailInboxRow>*:last-child{grid-area:tag;justify-self:end;min-width:0;max-width:100%;white-space:normal;text-align:right;overflow-wrap:anywhere}
+  .quiz{gap:16px;min-width:0}
+  .question{min-width:0;padding:20px 17px;border-radius:18px}
+  .question h3{font-size:16px;line-height:1.5;overflow-wrap:anywhere}
+  .answers{min-width:0}
+  .answer{min-width:0;width:100%;padding:15px 14px;min-height:50px;font-size:14px;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+  .quizSubmit{min-width:0;padding:20px;border-radius:20px}
+  .completeMoment{min-width:0;padding:24px 20px;border-radius:22px}
 }
 @media(max-width:390px){
   .lessonActions{grid-template-columns:1fr}
   .lessonHead h1{font-size:38px}
-  .emailLabels{grid-template-columns:1fr 1fr}
+  .emailLabels{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .emailCompare{grid-template-columns:1fr}
   .emailChoice{min-height:0}
-  .emailTriage .emailStep{flex-basis:88%}
-  .emailRoute{flex-basis:84%}
 }
 </style></head><body>
 <div id="loading" class="loading">Loading your Academy...</div>
