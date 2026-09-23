@@ -206,7 +206,7 @@ document.querySelectorAll(".lesson9Answer").forEach(b=>b.onclick=()=>{let qi=+b.
 let chk=document.getElementById("checkAnswers9");if(chk)chk.onclick=()=>{lesson9Submitted=true;renderLesson9()};
 let fin=document.getElementById("finishLesson9");if(fin)fin.onclick=async()=>{fin.disabled=true;fin.textContent="Saving...";let ok=await markClassComplete(lesson9.key);if(ok)renderLesson9();else{fin.disabled=false;fin.textContent="Could not save — try again"}};
 let nx=document.getElementById("continueM3Class2");if(nx)nx.onclick=()=>openClass(1);
-let pv=document.getElementById("lessonSlidesPreview9");if(pv)pv.onclick=()=>openImageLessonSlides(["academy/assets/slides/p1m3c1/01-cover.svg","academy/assets/slides/p1m3c1/02-workspace-map.svg","academy/assets/slides/p1m3c1/03-client-workflow.svg","academy/assets/slides/p1m3c1/04-drive-source-of-truth.svg","academy/assets/slides/p1m3c1/05-sharing-permissions.svg","academy/assets/slides/p1m3c1/06-docs-collaboration.svg","academy/assets/slides/p1m3c1/07-sheets-operations.svg","academy/assets/slides/p1m3c1/08-calendar-safeguards.svg","academy/assets/slides/p1m3c1/09-forms-workflow.svg","academy/assets/slides/p1m3c1/10-put-it-together.svg"],"Google Workspace Navigation");
+let pv=document.getElementById("lessonSlidesPreview9");if(pv)pv.onclick=()=>openLessonSlidesPreview(lesson9.pdfFileId||lesson9.slidesFileId,"Assistara_Academy_P1_M3_C1_Google_Workspace_Navigation.pdf");
 }
 function renderLesson1(){
 let done=completed.has(lesson1.key),answered=Object.keys(lessonSelections).length,allAnswered=answered===lesson1.questions.length,correctCount=lesson1.questions.filter((q,i)=>lessonSelections[i]===q.correct).length,allCorrect=lessonSubmitted&&correctCount===lesson1.questions.length;
