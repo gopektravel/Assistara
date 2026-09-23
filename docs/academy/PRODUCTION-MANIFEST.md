@@ -922,3 +922,28 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — independent VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
 - current_class_remains: p1m6c3.
 - next_class_not_started: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
+
+
+### p1m6c3 INDEPENDENT VISUAL / SLIDE PDF QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C3 — Client Project Management with Trello (p1m6c3) only.
+- binding_slide_standard_reread: yes.
+- actual_final_learner_PDF_opened: yes — Drive ID 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy.
+- full_render_pass_1: all 6 pages rendered at 120 DPI and visually inspected as a contact sheet and page-by-page.
+- visual_problem_found_1: slide 4’s right-side process signal wrapped awkwardly (“TO-DO → IN / PROGRESS”), weakening the intended stage flow.
+- visual_problem_found_2: slide 6’s synthesis signal visibly overflowed its yellow panel; “ENOUGH” rendered outside the panel, which is an unacceptable finished-artifact defect.
+- correction_slide_4: changed the signal to a clean vertical To-Do ↓ In Progress ↓ Completed flow with Resources shown as the supporting reference lane.
+- correction_slide_6: compacted the synthesis to “SIMPLE BOARD + USEFUL POWER-UPS = ENOUGH” so the complete thought stays inside the yellow panel.
+- full_render_pass_2: corrected source deck exported again; all 6 pages rendered again at 120 DPI and visually inspected together and individually.
+- final_visual_result: PASS — no visible clipping, overflow, off-canvas text, broken wrapping, malformed logo, inconsistent Academy lockup or unreadable phone-scale teaching text remains.
+- hierarchy_and_spacing: PASS — consistent safe margins and clear label → headline → teaching content hierarchy across all six pages.
+- visual_teaching: PASS within source scope — cover communicates Project→Stages→Tasks; WHY uses move-card→see-progress; structure uses Board→Lists→Cards; client lists now read as a stage flow plus Resources; daily habits use a MOVE→CHECK→ATTACH→DATE operating sequence; Power-Ups ends with a compact simple-board synthesis.
+- repetition_review: the deck deliberately keeps the established Module 6 brand geometry/lockup, but teaching signals and foundations vary by concept; no generic card-grid filler or invented Trello UI was added merely for decoration.
+- branding: PASS — approved real Assistara square logo + Assistara Academy lockup is consistent on every page; core near-black/cream/yellow palette with restrained sage is used.
+- corrected_source_deck: 1QXG467gcnQKOZm3UyRIUyGhvWR6CmC3M3n9QZTY1maQ.
+- corrected_learner_PDF: replaced in place preserving Drive ID 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy; final size 61,735 bytes; modified 2026-09-23T20:22:12.202Z.
+- preview_download_wiring: verified on latest Academy implementation — lesson21.slidesFileId is 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy and Lesson Slides uses the canonical Trello PDF filename, so the learner action points to the corrected in-place artifact.
+- live_browser_preview_click: not claimed in this visual pass.
+- status_remains: LIVE BUT NEEDS QA — FUNCTIONAL / DOUBLE-CHECK / FINAL QA remain.
+- current_class_remains: p1m6c3.
+- next_class_not_started: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
