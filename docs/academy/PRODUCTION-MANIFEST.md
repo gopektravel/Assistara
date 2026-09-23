@@ -128,3 +128,20 @@ Initialization note: direct production browser verification was blocked because 
 - learner_pdf_replaced_in_place: yes — Drive file ID remains 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q.
 - content_audit_commit: 29b6d8055661bb3d13d021a8e2730bf48c746f37
 - remaining_QA: runtime Quick Check interaction, wrong-answer retry, completion persistence, next unlock, desktop/mobile and live-production verification remain independent QA gates.
+
+
+### p1m5c1 independent visual / slide PDF QA — 2026-09-23
+- queue_advanced: no
+- binding_standard_reread: yes — assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md
+- canonical_reference_compared: yes — P1 M3 C1 Google Workspace Navigation production PDF inspected as the quality reference.
+- actual_learner_pdf_opened: yes — Drive file ID 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q.
+- pages_rendered_and_inspected_before_fixes: 8/8.
+- issues_found: deck was visually too template-like versus the reference; pages 2–7 relied heavily on repeated horizontal card/grid compositions; cover had little topic-specific visual treatment; brand lockup was on the wrong side versus the standard; several pages had excessive unused lower space and weak spatial teaching.
+- fixes: moved the real Assistara Academy lockup to a consistent top-right safe position; redesigned AI-assisted research as a staggered prompt→collect→explore path; redesigned prompt examples as an asymmetric editorial + dark prompt surface; redesigned customer-avatar inputs as a staggered evidence stack; preserved the strongest existing goal-flow and competitor comparison while improving overall deck rhythm.
+- pages_rendered_and_inspected_after_fixes: 8/8.
+- second_correction_pass: yes — first top-right lockup placement caused logo/wordmark overlap; corrected all 8 lockups and re-rendered all pages again.
+- final_visual_result: no clipping, overflow, canvas escape or malformed logo observed in final 8-page render; typography and margins are readable at contact-sheet/mobile-preview scale; deck now has materially more composition variety and closer Assistara art direction without copying the Google Workspace layouts.
+- learner_pdf_replaced_in_place: yes — corrected PDF uploaded over the same Drive file ID, preserving Academy linkage.
+- preview_download_wiring_verified_in_code: yes — p1m5c1 slidesFileId still points to 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q and the preview filename ends in .pdf.
+- live_preview_download_interaction_tested: no — remains a later runtime/live QA gate.
+- slides_rendered_visual_QA: yes.
