@@ -257,3 +257,19 @@ Initialization note: direct production browser verification was blocked because 
 - mobile_tested: no — responsive implementation inspected; deployed viewport QA pending.
 - live_production_tested: no — connected Vercel authorization limitation remains from prior passes unless independently resolved later.
 - known_issues: no known build-time content/slide defect after the final render. Independent content, visual, functional and final QA passes are still required before advancing to p1m5c3.
+
+
+### p1m5c2 independent content audit — 2026-09-23
+- queue_advanced: no
+- original_source_reread: yes — Phase 1 guidebook, Module 5, complete Lesson 2 through the Lesson 3 boundary.
+- source_scope_confirmed: Lesson 2 is intentionally short and teaches exactly four manual research places/purposes: Exploding Topics — rising trends across industries; AnswerThePublic — questions people ask online; Google Trends — search interest over time; Social Media Comment Sections — real conversations revealing customer opinions, struggles and desires.
+- learner_class_inspected: yes — lesson17 definition, learner-facing written sections, Quick Check and retained slide source inspected independently.
+- meaningful_issue_found: initial build expanded the very short source with unsupported teaching claims and invented snack/search/comment examples (for example, a fabricated healthy-snack search and fabricated customer comments). The slide deck also exposed internal wording such as “source-backed” and added unsupported workflow language such as “trend lead to investigate.”
+- fixes: removed invented examples and unsupported procedures from the written lesson; rewrote the lesson framing to the source's own “gather insights and spot patterns” framing; reduced objectives to the four actually taught source outcomes; removed internal/source-production terminology from learner-facing slide copy; rewrote all five slides to stay within the four source-defined tool purposes.
+- quick_check_alignment: passed by inspection — four questions map one-to-one to the four source-defined purposes; no answer requires knowledge outside Lesson 2.
+- affected_slides_reexported: yes.
+- affected_slides_rendered_and_inspected: yes — corrected PDF rendered page-by-page, 5/5 pages inspected; no clipping/overflow introduced by the content corrections.
+- learner_pdf_replaced_in_place: yes — Drive ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X preserved; corrected size 36,220 bytes.
+- written_lesson_commit: 301493e55657235e8592275bb84c463546601b95
+- remaining_QA: independent visual/slide PDF QA, functional/UX QA, double-check and FINAL QA still required; live browser gates remain subject to the existing Vercel authorization limitation.
+- known_content_issues_after_audit: none found within the source-supported scope.
