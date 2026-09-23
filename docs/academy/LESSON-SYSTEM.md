@@ -148,6 +148,8 @@ Never claim a QA step passed unless it was actually performed.
 ### Mandatory slide QA gate
 A deck is not production-ready when the PDF merely generates or passes an automated test. Every production deck must be created as a single landscape 16:9 PDF, rendered page-by-page to images, visually inspected, checked with the available overflow/layout tests, corrected where needed, re-rendered after every correction, and visually inspected again before the final PDF is uploaded and connected to the Academy. PDF is the canonical learner-facing slide format; do not use PPTX as the default for future classes.
 
+Use `assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md` as the binding visual and production specification. Its canonical quality reference is Phase 1 → Module 3 → Class 1 — Google Workspace Navigation. Match that deck’s level of visual teaching and brand execution without copying its layouts mechanically.
+
 Passing an automated overflow check does not mean visual QA passed. Never report slide visual QA as complete unless the rendered output was actually inspected.
 
 ## 9. Mobile production standard
