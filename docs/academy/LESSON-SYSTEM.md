@@ -146,7 +146,7 @@ Read the approved source before authoring. Assessment must test what the class a
 Never claim a QA step passed unless it was actually performed.
 
 ### Mandatory slide QA gate
-A deck is not production-ready when the PPTX merely generates or passes an automated test. Every production deck must be generated, rendered slide-by-slide to images, visually inspected, checked with the available overflow/layout tests, corrected where needed, re-rendered after every correction, and visually inspected again before the final asset is uploaded or connected to the Academy.
+A deck is not production-ready when the PDF merely generates or passes an automated test. Every production deck must be created as a single landscape 16:9 PDF, rendered page-by-page to images, visually inspected, checked with the available overflow/layout tests, corrected where needed, re-rendered after every correction, and visually inspected again before the final PDF is uploaded and connected to the Academy. PDF is the canonical learner-facing slide format; do not use PPTX as the default for future classes.
 
 Passing an automated overflow check does not mean visual QA passed. Never report slide visual QA as complete unless the rendered output was actually inspected.
 
