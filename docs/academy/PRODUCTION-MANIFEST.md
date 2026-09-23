@@ -12,7 +12,7 @@ Drive production root: Assistara / 05 Assistara Academy / Course Material / Prod
 
 ## Queue position
 Current class under production/QA: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1)
-Build state: NOT BUILT — selected as the next production target after p1m6c4 passed FINAL LOCAL QA.
+Build state: implementation + learner PDF slides created; independent CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
 NEXT BUILD: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1)
 Current source: Phase 2_ AI-Powered VA Guidebook.pdf → Module 1: Build Your VA Brand → Lesson 1: Canva Navigation: Colors, Elements & Fonts
 Previous completed queue class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) — BUILT + FINAL LOCAL QA.
@@ -1308,3 +1308,19 @@ Initialization note: direct production browser verification was blocked because 
 - next_NOT_BUILT_class: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1).
 - next_build_target: p2m1c1.
 - p2m1c1_built_in_this_pass: no.
+
+
+### p2m1c1 BUILD — 2026-09-24
+- queue_advanced: no.
+- class_built: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1) only.
+- source: Phase 2_ AI-Powered VA Guidebook.pdf (Drive ID 1BMZwJWChFviuL0bdJEB87YoiFJQcIZPE), Module 1, Lesson 1.2; entire lesson read before authoring.
+- implementation: lesson23 added with six teaching sections, established video-coming-soon state, 5-question Quick Check, centralized completion and sequential p2m1c2 unlock.
+- slides_source: 1QQyLTzvXIZ61hulbNBqEVXqm31WL4tsZboRQSfPQw2Y.
+- learner_PDF: 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi; 6-page landscape PDF.
+- resources: none; source does not provide a separate reusable worksheet/template body.
+- skills: existing Canva mapping includes p2m1c1; no new skill added.
+- implementation_commit: 5a661ab0b31ad6190c69384fc19bc44fd81718d0.
+- independent_QA_required: CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL.
+- status: LIVE BUT NEEDS QA.
+- current_and_NEXT_BUILD_pointer_remains: p2m1c1 until FINAL QA.
+- next_class_not_started: p2m1c2 Create Your Profile Picture.
