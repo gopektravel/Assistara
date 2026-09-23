@@ -630,3 +630,29 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — double-check and FINAL QA remain.
 - current_class_remains: p1m6c1.
 - next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
+
+
+### p1m6c1 INDEPENDENT DOUBLE-CHECK — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1) only.
+- prior_QA_trusted_as_evidence: no — source, latest learner implementation, actual learner PDF, Slides source, Quick Check/completion/progression wiring and responsive CSS were independently re-inspected.
+- original_source_reread: yes — full Phase 1 Module 6 Lesson 1 reread through the Lesson 2 boundary.
+- meaningful_content_issue_found: the earlier content-QA pass had incorrectly removed the source word “free” from “Use free tools like Trello, ClickUp, Notion, or Google Calendar.” The original guidebook explicitly says “free tools,” so that edit reduced source fidelity. Restored the exact source framing in the written lesson and slide 3.
+- learner_terminology_issue_found: Quick Check feedback twice said “The source…”, exposing internal source terminology to learners. Changed both feedback lines to “The lesson…”.
+- implementation_fix_commit: 1a2d03aef473a2775b9ad25242a3131f558477b6.
+- slide_fix: slide 3 body restored to “Use free tools like Trello, ClickUp, Notion, or Google Calendar.” No other slide content changed.
+- affected_slide_rerender: yes — corrected deck exported to PDF and page 3 rendered at 120 DPI; visually re-inspected. Text fits cleanly with no clipping/overflow/broken wrapping; logo/lockup and signal remain intact.
+- learner_PDF_replaced_in_place: yes — Drive ID 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ preserved; corrected final size 40,535 bytes; modified 2026-09-23T18:32:02.773Z.
+- full_PDF_recheck: the pre-fix actual learner PDF was independently rendered on all 6 pages and visually inspected during this double-check; only page 3 required modification. Unaffected pages retained the already-inspected final visual state.
+- written_lesson_final_check: pass after fixes — all source concepts are represented without additional framework claims; no internal source/production language remains in learner copy found during recheck.
+- resources: none; source provides no actual downloadable template/resource body.
+- quick_check_final_check: pass after feedback terminology fix — five source-supported questions, unambiguous correct answers, all-answer gate, retry path and 5/5 completion requirement remain intact.
+- completion_progression_final_check: pass structurally — centralized p1m6c1 completion persistence remains intact; C2 alone unlocks after C1; Module 6 and Phase 1 do not prematurely complete; completed state correctly labels unbuilt C2 as Coming soon and returns to Module 6.
+- skills_final_check: pass — p1m6c1 has no false skill mapping; ClickUp begins at p1m6c2.
+- responsive_final_check: pass for static/verifiable implementation — class layouts collapse at <=700px, min-width hardening remains, slide action >=44px and answers >=48px; no new fixed-width overflow introduced.
+- preview_download_wiring: pass — lesson19.slidesFileId still equals corrected in-place learner PDF ID 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ.
+- live_external_limitations: unchanged — actual deployed browser/device interaction remains NOT VERIFIED because connected Vercel authorization exposes no Assistara team/project. No live claim is made.
+- double_check_result: PASS after fixes. Same class is ready for FINAL QA.
+- status_remains: LIVE BUT NEEDS QA.
+- current_class_remains: p1m6c1.
+- next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
