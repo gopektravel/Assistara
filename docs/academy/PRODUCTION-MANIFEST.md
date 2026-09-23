@@ -11,12 +11,12 @@ Drive source root: Assistara / 05 Assistara Academy / Course Material / Original
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current class under production/QA: P1 M6 C1 — Project & Business Management for VAs (p1m6c1)
-Build state: implementation + learner PDF slides created; independent QA still required.
-NEXT BUILD: P1 M6 C1 — Project & Business Management for VAs (p1m6c1)
-Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 1: Project & Business Management for VAs
-Previous completed queue class: P1 M5 C3 — Organizing Your Findings (p1m5c3) — BUILT + FINAL LOCAL QA.
-Queue rule: p1m5c3 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p1m6c1; this FINAL QA did not build it.
+Current class under production/QA: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2)
+Build state: NOT BUILT — selected as the next production target after p1m6c1 passed FINAL LOCAL QA.
+NEXT BUILD: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2)
+Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 2: Client Project Management ClickUp
+Previous completed queue class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1) — BUILT + FINAL LOCAL QA.
+Queue rule: p1m6c1 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p1m6c2; this FINAL QA did not build it.
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
@@ -51,7 +51,7 @@ M5 Market Research & Data Organization
 - p1m5c2 Tools for Manual Market Research — BUILT + FINAL LOCAL QA
 - p1m5c3 Organizing Your Findings — BUILT + FINAL LOCAL QA
 M6 Project Management for VAs
-- p1m6c1 Project & Business Management for VAs — LIVE BUT NEEDS QA
+- p1m6c1 Project & Business Management for VAs — BUILT + FINAL LOCAL QA
 - p1m6c2 Client Project Management with ClickUp — NOT BUILT
 - p1m6c3 Client Project Management with Trello — NOT BUILT
 - p1m6c4 Client Project Management with Notion — NOT BUILT
@@ -656,3 +656,34 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA.
 - current_class_remains: p1m6c1.
 - next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
+
+
+### p1m6c1 FINAL INDEPENDENT QA — 2026-09-24
+- final_gate_completed: yes.
+- class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
+- queue_advanced_after_final_gate: yes.
+- final_status: BUILT + FINAL LOCAL QA.
+- previous_QA_claims_trusted_as_evidence: no — latest source, learner implementation and current Drive-backed learner PDF were independently fetched for this gate.
+- original_source_reread: yes — full Phase 1 Module 6 Lesson 1 through the Lesson 2 boundary.
+- source_to_final_lesson: passed. Final lesson preserves the guidebook's organization/client-expectation framing, free-tool list, breaking projects into smaller tasks, simple-over-complicated principle, four responsibilities, proactive communication, Plan→Execute→Review & Adjust sequence, phase-based overwhelm/missed-detail benefit, bigger-goal mindset, smoother/faster question, and collaborator framing.
+- learner_class_inspected: yes — current lesson19 definition and renderLesson19 inspected on latest main.
+- written_lesson: passed — no internal source/production terminology found; prior “The source…” feedback leak remains corrected to “The lesson…”.
+- actual_final_learner_PDF: Drive ID 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ; 40,535 bytes; corrected version modified 2026-09-23T18:32:02.773Z.
+- final_PDF_rendered_and_visually_inspected: yes — all 6 pages of the actual current Drive-backed PDF rendered again during FINAL QA and visually inspected page-by-page.
+- final_PDF_result: passed — source-faithful text including the restored “free tools” wording is present; real Assistara logo/Academy lockup remains; no meaningful clipping, overflow, broken wrapping, malformed logo, unreadable typography, off-canvas object or unfinished visual found.
+- final_slide_content: passed — the deck teaches organization/client expectations, simple systems + task breakdown, four responsibilities, three phases, and business-partner mindset. The final deck text confirms the project-management sequence and source question.
+- preview_download_wiring: passed by latest implementation inspection — lesson19.slidesFileId still points to the corrected in-place learner PDF ID and canonical PDF filename.
+- optional_resources: none; passed as appropriate because the source provides no actual reusable resource/template body.
+- quick_check: passed by independent inspection — 5 questions; every correct answer is explicitly taught; all five selections required before grading; feedback/retry path retained; 5/5 required before Complete Class.
+- completion_persistence: passed structurally — centralized markClassComplete/loadProgress path remains used for p1m6c1.
+- completed_reopen: passed structurally — saved-completion state hides redundant fresh quiz and displays completion moment.
+- progression: passed — p1m6c1 unlocks p1m6c2 only; Module 6 remains incomplete; Phase 1 does not complete or expose its exam early.
+- unbuilt_next_class_handling: passed — completed C1 labels Client Project Management with ClickUp as Coming soon and Continue returns to Module 6 rather than opening unfinished C2.
+- skills: passed — no false p1m6c1 skill demonstration mapping; tool-specific ClickUp learning begins with p1m6c2.
+- responsive_static_QA: passed — class layouts collapse at <=700px, min-width hardening remains, responsibility board becomes one column, flow structures stack, slide control keeps >=44px target and answers >=48px; no new class-specific fixed-width overflow found.
+- regression_review: passed for locally/verifiably inspectable paths; no FINAL-gate code/content fix was required.
+- fixable_defects_found_in_final_gate: none.
+- blocked_external_live_checks: actual deployed Test Student Portal interaction remains NOT VERIFIED because the connected Vercel authorization does not expose the Assistara project. Therefore real production class opening, iframe navigation/download response, authenticated Quick Check/Complete Class→refresh→reopen persistence, surrounding-page browser navigation and physical desktop/mobile behavior are not claimed as verified.
+- next_NOT_BUILT_class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
+- next_class_built_during_this_pass: no.
+- next_production_target_set: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
