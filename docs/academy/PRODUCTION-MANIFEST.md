@@ -738,3 +738,25 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — independent visual/PDF QA, functional/UX QA, double-check and FINAL QA remain.
 - current_class_remains: p1m6c2.
 - next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
+
+
+### p1m6c2 INDEPENDENT VISUAL / SLIDE PDF QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) only.
+- binding_standard_reread: yes — assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md.
+- actual_learner_PDF_opened: yes — Drive ID 1C_-uTyJKnM-_cS_Ehsbw4lTmLhl_3HVa; initial size 40,255 bytes.
+- initial_render: all 6 pages of the actual learner-facing PDF rendered at 120 DPI and visually inspected together and page-by-page.
+- problems_found: the BUILD deck was too text-duplicative/template-like; several right-side signal panels repeated body copy instead of synthesizing it; slide 3 visibly overflowed its hierarchy signal box (“LISTS” escaped below the dark panel); slide 4’s signal was a loose metadata list rather than a clear section map; slide 5’s signal was an undifferentiated one-line process; slide 6 repeated automation copy rather than showing trigger→action relationships.
+- correction_pass_1: reduced body/signal duplication across all 6 pages; reframed cover around CLIENT WORK→ONE SHARED WORKSPACE; changed slide 2 to alignment outcome; converted slide 3 signal to hierarchy; converted slide 4 signal to project-section labels; converted slide 5 to a vertical daily routine; converted slide 6 to three trigger→action automation pairs.
+- correction_pass_1_render: all 6 pages rendered again. This caught a remaining slide 3 overflow caused by the vertical hierarchy exceeding the inherited signal box, plus unexplained * / † markers on slide 4.
+- correction_pass_2: shortened slide 3 hierarchy signal to a clean two-line WORKSPACE→SPACE / FOLDER→LIST treatment that fits the panel; removed unexplained markers on slide 4 and wrote PROGRESS TRACKER (OPTIONAL) explicitly.
+- final_render: all 6 corrected pages rendered again at 120 DPI and visually inspected as a contact sheet and individually.
+- final_visual_result: PASS for clipping, overflow, wrapping, margins, logo/Academy lockup, contrast and phone-scale legibility. No object visibly escapes its panel/canvas; the real approved Assistara logo remains consistent on every page.
+- visual_teaching_result: improved substantially from BUILD. Each page now has a clearer synthesis signal: shared-workspace outcome, alignment map, ClickUp hierarchy, client-project sections, daily operating loop and automation trigger→action map. The deck remains deliberately concise and source-faithful rather than inventing unsupported ClickUp UI screens.
+- corrected_source: Google Slides ID 1s-xDvuX4gHQIhwHBqZWZj99eVmpqKlZC1Yv_SEsEUwA.
+- corrected_learner_PDF: replaced in place, preserving Drive ID 1C_-uTyJKnM-_cS_Ehsbw4lTmLhl_3HVa; final size 39,199 bytes; modified 2026-09-23T19:12:20.115Z.
+- preview_download_wiring: verified on latest Academy implementation — lesson20.slidesFileId remains 1C_-uTyJKnM-_cS_Ehsbw4lTmLhl_3HVa and the Lesson Slides action uses the canonical learner PDF filename, so preview/download points to the corrected in-place artifact.
+- live_browser_preview_click: not claimed; functional/live QA remains separate.
+- status_remains: LIVE BUT NEEDS QA — functional/UX QA, double-check and FINAL QA remain.
+- current_class_remains: p1m6c2.
+- next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
