@@ -1158,3 +1158,19 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA.
 - following_class_not_started: p2m1c1.
+
+
+### p1m6c4 BUILD RE-ENTRY VERIFICATION — 2026-09-24
+- queue_advanced: no.
+- requested_action: BUILD THE NEXT CLASS.
+- manifest_authority_result: current/NEXT target is P1 M6 C4 — Client Project Management with Notion (p1m6c4), but the manifest already records its implementation + learner PDF as created and awaiting independent QA.
+- duplicate_build_avoided: yes — no second Notion class or duplicate artifact was created.
+- original_source_reread: yes — Phase 1 Module 6 Lesson 4 read in full. It teaches One Workspace for Everything; why Notion; Page/Sub-Pages/Databases; client workspace pages; daily habits; simple templates; and start-simple/clarity-over-complexity.
+- actual_implementation_reverified: yes — lesson22 exists on latest main with p1m6c4 identity, written lesson, established video Coming Soon state, five-question Quick Check, centralized completion, Phase 1 coursework-complete state, Phase 1 Exam unlock messaging, Notion Skills mapping, and slide preview/download wiring.
+- canonical_learner_PDF_reverified: Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t; 6 pages; 43,969 bytes; modified 2026-09-23T21:43:16.525Z.
+- render_verification: actual canonical PDF downloaded and all 6 pages rendered at 120 DPI; contact-sheet inspection confirms correct Phase 1 / Module 6 / Class 4 identity, real Assistara Academy lockup, distinct 16:9 compositions, no obvious clipping/off-canvas content, and source-aligned teaching sequence.
+- resources: none; source does not supply a separate reusable template/file body requiring an optional resource.
+- production_state: implementation/assets already built; independent CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
+- current_class_unchanged: p1m6c4.
+- next_build_pointer_unchanged: p1m6c4 until FINAL QA advances the manifest.
+- following_class_not_started: yes.
