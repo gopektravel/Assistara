@@ -1,7 +1,8 @@
 # Assistara Academy — Lesson Style & Production Guide
 
 **Status:** Canonical production standard  
-**Reference UI:** `assistara-local-v9/academy-dashboard.html`
+**Reference UI:** `assistara-local-v9/academy-dashboard.html`  
+**Binding visual lesson standard:** `docs/academy/VISUAL-LESSON-STANDARD.md`
 
 > Classes 1–4 are examples of this system in use, not page templates. Inspect current implementations for quality and interaction behavior, then design each new class from its approved source and learning outcome.
 
@@ -115,6 +116,8 @@ Read the approved source before authoring. Assessment must test what the class a
 **Skill Challenge:** separate from the class understanding check and optional for verification unless the curriculum explicitly changes that rule.
 
 ## 8. Production workflow
+
+**Mandatory:** Before building, redesigning, or visually QA'ing any class, read `docs/academy/VISUAL-LESSON-STANDARD.md` in full. A lesson is not production-ready when correct copy is merely arranged into paragraphs/repeated cards; meaningful visual teaching is part of the completion standard.
 
 ### Before building
 1. Identify exact phase/module/class.
