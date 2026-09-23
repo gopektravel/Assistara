@@ -12,7 +12,7 @@ Drive production root: Assistara / 05 Assistara Academy / Course Material / Prod
 
 ## Queue position
 Current class under production/QA: P1 M6 C4 — Client Project Management with Notion (p1m6c4)
-Build state: NOT BUILT — selected as the next production target after p1m6c3 passed FINAL LOCAL QA.
+Build state: implementation + learner PDF slides created; independent CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
 NEXT BUILD: P1 M6 C4 — Client Project Management with Notion (p1m6c4)
 Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 4: Client Project Management Notion
 Previous completed queue class: P1 M6 C3 — Client Project Management with Trello (p1m6c3) — BUILT + FINAL LOCAL QA.
@@ -54,7 +54,7 @@ M6 Project Management for VAs
 - p1m6c1 Project & Business Management for VAs — BUILT + FINAL LOCAL QA
 - p1m6c2 Client Project Management with ClickUp — BUILT + FINAL LOCAL QA
 - p1m6c3 Client Project Management with Trello — BUILT + FINAL LOCAL QA
-- p1m6c4 Client Project Management with Notion — NOT BUILT
+- p1m6c4 Client Project Management with Notion — LIVE BUT NEEDS QA
 
 ### Phase 2 — Creative & Digital Marketing Skills
 M1 Build Your VA Brand: p2m1c1 Canva Navigation: Colors, Elements & Fonts; p2m1c2 Create Your Profile Picture; p2m1c3 Create Your Facebook & LinkedIn Cover; p2m1c4 Create Your Email Signature — NOT BUILT
@@ -1020,3 +1020,32 @@ Initialization note: direct production browser verification was blocked because 
 - next_NOT_BUILT_class: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
 - next_build_target: p1m6c4.
 - p1m6c4_built_in_this_pass: no.
+
+
+### p1m6c4 BUILD — 2026-09-24
+- queue_advanced: no — p1m6c4 remains the current production/QA class until FINAL QA.
+- class_built: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- following_class_not_started: Phase 2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1).
+- source_read_in_full: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6 → Lesson 4: Client Project Management Notion, through the Phase 1 completion text.
+- source_teaching_scope: One Workspace for Everything; Notion as flexible project headquarters; Page/Sub-Pages/Databases; Client Dashboard→Organized Sections→Custom Views; Task Tracker, Meeting Notes, Content Calendar, Resources & Files Hub; daily status/note/archive/toggle-callout habits; simple Task List/Content Calendar/Project Dashboard templates; clarity over over-complication.
+- standards_inspected_before_build: docs/academy/LESSON-SYSTEM.md; docs/academy/VISUAL-LESSON-STANDARD.md; assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md; current Module 6 implementation.
+- learner_implementation: lesson22 added to assistara-local-v9/academy-dashboard.html and wired to Phase 1 / Module 6 / Class 4.
+- written_lesson: five source-grounded teaching sections — project headquarters; basic Notion setup; client workspace pages; daily habits; simple templates.
+- video: established 16:9 Lesson video coming soon state; no fake playable video.
+- learner_visuals: Notion-specific headquarters map, Page/Sub-Pages/Databases structure, client workspace page grid, UPDATE→LOG→ARCHIVE→ORGANIZE routine and simple-template treatment.
+- quick_check: 5 source-grounded questions; all required before Check Answers; correct/wrong feedback; correct answers lock; wrong answers retryable; 5/5 required before Complete Class.
+- completion: centralized markClassComplete(p1m6c4); completed state marks Phase 1 coursework complete and returns learner to the Phase 1 view where the existing Phase Exam progression can take over.
+- progression: sequential architecture means p1m6c4 completes Module 6 and all Phase 1 coursework; Phase 1 Exam is the next progression gate. Phase 2 still requires a passed Phase 1 Exam.
+- skills: existing Notion skill mapping already points to p1m6c4; no new skill invented.
+- resources: none created — source names simple template types but does not provide a standalone reusable template body to distribute.
+- implementation_commit: 45a62bbcd20e67b6a11c217c893dc48a222b7fdf.
+- slide_source: Google Slides ID 1WYRG0QfxLJQKalA3XFTKD55utKkAvJea8QcSAaEJo-8.
+- learner_PDF: Google Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t; filename Assistara_Academy_P1_M6_C4_Client_Project_Management_with_Notion_Lesson_Slides.pdf; 6 pages; 40,853 bytes.
+- slide_render_QA_during_BUILD: all 6 exported pages rendered at 120 DPI and visually inspected together. No visible clipping, overflow, malformed logo, off-canvas text or broken wrapping found. Teaching story reads: one workspace → project headquarters → setup hierarchy → client pages → daily maintenance → simple templates.
+- preview_download_wiring: lesson22.slidesFileId points to learner PDF 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t and uses the canonical PDF filename.
+- locally_verifiable_build_check: latest main re-fetched after implementation commit; lesson22 metadata and renderLesson22 are present; openClass dispatch includes Phase 1 / Module 6 / Class 4.
+- independent_QA_still_required: CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL.
+- live_external_gate: not claimed in BUILD.
+- status: LIVE BUT NEEDS QA.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA advances it.
