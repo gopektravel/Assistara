@@ -10,11 +10,12 @@ Drive source root: Assistara / 05 Assistara Academy / Course Material / Original
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current production target: P1 M5 C2 — Tools for Manual Market Research (p1m5c2)
-Build state: NOT BUILT — selected by the completed FINAL QA of p1m5c1. The next automated BUILD prompt may build this class.
-Previous class final-QA complete: P1 M5 C1 — AI Research & Creating a Customer Avatar (p1m5c1)
-Current source for next build: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 2: Tools for Manual Market Research
-Queue rule: p1m5c2 is the NEXT production target only; it was not built or modified during p1m5c1 FINAL QA.
+Current class under production/QA: P1 M5 C2 — Tools for Manual Market Research (p1m5c2)
+Build state: implementation + learner PDF slides created; independent/live QA still required.
+NEXT BUILD AFTER FINAL QA ADVANCES QUEUE: P1 M5 C3 — Organizing Your Findings (p1m5c3)
+Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5: Market Research & Data Organization → Lesson 2: Tools for Manual Market Research
+Next source after queue advance: Phase 1_ AI-Powered VA Guidebook.pdf → Module 5 → Lesson 3: Organizing Your Findings
+Queue rule: remain parked on p1m5c2 until its FINAL QA advances the manifest. Do not build p1m5c3 before that.
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
@@ -46,7 +47,7 @@ M4 Customer Support & Business Operations
 - p1m4c3 Travel Research & Booking — LIVE BUT NEEDS QA
 M5 Market Research & Data Organization
 - p1m5c1 AI Research & Creating a Customer Avatar — BUILT + FINAL LOCAL QA
-- p1m5c2 Tools for Manual Market Research — NOT BUILT
+- p1m5c2 Tools for Manual Market Research — LIVE BUT NEEDS QA
 - p1m5c3 Organizing Your Findings — NOT BUILT
 M6 Project Management for VAs
 - p1m6c1 Project & Business Management for VAs — NOT BUILT
@@ -230,3 +231,29 @@ Initialization note: direct production browser verification was blocked because 
 - next_NOT_BUILT_class: P1 M5 C2 — Tools for Manual Market Research (p1m5c2).
 - next_production_target_set: p1m5c2.
 - next_class_built_in_this_pass: no.
+
+
+### p1m5c2 build record — Tools for Manual Market Research — 2026-09-23
+- queue_advanced: no — manifest remains parked on p1m5c2 for independent QA.
+- source_read: yes — entire Lesson 2 read in Phase 1 guidebook from the Lesson 2 heading through the Lesson 3 boundary.
+- source_scope: four manual research sources only: Exploding Topics (rising trends across industries), AnswerThePublic (questions people ask online), Google Trends (search interest over time), and Social Media Comment Sections (customer opinions, struggles and desires).
+- written_lesson: yes — custom learner lesson built around matching the research need to the correct manual source; no Lesson 3 organization/report workflow pulled forward.
+- video_state: established 16:9 Coming Soon placeholder.
+- slides_created: yes — 5-page landscape 16:9 teaching deck; native Google Slides source ID 1AClvnntkrigr7WgssliCs4NV_Xh5hnVZmSGga3Ejzi0; canonical learner PDF Drive ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X.
+- slides_rendered_visual_QA: yes — final 5-page PDF rendered page-by-page and inspected; no clipping/overflow observed in the build pass.
+- slide_visual_reference: Google Workspace Navigation production PDF inspected as quality/art-direction reference; layouts were not copied mechanically.
+- additional_resources: none — source lesson is short and tool-selection focused; a separate workbook/checklist would duplicate the lesson rather than add useful execution value.
+- quick_check_created: yes — 4 source-grounded tool-selection questions, all-at-once established pattern with Check Answers, correct-answer locking, wrong-answer retry and Complete Class gate.
+- completion_progression_integration: yes — centralized markClassComplete("p1m5c2"); completed state unlocks/routes to p1m5c3 through existing sequential progression.
+- skills_integration: existing Market Research mapping already includes p1m5c1+p1m5c2+p1m5c3; no new skill invented.
+- responsive_implementation: yes — p1m5c2-specific manualResearchLesson components include mobile stacking rules; global Academy mobile rules remain in force.
+- implementation_commit: deb4a05ea0bd1286c61f266baeabb6b19494016c
+- slide_preview_download_tested: no — wired to Drive PDF ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X; deployed interaction QA pending.
+- quick_check_tested: partial — implementation/state logic inspected during build; independent runtime QA pending.
+- wrong_answer_retry_tested: partial — established state-machine pattern implemented; independent runtime QA pending.
+- completion_persistence_tested: no — live authenticated write/refresh QA pending.
+- next_unlock_tested: no — implementation wired to p1m5c3; independent runtime QA pending.
+- desktop_tested: no — deployed browser QA pending.
+- mobile_tested: no — responsive implementation inspected; deployed viewport QA pending.
+- live_production_tested: no — connected Vercel authorization limitation remains from prior passes unless independently resolved later.
+- known_issues: no known build-time content/slide defect after the final render. Independent content, visual, functional and final QA passes are still required before advancing to p1m5c3.
