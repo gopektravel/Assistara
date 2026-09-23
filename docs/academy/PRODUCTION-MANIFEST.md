@@ -1079,3 +1079,27 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA.
 - following_class_not_started: p2m1c1.
+
+
+### p1m6c4 INDEPENDENT VISUAL / SLIDE PDF QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- binding_slide_standard_reread: yes.
+- actual_learner_PDF_opened: yes — Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t.
+- initial_visual_inspection: all 6 actual PDF pages rendered at 120 DPI and inspected together as a contact sheet and page-by-page.
+- meaningful_visual_issue_found: although the BUILD/content-corrected deck was clean and unclipped, it was too template-like and text-led. Pages 2–6 reused the same left-copy/right-signal-box silhouette, with weak visual teaching for a software/project-workspace lesson. The signal boxes mostly restated copy rather than showing the system.
+- correction_pass_1: page 2 converted the right side into a compact client-dashboard system showing Projects / Notes / Files / Databases inside one flexible dashboard; page 3 gained a spatial Page → Sub-Pages → Databases hierarchy; page 4 gained a client-home stack for Task Tracker / Notes & Docs / Content Calendar / Resources & Files; page 5 gained a four-step maintenance sequence; page 6 gained three concrete simple-template starting points plus the clarity-over-complication rule.
+- correction_pass_1_render: all 6 pages exported and rendered again. This exposed two real layout defects introduced by the redesign: the ORGANIZE step on page 5 wrapped badly after a transform change, and the three template chips on page 6 had been accidentally enlarged by absolute transforms and overlapped the rule panel.
+- correction_pass_2: restored correct shape scaling for the page-5 ORGANIZE step and page-6 template chips; repositioned the page-6 rule panel so all elements have clean separation.
+- final_render: all 6 corrected pages exported and rendered again at 120 DPI; inspected as a contact sheet and individually.
+- final_visual_result: PASS — no visible clipping, overflow, off-canvas objects, broken wrapping, malformed Assistara logo, inconsistent Academy lockup or unreadable teaching text. Page silhouettes are now materially more distinct and the software concepts are taught spatially rather than through repeated signal boxes alone.
+- visual_language: PASS — real Assistara logo/Academy lockup retained; near-black / warm cream / Assistara yellow remain dominant with restrained powder blue, lavender and sage used for teaching states; deck remains concise and phone-viewer readable.
+- source_scope_preserved: yes — redesign changes presentation only; it does not invent unsupported Notion procedures or features.
+- corrected_source_deck: Google Slides ID 1WYRG0QfxLJQKalA3XFTKD55utKkAvJea8QcSAaEJo-8.
+- corrected_learner_PDF: replaced in place, preserving Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t; final size 43,969 bytes; modified 2026-09-23T21:24:09.588Z.
+- preview_download_wiring: verified on latest main — lesson22.slidesFileId remains 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t and renderLesson22 uses the canonical Notion lesson PDF filename, so the learner action continues to target the corrected in-place artifact.
+- live_browser_preview_click: not claimed; connected Vercel authorization still exposes zero teams/projects, so deployed iframe interaction remains a separate blocked live check.
+- status_remains: LIVE BUT NEEDS QA — FUNCTIONAL / DOUBLE-CHECK / FINAL QA remain.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA.
+- following_class_not_started: p2m1c1.
