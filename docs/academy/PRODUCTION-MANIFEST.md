@@ -292,3 +292,37 @@ Initialization note: direct production browser verification was blocked because 
 - live_preview_download_interaction_tested: no — remains a later functional/live QA gate.
 - slides_rendered_visual_QA: yes.
 - remaining_QA: functional/UX QA, double-check and FINAL QA. Queue remains parked on p1m5c2.
+
+
+### p1m5c2 independent functional / UX QA — 2026-09-23
+- queue_advanced: no
+- class_confirmed: P1 M5 C2 — Tools for Manual Market Research (p1m5c2).
+- correct_phase_module_class_title: passed by implementation inspection — Phase 1 / Module 5 / Class 2 of 3.
+- class_opening: renderLesson17 is mapped from the centralized p1m5c2 class route.
+- video_state: correct established Coming Soon placeholder; no fake playable video.
+- written_lesson_rendering: learner-facing lesson17 sections inspected; manualResearchLesson wrapper is scoped to this class.
+- learner_copy_issue_found_and_fixed: first Quick Check feedback still exposed internal wording ("The source describes..."). Replaced it with direct learner-facing teaching language.
+- slide_preview_wiring: passed by implementation inspection — lesson17.slidesFileId points to corrected PDF Drive ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X and openLessonSlidesPreview receives the canonical .pdf filename.
+- optional_resources: none implemented or required for this class; no optional resource link to test.
+- quick_check_logic: inspected end-to-end in renderLesson17 — 4 questions; Check Answers disabled until all 4 are selected; submitted state marks correct/wrong; correct submitted answers are locked; changing a wrong answer clears submitted state; Check Answers Again is available; all-correct state exposes Complete Class.
+- completion_logic: Complete Class awaits markClassComplete("p1m5c2"); production persistence uses academy_class_progress upsert and removes optimistic local completion if persistence fails.
+- persistence_schema_verified: academy_class_progress PRIMARY KEY is (user_id, class_key), matching the upsert conflict target.
+- reopening_completed_class: implementation renders the completed state from the centralized completed Set loaded from persisted academy_class_progress.
+- next_unlock_logic: centralized sequential isClassUnlocked requires p1m5c2 completion before p1m5c3 unlocks; Continue from completed p1m5c2 routes to Module 5 Class 3.
+- module_phase_progression: p1m5c2 completion produces 2/3 Module 5 classes completed; it does not complete Module 5, unlock Module 6 or advance the phase.
+- skills_integration: legitimate — Market Research requires p1m5c1+p1m5c2+p1m5c3; after p1m5c2 it remains Learning at 2/3 rather than falsely becoming Demonstrated/Verified.
+- test_portal_issue_found_and_fixed: preview states only reached p1m5c1. Added explicit "QA · P1 M5 C2 current" and "QA · P1 M5 C2 completed / C3 unlocked" states so current/completed progression can be exercised directly in the Test Student Portal.
+- academy_navigation_regression_static_QA: centralized Home/My Course/My Skills/Resources/Live Sessions/Certificate/Settings navigation and surrounding class/module/phase routing remain unchanged by this class-specific fix.
+- responsive_static_QA: manualSignalMap collapses from 2 columns to 1 below 700px; Academy consolidated mobile rules provide full-width lesson actions, 44–48px minimum interactive controls, single-column lesson actions, wrapped text, min-width protections and mobile slide modal sizing. No p1m5c2-specific fixed-width content remains in the rendered lesson.
+- live_production_tested: no.
+- exact_live_browser_limitation: Vercel connector again returned access denied for https://getassistara.com/academy/test-portal and states that the connected account must authorize the deployment's project/team. Therefore actual production class opening, iframe page loading/navigation, download response, button/tap interaction, authenticated completion write+refresh, reopening after refresh, and desktop/mobile viewport screenshots cannot honestly be marked passed.
+- slide_preview_download_tested: no — wiring verified; live interaction blocked by Vercel authorization.
+- quick_check_tested: partial — complete state machine inspected; live browser clicks blocked.
+- wrong_answer_retry_tested: partial — retry/locking logic inspected; live browser clicks blocked.
+- completion_persistence_tested: partial — write/read paths and DB key verified; real authenticated learner write+refresh blocked.
+- next_unlock_tested: partial — progression logic plus dedicated preview states verified statically; live browser interaction blocked.
+- desktop_tested: no — live production browser unavailable.
+- mobile_tested: no — live production browser unavailable; responsive implementation inspected.
+- functional_UX_fix_commit: a2b18996cc91a5002ed210921a79ace931b789fc
+- known_fixable_issues_after_QA: none found in the locally inspectable implementation.
+- remaining_QA: double-check and FINAL QA; queue remains parked on p1m5c2.
