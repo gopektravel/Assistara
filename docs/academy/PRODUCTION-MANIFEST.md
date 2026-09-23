@@ -326,3 +326,26 @@ Initialization note: direct production browser verification was blocked because 
 - functional_UX_fix_commit: a2b18996cc91a5002ed210921a79ace931b789fc
 - known_fixable_issues_after_QA: none found in the locally inspectable implementation.
 - remaining_QA: double-check and FINAL QA; queue remains parked on p1m5c2.
+
+
+### p1m5c2 double-check pass — 2026-09-23
+- queue_advanced: no
+- same_class_retained: yes — p1m5c2 Tools for Manual Market Research.
+- original_source_reread_again: yes — complete Lesson 2 independently reread through the Lesson 3 boundary.
+- source_scope_reconfirmed: exactly four manual research places/purposes: Exploding Topics = rising trends across industries; AnswerThePublic = questions people ask online; Google Trends = search interest over time; Social Media Comment Sections = real conversations for customer opinions, struggles and desires.
+- written_lesson_rechecked: yes — final learner lesson stays inside that intentionally short source scope; no additional workflow/example/framework was reintroduced.
+- actual_current_learner_PDF_downloaded: yes — Drive ID 159lWTpa9-h4K_Vg7_YqtXe2VS3L0Q75X, 90,055 bytes before this pass.
+- actual_current_PDF_rendered_and_inspected: yes — 5/5 pages rendered locally at 120 DPI and inspected as output rather than trusting the slide source.
+- meaningful_visual_issue_found: yes — page 5 used near-white heading/body/Academy-lockup text on the pale sage background, creating visibly poor contrast and an unfinished appearance. The lower signal block was also sitting unnecessarily low.
+- slide_fix: changed page-5 Academy lockup and main teaching copy to dark ink/muted dark text and moved the lower signal surface upward for a cleaner composition.
+- affected_PDF_reexported: yes.
+- affected_pages_rerendered_and_verified: yes — page 5 rerendered after correction; heading, body and Academy lockup now have strong readable contrast and the lower teaching surface fits cleanly inside the composition.
+- learner_PDF_replaced_in_place: yes — same Drive ID preserved; corrected size 90,045 bytes; modified 2026-09-23T16:30:54Z.
+- resources_rechecked: yes — no optional class-specific resource is implemented or required; no dead resource link.
+- quick_check_rechecked: yes — 4 source-aligned questions; selection/check/wrong-feedback/retry/pass logic remains intact after the prior functional fix.
+- completion_progression_rechecked: yes — centralized p1m5c2 completion, persistence path, p1m5c3 sequential unlock, 2/3 Module 5 state and Market Research 2/3 Learning state remain correct by implementation inspection.
+- responsive_UX_rechecked: yes by implementation inspection — manualSignalMap collapses to one column under 700px and consolidated Academy mobile rules protect lesson/actions/quiz/slide modal widths and tap sizes.
+- regression_scope: no unrelated implementation change made in this pass; only the retained p1m5c2 slide source/PDF and this manifest record changed.
+- live_browser_limitation_unchanged: actual production browser interaction remains blocked by the connected Vercel account lacking authorization to the deployment project/team; this pass does not falsely promote those gates.
+- known_fixable_issues_after_double_check: none found in the source, written lesson, final rendered PDF, resources, Quick Check, completion/progression or responsive implementation after the page-5 correction.
+- ready_for_FINAL_QA: yes, with live-production/browser gates still separately blocked.
