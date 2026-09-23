@@ -1133,3 +1133,28 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA.
 - following_class_not_started: p2m1c1.
+
+
+### p1m6c4 INDEPENDENT DOUBLE-CHECK — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- previous_BUILD_CONTENT_VISUAL_FUNCTIONAL_claims_trusted: no.
+- source_reread: yes — original Phase 1 Module 6 Lesson 4 reread in full through the Phase 1 completion message.
+- written_lesson: PASS — learner lesson preserves the source's one-workspace rationale, Page/Sub-Pages/Databases setup, recommended client pages, daily habits, simple-template guidance and clarity-over-complexity rule. No unsupported advanced Notion workflow or internal production terminology found.
+- quick_check: PASS — five questions are directly grounded in taught concepts; no ambiguous answer dependency on invented material.
+- resources: none; still appropriate because the source names template categories but does not supply a reusable template body/file.
+- completion_and_progression: PASS structurally — p1m6c4 completion uses centralized persistence, completes Phase 1 coursework, unlocks the Phase 1 Exam rather than Phase 2 directly, and the completion CTA returns to the Phase 1 view.
+- skills: PASS — Notion maps to p1m6c4 and completion yields Demonstrated, not Verified.
+- responsive_UX: PASS by static inspection — Notion grids collapse to one column at <=700px; tap targets and shared slide modal mobile rules remain intact.
+- meaningful_PDF_issue_found: yes. The actual learner-facing PDF Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t had the correct six designed pages but its stored page order was corrupted: Client Workspace Pages → Basic Setup → Templates → Why Notion → Daily Habits → Cover. This meant the canonical learner PDF opened in a pedagogically wrong sequence despite the Google Slides source deck itself being correctly ordered.
+- correction: independently exported the current corrected Google Slides source deck 1WYRG0QfxLJQKalA3XFTKD55utKkAvJea8QcSAaEJo-8, whose order is Cover → Why Notion → Basic Setup → Client Workspace Pages → Daily Habits → Simple Templates, and replaced the learner PDF in place while preserving Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t.
+- corrected_PDF_size: 43,969 bytes; modified 2026-09-23T21:43:16.525Z.
+- post_fix_render: corrected export rendered page-by-page and inspected as a six-page contact sheet. Page order is now correct and all six pages remain visually intact with no clipping, overflow, broken wrapping, malformed logo/Academy lockup or off-canvas objects.
+- preview_download_after_fix: no implementation ID change required because the canonical PDF was replaced in place; lesson22.slidesFileId still points to the corrected artifact.
+- live_external_limit: unchanged — connected Vercel authorization exposes no Assistara team/project, so deployed browser/device interaction remains NOT VERIFIED LIVE.
+- double_check_result: PASS after correcting the canonical PDF page order.
+- status_remains: LIVE BUT NEEDS QA.
+- same_class_ready_for: FINAL QA.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA.
+- following_class_not_started: p2m1c1.
