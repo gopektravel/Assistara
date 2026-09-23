@@ -145,3 +145,37 @@ Initialization note: direct production browser verification was blocked because 
 - preview_download_wiring_verified_in_code: yes — p1m5c1 slidesFileId still points to 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q and the preview filename ends in .pdf.
 - live_preview_download_interaction_tested: no — remains a later runtime/live QA gate.
 - slides_rendered_visual_QA: yes.
+
+
+### p1m5c1 independent functional / UX QA — 2026-09-23
+- queue_advanced: no
+- class_confirmed: P1 M5 C1 — AI Research & Creating a Customer Avatar (p1m5c1)
+- implementation_static_QA: completed against academy-dashboard.html.
+- correct_phase_module_class_title: passed by implementation inspection.
+- class_opening: route/openClass mapping confirmed for Phase 1 / Module 5 / Class 1.
+- video_state: correct Coming Soon placeholder; no fake playable video.
+- written_lesson_rendering: implementation present; learner copy and section structure inspected.
+- functional_issue_found_and_fixed: p1m5c1 reused travelFlow, calendarNotes and travelTools class names whose styling was scoped to other lesson wrappers, so the market-research workflow, prompt panel and tool list could render largely unstyled. Added a dedicated marketResearchLesson wrapper and responsive styles for those components.
+- copy_issue_fixed: corrected malformed Quick Check feedback sentence ("This lesson uses to look...").
+- mobile_responsive_fix: dedicated p1m5c1 mobile rules now collapse goal flow, tool list, competitor comparison and market-signal grid to one column; min-width protections added to prevent horizontal overflow.
+- slide_preview_wiring: confirmed p1m5c1 opens Drive preview for file ID 1Pt9lGNe8Vv4Anx5KDqNg-c7xh8PSvU0q and exposes the established direct-download control. Corrected PDF remains linked in place.
+- optional_resources: none added for this class; no optional resource link requires QA.
+- quick_check_logic_inspected: 5 questions; all must be answered before Check Answers enables; submission marks correct/wrong; correct submitted answers are locked; changing an incorrect answer clears submitted state; Check Answers Again is available; all-correct state exposes Complete Class.
+- completion_logic_inspected: Complete Class calls centralized markClassComplete("p1m5c1"); production path upserts academy_class_progress and rolls back local completion if the write fails.
+- persistence_schema_verified: academy_class_progress has PRIMARY KEY (user_id, class_key), matching the upsert conflict target.
+- next_unlock_logic_inspected: centralized sequential unlocking requires p1m5c1 completion before p1m5c2 unlocks; Continue after completion routes to Class 2, which remains intentionally unbuilt/Coming Soon.
+- module_phase_progression_inspected: completion changes Module 5 progress only; does not complete Module 5 or unlock Module 6 until later required classes are completed.
+- skills_integration_inspected: Market Research skill legitimately references p1m5c1+p1m5c2+p1m5c3; p1m5c1 alone moves it to Learning rather than falsely Demonstrated/Verified.
+- test_portal_QA_support_fixed: added explicit "QA · P1 M5 C1 current" and "QA · P1 M5 C1 completed / C2 unlocked" admin test states so this late-Phase-1 class and its unlock state can be reached directly without pretending later curriculum is built.
+- academy_navigation_regression_static_QA: existing Home / My Course / My Skills / Resources / Live Sessions / Certificate / Settings navigation and centralized class/module/phase gates remain intact; changes were scoped to p1m5c1 styling and test states.
+- live_production_tested: no.
+- live_browser_limitation: connected Vercel still denies access to https://getassistara.com/academy/test-portal because the connected account has not authorized the deployment's project/team. Therefore actual browser clicks/taps, iframe load event, direct download response, real Supabase user write+refresh persistence, viewport screenshots, and production navigation could not honestly be marked passed.
+- slide_preview_download_tested: no — wiring inspected; live interaction blocked by Vercel authorization.
+- quick_check_tested: partial — state machine inspected in code; live click interaction blocked.
+- wrong_answer_retry_tested: partial — logic inspected; live click interaction blocked.
+- completion_persistence_tested: partial — production write/read paths and DB constraint verified; real authenticated learner write+refresh not performed.
+- next_unlock_tested: partial — logic + dedicated test states inspected; live browser interaction blocked.
+- desktop_tested: no — live browser unavailable.
+- mobile_tested: no — live browser unavailable; responsive CSS inspected/fixed.
+- known_issues: no remaining reproducible implementation defect found in the available static/database environment. Live browser-dependent gates remain blocked specifically by Vercel project/team authorization.
+- functional_UX_fix_commits: ab919e61f9bd29dc29a811786b55c3e544bc8858, 5a9384636a447281ec18516642a399b24f02ef64
