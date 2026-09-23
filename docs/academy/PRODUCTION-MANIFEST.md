@@ -433,3 +433,25 @@ Initialization note: direct production browser verification was blocked because 
 - status: LIVE BUT NEEDS QA — content audit complete; visual/PDF, functional/UX, double-check and FINAL QA still pending.
 - current_class_remains: p1m5c3.
 - next_class_not_started: p1m6c1.
+
+
+### p1m5c3 INDEPENDENT VISUAL / SLIDE PDF QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M5 C3 — Organizing Your Findings (p1m5c3).
+- binding_standard_reread: yes.
+- actual_production_PDF_downloaded: yes — Drive ID 1eKtj3F9y9My2qLnegkpZDQCF2-fodEiB.
+- every_page_rendered_before_fix: yes — 6/6 pages rendered and inspected as the actual learner-facing PDF.
+- major_visual_problems_found: yes. The initial deck was materially below the binding standard: every page used essentially the same left-copy/right-text silhouette; teaching devices were mostly plain text; the Academy lockup used a fake typed square instead of the approved Assistara logo; several pages had weak/accidental empty space; and the deck read as a generic template rather than an Academy teaching artifact.
+- fixes_applied: replaced the fake square on all 6 pages with the approved real Assistara logo artwork plus consistent Manrope Assistara Academy lockup; redesigned the right-side teaching signals as high-contrast yellow/sage/dark product surfaces; varied their scale and placement page-by-page to break the repeated silhouette; tightened slide 3 to the source-faithful six-section organization idea; tightened slide 5 to key findings/messaging themes/tone; changed slide 6 to a clean/focused final-check synthesis; increased the dense section-map copy for phone readability.
+- final_visual_sequence: near-black cover with yellow research→report→action surface; cream report-home page with sage section map; full-yellow six-section page with dark synthesis strip; near-black section-content map with decisive yellow signal; cream AI-prompt page with dark transformation surface; sage final-check page with yellow next-module signal.
+- real_logo_verified: yes — approved Drive-backed Assistara logo source used on every page, consistent top-right lockup; no fake/rebuilt logo remains.
+- fonts: Manrope for learner copy and lockup; exported PDF embeds Manrope. 
+- every_page_rerendered_after_fix: yes — final corrected export produced 6/6 rendered pages and was inspected again at contact-sheet/full-page scale.
+- clipping_overflow_wrapping: no visible clipping, canvas escape, broken wrapping or overlapping text found in final render.
+- hierarchy_margins_contrast: passed after correction.
+- phone_readability: improved; dense section-map body increased to 16pt and major teaching signals remain large/high contrast.
+- learner_PDF_replaced_in_place: yes — same Drive ID preserved; corrected PDF size 40,674 bytes; modified 2026-09-23T17:11:42.322Z.
+- preview_download_wiring: verified in current Academy implementation — lesson18.slidesFileId remains 1eKtj3F9y9My2qLnegkpZDQCF2-fodEiB and filename remains Assistara_Academy_P1_M5_C3_Organizing_Your_Findings_Lesson_Slides.pdf.
+- live_preview_download_interaction: not tested — existing production Vercel authorization limitation remains and is not falsely marked passed.
+- status: LIVE BUT NEEDS QA — visual/PDF QA complete; functional/UX, double-check and FINAL QA still pending.
+- next_class_not_started: p1m6c1.
