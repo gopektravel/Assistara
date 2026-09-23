@@ -5,6 +5,7 @@ Repository: gopektravel/Assistara
 Branch: main
 Canonical implementation: assistara-local-v9/academy-dashboard.html
 Canonical production guide: docs/academy/LESSON-SYSTEM.md
+Binding visual lesson standard: docs/academy/VISUAL-LESSON-STANDARD.md
 Binding slide standard: assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md
 Drive source root: Assistara / 05 Assistara Academy / Course Material / Original Course Material
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
@@ -79,8 +80,20 @@ M2 Portfolio & Profile Optimization: p4m2c1 Personal Branding for Freelancers; p
 M3 Lead Generation & Outreach: p4m3c1 Content Creation for Client-Getting; p4m3c2 Create Your Lead Magnet; p4m3c3 List Building; p4m3c4 Cold Email & DM Strategies; p4m3c5 Submit Job Applications on Upwork — NOT BUILT
 M4 Winning Your First Client: p4m4c1 Prepare Before the Call; p4m4c2 VA Interview Questions & Winning Answers; p4m4c3 Create a Discovery Call Script; p4m4c4 Create a Proposal; p4m4c5 Build Unshakeable Confidence — NOT BUILT
 
+## Academy-wide visual remediation directive — 2026-09-24
+- Scope: ALL existing learner-facing classes, not only Phase 1 Module 5.
+- Priority: Phase 1 Module 5 is a known weak area and must be remediated, while the same standard is applied Academy-wide.
+- Binding authority: `docs/academy/VISUAL-LESSON-STANDARD.md`.
+- Production rule: every future build/QA pass must read the visual standard before authoring or approving a class.
+- Remediation rule: inspect existing classes in curriculum order against their approved source and rendered learner experience; replace text-heavy/repeated-card teaching with meaningful source-grounded visual teaching where it improves comprehension.
+- Do not redesign strong sections merely for variation. Preserve source fidelity, Quick Checks, persistence, progression and responsive behavior.
+- A class with correct content but weak visual teaching cannot be considered visually production-ready.
+
 ## QA tracking
 For every class update these gates independently:
+- visual_lesson_standard_read: yes/no
+- meaningful_visual_teaching_checked: yes/no
+- repeated_card_wall_of_text_checked: yes/no
 - source_read: yes/no
 - written_lesson: yes/no
 - slides_created: yes/no
