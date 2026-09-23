@@ -12,7 +12,7 @@ Drive production root: Assistara / 05 Assistara Academy / Course Material / Prod
 
 ## Queue position
 Current class under production/QA: P1 M6 C3 — Client Project Management with Trello (p1m6c3)
-Build state: NOT BUILT — selected as the next production target after p1m6c2 passed FINAL LOCAL QA.
+Build state: implementation + learner PDF slides created; independent CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
 NEXT BUILD: P1 M6 C3 — Client Project Management with Trello (p1m6c3)
 Current source: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6: Project & Business Management → Lesson 3: Client Project Management Trello
 Previous completed queue class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) — BUILT + FINAL LOCAL QA.
@@ -53,7 +53,7 @@ M5 Market Research & Data Organization
 M6 Project Management for VAs
 - p1m6c1 Project & Business Management for VAs — BUILT + FINAL LOCAL QA
 - p1m6c2 Client Project Management with ClickUp — BUILT + FINAL LOCAL QA
-- p1m6c3 Client Project Management with Trello — NOT BUILT
+- p1m6c3 Client Project Management with Trello — LIVE BUT NEEDS QA
 - p1m6c4 Client Project Management with Notion — NOT BUILT
 
 ### Phase 2 — Creative & Digital Marketing Skills
@@ -866,3 +866,33 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_unchanged: p1m6c3.
 - next_build_unchanged: p1m6c3.
 - p1m6c3_built_in_this_pass: no.
+
+
+### p1m6c3 BUILD — 2026-09-24
+- queue_advanced: no — p1m6c3 remains the current production/QA class until FINAL QA.
+- class_built: P1 M6 C3 — Client Project Management with Trello (p1m6c3) only.
+- next_class_not_started: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
+- source_read_in_full: Phase 1_ AI-Powered VA Guidebook.pdf → Module 6 → Lesson 3: Client Project Management Trello, through the Lesson 4 boundary.
+- source_teaching_scope: visual progress; Trello boards/lists/cards; Board→Lists→Cards / Project→Stages→Tasks; To-Do/In Progress/Completed/Resources lists; daily card movement/checklists/attachments/due dates; Calendar View, Due Date Reminders and Google Drive/Dropbox Power-Ups; clean/simple-board takeaway.
+- standards_inspected_before_build: docs/academy/LESSON-SYSTEM.md; docs/academy/VISUAL-LESSON-STANDARD.md; assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md; current Module 6 implementation; established Module 6 source deck with approved real Assistara logo/Academy lockup.
+- learner_implementation: lesson21 added to assistara-local-v9/academy-dashboard.html and wired to Phase 1 / Module 6 / Class 3.
+- written_lesson: five source-grounded teaching sections — visual progress; basic Trello structure; must-have client lists; daily Trello habits; Power-Ups.
+- video: established 16:9 Lesson video coming soon state; no fake playable video.
+- learner_visuals: Trello-specific moving-card board, Board/List/Card structure, four-list board, daily MOVE/CHECK/ATTACH/DATE routine, and Power-Up treatment.
+- quick_check: 5 source-grounded questions; all required before Check Answers; correct/wrong feedback; correct answers lock; wrong answers retryable; 5/5 required before Complete Class.
+- completion: centralized markClassComplete(p1m6c3); completed state unlocks Client Project Management with Notion as Coming soon and returns learner to Module 6.
+- progression: sequential architecture means p1m6c3 completion unlocks p1m6c4 only; Module 6 and Phase 1 remain incomplete.
+- skills: existing Trello skill mapping already points to p1m6c3; no new skill invented.
+- resources: none created — source does not provide a standalone reusable template/file body.
+- QA_preview_states: p1m6c3qa and p1m6c3done added; done state includes p1m6c1+p1m6c2+p1m6c3 and unlocks C4 without completing it.
+- implementation_commits: 3fd2b1ac16993546c8bca30fee67fa95dc957c2f; 3a418e8f02687c178f65e2efc5ca15e540840ecd.
+- slide_source: Google Slides ID 1QXG467gcnQKOZm3UyRIUyGhvWR6CmC3M3n9QZTY1maQ, stored in Module 6 Production Course Material folder.
+- canonical_learner_PDF: Drive ID 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy; Assistara_Academy_P1_M6_C3_Client_Project_Management_with_Trello_Lesson_Slides.pdf; 6 pages; landscape 16:9; 40,066 bytes.
+- slide_story: cover; why visual Trello tracking; Board→Lists→Cards; must-have client lists; daily card habits; useful Power-Ups.
+- rendered_visual_check: all 6 PDF pages rendered at 120 DPI and inspected together. No visible clipping, overflow, malformed logo/Academy lockup or off-canvas object found in the BUILD pass. Independent VISUAL QA must still challenge composition quality and template similarity.
+- responsive_build: Trello board, structure, list, routine and Power-Up layouts collapse to one column at <=700px; moving-board arrows rotate vertically; slide action >=44px and answer targets >=48px.
+- locally_testable_result: implementation wiring, source fidelity, PDF render, sequential completion path and QA preview-state logic checked at BUILD level.
+- live_external_limit: actual deployed Test Student Portal/browser/device behavior is not claimed here; independent FUNCTIONAL QA must verify what access permits.
+- status: LIVE BUT NEEDS QA.
+- current_class_remains: p1m6c3.
+- following_class_not_built: p1m6c4.
