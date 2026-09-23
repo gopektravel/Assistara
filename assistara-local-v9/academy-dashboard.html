@@ -159,6 +159,55 @@
   .lessonSection{padding-left:12px;padding-right:12px}
   .lessonResourceArrow{flex:0 0 auto}
 }
+
+/* Email Management mobile composition: preserve scale, reorganize content */
+@media(max-width:700px){
+  .lessonShell{max-width:none;width:100%}
+  .lessonHead{padding:24px 20px!important;border-radius:24px}
+  .lessonHead h1{font-size:40px;line-height:1.02}
+  .lessonHead .lead{font-size:16px;line-height:1.6}
+  .lessonVideo{border-radius:22px;padding:24px;min-height:210px}
+  .lessonVideo .play{width:68px;height:68px}
+  .lessonActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 0 6px}
+  .lessonActions>span,.lessonActions>a,.lessonActions>button{min-height:48px;width:100%;display:flex!important;align-items:center;justify-content:center;text-align:center;white-space:normal}
+  .lessonSection{padding:34px 0}
+  .lessonSection h2{font-size:28px;line-height:1.08;margin-bottom:16px}
+  .lessonSection p{font-size:16px;line-height:1.68}
+  .emailTriage{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:4px 2px 14px;margin-left:-2px;margin-right:-2px}
+  .emailTriage .emailStep{flex:0 0 84%;min-height:145px;padding:20px;scroll-snap-align:start}
+  .emailTriage .emailArrow{display:none}
+  .emailLabels{grid-template-columns:1fr 1fr;gap:12px}
+  .emailLabel{min-height:112px;padding:18px}
+  .emailCompare{grid-template-columns:1fr 1fr;gap:10px}
+  .emailChoice{padding:18px 15px;min-height:150px}
+  .emailAnatomy{padding:8px 18px;margin-top:20px}
+  .emailLine{grid-template-columns:1fr;gap:5px;padding:16px 0}
+  .emailLine b{font-size:11px}
+  .emailRouting{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding-bottom:12px}
+  .emailRoute{flex:0 0 78%;min-height:150px;padding:20px;scroll-snap-align:start}
+  .emailFollow{padding:24px 20px;border-radius:22px}
+  .emailInbox{border-radius:18px;overflow:visible;background:transparent;border:0;display:grid;gap:10px}
+  .emailInboxRow{grid-template-columns:1fr auto;grid-template-areas:"sender tag" "subject subject";gap:7px 10px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
+  .emailInboxRow.hot{background:#fff8cf}
+  .emailInboxRow>strong:first-child{grid-area:sender}
+  .emailInboxRow>small{grid-area:subject;font-size:13px;line-height:1.45}
+  .emailInboxRow>*:last-child{grid-area:tag;justify-self:end}
+  .quiz{gap:16px}
+  .question{padding:20px 17px;border-radius:18px}
+  .question h3{font-size:16px;line-height:1.5}
+  .answer{padding:15px 14px;min-height:50px;font-size:14px;line-height:1.4}
+  .quizSubmit{padding:20px;border-radius:20px}
+  .completeMoment{padding:24px 20px;border-radius:22px}
+}
+@media(max-width:390px){
+  .lessonActions{grid-template-columns:1fr}
+  .lessonHead h1{font-size:38px}
+  .emailLabels{grid-template-columns:1fr 1fr}
+  .emailCompare{grid-template-columns:1fr}
+  .emailChoice{min-height:0}
+  .emailTriage .emailStep{flex-basis:88%}
+  .emailRoute{flex-basis:84%}
+}
 </style></head><body>
 <div id="loading" class="loading">Loading your Academy...</div>
 <div id="app" class="app" hidden><aside class="side"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><nav class="nav" id="desktopNav"></nav><div class="sidefoot"><div id="profile" class="profile"></div><button class="logout" id="logout">← Log out</button></div></aside>
