@@ -581,3 +581,24 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — visual/PDF, functional/UX, double-check and FINAL QA still remain.
 - current_class_remains: p1m6c1.
 - next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
+
+
+### p1m6c1 INDEPENDENT VISUAL / SLIDE PDF QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C1 — Project & Business Management for VAs (p1m6c1).
+- binding_standard_reread: yes — assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md.
+- actual_learner_PDF_opened: yes — Drive ID 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ, not merely the Slides source.
+- pre_fix_render: all 6 pages rendered at 120 DPI and visually inspected as a contact sheet and page-by-page.
+- problems_found: deck was too template-like, with the same left-copy/right-rectangle silhouette repeated across all six pages; teaching surfaces were mostly text boxes rather than strong visual teaching; page 3’s vertical signal cramped “CONSISTENT SYSTEM”; page 4 still used pre-content-QA headline “Own the work before the client has to ask”; page 4 signal duplicated the prose rather than synthesizing it; pages 5–6 had weak vertical text-stack signals.
+- visual_fixes: page 3 signal redesigned into a compact big-project→smaller-tasks + tool strip; page 4 headline synchronized to the approved content-QA wording “Track the work. Communicate proactively.” and signal changed to the four responsibility verbs; page 5 signal simplified into a readable horizontal Plan→Execute→Review + Adjust sequence; page 6 signal reframed as bigger-goal→think-ahead/collaborate synthesis. These changes improve phone readability and teaching hierarchy without adding untaught content.
+- correction_iteration: first correction render exposed literal backslash-n characters caused by connector text insertion. Those were immediately corrected with real line breaks and the deck was exported again.
+- final_render: corrected PDF exported and all 6 pages rendered again at 120 DPI; every page visually inspected after the correction.
+- final_visual_result: pass for clipping/overflow/wrapping/margins/logo/lockup/contrast/readability. Real approved Assistara logo remains on all pages; Academy lockup is consistent; no object is visibly outside the canvas; no broken glyphs or literal escape sequences remain.
+- visual_quality_note: deck intentionally remains concise and editorial rather than adding unsupported screenshots/examples; final pages use dark, cream, yellow and sage foundations with distinct teaching signals while staying within the source.
+- corrected_source: Google Slides ID 1Wdh9MlPzEY_bi9kuzgtHBai7FENak-WkLh9XWnj5EYM.
+- corrected_learner_PDF: replaced in place, preserving Drive ID 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ; final size 40,507 bytes; modified 2026-09-23T18:12:05.958Z.
+- preview_download_wiring: verified in latest Academy implementation — lesson19.slidesFileId remains 19vSJh2OU36H93NTnT_tgbuC4e6YpbwrQ, so preview/download continues to point at the corrected in-place artifact and canonical PDF filename.
+- live_browser_preview_click: not claimed; separate functional/live QA remains pending.
+- status_remains: LIVE BUT NEEDS QA — functional/UX, double-check and FINAL QA still remain.
+- current_class_remains: p1m6c1.
+- next_class_not_started: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2).
