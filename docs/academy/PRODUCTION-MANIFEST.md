@@ -1324,3 +1324,27 @@ Initialization note: direct production browser verification was blocked because 
 - status: LIVE BUT NEEDS QA.
 - current_and_NEXT_BUILD_pointer_remains: p2m1c1 until FINAL QA.
 - next_class_not_started: p2m1c2 Create Your Profile Picture.
+
+
+### p2m1c1 INDEPENDENT CONTENT QA — 2026-09-24
+- queue_advanced: no.
+- class: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1) only.
+- previous_BUILD_claims_trusted: no.
+- original_source_reread: yes — Phase 2 AI-Powered VA Guidebook, Module 1, Canva Navigation: Color Palette, elements & font, read again in full.
+- actual_learner_implementation_inspected: yes — latest main lesson23 metadata, written lesson, Quick Check and completion copy inspected.
+- source_coverage_before_fix: broadly strong, but two useful source items had been omitted from the learner-facing written lesson.
+- issue_1_fixed: restored the guidebook's concrete service-direction example exactly in learner context: “I am a VA. I offer Admin Support and Executive Assistance.” This now sits before the separate tagline prompt, preserving the source's service → target client/vibe → tagline teaching sequence.
+- issue_2_fixed: restored the source-provided Canva keyboard-shortcuts guide as a learner-facing external reference in the Canva dashboard section, using the exact source URL and a safe new-tab link.
+- implementation_fix_commit: d92b7adfa177942d481b263578862b79c4f0cba8.
+- post_fix_reread: yes — latest main re-fetched; both restored source items are present in renderLesson23.
+- source_fidelity_after_fix: PASS — lesson now covers service direction/changeability; source service example; target client + brand vibe; tagline prompt; Google Docs output note; ColorHunt and tone examples; screenshot/note colors plus Windows/Mac shortcuts; Canva Templates/Elements/Text plus source keyboard-shortcuts reference; readable-font guidance and two-font pairing; matching elements to brand identity; visual harmony; simplicity/consistency; template duplication; desktop/mobile preview.
+- invented_material_audit: PASS — visual examples and labels are explanatory presentation only; no unsupported workflow is assessed as source fact.
+- teaching_sequence: PASS — branding direction → palette → Canva navigation → fonts → elements/harmony → final consistency/reuse/preview tips follows the guidebook.
+- difficulty: PASS — beginner-level recognition and application; no unsupported advanced Canva setup.
+- internal_terminology: PASS — no guidebook/production/QA terminology is exposed to learners.
+- quick_check: PASS — five questions are source-grounded, unambiguous and assess taught material only. No answer depends on decorative examples.
+- resources: no separate downloadable resource added; the only source-supplied external reference is now surfaced inline where it is taught.
+- slides_content_scope: current canonical deck remains aligned to the same six teaching stages; visual QA remains a separate gate.
+- status_remains: LIVE BUT NEEDS QA.
+- current_and_NEXT_BUILD_pointer_remains: p2m1c1 until FINAL QA.
+- next_class_not_started: p2m1c2 Create Your Profile Picture.
