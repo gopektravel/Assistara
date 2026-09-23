@@ -1223,3 +1223,31 @@ Initialization note: direct production browser verification was blocked because 
 - current_class_remains: p1m6c4.
 - next_build_pointer_remains: p1m6c4 until FINAL QA.
 - following_class_not_started: p2m1c1.
+
+
+### p1m6c4 INDEPENDENT FUNCTIONAL / UX QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) only.
+- latest_manifest_and_main_reread: yes.
+- class_identity_opening: PASS structurally — Phase 1 / Module 6 / Class 4 of 4; openClass dispatches p1m6c4 through renderLesson22 only after centralized sequential class/module gating.
+- video_state: PASS — established non-playable 16:9 “Lesson video coming soon” state; no fake playable video.
+- written_lesson_rendering: PASS by implementation inspection — five Notion teaching sections plus Quick Check/completion state render through the class-specific lesson shell.
+- slide_preview_download: PASS structurally — lesson22 points to canonical PDF Drive ID 1jVfSAgjOOZd-F5dDCEXdHlKRiVevyl1t; shared preview helper supplies loading state, Drive iframe, canonical download link, close/backdrop/Escape behavior and scroll restoration.
+- optional_resources: none; no resource interaction exists to break.
+- quick_check_behavior: PASS by code-path inspection — five questions; all answers required before Check Answers enables; submitted answers receive correct/wrong state plus feedback; correct submitted answers lock; wrong answers can be changed; changing a wrong answer clears submitted state; Check Answers Again path exists; all 5 correct required before Complete Class.
+- completion_persistence: PASS structurally — markClassComplete(p1m6c4) uses centralized academy_class_progress persistence; Supabase schema independently rechecked: user_id uuid NOT NULL, class_key text NOT NULL, completed boolean NOT NULL, completed_at timestamptz, updated_at timestamptz. loadProgress reloads completed=true keys for authenticated learners.
+- completed_reopen: PASS structurally — completed render clears transient lesson22 quiz state and shows the saved completion state; shared completed-test review can reconstruct the five correct answers for Module 6 completed classes.
+- phase_progression: PASS — completing p1m6c4 finishes Module 6 / all Phase 1 coursework and makes the Phase 1 Exam the next gate; it does not directly unlock Phase 2, which still requires the Phase 1 Exam pass.
+- skills: PASS — Notion skill maps legitimately to p1m6c4; completing the class moves it to Demonstrated, not Verified, unless a separate optional Skill Challenge is passed.
+- responsive_static_QA: PASS — Notion hierarchy/pages/habits collapse to one column <=700px; shared Notion window collapses from sidebar+main to one column; snapshot cards stack; answer targets are >=48px and slide action >=44px; no class-specific fixed-width horizontal-overflow defect found.
+- regression_1_found_and_fixed: the Test Student Portal had no p1m6c4qa / p1m6c4done states, so the current class and completed/Phase-1-ready state could not be isolated for QA. Added both states and the required prerequisite completion chain. p1m6c4qa now completes Modules 1–5 plus p1m6c1–c3; p1m6c4done additionally completes p1m6c4.
+- regression_2_found_and_fixed: the actual learner Notion dashboard still displayed stale unsupported copy “One place for the work, conversations and files,” despite the latest content-audit record saying it had been corrected. Replaced it with source-aligned “One place for projects, notes, files and tracking.”
+- implementation_fix_commit: a45f689548c3578ecee2700a7d62d570cbbf86d7.
+- post_fix_retest: latest main re-fetched. Corrected dashboard copy is present; p1m6c4qa and p1m6c4done are both present in previewState prerequisite logic and the Test Student Portal dropdown; p1m6c4done explicitly adds p1m6c4.
+- Academy_navigation_surrounding_routes: PASS by static regression inspection — prior lesson dispatches remain intact; p1m6c4 uses only Module 6/Class 4 dispatch and shared navigation remains centralized.
+- live_external_limit: connected Vercel authorization still returns zero teams/projects. Therefore actual deployed Test Student Portal clicks, Drive iframe page navigation/download response, authenticated answer clicking, wrong-answer/retry/pass, Complete Class→refresh→reopen persistence, and physical desktop/mobile overflow/tap behavior remain NOT VERIFIED LIVE.
+- functional_QA_result: PASS for all locally/verifiably inspectable paths after the two fixes above; blocked live checks remain explicitly NOT VERIFIED.
+- status_remains: LIVE BUT NEEDS QA — DOUBLE-CHECK and FINAL QA remain.
+- current_class_remains: p1m6c4.
+- next_build_pointer_remains: p1m6c4 until FINAL QA advances the manifest.
+- following_class_not_started: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1).
