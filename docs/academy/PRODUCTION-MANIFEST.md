@@ -947,3 +947,33 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — FUNCTIONAL / DOUBLE-CHECK / FINAL QA remain.
 - current_class_remains: p1m6c3.
 - next_class_not_started: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
+
+
+### p1m6c3 INDEPENDENT FUNCTIONAL / UX QA — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C3 — Client Project Management with Trello (p1m6c3) only.
+- latest_manifest_and_main_reread: yes.
+- class_identity_opening: PASS structurally — Phase 1 / Module 6 / Class 3 of 4; openClass dispatches p1m6c3 only when centralized sequential gating allows it.
+- video_state: PASS — established 16:9 “Lesson video coming soon” state; no fake playable video.
+- written_lesson: PASS by actual implementation inspection — Key Shift/Why, Board→Lists→Cards structure, must-have lists, daily habits and Power-Ups all render.
+- slides: PASS structurally — lesson21 points to corrected learner PDF Drive ID 1W0DBIjxBSV0mDpJje69bkd8146jJTsJy and canonical Trello filename. Shared preview helper supplies loading state, Drive preview iframe, download action, close button, backdrop close, Escape close and scroll restoration. Final PDF itself was rendered/visually inspected in the preceding independent visual gate.
+- optional_resources: none; no resource interaction exists to break.
+- quick_check: PASS by code-path inspection — five questions; Check Answers disabled until all five answered; submitted answers receive correct/wrong styling and explanatory feedback; correct submitted answers lock; wrong answers can be changed; changing an answer after a failed submission resets submitted state; Check Answers Again path exists; Complete Class appears only after 5/5.
+- completion_persistence: PASS structurally — centralized markClassComplete(p1m6c3) upserts academy_class_progress on user_id,class_key; independent Supabase check confirms the table retains primary-key and user foreign-key constraints; loadProgress reloads completed=true class keys after authenticated refresh.
+- completed_reopen: PASS — completed render clears transient lesson21 selection/submission state before calculating quiz state.
+- reproduced_navigation_issue: completed-state “Continue to Module 6” previously called renderCourse() without explicitly restoring current.module=5. In the normal direct path current.module is already 5, but the button contract was fragile and inconsistent with the hardened ClickUp completion path; a stale/current-state mutation could render the wrong course level.
+- navigation_fix: completed Trello Continue now explicitly sets current.module=5 before renderCourse().
+- fix_commit: f37e9f3ddb01d47b9750cb72cc365fccc98333d7.
+- fix_retest: latest main re-fetched; completed Continue handler now deterministically returns to Module 6 while preserving the completed p1m6c3 state.
+- next_class_unlock: PASS — completion of p1m6c3 unlocks p1m6c4 only. Completion panel names Client Project Management with Notion and labels it Coming soon; no unbuilt C4 content is opened automatically.
+- module_phase_progression: PASS — p1m6c3 does not complete Module 6 because p1m6c4 remains incomplete; Phase 1 exam remains locked.
+- skills: PASS — Trello mapping is exactly [p1m6c3] in Phase 1, so completion legitimately moves Trello from Available to Demonstrated; it is not marked Verified without a Skill Challenge.
+- QA_preview_states: PASS — p1m6c3qa completes Modules 1–5 plus p1m6c1/p1m6c2; p1m6c3done additionally completes p1m6c3, making C4 the sequential current class.
+- Academy_navigation_surrounding_pages: PASS by static regression inspection — shared navigation/breadcrumb/class dispatch remain centralized; earlier built lesson routes remain present; p1m6c3 adds only the Module 6/Class 3 route.
+- responsive_static_QA: PASS — .trelloLesson uses min-width:0; board arrows rotate and board becomes single-column at <=700px; structure/lists/routine/power-up layouts collapse to one column; slide action target >=44px and answer buttons >=48px. No Trello-specific fixed width found that should force horizontal overflow.
+- responsive_slide_experience: uses the shared responsive modal/iframe path and corrected landscape 16:9 PDF.
+- live_external_limit: connected Vercel authorization still returns zero teams/projects. Therefore actual deployed Test Student Portal clicks, iframe page navigation/download HTTP response, real answer clicking, authenticated Complete→refresh→reopen persistence, surrounding-page browser navigation, and physical desktop/mobile overflow/tap behavior remain NOT VERIFIED LIVE.
+- functional_QA_result: PASS for locally/verifiably inspectable paths after the deterministic completed-navigation fix.
+- status_remains: LIVE BUT NEEDS QA — DOUBLE-CHECK and FINAL QA remain.
+- current_class_remains: p1m6c3.
+- next_class_not_started: P1 M6 C4 — Client Project Management with Notion (p1m6c4).
