@@ -789,3 +789,32 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — double-check and FINAL QA remain.
 - current_class_remains: p1m6c2.
 - next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
+
+
+### p1m6c2 INDEPENDENT DOUBLE-CHECK — 2026-09-24
+- queue_advanced: no.
+- class: P1 M6 C2 — Client Project Management with ClickUp (p1m6c2) only.
+- previous_BUILD_CONTENT_VISUAL_FUNCTIONAL_claims_trusted: no.
+- source_reread: yes — original Phase 1 Module 6 Lesson 2 read again in full through Lesson 3 boundary.
+- actual_current_outputs_inspected: latest main learner implementation, actual current Drive learner PDF, Google Slides source and full slide text.
+- meaningful_issue_found: the visual-QA simplification made slide 4 and slide 5 too terse and dropped useful source detail from the canonical teaching PDF. Slide 4 no longer showed due dates/assignees, resource contents, the condition on Content Calendar, Progress Tracker examples, or the source's trust-at-start takeaway. Slide 5 no longer explicitly taught the morning check or the source's “comments instead of separate emails” and “assigned tasks” details in body copy.
+- correction_slide_4: restored Task List — due dates + assignees; Resource Folder — links, files + important documents; Content Calendar — if managing social media or launches; Progress Tracker — optional: % done + status updates; and “Set these up at the start to build trust fast with new clients.”
+- correction_slide_5: restored “Check your tasks every morning,” all three statuses, “Leave comments for updates instead of separate emails,” and “Upload deliverables directly to assigned tasks.”
+- source_fidelity_after_fix: passed — written lesson and canonical PDF now both preserve the guidebook's meaningful conditions/examples rather than relying on signal labels alone.
+- affected_pages_rendered_after_fix: yes — corrected PDF exported; pages 4 and 5 rendered at 120 DPI and visually inspected. No clipping, overflow or broken wrapping found after restoring detail.
+- final_PDF_replaced_in_place: yes — learner PDF Drive ID remains 1C_-uTyJKnM-_cS_Ehsbw4lTmLhl_3HVa; final size 40,449 bytes; modified 2026-09-23T19:30:53.605Z.
+- remaining_slides_rechecked: pages 1–3 and 6 still match source scope and did not require correction.
+- written_lesson: passed — all source concepts remain present; no internal source/production terminology exposed.
+- resources: none; still appropriate.
+- quick_check: passed — five source-grounded questions; no mismatch introduced by slide corrections.
+- completion: passed structurally after prior stale-quiz-state fix; completed render clears transient C2 quiz state while incomplete retry flow remains intact.
+- progression: passed — p1m6c2 unlocks p1m6c3 only; Module 6 and Phase 1 remain incomplete.
+- skills: passed — ClickUp remains a legitimate Learning milestone, not falsely Demonstrated/Verified.
+- responsive_UX: class-specific static responsive rules rechecked; no new fixed-width regression introduced. Corrected PDF remains landscape 16:9 and uses the shared responsive preview path.
+- preview_download: lesson20 still points to the same corrected in-place PDF ID and canonical filename.
+- external_live_limit: unchanged — actual deployed browser/device interactions remain NOT VERIFIED because connected Vercel authorization exposes no Assistara team/project.
+- double_check_result: PASS after the slide 4/5 source-detail restoration.
+- status_remains: LIVE BUT NEEDS QA.
+- same_class_ready_for: FINAL QA.
+- current_class_remains: p1m6c2.
+- next_class_not_started: P1 M6 C3 — Client Project Management with Trello (p1m6c3).
