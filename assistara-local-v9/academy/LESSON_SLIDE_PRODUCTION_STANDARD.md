@@ -39,6 +39,10 @@ The production reference is **Phase 1 → Module 3 → Class 1 — Google Worksp
 ### Composition language
 - Begin each page with a clear hierarchy: small context label, outcome-led headline and only the minimum supporting sentence needed.
 - Build the remainder around the strongest teaching form for that idea.
+- Treat the brand system as a visual language, never as a fixed slide template. Keep the logo lockup, type system, palette, spacing discipline and interaction-style details consistent while redesigning the actual composition for every teaching idea.
+- Every page in a deck must have a visibly distinct composition. Do not repeat the same comparison cards, orbit, step grid, horizontal flow, recap panel or cover construction with different words.
+- Cover pages must share brand recognition without sharing one master composition. The lesson topic should determine the cover device: a message thread, schedule, decision system, workload lane, diagnostic target, service landscape or another relevant visual.
+- Across a course sequence, audit contact sheets side by side. If two pages have the same silhouette at thumbnail size, redesign one of them unless the repetition carries instructional meaning.
 - Use whitespace deliberately. Empty space is structure; do not fill it with decorative icons, stock imagery or arbitrary shapes.
 - Create visual rhythm across the deck. Alternate light and dark foundations, dense and open compositions, and diagram/interface/example pages when the learning story supports it.
 - Use asymmetry deliberately: a large headline may sit opposite a tilted product panel; a UI surface may break out of a gradient field; a small status card may float above a larger system view.
