@@ -1348,3 +1348,22 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA.
 - current_and_NEXT_BUILD_pointer_remains: p2m1c1 until FINAL QA.
 - next_class_not_started: p2m1c2 Create Your Profile Picture.
+
+
+### p2m1c1 INDEPENDENT VISUAL / SLIDE PDF QA — 2026-09-24
+- queue_advanced: no.
+- class: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1) only.
+- binding_slide_standard_reread: yes.
+- actual_final_learner_PDF_opened: yes — Drive ID 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi; initial 6-page PDF size 40,459 bytes.
+- initial_render: all 6 actual learner-facing PDF pages rendered at 120 DPI and visually inspected page-by-page.
+- initial_visual_findings: no clipping, overflow, malformed Assistara logo or unsafe margins; however the deck was visually too dependent on the same “paragraph + plain text signal box” composition. Several right-side panels repeated words instead of visually teaching the idea, especially Canva navigation, font/element pairing and final consistency. The deck therefore fell short of the binding requirement to choose the strongest visual form and avoid template-like repetition.
+- correction_pass: preserved source-faithful body copy and rebuilt the six teaching signals as more diagrammatic visual summaries: VA brand funnel (service→tagline→visual system), numbered branding inputs→tagline, tone/palette swatch concept, simplified Canva sidebar, header/body typography + matching element system, and final brand/responsive checklist.
+- correction_render: corrected source deck exported to PDF; all 6 pages rendered again and visually inspected. The revised panels fit their inherited geometry without clipping or overflow. Pages 3 and 4 were specifically checked after introducing palette/sidebar symbols; symbols render inside their panels and text remains readable.
+- final_visual_result: PASS for clipping, overflow, wrapping, alignment, safe margins, contrast, logo/Academy lockup consistency and phone-viewer readability. Visual teaching is materially stronger and less repetitive than the initial artifact while staying within the source's actual Canva concepts rather than inventing product UI claims.
+- corrected_source: Google Slides ID 1QQyLTzvXIZ61hulbNBqEVXqm31WL4tsZboRQSfPQw2Y.
+- corrected_learner_PDF: replaced in place, preserving Drive ID 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi; final size 75,184 bytes; modified 2026-09-23T23:23:17.217Z.
+- preview_download_wiring: verified on latest implementation — lesson23.slidesFileId points to 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi and the shared Lesson Slides preview/download uses the canonical p2m1c1 learner PDF.
+- live_browser_preview_click: not claimed in this visual gate.
+- status_remains: LIVE BUT NEEDS QA — FUNCTIONAL / DOUBLE-CHECK / FINAL QA remain.
+- current_and_NEXT_BUILD_pointer_remains: p2m1c1 until FINAL QA.
+- next_class_not_started: p2m1c2 Create Your Profile Picture.
