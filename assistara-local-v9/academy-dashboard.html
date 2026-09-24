@@ -585,6 +585,29 @@
  #resources .resource .btn,#resources .resource .status,#settings .resource .btn,#settings .resource .pill{grid-column:2;justify-self:start;margin-top:3px}
 }
 
+
+/* Mobile dashboard density fix — 2026-09-24 */
+@media(max-width:850px){
+  #home .dashboardGrid{gap:10px!important;margin-bottom:0!important}
+  #home #continueCard{padding:14px 16px!important;border-radius:18px!important}
+  #home #continueCard .eyebrow{font-size:9px!important}
+  #home #continueCard h2{font-size:18px!important;margin:5px 0 2px!important}
+  #home #continueCard p{font-size:11px!important;line-height:1.35!important;margin:4px 0!important}
+  #home #continueCard .btn{min-height:40px!important;padding:9px 15px!important;margin-top:8px!important;font-size:11px!important}
+  #home .dashboardGrid>.card:not(.dark){padding:14px 16px!important;border-radius:18px!important}
+  #home .dashboardGrid>.card:not(.dark)>.eyebrow{font-size:9px!important;margin:0!important}
+  #home #overallPct{font-size:31px!important;line-height:1!important;margin:7px 0 8px!important}
+  #home .dashboardGrid>.card:not(.dark)>.track{height:7px!important;margin:0 0 10px!important}
+  #home .dashboardGrid>.card:not(.dark) .stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  #home .dashboardGrid>.card:not(.dark) .stat{grid-column:auto!important;min-height:58px!important;padding:9px 8px!important;border-radius:12px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+  #home .dashboardGrid>.card:not(.dark) .stat b{font-size:18px!important;line-height:1!important}
+  #home .dashboardGrid>.card:not(.dark) .stat span{font-size:8px!important;line-height:1.15!important;margin-top:5px!important;white-space:normal!important}
+  #home>.sectionTitle:has(+ #phaseJourney){margin:16px 0 8px!important}
+  #home>.sectionTitle:has(+ #phaseJourney) h2,#home>.sectionTitle:has(+ #skillsSnapshot) h2{font-size:20px!important}
+  #phaseJourney .phaseCurrent{margin-top:0!important;padding:10px 12px!important}
+  #home>.sectionTitle:has(+ #skillsSnapshot){margin:17px 0 8px!important}
+  #home>.sectionTitle:has(+ #skillsSnapshot) .btn{min-height:40px!important;padding:9px 14px!important;font-size:11px!important}
+}
 </style><style>
 .clickupLesson .cuHub{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:14px;align-items:stretch;margin:24px 0}.clickupLesson .cuHub>div,.clickupLesson .cuHub>strong{border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;justify-content:center;gap:5px}.clickupLesson .cuHub>strong{grid-row:span 2;background:#151515;color:#fff;text-align:center;font-size:20px}.clickupLesson .cuHub small{color:#ffd51f}.clickupLesson .cuHub span,.clickupLesson .cuHierarchy span,.clickupLesson .cuBoard span,.clickupLesson .cuRoutine span{display:block;color:var(--muted);margin-top:5px}.clickupLesson .cuHierarchy{display:flex;align-items:stretch;gap:10px;margin:24px 0}.clickupLesson .cuHierarchy>div{flex:1;border:1px solid var(--line);border-radius:18px;padding:18px}.clickupLesson .cuHierarchy>div.active{background:#ffd51f;border-color:#ffd51f}.clickupLesson .cuHierarchy>i{align-self:center;font-style:normal;font-size:22px}.clickupLesson .cuBoard{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0}.clickupLesson .cuBoard>div{border:1px solid var(--line);border-radius:18px;padding:20px}.clickupLesson .cuBoard small{display:block;font-weight:800;margin-bottom:8px}.clickupLesson .cuRoutine{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}.clickupLesson .cuRoutine>div{background:#151515;color:#fff;border-radius:18px;padding:18px}.clickupLesson .cuRoutine span{color:#ddd}.clickupLesson .cuAutomation{display:grid;gap:12px;margin:24px 0}.clickupLesson .cuAutomation>div{display:flex;justify-content:space-between;gap:20px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:18px 20px}.clickupLesson.quizCompleteState>.quiz{display:none}
 @media(max-width:700px){.clickupLesson *{min-width:0}.clickupLesson .cuHub{grid-template-columns:1fr}.clickupLesson .cuHub>strong{grid-row:auto;order:-1}.clickupLesson .cuHierarchy{flex-direction:column}.clickupLesson .cuHierarchy>i{transform:rotate(90deg)}.clickupLesson .cuBoard,.clickupLesson .cuRoutine{grid-template-columns:1fr}.clickupLesson .cuAutomation>div{align-items:flex-start;flex-direction:column;gap:6px}.clickupLesson .lessonResourceOpen{min-height:44px}.clickupLesson .answer{min-height:48px}}
