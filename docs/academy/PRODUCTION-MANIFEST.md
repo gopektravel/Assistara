@@ -1432,3 +1432,13 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA — DOUBLE-CHECK and FINAL QA remain.
 - current_and_NEXT_BUILD_pointer_remains: p2m1c1.
 - next_class_not_started: p2m1c2 Create Your Profile Picture.
+
+
+### p2m1c1 FUNCTIONAL / UX QA FOLLOW-UP — 2026-09-24
+- queue_advanced: no; p2m1c1 remains current target and p2m1c2 was not started.
+- latest implementation independently rechecked: lesson identity/opening, video placeholder, six written sections, shared slide preview/download, Quick Check selection/grading/retry/pass, Complete Class, centralized persistence, completed reopen, p2m1c2-only unlock, module/phase gating, Canva Skills mapping, Test Student Portal QA states, shared navigation, and responsive rules.
+- result: PASS for locally/verifiably inspectable functional paths. No new fix was required; the previously added p2m1c1qa/p2m1c1done preview-state fix remains present.
+- persistence: academy_class_progress schema was independently rechecked in Supabase and remains compatible with centralized markClassComplete/loadProgress.
+- responsive static check: mobile stacking/min-width hardening and >=44px slide / >=48px answer targets remain present; no class-specific fixed-width overflow regression found.
+- live limitation: connected Vercel authorization again returns zero teams/projects, so deployed Test Student Portal clicks, external Canva link, Drive iframe/download response, authenticated Complete→refresh→reopen, and physical desktop/mobile interaction remain NOT VERIFIED LIVE.
+- status remains: LIVE BUT NEEDS QA.
