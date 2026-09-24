@@ -1414,3 +1414,21 @@ Initialization note: direct production browser verification was blocked because 
 - status_remains: LIVE BUT NEEDS QA.
 - current_and_NEXT_BUILD_pointer_remains: p2m1c1 until FINAL QA.
 - next_class_not_started: p2m1c2 Create Your Profile Picture.
+
+
+### p2m1c1 INDEPENDENT VISUAL / SLIDE PDF QA — CORRECTIVE RECHECK — 2026-09-24
+- queue_advanced: no.
+- class: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1) only.
+- reason_for_recheck: previous visual-QA PASS was not trusted; the actual current learner-facing PDF was downloaded again and all 6 pages rendered at 120 DPI as a contact sheet.
+- defect_reproduced: yes — three signal panels contained visible text overflow beyond their colored panel geometry despite the earlier manifest claiming no overflow. Slide 1’s “VISUAL SYSTEM” escaped below the yellow brand panel; slide 3’s “TONE → PALETTE” escaped below the dark palette panel; slide 6’s “DESKTOP ↔ MOBILE” escaped below the yellow final-check panel.
+- corrective_fix: shortened/recomposed only the affected visual-synthesis text while preserving the teaching meaning: slide 1 now uses SERVICE → TAGLINE → VISUAL SYSTEM within the panel; slide 3 keeps the three tone/palette swatch rows within the dark panel; slide 6 compresses COLOR/FONTS/ELEMENTS + DESKTOP↔MOBILE into three lines inside the yellow panel.
+- corrected_source: Google Slides ID 1QQyLTzvXIZ61hulbNBqEVXqm31WL4tsZboRQSfPQw2Y.
+- regenerated_PDF: yes — exported after correction; 74,994 bytes.
+- post_fix_render: all 6 pages rendered again at 120 DPI and visually inspected together. The three prior overflows are gone. No clipping, off-canvas text, unsafe logo placement, broken wrapping or new readability regression is visible.
+- visual_quality_after_fix: PASS — distinct light/dark/yellow rhythm remains; hierarchy is strong; signal panels now read as contained visual summaries rather than accidental overflow; real Assistara logo/Academy lockup remains consistent.
+- learner_PDF_replaced_in_place: yes — Drive ID remains 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi; modified 2026-09-24T00:23:17.273Z; size 74,994 bytes.
+- preview_download_wiring: unchanged and valid — lesson23.slidesFileId still points to the same in-place corrected PDF ID.
+- live_browser_preview_click: not claimed; connected Vercel authorization still exposes zero teams/projects.
+- status_remains: LIVE BUT NEEDS QA — DOUBLE-CHECK and FINAL QA remain.
+- current_and_NEXT_BUILD_pointer_remains: p2m1c1.
+- next_class_not_started: p2m1c2 Create Your Profile Picture.
