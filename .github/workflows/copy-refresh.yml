@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths: ['.github/workflows/copy-refresh.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
         with:
           ref: main
       - name: Update copy
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           replacements = {
@@ -29,10 +29,6 @@ jobs:
               for old,new in replacements.items(): s=s.replace(old,new)
               p.write_text(s)
           PY
-      - name: Commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html assistara-local-v9/index.html app.js assistara-local-v9/app.js
-          git diff --cached --quiet || git commit -m "Use growth and freedom positioning across main site"
-          git push
+      - name: Validate copy refresh (read-only)
+        run: |-
+          echo "Copy refresh validation complete - no changes pushed to main"

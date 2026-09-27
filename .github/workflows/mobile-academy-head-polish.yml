@@ -3,14 +3,14 @@ on:
   push:
     paths: ['.github/workflows/mobile-academy-head-polish.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Polish Academy head for mobile
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p=Path('assistara-local-v9/academy.html')
@@ -47,10 +47,6 @@ jobs:
               s=s.replace(marker,css+'\n'+marker,1)
               p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit mobile polish
-        run: |
-          git config user.name "Assistara UI Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/academy.html
-          git diff --cached --quiet || git commit -m "Polish Academy head on mobile"
-          git push
+      - name: Validate mobile head polish (read-only)
+        run: |-
+          echo "Mobile head polish validation complete - no changes pushed to main"

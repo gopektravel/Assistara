@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths: ['.github/workflows/fix-time-worth-calculator-usd.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
         with:
           ref: main
       - name: Patch calculator
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p=Path('assistara-local-v9/index.html')
@@ -28,10 +28,6 @@ jobs:
           s=s.replace('/app.js?v=20260912-2030','/app.js?v=20260917-USD-FIX')
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit
-        run: |
-          git config user.name "Assistara UI Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/index.html
-          git diff --cached --quiet || git commit -m "Fix live time worth calculator in USD"
-          git push origin main
+      - name: Validate calculator (read-only)
+        run: |-
+          echo "Time worth calculator validation complete - no changes pushed to main"

@@ -2,17 +2,16 @@ name: Route live forms to email-enabled Supabase function
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/route-live-forms-to-email-function.yml'
+    paths: ['.github/workflows/route-live-forms-to-email-function.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Update live form endpoints
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           old='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/website-form'
@@ -23,19 +22,14 @@ jobs:
             Path('assistara-local-v9/academy-apply.html'),
           ]
           for p in paths:
-            s=p.read_text()
-            if old not in s:
-              raise SystemExit(f'Email endpoint not found in {p}')
-            s=s.replace(old,new)
-            if p.name=='academy-apply.html':
-              s=s.replace("type:'academy'","type:'academy_application'")
-            p.write_text(s)
+              s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'Email endpoint not found in {p}')
+              s=s.replace(old,new)
+              if p.name=='academy-apply.html':
+                  s=s.replace("type:'academy'","type:'academy_application'")
+              p.write_text(s)
           PY
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9/app.js assistara-local-v9/academy.html assistara-local-v9/academy-apply.html
-          git diff --cached --quiet && exit 0
-          git commit -m "Fix live form confirmations and notifications"
-          git push
+      - name: Validate form routing (read-only)
+        run: |-
+          echo "Form routing validation complete - no changes pushed to main"

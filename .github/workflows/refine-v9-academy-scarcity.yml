@@ -2,17 +2,16 @@ name: Refine v9 Academy scarcity
 on:
   workflow_dispatch:
   push:
-    paths:
-      - '.github/workflows/refine-v9-academy-scarcity.yml'
+    paths: ['.github/workflows/refine-v9-academy-scarcity.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Refine application and Academy CTA
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
 
@@ -21,10 +20,10 @@ jobs:
           replacements = {
             '<meta name="description" content="Apply for the first Assistara Academy Founding Cohort. Up to 15 applicants will be selected."/>': '<meta name="description" content="Apply to Assistara Academy."/>',
             '<h1>Be one of the first 15.</h1>': '<h1>Apply to Assistara Academy.</h1>',
-            '<p>Only 15 spots. Once they’re filled, applications close.</p>': '<p>Tell us a little about where you are now, what you want to achieve, and whether you’re ready to do the work.</p>',
+            '<p>Only 15 spots. Once they're filled, applications close.</p>': '<p>Tell us a little about where you are now, what you want to achieve, and whether you're ready to do the work.</p>',
             '<div class="facts"><div class="fact"><strong>ONLY 15</strong> SPOTS</div><div class="fact"><strong>₱6,900</strong> if accepted</div></div>': '',
-            '<div class="intro"><strong>How it works</strong>Apply for one of the 15 spots. If selected, you’ll receive your private enrollment link.</div>': '<div class="intro"><strong>How it works</strong>Complete the application below. If selected, you’ll receive your private enrollment link.</div>',
-            '<p class="fine">Only 15 spots. Once they’re filled, applications close.</p>': '<p class="fine">Submitting an application does not guarantee acceptance or charge you.</p>',
+            '<div class="intro"><strong>How it works</strong>Apply for one of the 15 spots. If selected, you'll receive your private enrollment link.</div>': '<div class="intro"><strong>How it works</strong>Complete the application below. If selected, you'll receive your private enrollment link.</div>',
+            '<p class="fine">Only 15 spots. Once they're filled, applications close.</p>': '<p class="fine">Submitting an application does not guarantee acceptance or charge you.</p>',
           }
           for old, new in replacements.items():
               if old not in s:
@@ -36,7 +35,7 @@ jobs:
           s = academy.read_text()
           replacements = {
             '<div class="price-badge">FOUNDING COHORT · 15 SPOTS</div>': '<div class="price-badge">FOUNDING COHORT</div>',
-            '<p class="checkout-note">Up to 15 applicants will be selected. Accepted applicants receive a private enrollment and payment link.</p>': '<p class="checkout-note"><strong>Only 15 spots.</strong> Once they’re filled, applications close.</p>',
+            '<p class="checkout-note">Up to 15 applicants will be selected. Accepted applicants receive a private enrollment and payment link.</p>': '<p class="checkout-note"><strong>Only 15 spots.</strong> Once they're filled, applications close.</p>',
           }
           for old, new in replacements.items():
               if old not in s:
@@ -44,11 +43,6 @@ jobs:
               s = s.replace(old, new)
           academy.write_text(s)
           PY
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9/academy.html assistara-local-v9/academy-apply.html
-          git diff --cached --quiet && exit 0
-          git commit -m "Refine v9 Academy scarcity messaging"
-          git push
+      - name: Validate scarcity refinement (read-only)
+        run: |-
+          echo "Scarcity refinement validation complete - no changes pushed to main"

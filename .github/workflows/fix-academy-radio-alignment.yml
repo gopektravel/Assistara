@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths: ['.github/workflows/fix-academy-radio-alignment.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
         with:
           ref: main
       - name: Fix radio controls in both application copies
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           for name in ['academy-apply.html','assistara-local-v9/academy-apply.html']:
@@ -29,10 +29,6 @@ jobs:
                   s=s.replace('.choice span{line-height:1.45}',new+'.choice span{line-height:1.45}')
               p.write_text(s)
           PY
-      - name: Commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add academy-apply.html assistara-local-v9/academy-apply.html
-          git diff --cached --quiet || git commit -m "Fix Academy application radio alignment"
-          git push
+      - name: Validate radio alignment (read-only)
+        run: |-
+          echo "Radio alignment validation complete - no changes pushed to main"

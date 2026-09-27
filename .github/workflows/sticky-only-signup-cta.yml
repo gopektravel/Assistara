@@ -3,14 +3,14 @@ on:
   push:
     paths: ['.github/workflows/sticky-only-signup-cta.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Make only signup CTA sticky
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p=Path('assistara-local-v9/academy.html')
@@ -32,7 +32,7 @@ jobs:
           a[href="/masterclass/join/"].btn-yellow{
             position:sticky!important;
             bottom:12px!important;
-            z-index:70!important;
+            z-index:70!important
           }
           @media(max-width:620px){
             .topbar{padding:8px 10px!important;font-size:10px!important;line-height:14px!important;min-height:0!important}
@@ -44,10 +44,6 @@ jobs:
               s=s.replace('</head>',css+'\n</head>',1)
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit fix
-        run: |
-          git config user.name "Assistara UI Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/academy.html
-          git diff --cached --quiet || git commit -m "Keep only Academy signup CTA sticky"
-          git push
+      - name: Validate signup CTA (read-only)
+        run: |-
+          echo "Signup CTA validation complete - no changes pushed to main"

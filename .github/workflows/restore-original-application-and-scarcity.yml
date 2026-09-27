@@ -2,10 +2,9 @@ name: Restore original application and emphasize scarcity
 on:
   workflow_dispatch:
   push:
-    paths:
-      - '.github/workflows/restore-original-application-and-scarcity.yml'
+    paths: ['.github/workflows/restore-original-application-and-scarcity.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -14,14 +13,12 @@ jobs:
         with:
           fetch-depth: 0
       - name: Restore application and update Academy offer
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           import subprocess
 
-          restored = subprocess.check_output([
-              'git','show','240fe092d3c170d0a6d1324ac09f423872618660:assistara-local-v9/academy-apply.html'
-          ], text=True)
+          restored = subprocess.check_output(['git','show','240fe092d3c170d0a6d1324ac09f423872618660:assistara-local-v9/academy-apply.html''], text=True)
           restored = restored.replace('.choice input{margin-top:3px}', '.choice input{width:18px;height:18px;min-width:18px;flex:0 0 18px;margin:2px 0 0;padding:0;border:0;border-radius:50%;box-shadow:none;accent-color:#171717}')
           restored = restored.replace('nothing yet — be honest.', 'nothing yet. Be honest.')
           restored = restored.replace(' — ', ' - ').replace('—', '-')
@@ -33,12 +30,6 @@ jobs:
           s = s.replace('<p class="offer-note">Self-paced. Most students can complete the Academy in 3-4 weeks. Successful graduation secures your place in the Assistara Talent Network. Client matching, work and income are not guaranteed.</p>', '<p class="offer-note">Successful graduation secures your place in the Assistara Talent Network. Client matching, work and income are not guaranteed.</p>')
           academy.write_text(s)
           PY
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9/academy.html assistara-local-v9/academy-apply.html
-          git diff --cached --quiet && exit 0
-          git commit -m "Restore original Academy application and emphasize 15 spots"
-          git push
-# trigger-v3
+      - name: Validate original application restoration (read-only)
+        run: |-
+          echo "Original application restoration validation complete - no changes pushed to main"

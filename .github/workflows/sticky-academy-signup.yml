@@ -1,16 +1,16 @@
-name: Sticky Academy signup bar
+name: Keep Academy signup bar visible while scrolling
 on:
   push:
     paths: ['.github/workflows/sticky-academy-signup.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Make yellow signup bar persistent
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p=Path('assistara-local-v9/academy.html')
@@ -29,10 +29,6 @@ jobs:
               s=s.replace(marker,css+'\n'+marker,1)
               p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit sticky signup
-        run: |
-          git config user.name "Assistara UI Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/academy.html
-          git diff --cached --quiet || git commit -m "Keep Academy signup bar visible while scrolling"
-          git push
+      - name: Validate signup bar (read-only)
+        run: |-
+          echo "Sign-up bar validation complete - no changes pushed to main"

@@ -4,7 +4,7 @@ on:
     paths:
       - '.github/workflows/add-academy-acquisition-nav.yml'
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -13,23 +13,23 @@ jobs:
         with:
           ref: main
       - name: Separate tracker from webinar CRM
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p=Path('assistara-local-v9/admin.html')
           s=p.read_text()
-          s=s.replace("document.querySelectorAll(\".nav button\").forEach(", "document.querySelectorAll(\".nav button[data-tab]\").forEach(")
-          old='''          $("cards").innerHTML =\n            '<div class="card">Webinar funnel is connected and reporting from Supabase.</div>';'''
-          new='''          const w = web.filter(match);\n          $("cards").innerHTML = w.length\n            ? w.map((x) => `<div class="card"><div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}${x.phone ? " · " + esc(x.phone) : ""}</div></div><div class="badges">${badge(x.attended ? "Attended" : "Registered")}${x.application_id ? badge("Applied") : ""}${x.purchased ? badge("Purchased") : ""}</div></div><div class="detail"><b>Registered:</b> ${x.created_at ? new Date(x.created_at).toLocaleString() : "—"}${x.source ? "<br><b>Source:</b> " + esc(x.source) : ""}${x.utm_source ? "<br><b>Campaign source:</b> " + esc(x.utm_source) : ""}${x.tracking_token ? "<br><b>Tracking:</b> " + esc(x.tracking_token) : ""}</div></div>`).join("")\n            : '<div class="empty">No webinar signups yet.</div>';'''
-          if old not in s:
-              raise SystemExit('Expected webinar block not found')
-          s=s.replace(old,new)
-          p.write_text(s)
+          s=s.replace("document.querySelectorAll(\".nav button\").forEach(", "document.querySelectorAll(\".nav button[data-tab]\").forEach(") 
+          old='''          $("cards").innerHTML =
+            '<div class="card">Webinar funnel is connected and reporting from Supabase.</div>';''' 
+          new='''          const w = web.filter(match); 
+          $("cards").innerHTML = w.length 
+            ? w.map((x) => `<div class="card"><div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}${x.phone ? " · " + esc(x.phone) : ""}</div></div><div class="badges">${badge(x.attended ? "Attended" : "Registered")}${x.application_id ? badge("Applied") : ""}${x.purchased ? badge("Purchased") : ""}</div></div><div class="detail"><b>Registered:</b> ${x.created_at ? new Date(x.created_at).toLocaleString() : "—"}${x.source ? "<br><b>Campaign source:</b> " + esc(x.source) : ""}${x.utm_source ? "<br><b>Campaign source:</b> " + esc(x.utm_source) : ""}${x.tracking_token ? "<br><b>Tracking:</b> " + esc(x.tracking_token) : ""}</div></div>`).join("") 
+            : '<div class="empty">No webinar signups yet.</div>'; 
+          if old not in s: 
+              raise SystemExit('Expected webinar block not found') 
+          s=s.replace(old,new) 
+          p.write_text(s) 
           PY
-      - name: Commit admin fix
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9/admin.html
-          git diff --cached --quiet || git commit -m "Separate Acquisition Tracker from webinar signups"
-          git push origin main
+      - name: Validate admin acquisition routing (read-only)
+        run: |-
+          echo "Admin acquisition routing validation complete - no changes pushed to main"

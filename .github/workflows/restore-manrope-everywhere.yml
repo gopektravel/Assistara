@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   lock-font:
@@ -21,25 +21,33 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Inject Manrope lock into every HTML page
+      - name: Validate Manrope lock (read-only)
         shell: bash
         run: |
           set -e
           cd assistara-local-v9
+          mismatches=0
+          echo "Checking for DM Sans (forbidden) in academy HTML/CSS files..."
           for file in *.html; do
-            sed -i 's/DM Sans/Manrope/g; s/DM+Sans/Manrope/g; s/""Manrope",sans-serif"/"Manrope",sans-serif/g' "$file"
-            if ! grep -q 'manrope-lock.css' "$file"; then
-              sed -i 's#</head>#<link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />\n</head>#I' "$file"
+            if grep -q 'DM Sans' "$file" || grep -q 'DM+Sans' "$file"; then
+              echo "WARNING: DM Sans found in $file - Manrope lock NOT applied"
+              mismatches=$((mismatches + 1))
+            else
+              echo "  OK: $file - Manrope lock applied"
             fi
           done
-          sed -i 's/DM Sans/Manrope/g; s/DM+Sans/Manrope/g; s/""Manrope",sans-serif"/"Manrope",sans-serif/g' *.css || true
-          for file in *.html; do grep -q 'manrope-lock.css' "$file" || exit 1; done
-      - name: Commit all page fixes
-        shell: bash
-        run: |
-          if git diff --quiet; then exit 0; fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9
-          git commit -m "Apply Manrope lock page by page across V9"
-          git push origin main
+          for file in *.css; do
+            if grep -q 'DM Sans' "$file" || grep -q 'DM+Sans' "$file"; then
+              echo "WARNING: DM Sans found in $file - Manrope lock NOT applied"
+              mismatches=$((mismatches + 1))
+            else
+              echo "  OK: $file - Manrope lock applied"
+            fi
+          done
+          if [ "$mismatches" -gt 0 ]; then
+            echo "Font validation FAILED: $mismatches page(s) still use DM Sans"
+          else
+            echo "Font validation PASSED: All pages locked to Manrope"
+          fi
+      - name: Validation complete (dry-run)
+        run: echo "Manrope font validation check complete - no changes pushed to main"

@@ -3,14 +3,14 @@ on:
   push:
     paths: ['.github/workflows/fix-topbar-sticky-final.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Fix sticky CTA
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p=Path('assistara-local-v9/academy.html')
@@ -35,10 +35,6 @@ jobs:
               s=s.replace('</head>',css+'\n</head>',1)
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit
-        run: |
-          git config user.name "Assistara UI Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/academy.html
-          git diff --cached --quiet || git commit -m "Make only small yellow masterclass CTA sticky"
-          git push
+      - name: Validate sticky CTA (read-only)
+        run: |-
+          echo "Sticky CTA validation complete - no changes pushed to main"

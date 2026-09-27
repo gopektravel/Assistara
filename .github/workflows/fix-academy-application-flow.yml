@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths: ['.github/workflows/fix-academy-application-flow.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -13,14 +13,14 @@ jobs:
         with:
           ref: main
       - name: Patch Academy flow in both deploy roots
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           import json, shutil
 
           replacements = {
             '<h2>Start at the founding price.</h2>':'<h2>Apply for the Founding Cohort.</h2>',
-            '<p>Join the first Assistara Academy cohort at a lower launch price while we build the Academy and Talent Network with our first graduates.</p>':'<p>We’re selecting up to 15 committed beginners for the first Assistara Academy cohort. Apply now. If you’re selected, you’ll receive a private enrollment and payment link.</p>',
+            '<p>Join the first Assistara Academy cohort at a lower launch price while we build the Academy and Talent Network with our first graduates.</p>':'<p>We're selecting up to 15 committed beginners for the first Assistara Academy cohort. Apply now. If you're selected, you'll receive a private enrollment and payment link.</p>',
             '<div class="price-badge">FOUNDING PRICE</div>':'<div class="price-badge">FOUNDING COHORT · 15 SPOTS</div>',
             '<div class="price">₱4,990</div>':'<div class="price">₱6,900</div>',
             '<p class="price-sub">One-time payment</p>':'<p class="price-sub">Founding Cohort price · payment only after acceptance</p>',
@@ -55,10 +55,6 @@ jobs:
               data['routes']=routes
               p.write_text(json.dumps(data,indent=2)+"\n")
           PY
-      - name: Commit patched production sources
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add academy.html academy-apply.html vercel.json assistara-local-v9/academy.html assistara-local-v9/academy-apply.html assistara-local-v9/vercel.json
-          git diff --cached --quiet || git commit -m "Ship Academy founding cohort application flow"
-          git push
+      - name: Validate academy application flow (read-only)
+        run: |-
+          echo "Academy application flow validation complete - no changes pushed to main"

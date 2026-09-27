@@ -1,20 +1,16 @@
 name: Patch v9 Supabase form key
-
 on:
   push:
-    paths:
-      - '.github/workflows/patch-v9-supabase-key.yml'
-
+    paths: ['.github/workflows/patch-v9-supabase-key.yml']
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Patch v9 form requests
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           key = "sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E"
@@ -39,11 +35,6 @@ jobs:
           if changed < 3:
               raise SystemExit(f'Expected at least 3 patched requests, got {changed}')
           PY
-      - name: Commit patch
-        run: |
-          git config user.name "Assistara Automation"
-          git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/academy.html assistara-local-v9/academy-apply.html assistara-local-v9/app.js
-          git diff --cached --quiet && exit 0
-          git commit -m "Fix v9 Supabase form authentication"
-          git push
+      - name: Validate Supabase key patch (read-only)
+        run: |-
+          echo "Supabase key patch validation complete - no changes pushed to main"

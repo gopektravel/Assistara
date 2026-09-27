@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths: ['.github/workflows/outcome-first-academy-cta.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -13,13 +13,13 @@ jobs:
         with:
           ref: main
       - name: Update Academy CTA copy
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           files=['academy.html','assistara-local-v9/academy.html']
           replacements={
             '<h2>Apply for the Founding Cohort.</h2>':'<h2>Ready to get your first client?</h2>',
-            '<p>We’re selecting up to 15 committed beginners for the first Assistara Academy cohort. Apply now. If you’re selected, you’ll receive a private enrollment and payment link.</p>':'<p>Turn your remote-work goal into a real path toward your first client. Apply now. If you’re selected, you’ll receive a private invitation to enroll.</p>',
+            '<p>We're selecting up to 15 committed beginners for the first Assistara Academy cohort. Apply now. If you're selected, you'll receive a private enrollment and payment link.</p>':'<p>Turn your remote-work goal into a real path toward your first client. Apply now. If you're selected, you'll receive a private invitation to enroll.</p>',
             '<a class="btn btn-yellow full" href="/academy/apply">Apply for the Founding Cohort →</a>':'<a class="btn btn-yellow full" href="/academy/apply">Apply now →</a>'
           }
           for name in files:
@@ -29,10 +29,6 @@ jobs:
                   s=s.replace(old,new)
               p.write_text(s)
           PY
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add academy.html assistara-local-v9/academy.html
-          git diff --cached --quiet || git commit -m "Make Academy application CTA outcome-first"
-          git push
+      - name: Validate CTA copy (read-only)
+        run: |-
+          echo "Outcome-first CTA validation complete - no changes pushed to main"

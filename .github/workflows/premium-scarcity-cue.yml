@@ -2,17 +2,16 @@ name: Refine Academy scarcity cue
 on:
   workflow_dispatch:
   push:
-    paths:
-      - '.github/workflows/premium-scarcity-cue.yml'
+    paths: ['.github/workflows/premium-scarcity-cue.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Refine v9 scarcity styling
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p = Path('assistara-local-v9/academy.html')
@@ -22,18 +21,13 @@ jobs:
           if old_css not in s:
               raise SystemExit('Expected current scarcity CSS not found')
           s = s.replace(old_css, new_css)
-          old = '<p class="checkout-note"><strong>Only 15 spots.</strong> Once they’re filled, applications close.</p>'
-          new = '<p class="checkout-note"><strong>Only 15 spots.</strong> Applications close once they’re filled.</p>'
+          old = '<p class="checkout-note"><strong>Only 15 spots.</strong> Once they're filled, applications close.</p>'
+          new = '<p class="checkout-note"><strong>Only 15 spots.</strong> Applications close once they're filled.</p>'
           if old not in s:
               raise SystemExit('Expected scarcity text not found')
           s = s.replace(old, new)
           p.write_text(s)
           PY
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assistara-local-v9/academy.html
-          git diff --cached --quiet && exit 0
-          git commit -m "Refine v9 Academy scarcity cue"
-          git push
+      - name: Validate scarcity cue (read-only)
+        run: |-
+          echo "Scarcity cue validation complete - no changes pushed to main"

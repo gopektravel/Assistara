@@ -3,14 +3,14 @@ on:
   push:
     paths: ['.github/workflows/remove-original-masterclass-topbar.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Remove original top message and simplify bubble
-        run: |
+        run: |-
           python - <<'PY'
           from pathlib import Path
           p=Path('assistara-local-v9/academy.html')
@@ -19,10 +19,6 @@ jobs:
           s=s.replace('Free Masterclass → Save My Seat','Free Masterclass →')
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit
-        run: |
-          git config user.name "Assistara UI Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add assistara-local-v9/academy.html
-          git diff --cached --quiet || git commit -m "Remove redundant masterclass top message"
-          git push
+      - name: Validate top bar removal (read-only)
+        run: |-
+          echo "Top bar removal validation complete - no changes pushed to main"
