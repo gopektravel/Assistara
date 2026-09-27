@@ -35,11 +35,17 @@ token, a disallowed `Origin`, an unsupported method, or an unusable id is refuse
 before the database is contacted, and the response is always `no-store`. The
 function never widens a grant or an RLS policy and never returns the service key.
 
-Question wording lives in `api/_academy-application-fields.js` and is sent to the
-Admin page with the answers, so the labels are defined once and cannot drift from
-the form. The row is read with `select=*` and projected: known system columns are
-dropped, canonical fields are split into answers and details, and any other
-stored column is returned and labelled rather than being silently discarded.
+`api/_academy-application-fields.js` is the single source of truth for the
+applicant-facing questions: their order, their wording, and the exact label for
+any choice the form stores as a machine token. It is sent to the Admin page with
+the answers, so the wording is defined once and cannot drift from the form.
+
+The list is a closed allowlist of the seven questions the applicant actually
+answers. The row is read with `select=*` and then projected through that
+allowlist, so only the questions are returned. Ids, timestamps, acquisition and
+tracking metadata, internal status, internal notes, and any column added to the
+table later are discarded server-side and never reach the browser. Adding a
+question to the form therefore means deliberately adding it to that file.
 
 Offline security tests:
 

@@ -24,7 +24,7 @@ const crypto = require("node:crypto");
 const security = require("./_academy-security");
 const {
   APPLICATION_FIELDS,
-  CANONICAL_FIELDS,
+  APPLICATION_FIELDS_BY_NAME,
 } = require("./_academy-application-fields");
 
 const ROOT = path.join(__dirname, "..");
@@ -422,20 +422,61 @@ function apiResponse() {
   };
 }
 
-test("question labels are the live application form's own wording", () => {
-  const formQuestions = APPLICATION_FIELDS.filter(f => f.group === "answers");
-  assert.equal(formQuestions.length, 7);
-  for (const field of formQuestions) {
-    assert.ok(APPLY_HTML.includes(field.label), `academy-apply.html no longer asks: ${field.label}`);
+test("the allowlist is exactly the live form's questions, in form order", () => {
+  // Closed list: the seven questions the applicant actually answers, and
+  // nothing else. Adding a column to the database must not add a question.
+  assert.deepEqual(APPLICATION_FIELDS_BY_NAME, [
+    "current_situation",
+    "why_remote_work",
+    "what_tried",
+    "biggest_obstacle",
+    "remote_work_interest",
+    "weekly_commitment",
+    "payment_readiness",
+  ]);
+  // Every label is the form's own wording, and every question is asked in that
+  // order in the DOM.
+  let cursor = 0;
+  for (const field of APPLICATION_FIELDS) {
+    const at = APPLY_HTML.indexOf(field.label, cursor);
+    assert.ok(at > -1, `academy-apply.html no longer asks: ${field.label}`);
+    cursor = at;
   }
+  // Nothing technical is on the list.
+  for (const banned of [
+    "source",
+    "tracking_token",
+    "created_at",
+    "updated_at",
+    "reviewed_at",
+    "notes",
+    "admin_notes",
+    "id",
+  ]) {
+    assert.equal(APPLICATION_FIELDS_BY_NAME.includes(banned), false, `${banned} must not be a question`);
+  }
+
   // Every answer the website-form Edge Function writes must be described.
   const wired = [...APPLY_HTML.matchAll(/JSON\.stringify\(\{type:'academy_application'([\s\S]*?)\}\)\}\)/g)]
     .map(m => [...m[1].matchAll(/(\w+):fd\.get\('(\w+)'\)/g)].map(p => p[1]));
   assert.ok(wired.length, "could not read the application payload from academy-apply.html");
   for (const key of wired[0]) {
     if (key === "name" || key === "email") continue;
-    assert.ok(CANONICAL_FIELDS.includes(key), `stored answer column is not described: ${key}`);
+    assert.ok(APPLICATION_FIELDS_BY_NAME.includes(key), `stored answer column is not a listed question: ${key}`);
   }
+});
+
+test("machine choice values map to the label the applicant saw on the form", () => {
+  const readiness = APPLICATION_FIELDS.find(f => f.field === "payment_readiness");
+  assert.ok(readiness.options, "payment readiness stores a machine token and needs a label map");
+  for (const [stored, label] of Object.entries(readiness.options)) {
+    assert.ok(APPLY_HTML.includes(`value="${stored}"`), `form no longer offers: ${stored}`);
+    assert.ok(APPLY_HTML.includes(label), `form no longer shows this exact label: ${label}`);
+  }
+  // A form whose stored value already is the human answer needs no map.
+  assert.equal(APPLICATION_FIELDS.find(f => f.field === "weekly_commitment").options, undefined);
+  assert.ok(APPLY_HTML.includes('name="commitment" value="Yes"'));
+  assert.ok(APPLY_HTML.includes('name="commitment" value="Not sure"'));
 });
 
 test("application answers endpoint fails closed for every non-Admin caller", async () => {
@@ -510,13 +551,13 @@ test("application answers endpoint returns every stored answer for a verified Ad
 
   const edward = payload.applications.find(a => a.id === EDWARD_ROW.id);
   assert.equal(edward.found, true);
-  for (const field of CANONICAL_FIELDS) {
-    assert.ok(field in edward.answers || field in edward.details, `answer column missing: ${field}`);
-  }
+  // Exactly the allowlisted questions come back, in order, and nothing else.
+  assert.deepEqual(Object.keys(edward.answers), APPLICATION_FIELDS_BY_NAME);
   assert.equal(edward.answers.why_remote_work, EDWARD_ROW.why_remote_work);
   assert.equal(edward.answers.weekly_commitment, "Yes");
-  assert.equal(edward.details.created_at, EDWARD_ROW.created_at);
-  assert.equal(edward.details.tracking_token, "LAUNCH01");
+  assert.equal(edward.answers.payment_readiness, "Willing to invest in myself");
+  assert.equal(payload.fields.length, 7);
+  assert.equal(payload.extra_fields, undefined, "unknown-column discovery is removed");
 
   // Requested but missing ids come back empty rather than failing the batch.
   const missing = payload.applications.find(a => a.id === JOHN_ROW.id);
@@ -524,37 +565,49 @@ test("application answers endpoint returns every stored answer for a verified Ad
   assert.deepEqual(missing.answers, {});
 
   // The endpoint itself never widens the database and never hands back
-  // internal identity columns.
+  // internal identity columns or review metadata.
   assert.match(seenUrl, /^https:\/\/supabase\.example\.test\/rest\/v1\/academy_applications\?/);
   assert.doesNotMatch(res.body, /auth_user_id|contact_id|acquisition_visitor_id/);
   assert.doesNotMatch(res.body, new RegExp(ADMIN_TOKEN_SECRET));
+  // No technical field may appear anywhere in the payload.
+  for (const banned of ["source", "tracking_token", "created_at", "reviewed_at", "admin_notes", "LAUNCH01"]) {
+    assert.equal(res.body.includes(`"${banned}"`), false, `payload must not carry ${banned}`);
+  }
+  assert.equal(res.body.includes("details"), false);
 
   const maria = payload.applications.find(a => a.id === MARIA_ROW.id);
   assert.deepEqual(maria.answers.why_remote_work, ["Social media", "Admin support"]);
   assert.equal(maria.answers.weekly_commitment, true);
   assert.deepEqual(maria.answers.remote_work_interest, { first_choice: "Admin", second_choice: "Bookkeeping" });
-  assert.equal(maria.notes ?? maria.details.notes, "Referred by a past client.");
+  assert.equal(maria.answers.what_tried, "");
 
   global.fetch = before;
 });
 
-test("an unknown stored column is surfaced instead of silently dropped", async () => {
+test("a column added to the database later is never returned", async () => {
+  // A new column is not an applicant answer. It must not be described, must not
+  // be returned, and must not reach the Admin.
   adminEnv();
   const handler = require("./admin-application-answers");
   const before = global.fetch;
   global.fetch = async () =>
-    new Response(JSON.stringify([{ ...EDWARD_ROW, laptop_access: "Yes", new_question_added_later: "42" }]), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    new Response(
+      JSON.stringify([
+        {
+          ...EDWARD_ROW,
+          laptop_access: "Yes",
+          new_question_added_later: "42",
+          internal_score: 99,
+          partner_referral_id: "ref-1234",
+        },
+      ]),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
   const res = apiResponse();
   await handler(apiRequest({ authorization: `Bearer ${adminToken()}`, body: { ids: [EDWARD_ROW.id] } }), res);
   const payload = JSON.parse(res.body);
-  assert.equal(payload.applications[0].answers.laptop_access, "Yes");
-  assert.equal(payload.applications[0].answers.new_question_added_later, "42");
-  const labels = payload.extra_fields.map(f => f.label);
-  assert.ok(labels.includes("Laptop access"));
-  assert.ok(labels.includes("New question added later"));
+  assert.deepEqual(Object.keys(payload.applications[0].answers), APPLICATION_FIELDS_BY_NAME);
+  assert.doesNotMatch(res.body, /laptop_access|new_question_added_later|internal_score|partner_referral_id/);
   global.fetch = before;
 });
 
@@ -627,18 +680,13 @@ function startAdmin(overrides = {}) {
           JSON.stringify({
             ok: true,
             fields: APPLICATION_FIELDS,
-            extra_fields: [],
             applications: body.ids.map(id => {
               const row = rows.find(r => r.id === id);
-              if (!row) return { id, answers: {}, details: {}, found: false };
+              if (!row) return { id, answers: {}, found: false };
               const answers = {};
-              const details = {};
-              for (const field of APPLICATION_FIELDS) {
-                if (field.group === "details") details[field.field] = row[field.field] ?? null;
-                else answers[field.field] = row[field.field] ?? null;
-              }
+              for (const field of APPLICATION_FIELDS_BY_NAME) answers[field] = row[field] ?? null;
               Object.assign(answers, (overrides.answers && overrides.answers[row.id]) || {});
-              return { id, answers, details, found: true };
+              return { id, answers, found: true };
             }),
           }),
           { status: 200 },
@@ -729,9 +777,33 @@ test("expanding a card reveals that applicant's real answers and collapses again
   assert.match(html, /Virtual assistant/);
   assert.match(html, /Can you commit consistent time every week to complete the Academy and take action\?/);
   assert.match(html, /If selected, would you be ready to join at ₱6,900\?/);
-  assert.match(html, /Application submitted/);
-  assert.match(html, /website_academy_application/);
-  assert.match(html, /LAUNCH01/);
+
+  // The questions read as the completed form, in the form's own order.
+  const questions = panel.querySelectorAll(".answerQ").map(node => node.textContent);
+  assert.deepEqual(questions, APPLICATION_FIELDS.map(field => field.label));
+
+  // The payment choice is shown as the sentence the applicant saw, never as the
+  // stored token.
+  assert.match(html, /Yes, I\u2019m willing to invest in myself\./);
+  assert.equal(html.includes("Willing to invest in myself</p>"), false);
+
+  // Review metadata and technical fields are not part of the answers.
+  for (const forbidden of [
+    "Application submitted",
+    "Application details",
+    "Application source",
+    "Tracking",
+    "Reviewed at",
+    "Application notes",
+    "Admin notes",
+    "website_academy_application",
+    "LAUNCH01",
+    EDWARD_ROW.id,
+    EDWARD_ROW.contact_id,
+    EDWARD_ROW.acquisition_visit_id,
+  ]) {
+    assert.equal(html.includes(forbidden), false, `panel must not show ${forbidden}`);
+  }
 
   // No raw column names, and no unrendered JS values anywhere on the page.
   const whole = document.getElementById("cards").innerHTML;
@@ -805,40 +877,52 @@ test("empty, array, boolean and object answers render cleanly", async () => {
   assert.match(html, />No<\/p>/);
   assert.match(html, /First choice: Admin/);
   assert.match(html, /Second choice: Bookkeeping/);
-  // Empty review metadata is not padded into the card.
-  assert.doesNotMatch(html, /Reviewed at/);
-  // Notes that do exist are shown.
-  assert.match(html, /Referred by a past client\./);
+  // No raw booleans or machine values leak through.
+  assert.doesNotMatch(html, />true<|>false</);
+  assert.doesNotMatch(html, /Referred by a past client\./);
   assert.doesNotMatch(html, /undefined|null|\[\]|\{\}/);
 });
 
-test("a stored answer the endpoint did not describe is still shown", async () => {
-  // The endpoint is expected to list every stored column in extra_fields. If
-  // that description ever falls short, the panel must still show the value
-  // rather than quietly hiding an applicant's answer.
+test("a stored answer that is not a listed question is never shown", async () => {
+  // Even if the payload somehow carried a column the allowlist does not name,
+  // the panel renders only the canonical questions.
   const { context, document } = startAdmin({
-    answers: { [EDWARD_ROW.id]: { laptop_access: "Yes, a laptop and stable wifi", referral_code: "REF-9" } },
+    answers: { [EDWARD_ROW.id]: { laptop_access: "Yes, a laptop", referral_code: "REF-9" } },
   });
   await login(context, document);
   document.getElementById(`app-${EDWARD_ROW.id}`).querySelector("[data-toggle-answers]").click();
   await new Promise(resolve => setTimeout(resolve, 0));
-  const html = document.getElementById(`answers-${EDWARD_ROW.id}`).innerHTML;
+  const panel = document.getElementById(`answers-${EDWARD_ROW.id}`);
 
-  assert.match(html, /Laptop access<\/p><p class="answerA">Yes, a laptop and stable wifi/);
-  assert.match(html, /Referral code<\/p><p class="answerA">REF-9/);
-  // The humanised label is a label, not the raw column name.
-  assert.doesNotMatch(html, /laptop_access|referral_code/);
+  assert.deepEqual(
+    panel.querySelectorAll(".answerQ").map(node => node.textContent),
+    APPLICATION_FIELDS.map(field => field.label),
+  );
+  assert.equal(panel.textContent.includes("laptop"), false);
+  assert.equal(panel.textContent.includes("REF-9"), false);
+  assert.doesNotMatch(panel.innerHTML, /Laptop access|Referral code/);
 });
 
-test("metadata that was never supplied is omitted rather than faked", async () => {
+test("every current question is shown for an application with gaps", async () => {
   const { context, document } = startAdmin();
   await login(context, document);
   document.getElementById(`app-${JOHN_ROW.id}`).querySelector("[data-toggle-answers]").click();
   await new Promise(resolve => setTimeout(resolve, 0));
-  const html = document.getElementById(`answers-${JOHN_ROW.id}`).innerHTML;
+  const panel = document.getElementById(`answers-${JOHN_ROW.id}`);
+  const html = panel.innerHTML;
+
+  // All seven questions, in form order, whatever the applicant answered.
+  assert.equal(panel.querySelectorAll(".answerItem").length, 7);
+  assert.deepEqual(
+    panel.querySelectorAll(".answerQ").map(node => node.textContent),
+    APPLICATION_FIELDS.map(field => field.label),
+  );
+  // The other payment option is shown as the sentence from the form.
+  assert.match(html, /I\u2019m ready to join, but I would need a payment plan\./);
+  assert.equal(html.includes("Need payment plan</p>"), false);
+  // Technical metadata is absent even when the row has some.
   assert.doesNotMatch(html, /Reviewed at|Application notes|Admin notes|Tracking \/ referral code|Application source/);
   assert.doesNotMatch(html, /1970/);
-  assert.match(html, /Application submitted/);
   assert.match(html, /Student \/ recent graduate/);
 });
 

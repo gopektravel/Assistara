@@ -690,7 +690,9 @@
         answerCache = new Map(),
         answerQueue = new Set(),
         SAFE_APP_ID = /^[A-Za-z0-9_-]{1,64}$/;
-      let answerSchema = { fields: [], extraFields: [] };
+      // The canonical application questions, in form order, as sent by the
+      // answers endpoint. Filled in on the first successful load.
+      let answerSchema = [];
       const $ = (x) => document.getElementById(x),
         esc = (s) =>
           String(s ?? "").replace(
@@ -787,43 +789,44 @@
           .trim();
         return words ? words.charAt(0).toUpperCase() + words.slice(1) : String(key || "");
       }
-      // Renders any stored value as readable text. Never leaks undefined,
-      // null, [object Object], {} or [] into the Admin.
-      function answerText(value) {
+      // Renders one stored answer as the applicant wrote or selected it. A
+      // choice that the form stored as a machine token is mapped back to the
+      // exact label the applicant saw, and anything the form no longer offers
+      // is shown exactly as stored, because it is still their answer. Never
+      // leaks undefined, null, [object Object], {} or [] into the Admin.
+      function answerText(field, value) {
+        const options = (field && field.options) || null;
         if (value === null || value === undefined) return "";
-        if (typeof value === "string") return value.trim();
+        if (typeof value === "string") return labelFor(options, value);
         if (typeof value === "boolean") return value ? "Yes" : "No";
         if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
         if (Array.isArray(value)) {
           return value
-            .map(answerText)
+            .map(item => answerText(field, item))
             .filter(Boolean)
             .join(" • ");
         }
         if (typeof value === "object") {
           return Object.entries(value)
             .map(([key, item]) => {
-              const text = answerText(item);
+              const text = answerText(field, item);
               return text ? `${humanizeKey(key)}: ${text}` : "";
             })
             .filter(Boolean)
             .join("\n");
         }
-        return String(value).trim();
+        return labelFor(options, String(value).trim());
       }
-      function answerDisplay(field, value) {
-        if (field && field.format === "datetime") {
-          if (value === null || value === undefined || value === "") return "";
-          const date = new Date(value);
-          return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
-        }
-        return answerText(value);
+      function labelFor(options, text) {
+        if (!text) return "";
+        return options && Object.prototype.hasOwnProperty.call(options, text)
+          ? options[text]
+          : text;
       }
       function answerItem(field, value) {
-        const text = answerDisplay(field, value);
-        const label = (field && field.label) || humanizeKey(field && field.field);
+        const text = answerText(field, value);
         const wide = !!(field && field.long) || text.length > 120;
-        return `<div class="answerItem${wide ? " wide" : ""}"><p class="answerQ">${esc(label)}</p><p class="answerA${text ? "" : " empty"}">${text ? esc(text) : "Not answered"}</p></div>`;
+        return `<div class="answerItem${wide ? " wide" : ""}"><p class="answerQ">${esc(field.label)}</p><p class="answerA${text ? "" : " empty"}">${text ? esc(text) : "Not answered"}</p></div>`;
       }
       function paintAnswers(box, record) {
         if (!record) {
@@ -834,35 +837,13 @@
           box.innerHTML = `<p class="answerNote">Application answers could not be loaded: ${esc(record.error)}</p>`;
           return;
         }
-        const answers = record.answers || {},
-          details = record.details || {},
-          schema = answerSchema;
-        const answerFields = [
-          ...schema.fields.filter(f => f.group === "answers"),
-          ...schema.extraFields,
-        ];
-        // The endpoint normally describes every stored column, but the panel
-        // still renders any stored answer it was not told about, so a column can
-        // never be silently hidden from the Admin.
-        const described = new Set(answerFields.map(f => f.field));
-        for (const key of Object.keys(answers)) {
-          if (described.has(key)) continue;
-          described.add(key);
-          answerFields.push({ field: key, label: humanizeKey(key) });
-        }
-        const answerItems = answerFields.map(f => answerItem(f, answers[f.field]));
-        const detailItems = schema.fields
-          .filter(f => f.group === "details")
-          .map(f => answerItem(f, details[f.field]))
-          .filter(html => !/class="answerA empty"/.test(html));
-        let html = '<p class="answersTitle">Application answers</p>';
-        html += answerItems.length
-          ? `<div class="answerGrid">${answerItems.join("")}</div>`
-          : '<p class="answerNote">This application has no stored answers.</p>';
-        if (detailItems.length) {
-          html += `<p class="answersTitle">Application details</p><div class="answerGrid">${detailItems.join("")}</div>`;
-        }
-        box.innerHTML = html;
+        // Only the canonical application questions are rendered, in form order.
+        // Nothing else about the stored row is shown here.
+        const answers = record.answers || {};
+        const items = answerSchema.map(field => answerItem(field, answers[field.field]));
+        box.innerHTML =
+          '<p class="answersTitle">Application answers</p>' +
+          `<div class="answerGrid">${items.join("")}</div>`;
       }
       function paintAppAnswers(id) {
         const box = $("answers-" + id);
@@ -878,23 +859,17 @@
           answerQueue.clear();
           try {
             const data = await req("list", { ids: batch.slice(0, 50) }, ANSWERS);
-            if (Array.isArray(data.fields)) {
-              answerSchema = {
-                fields: data.fields,
-                extraFields: Array.isArray(data.extra_fields) ? data.extra_fields : [],
-              };
-            }
+            if (Array.isArray(data.fields)) answerSchema = data.fields;
             const rows = Array.isArray(data.applications) ? data.applications : [];
             rows.forEach(row => answerCache.set(String(row.id), row));
             batch.forEach(id => {
-              if (!answerCache.has(id)) answerCache.set(id, { id, answers: {}, details: {} });
+              if (!answerCache.has(id)) answerCache.set(id, { id, answers: {} });
             });
           } catch (error) {
             batch.forEach(id =>
               answerCache.set(id, {
                 id,
                 answers: {},
-                details: {},
                 error: error.message || "Request failed",
               }),
             );

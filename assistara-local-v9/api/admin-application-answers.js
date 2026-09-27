@@ -19,9 +19,7 @@ const {
 } = require("./_academy-security");
 const {
   APPLICATION_FIELDS,
-  SYSTEM_FIELDS,
-  CANONICAL_FIELDS,
-  humanizeField,
+  APPLICATION_FIELDS_BY_NAME,
 } = require("./_academy-application-fields");
 
 const MAX_IDS_PER_REQUEST = 50;
@@ -68,28 +66,18 @@ function requestedIds(body) {
   return ids.slice(0, MAX_IDS_PER_REQUEST);
 }
 
+// Strict allowlist projection. The row is read whole so that a column which no
+// longer exists cannot break the query, but only the applicant-facing questions
+// in _academy-application-fields.js are ever returned. Everything else on the
+// row - ids, timestamps, acquisition and tracking metadata, internal status,
+// internal notes, and any column added to the table later - is discarded here
+// and never reaches the browser.
 function projectRow(row) {
   const answers = {};
-  const details = {};
-  for (const field of APPLICATION_FIELDS) {
-    if (field.group === "details") details[field.field] = row[field.field] ?? null;
-    else answers[field.field] = row[field.field] ?? null;
+  for (const field of APPLICATION_FIELDS_BY_NAME) {
+    answers[field] = row[field] ?? null;
   }
-
-  // Deny-by-default on noise, allow-by-default on real application data: any
-  // stored column that is neither a canonical field nor a known system column
-  // is surfaced instead of being silently dropped.
-  const internal = new Set([...SYSTEM_FIELDS, ...CANONICAL_FIELDS]);
-  for (const [key, value] of Object.entries(row)) {
-    if (internal.has(key)) continue;
-    answers[key] = value ?? null;
-  }
-
-  return {
-    id: String(row.id),
-    answers,
-    details,
-  };
+  return { id: String(row.id), answers };
 }
 
 module.exports = async function adminApplicationAnswers(req, res) {
@@ -153,22 +141,12 @@ module.exports = async function adminApplicationAnswers(req, res) {
 
   const applications = ids.map(id => {
     const record = byId.get(id);
-    return record ? { ...record, found: true } : { id, answers: {}, details: {}, found: false };
+    return record ? { ...record, found: true } : { id, answers: {}, found: false };
   });
-
-  const extraFields = [];
-  for (const record of applications) {
-    for (const field of Object.keys(record.answers)) {
-      if (CANONICAL_FIELDS.includes(field)) continue;
-      if (extraFields.some(entry => entry.field === field)) continue;
-      extraFields.push({ field, label: humanizeField(field), group: "answers" });
-    }
-  }
 
   return json(res, 200, {
     ok: true,
     fields: APPLICATION_FIELDS,
-    extra_fields: extraFields,
     applications,
   });
 };
