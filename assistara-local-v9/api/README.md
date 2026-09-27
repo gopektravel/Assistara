@@ -26,41 +26,20 @@ learner gate. The Drive proxy serves only a PDF response from the existing file
 ID; private/confirmation-page files fail closed. Existing Google Drive sharing
 permissions are not changed by this code and must be reviewed before production.
 
-`/api/admin-application-answers` returns the answers an applicant submitted on
-the Academy application form, for the applications whose ids are posted to it.
-`public.academy_applications` has no anon or authenticated grant, so the row is
-read here with the service role and only after the caller's Admin token has been
-verified with the same HMAC check described above. A request with no valid Admin
-token, a disallowed `Origin`, an unsupported method, or an unusable id is refused
-before the database is contacted, and the response is always `no-store`. The
-function never widens a grant or an RLS policy and never returns the service key.
+Application Answers and Internal Notes are handled by the Supabase Edge Function
+`admin-api`. Its actions use the existing `verifyToken()` check before any
+Admin-only operation reaches the database. Browser code never receives the
+Supabase service-role credential.
 
-`api/_academy-application-fields.js` is the single source of truth for the
-applicant-facing questions: their order, their wording, and the exact label for
-any choice the form stores as a machine token. It is sent to the Admin page with
-the answers, so the wording is defined once and cannot drift from the form.
+The Answers action reads only the canonical seven-field answer allowlist. Its
+response includes the canonical `fields` schema and `applications` entries in
+the form `{ id, answers, found }`; `answers` contains only those seven approved
+fields, and missing requested applications are represented safely with
+`found: false` and an empty `answers` object.
 
-The list is a closed allowlist of the seven questions the applicant actually
-answers. The row is read with `select=*` and then projected through that
-allowlist, so only the questions are returned. Ids, timestamps, acquisition and
-tracking metadata, internal status, internal notes, and any column added to the
-table later are discarded server-side and never reach the browser. Adding a
-question to the form therefore means deliberately adding it to that file.
-
-`/api/admin-application-notes` reads and writes the private reviewer note kept in
-`public.academy_applications.admin_notes`. It is a separate endpoint precisely
-because `admin_notes` is not an applicant answer: it is not on the allowlist
-above, so the answers response can never carry it, and no learner or applicant
-endpoint selects that column.
-
-The endpoint is gated exactly like the answers endpoint: a verified Admin token,
-an allowed `Origin`, and `POST` only, all checked before the database is
-contacted, with a `no-store` response. A read is limited to
-`select=id,admin_notes` for the requested ids. A write sends a `PATCH` whose body
-is `{ "admin_notes": ... }` and nothing else, so saving a note cannot change an
-application status or decision, cannot create a payment or enrolment record, and
-cannot send an email. Clearing a note stores `null`. Notes are trimmed and capped
-at 5000 characters.
+The Notes action has separate read and save operations for the private
+`admin_notes` column only. Notes are private to Admin, and saving one cannot
+change an application status, decision, payment, enrolment, or email behavior.
 
 Offline security tests:
 
