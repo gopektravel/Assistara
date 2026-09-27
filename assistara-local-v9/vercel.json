@@ -62,6 +62,16 @@
       }
     },
     {
+      "src": "api/academy-quick-check.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_quick-check-bank.js",
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "api/test-portal-session.js",
       "use": "@vercel/node",
       "config": {
@@ -307,6 +317,10 @@
     {
       "src": "/api/academy-session",
       "dest": "/api/academy-session.js"
+    },
+    {
+      "src": "/api/academy-quick-check",
+      "dest": "/api/academy-quick-check.js"
     },
     {
       "src": "/api/test-portal-session",
