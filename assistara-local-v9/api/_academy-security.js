@@ -194,6 +194,32 @@ function adminTokenClaims(token, serviceKey) {
   return { ...payload, expiry_ms: payload.exp };
 }
 
+function adminTokenDiagnostic(token, serviceKey) {
+  if (!serviceKey) return "SERVER_AUTH_CONFIG_MISSING";
+  if (!token) return "AUTH_HEADER_MISSING";
+  const parts = String(token).split(".");
+  if (parts.length !== 2) return "TOKEN_FORMAT_INVALID";
+  const [payloadPart, signaturePart] = parts;
+
+  const decodeBase64Url = value => {
+    if (!/^[A-Za-z0-9_-]+$/.test(value)) return null;
+    const bytes = Buffer.from(value, "base64url");
+    return bytes.toString("base64url") === value ? bytes : null;
+  };
+  const payloadBytes = decodeBase64Url(payloadPart);
+  const signatureBytes = decodeBase64Url(signaturePart);
+  if (!payloadBytes || !payloadBytes.length || !signatureBytes || signatureBytes.length !== 32) return "TOKEN_FORMAT_INVALID";
+
+  let payload;
+  try { payload = JSON.parse(payloadBytes.toString("utf8")); } catch { return "TOKEN_FORMAT_INVALID"; }
+  if (!payload || payload.u !== "admin") return "ADMIN_CLAIM_INVALID";
+
+  const expected = crypto.createHmac("sha256", serviceKey).update(payloadPart, "utf8").digest();
+  if (!crypto.timingSafeEqual(expected, signatureBytes)) return "SIGNATURE_INVALID";
+  if (typeof payload.exp !== "number" || !Number.isFinite(payload.exp) || payload.exp < 1e12 || payload.exp <= Date.now()) return "TOKEN_EXPIRED";
+  return "AUTH_VALID";
+}
+
 function issueCookie(res, cookieName, payload, secret, ttlSeconds) {
   const now = Date.now();
   const exp = Math.min(payload.exp || now + ttlSeconds * 1000, now + ttlSeconds * 1000);
@@ -219,5 +245,6 @@ module.exports = {
   academyHasAccess,
   validatedLearnerSession,
   adminTokenClaims,
+  adminTokenDiagnostic,
   issueCookie,
 };

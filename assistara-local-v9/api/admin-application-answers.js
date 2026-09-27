@@ -15,6 +15,7 @@ const {
   config,
   allowedOrigin,
   adminTokenClaims,
+  adminTokenDiagnostic,
   noStore,
 } = require("./_academy-security");
 const {
@@ -106,8 +107,9 @@ module.exports = async function adminApplicationAnswers(req, res) {
     return json(res, 503, { ok: false, error: "Admin authorization could not be verified" });
   }
 
-  if (!adminTokenClaims(bearerToken(req), cfg.service)) {
-    return json(res, 401, { ok: false, error: "Valid Admin authorization is required" });
+  const token = bearerToken(req);
+  if (!adminTokenClaims(token, cfg.service)) {
+    return json(res, 401, { ok: false, error: "Valid Admin authorization is required", authDiagnostic: adminTokenDiagnostic(token, cfg.service) });
   }
 
   const filter = ids.map(id => `"${id}"`).join(",");
