@@ -3859,4 +3859,302 @@ module.exports = Object.freeze([
       }
     ]
   }
+,
+  {
+    "class_key": "p2m3c1",
+    "question_set_version": "p2m3c1-v1",
+    "questions": [
+      {
+        "id": "p2m3c1.q01",
+        "prompt": "What is the primary purpose of social media marketing?",
+        "options": [
+          { "id": "p2m3c1.q01.o01", "text": "To build brand awareness, engage audiences, and drive sales" },
+          { "id": "p2m3c1.q01.o02", "text": "To replace all other forms of marketing" },
+          { "id": "p2m3c1.q01.o03", "text": "To create personal social media accounts for clients" },
+          { "id": "p2m3c1.q01.o04", "text": "To respond to customer service inquiries only" }
+        ],
+        "correct_option_id": "p2m3c1.q01.o01",
+        "correct_explanation": "✓ Correct. Social media marketing builds brand awareness, engages audiences, and drives sales through platforms like Facebook, Instagram, TikTok, and LinkedIn.",
+        "wrong_feedback_by_option": {
+          "p2m3c1.q01.o02": "Not quite! Social media marketing is one part of a broader marketing strategy — it does not replace all other forms of marketing. Try again.",
+          "p2m3c1.q01.o03": "Hmm, not this one. Social media marketing focuses on promoting a brand's products or services, not creating personal accounts for clients. Try again.",
+          "p2m3c1.q01.o04": "Close! While responding to customers is one responsibility, social media marketing covers much more — awareness, engagement, traffic, and conversions. Try again."
+        }
+      },
+      {
+        "id": "p2m3c1.q02",
+        "prompt": "What does the algorithm on social media platforms do?",
+        "options": [
+          { "id": "p2m3c1.q02.o01", "text": "It tracks what users engage with and shows more of that content to similar users" },
+          { "id": "p2m3c1.q02.o02", "text": "It randomly shows posts to all users" },
+          { "id": "p2m3c1.q02.o03", "text": "It only shows posts from paid advertisers" },
+          { "id": "p2m3c1.q02.o04", "text": "It hides all business content from users" }
+        ],
+        "correct_option_id": "p2m3c1.q02.o01",
+        "correct_explanation": "✓ Correct. The algorithm analyzes user activity — what they watch, like, comment on, or share — and shows more of what it thinks they'll enjoy.",
+        "wrong_feedback_by_option": {
+          "p2m3c1.q02.o02": "Not quite! The algorithm does not work randomly — it selects content based on relevance and engagement patterns. Try again.",
+          "p2m3c1.q02.o03": "Good try! The algorithm shows both organic and paid content — it is not limited to paid advertisers only. Try again.",
+          "p2m3c1.q02.o04": "Hmm, not this one. Business content can absolutely appear in users' feeds — the algorithm favors content that keeps people engaged. Try again."
+        }
+      },
+      {
+        "id": "p2m3c1.q03",
+        "prompt": "Which platform is best suited for B2B networking and professional branding?",
+        "options": [
+          { "id": "p2m3c1.q03.o01", "text": "LinkedIn" },
+          { "id": "p2m3c1.q03.o02", "text": "TikTok" },
+          { "id": "p2m3c1.q03.o03", "text": "Instagram" },
+          { "id": "p2m3c1.q03.o04", "text": "Facebook" }
+        ],
+        "correct_option_id": "p2m3c1.q03.o01",
+        "correct_explanation": "✓ Correct. LinkedIn is the go-to platform for B2B networking, professional branding, thought leadership, and showcasing expertise.",
+        "wrong_feedback_by_option": {
+          "p2m3c1.q03.o02": "Not quite! TikTok is best for short-form videos with entertainment or educational value, not B2B networking. Try again.",
+          "p2m3c1.q03.o03": "Good try! Instagram excels at visually driven content and brand aesthetics — it is not the primary B2B networking platform. Try again.",
+          "p2m3c1.q03.o04": "Close! Facebook is great for general audiences and community engagement, but it is not the main platform for professional B2B networking. Try again."
+        }
+      },
+      {
+        "id": "p2m3c1.q04",
+        "prompt": "What is one of the core responsibilities of a social media manager?",
+        "options": [
+          { "id": "p2m3c1.q04.o01", "text": "Content planning, graphic creation, caption writing, community management, and tracking" },
+          { "id": "p2m3c1.q04.o02", "text": "Only posting photos without any planning" },
+          { "id": "p2m3c1.q04.o03", "text": "Only responding to emails" },
+          { "id": "p2m3c1.q04.o04", "text": "Only creating paid advertisements" }
+        ],
+        "correct_option_id": "p2m3c1.q04.o01",
+        "correct_explanation": "✓ Correct. A social media manager handles content planning, graphic creation, caption writing, community management, and tracking engagement and reporting results.",
+        "wrong_feedback_by_option": {
+          "p2m3c1.q04.o02": "Not quite! Content planning and scheduling is a core responsibility — posting without planning misses the strategic side of the role. Try again.",
+          "p2m3c1.q04.o03": "Good try! Community management includes interacting on social platforms, but email responses are not the primary focus of a social media manager. Try again.",
+          "p2m3c1.q04.o04": "Close! Managing ads is one part of the role, but a social media manager also handles organic content, captions, and community engagement. Try again."
+        }
+      }
+    ]
+  },
+  {
+    "class_key": "p2m3c2",
+    "question_set_version": "p2m3c2-v1",
+    "questions": [
+      {
+        "id": "p2m3c2.q01",
+        "prompt": "Why should the client create their own Facebook Page?",
+        "options": [
+          { "id": "p2m3c2.q01.o01", "text": "Because Meta checks location and IP, and creating from a different country can trigger security alerts" },
+          { "id": "p2m3c2.q01.o02", "text": "Because VAs are not allowed to create Facebook Pages" },
+          { "id": "p2m3c2.q01.o03", "text": "Because the client needs to pay for the page" },
+          { "id": "p2m3c2.q01.o04", "text": "Because Facebook requires a business license" }
+        ],
+        "correct_option_id": "p2m3c2.q01.o01",
+        "correct_explanation": "✓ Correct. Meta checks your location and IP address when creating a page. If the location does not match the business country, it can trigger suspicious activity alerts or blocks.",
+        "wrong_feedback_by_option": {
+          "p2m3c2.q01.o02": "Not quite! VAs can help manage pages — the issue is that Facebook's security system flags location mismatches during creation. Try again.",
+          "p2m3c2.q01.o03": "Good try! Creating a Facebook Page is free — the reason for the client creating it is security, not payment. Try again.",
+          "p2m3c2.q01.o04": "Hmm, not this one. Facebook does not require a business license to create a standard business Page. Try again."
+        }
+      },
+      {
+        "id": "p2m3c2.q02",
+        "prompt": "What is a VPN used for in Facebook Page management?",
+        "options": [
+          { "id": "p2m3c2.q02.o01", "text": "To hide the real location so logins appear from the same country as the client" },
+          { "id": "p2m3c2.q02.o02", "text": "To speed up the internet connection" },
+          { "id": "p2m3c2.q02.o03", "text": "To create multiple Facebook accounts" },
+          { "id": "p2m3c2.q02.o04", "text": "To block advertisements" }
+        ],
+        "correct_option_id": "p2m3c2.q02.o01",
+        "correct_explanation": "✓ Correct. A VPN makes your browsing appear from a different location, preventing Facebook from flagging the login as suspicious when managing a client's page from another country.",
+        "wrong_feedback_by_option": {
+          "p2m3c2.q02.o02": "Not quite! A VPN does not speed up your internet — its purpose here is to mask your real geographic location. Try again.",
+          "p2m3c2.q02.o03": "Good try! While a VPN can be used in various ways, the reason we use it for Facebook is location matching, not creating multiple accounts. Try again.",
+          "p2m3c2.q02.o04": "Close! Blocking advertisements is not the purpose of a VPN in this context — it is about securing the login location. Try again."
+        }
+      },
+      {
+        "id": "p2m3c2.q03",
+        "prompt": "What information should you add when setting up a Facebook Page?",
+        "options": [
+          { "id": "p2m3c2.q03.o01", "text": "Page name, category, profile picture, cover photo, contact information, and a call-to-action button" },
+          { "id": "p2m3c2.q03.o02", "text": "Only the page name" },
+          { "id": "p2m3c2.q03.o03", "text": "Only the business logo" },
+          { "id": "p2m3c2.q03.o04", "text": "Only the business phone number" }
+        ],
+        "correct_option_id": "p2m3c2.q03.o01",
+        "correct_explanation": "✓ Correct. A complete Facebook Page includes the page name, category, profile and cover photos, contact info, and a call-to-action button.",
+        "wrong_feedback_by_option": {
+          "p2m3c2.q03.o02": "Not quite! A professional page needs much more than just a name — photos, contact info, and a call-to-action are essential. Try again.",
+          "p2m3c2.q03.o03": "Good try! The logo is important, but you also need a cover photo, category, contact details, and a call-to-action button. Try again.",
+          "p2m3c2.q03.o04": "Close! Contact information is one piece, but a complete page also needs a name, category, photos, and a call-to-action button. Try again."
+        }
+      },
+      {
+        "id": "p2m3c2.q04",
+        "prompt": "What is the final step in setting up a Facebook Page?",
+        "options": [
+          { "id": "p2m3c2.q04.o01", "text": "Click Publish to make the page live" },
+          { "id": "p2m3c2.q04.o02", "text": "Delete all the information" },
+          { "id": "p2m3c2.q04.o03", "text": "Share the page with friends" },
+          { "id": "p2m3c2.q04.o04", "text": "Run an advertisement campaign" }
+        ],
+        "correct_option_id": "p2m3c2.q04.o01",
+        "correct_explanation": "✓ Correct. Once all information is added — name, category, photos, contact details, and call-to-action — you click Publish to make the Page live.",
+        "wrong_feedback_by_option": {
+          "p2m3c2.q04.o02": "Not quite! Deleting the information would undo all the setup work — the final step is publishing the page. Try again.",
+          "p2m3c2.q04.o03": "Good try! Sharing the page can help spread awareness, but the final setup step is clicking Publish to make it live. Try again.",
+          "p2m3c2.q04.o04": "Close! Running ads is a separate marketing activity — the final setup step is publishing the page. Try again."
+        }
+      }
+    ]
+  },
+  {
+    "class_key": "p2m3c3",
+    "question_set_version": "p2m3c3-v1",
+    "questions": [
+      {
+        "id": "p2m3c3.q01",
+        "prompt": "What must an Instagram account be set to before it can connect to Meta Business Suite?",
+        "options": [
+          { "id": "p2m3c3.q01.o01", "text": "Business or Creator account" },
+          { "id": "p2m3c3.q01.o02", "text": "Personal account" },
+          { "id": "p2m3c3.q01.o03", "text": "Verified account" },
+          { "id": "p2m3c3.q01.o04", "text": "Private account" }
+        ],
+        "correct_option_id": "p2m3c3.q01.o01",
+        "correct_explanation": "✓ Correct. To manage Instagram from Meta Business Suite, the account must be switched to a Business or Creator type under Settings → Account Type and Tools.",
+        "wrong_feedback_by_option": {
+          "p2m3c3.q01.o02": "Not quite! A personal account cannot connect to Meta Business Suite — it needs to be switched to Business or Creator first. Try again.",
+          "p2m3c3.q01.o03": "Good try! Verification is a separate process — the requirement for Meta Business Suite is the account type, not verification status. Try again.",
+          "p2m3c3.q01.o04": "Close! A private account can be a business account — the key is the account type (Business or Creator), not the privacy setting. Try again."
+        }
+      },
+      {
+        "id": "p2m3c3.q02",
+        "prompt": "Where do you go in Meta Business Suite to connect Instagram?",
+        "options": [
+          { "id": "p2m3c3.q02.o01", "text": "Settings → Instagram Connection → Connect Instagram" },
+          { "id": "p2m3c3.q02.o02", "text": "Home Dashboard" },
+          { "id": "p2m3c3.q02.o03", "text": "The Planner" },
+          { "id": "p2m3c3.q02.o04", "text": "The Inbox" }
+        ],
+        "correct_option_id": "p2m3c3.q02.o01",
+        "correct_explanation": "✓ Correct. In Meta Business Suite, go to Settings (bottom left) → Instagram Connection → Connect Instagram, then log in and authorize access.",
+        "wrong_feedback_by_option": {
+          "p2m3c3.q02.o02": "Not quite! The Home Dashboard shows performance overviews — the connection setup is found in Settings. Try again.",
+          "p2m3c3.q02.o03": "Good try! The Planner is for scheduling posts — connecting Instagram is done through Settings. Try again.",
+          "p2m3c3.q02.o04": "Close! The Inbox is for managing messages — Instagram connection is configured in Settings. Try again."
+        }
+      },
+      {
+        "id": "p2m3c3.q03",
+        "prompt": "Which Meta Business Suite area consolidates messages from Facebook and Instagram?",
+        "options": [
+          { "id": "p2m3c3.q03.o01", "text": "Inbox" },
+          { "id": "p2m3c3.q03.o02", "text": "Home Dashboard" },
+          { "id": "p2m3c3.q03.o03", "text": "Ads" },
+          { "id": "p2m3c3.q03.o04", "text": "Insights" }
+        ],
+        "correct_option_id": "p2m3c3.q03.o01",
+        "correct_explanation": "✓ Correct. The Inbox consolidates messages, comments, and interactions from both Facebook and Instagram into a single location.",
+        "wrong_feedback_by_option": {
+          "p2m3c3.q03.o02": "Not quite! The Home Dashboard shows performance metrics — the Inbox is where messages from both platforms are consolidated. Try again.",
+          "p2m3c3.q03.o03": "Good try! Ads is for creating and managing advertising campaigns — the Inbox handles messages. Try again.",
+          "p2m3c3.q03.o04": "Close! Insights provides analytics — the Inbox is the consolidated messaging area. Try again."
+        }
+      },
+      {
+        "id": "p2m3c3.q04",
+        "prompt": "What does the Planner in Meta Business Suite allow you to do?",
+        "options": [
+          { "id": "p2m3c3.q04.o01", "text": "See a calendar view of scheduled posts and plan content strategy" },
+          { "id": "p2m3c3.q04.o02", "text": "Create advertising campaigns" },
+          { "id": "p2m3c3.q04.o03", "text": "Respond to messages" },
+          { "id": "p2m3c3.q04.o04", "text": "View analytics reports" }
+        ],
+        "correct_option_id": "p2m3c3.q04.o01",
+        "correct_explanation": "✓ Correct. The Planner offers a calendar view of scheduled posts and stories, helping you plan and organize your content strategy.",
+        "wrong_feedback_by_option": {
+          "p2m3c3.q04.o02": "Not quite! Creating ad campaigns is done in the Ads section — the Planner is for content scheduling. Try again.",
+          "p2m3c3.q04.o03": "Good try! Responding to messages happens in the Inbox — the Planner is for viewing and organizing scheduled content. Try again.",
+          "p2m3c3.q04.o04": "Close! Analytics are found in Insights — the Planner shows a calendar of scheduled posts. Try again."
+        }
+      }
+    ]
+  },
+  {
+    "class_key": "p2m3c4",
+    "question_set_version": "p2m3c4-v1",
+    "questions": [
+      {
+        "id": "p2m3c4.q01",
+        "prompt": "What is the difference between Reach and Impressions?",
+        "options": [
+          { "id": "p2m3c4.q01.o01", "text": "Reach counts each user once; Impressions count every time the post is displayed" },
+          { "id": "p2m3c4.q01.o02", "text": "They are exactly the same metric" },
+          { "id": "p2m3c4.q01.o03", "text": "Reach counts paid ads only; Impressions count organic posts only" },
+          { "id": "p2m3c4.q01.o04", "text": "Reach measures clicks; Impressions measure likes" }
+        ],
+        "correct_option_id": "p2m3c4.q01.o01",
+        "correct_explanation": "✓ Correct. Reach is the number of times a post is seen by individual users (each user counted once). Impressions count every time a post is displayed, even to the same user.",
+        "wrong_feedback_by_option": {
+          "p2m3c4.q01.o02": "Not quite! Reach and Impressions are different — Reach counts unique users, while Impressions count every display. Try again.",
+          "p2m3c4.q01.o03": "Good try! Both Reach and Impressions can apply to paid and organic content — the difference is not about paid vs organic. Try again.",
+          "p2m3c4.q01.o04": "Close! Neither Reach nor Impressions directly measure clicks or likes — they measure how many times content was seen. Try again."
+        }
+      },
+      {
+        "id": "p2m3c4.q02",
+        "prompt": "How do you calculate Engagement Rate?",
+        "options": [
+          { "id": "p2m3c4.q02.o01", "text": "Engagement ÷ Reach × 100" },
+          { "id": "p2m3c4.q02.o02", "text": "Reach ÷ Engagement × 100" },
+          { "id": "p2m3c4.q02.o03", "text": "Engagement × Reach ÷ 100" },
+          { "id": "p2m3c4.q02.o04", "text": "Reach × 100 ÷ Engagement" }
+        ],
+        "correct_option_id": "p2m3c4.q02.o01",
+        "correct_explanation": "✓ Correct. Engagement Rate = Engagement ÷ Reach × 100. This gives the percentage of people who saw the post and interacted with it.",
+        "wrong_feedback_by_option": {
+          "p2m3c4.q02.o02": "Not quite! That formula would give a number greater than 100% in most cases — Engagement Rate is Engagement divided by Reach, times 100. Try again.",
+          "p2m3c4.q02.o03": "Good try! Multiplying Engagement by Reach would give an extremely large number — the correct formula divides Engagement by Reach first. Try again.",
+          "p2m3c4.q02.o04": "Close! That formula inverts the relationship — Engagement Rate divides Engagement by Reach, not the other way around. Try again."
+        }
+      },
+      {
+        "id": "p2m3c4.q03",
+        "prompt": "How do you differentiate paid reach from organic reach?",
+        "options": [
+          { "id": "p2m3c4.q03.o01", "text": "Paid reach comes from ads; organic reach comes from unpaid posts" },
+          { "id": "p2m3c4.q03.o02", "text": "Paid reach is always higher than organic reach" },
+          { "id": "p2m3c4.q03.o03", "text": "Organic reach is only from verified accounts" },
+          { "id": "p2m3c4.q03.o04", "text": "There is no difference between paid and organic reach" }
+        ],
+        "correct_option_id": "p2m3c4.q03.o01",
+        "correct_explanation": "✓ Correct. Paid reach comes from advertising campaigns, while organic reach comes from unpaid posts. Total Reach = Paid Reach + Organic Reach.",
+        "wrong_feedback_by_option": {
+          "p2m3c4.q03.o02": "Not quite! Paid reach is not always higher — a viral post can generate massive organic reach without any ad spend. Try again.",
+          "p2m3c4.q03.o03": "Good try! Organic reach is available to all accounts — verification is not required for unpaid posts to be seen. Try again.",
+          "p2m3c4.q03.o04": "Close! There is a clear difference — paid reach comes from ads, and organic reach comes from unpaid content. Try again."
+        }
+      },
+      {
+        "id": "p2m3c4.q04",
+        "prompt": "How can you export data from Meta Business Suite for further analysis?",
+        "options": [
+          { "id": "p2m3c4.q04.o01", "text": "Navigate to Contents, filter for posts, and export to Excel" },
+          { "id": "p2m3c4.q04.o02", "text": "Screenshot the analytics dashboard" },
+          { "id": "p2m3c4.q04.o03", "text": "Copy and paste the numbers into a document" },
+          { "id": "p2m3c4.q04.o04", "text": "Email the analytics team" }
+        ],
+        "correct_option_id": "p2m3c4.q04.o01",
+        "correct_explanation": "✓ Correct. In Meta Business Suite, navigate to Contents, filter for all posts, and it will create an Excel sheet for further data analysis.",
+        "wrong_feedback_by_option": {
+          "p2m3c4.q04.o02": "Not quite! Screenshots capture visuals but not the underlying data — exporting to Excel gives you raw numbers for analysis. Try again.",
+          "p2m3c4.q04.o03": "Good try! Copy-pasting individual numbers is tedious and error-prone — the proper method is exporting the full dataset. Try again.",
+          "p2m3c4.q04.o04": "Close! Emailing a team does not export the data — Meta Business Suite has a built-in export feature. Try again."
+        }
+      }
+    ]
+  }
+
 ]);

@@ -17,8 +17,9 @@ const EXPECTED_CLASSES = [
   "p1m6c1", "p1m6c2", "p1m6c3", "p1m6c4",
   "p2m1c1", "p2m1c2", "p2m1c3", "p2m1c4",
   "p2m2c1", "p2m2c2", "p2m2c3",
+  "p2m3c1", "p2m3c2", "p2m3c3", "p2m3c4",
 ];
-const TOTAL_QUESTIONS = 127;
+const TOTAL_QUESTIONS = 143;
 const PHASE_2_CLASSES = new Set(EXPECTED_CLASSES.filter(key => key.startsWith("p2")));
 const failures = [];
 const warnings = [];
@@ -97,7 +98,7 @@ function baselineQuestions(source) {
 if (!correctPrefix || !correctPrefix.includes("\u2713") || !retryCue || !wrongFallback || openers.length < 6) {
   fail("dashboard feedback constants are missing or malformed");
 }
-if (!Array.isArray(bank) || bank.length !== EXPECTED_CLASSES.length) fail("expected exactly 29 classes, found " + (bank && bank.length));
+if (!Array.isArray(bank) || bank.length !== EXPECTED_CLASSES.length) fail("expected exactly 33 classes, found " + (bank && bank.length));
 const keys = Array.isArray(bank) ? bank.map(set => set && set.class_key) : [];
 const duplicateClasses = keys.filter((key, index) => keys.indexOf(key) !== index);
 if (duplicateClasses.length) fail("duplicate class keys: " + [...new Set(duplicateClasses)].join(", "));
@@ -155,13 +156,13 @@ for (const set of bank || []) {
     }
   }
 }
-if (questionCount !== TOTAL_QUESTIONS) fail("expected 127 questions, found " + questionCount);
+if (questionCount !== TOTAL_QUESTIONS) fail("expected 143 questions, found " + questionCount);
 
 const baseline = readBaseline();
 if (baseline) {
   const baselineMap = baselineQuestions(baseline);
   const baselineKeys = [...baselineMap.keys()];
-  if (baselineKeys.length !== EXPECTED_CLASSES.length) fail("baseline class count mismatch: expected 29, found " + baselineKeys.length);
+  if (baselineKeys.length !== EXPECTED_CLASSES.length) fail("baseline class count mismatch: expected 33, found " + baselineKeys.length);
   for (const key of EXPECTED_CLASSES) if (!baselineMap.has(key)) fail("baseline class missing: " + key);
   const baselinePrefix = (baseline.match(/const QC_CORRECT_PREFIX="([^"]*)"/) || [])[1];
   const baselineCue = (baseline.match(/const QC_RETRY_CUE="([^"]*)"/) || [])[1];
@@ -205,8 +206,8 @@ if (failures.length) {
   process.exit(1);
 }
 console.log("Quick Check server-bank validator: PASS");
-console.log("  classes: " + bank.length + "/29");
-console.log("  questions: " + questionCount + "/127");
+console.log("  classes: " + bank.length + "/33");
+console.log("  questions: " + questionCount + "/143");
 console.log("  stable IDs, four options, versions, correct-answer copy, all wrong-option feedback: PASS");
 console.log("  Phase 2 option-specific feedback: PASS");
 console.log("  baseline fidelity (prompts/options/correct explanations/Phase 2 wrong feedback): PASS");

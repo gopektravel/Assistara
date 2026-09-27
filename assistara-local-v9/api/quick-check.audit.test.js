@@ -28,9 +28,9 @@ const ALL_QUESTIONS = bank.flatMap(s => s.questions.map(q => ({ set: s, q })));
 // ITEM 5 — BANK STRUCTURE / CONSISTENCY
 // ---------------------------------------------------------------------------
 
-test("BANK: 29 classes and 127 questions", () => {
-  assert.equal(bank.length, 29);
-  assert.equal(ALL_QUESTIONS.length, 127);
+test("BANK: 33 classes and 143 questions", () => {
+  assert.equal(bank.length, 33);
+  assert.equal(ALL_QUESTIONS.length, 143);
 });
 
 test("BANK: class keys unique", () => {
@@ -51,7 +51,7 @@ test("BANK: question ids are <class_key>.qNN and unique within the whole bank", 
     assert.equal(seen.has(q.id), false, `duplicate question id ${q.id}`);
     seen.add(q.id);
   }
-  assert.equal(seen.size, 127);
+  assert.equal(seen.size, 143);
 });
 
 test("BANK: option ids are <question_id>.oNN, unique per question, >=2 options", () => {
@@ -339,7 +339,7 @@ test("FRONTEND: dashboard exposes no answer key material", () => {
 test("FRONTEND: no lesson question array is populated in the browser", () => {
   const html = fs.readFileSync(dashboardPath, "utf8");
   const defs = [...html.matchAll(/const (lesson\d+)\s*=\s*\{[\s\S]*?questions:\[([\s\S]*?)\]\}/g)];
-  assert.equal(defs.length, 29, `expected 29 lesson defs, found ${defs.length}`);
+  assert.equal(defs.length, 33, `expected 33 lesson defs, found ${defs.length}`);
   for (const d of defs) {
     assert.equal(d[2].trim(), "", `${d[1]} still holds question data in the browser`);
   }
@@ -466,7 +466,7 @@ test("BANK: prompts, options and feedback reconcile byte-for-byte with the appro
   for (const [, lessonName, classKey] of baseline.matchAll(/const (lesson\d+)=\{key:"([^"]+)"/g)) {
     baselineByClass.set(classKey, readQuestions(baseline, lessonName));
   }
-  assert.equal(baselineByClass.size, 29);
+  assert.equal(baselineByClass.size, 33);
   const currentPrefix = (fs.readFileSync(dashboardPath, "utf8").match(/const QC_CORRECT_PREFIX\s*=\s*"([^"]*)"/) || [])[1];
   const baselinePrefix = (baseline.match(/const QC_CORRECT_PREFIX="([^"]*)"/) || [])[1];
   const retryCue = (baseline.match(/const QC_RETRY_CUE="([^"]*)"/) || [])[1];
