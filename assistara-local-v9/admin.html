@@ -477,6 +477,126 @@
           grid-template-columns: 1fr;
         }
       }
+      .cardMeta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .answersHead {
+        cursor: pointer;
+        align-items: flex-start;
+      }
+      .answersHead:hover .name {
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+      .answersToggle {
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+        user-select: none;
+        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      }
+      .answersHead:hover .answersToggle {
+        background: #faf9f5;
+        border-color: #c9c3b6;
+      }
+      .answersToggle .chev {
+        display: inline-block;
+        font-size: 12px;
+        line-height: 1;
+        transition: transform 0.15s ease;
+      }
+      .card.open .answersToggle {
+        border-color: #171717;
+        background: #171717;
+        color: #fff;
+      }
+      .card.open .answersToggle .chev {
+        transform: rotate(180deg);
+      }
+      .answersPanel {
+        display: none;
+        margin-top: 14px;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+      .card.open .answersPanel {
+        display: block;
+      }
+      .answersTitle {
+        margin: 0 0 9px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .answersTitle:not(:first-child) {
+        margin-top: 16px;
+      }
+      .answerGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 9px;
+        align-items: start;
+      }
+      .answerItem {
+        background: #faf9f5;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 11px 12px;
+        min-width: 0;
+      }
+      .answerItem.wide {
+        grid-column: 1 / -1;
+      }
+      .answerQ {
+        margin: 0 0 5px;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.4;
+        color: var(--muted);
+      }
+      .answerA {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--ink);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .answerA.empty {
+        color: #a49c8e;
+        font-style: italic;
+      }
+      .answerNote {
+        margin: 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      @media (max-width: 650px) {
+        .cardMeta {
+          justify-content: flex-start;
+          margin-top: 10px;
+        }
+        .answerGrid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
 </head>
@@ -555,7 +675,8 @@
         DEL =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-delete-application",
         ONBOARD =
-          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-send-onboarding";
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-send-onboarding",
+        ANSWERS = "/api/admin-application-answers";
       let token = sessionStorage.getItem("assistara_admin_token") || "",
         apps = [],
         web = [],
@@ -563,6 +684,13 @@
         accounts = [],
         acquisitionLinks = [],
         tab = "applicants";
+      // Every application card keeps its own expand state so reviewing one
+      // applicant never opens or closes another.
+      const openApps = new Set(),
+        answerCache = new Map(),
+        answerQueue = new Set(),
+        SAFE_APP_ID = /^[A-Za-z0-9_-]{1,64}$/;
+      let answerSchema = { fields: [], extraFields: [] };
       const $ = (x) => document.getElementById(x),
         esc = (s) =>
           String(s ?? "").replace(
@@ -652,6 +780,156 @@
             ? `<div class="alert"><h2>🔔 PAYMENT PENDING VERIFICATION (${p.length})</h2><div class="sub">Only payments that still need an action appear here. After the final no-response follow-up, the record is archived below as Unverified payment.</div>${p.map(paymentRow).join("")}</div>`
             : "";
       }
+      function humanizeKey(key) {
+        const words = String(key || "")
+          .replace(/[_\-.]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        return words ? words.charAt(0).toUpperCase() + words.slice(1) : String(key || "");
+      }
+      // Renders any stored value as readable text. Never leaks undefined,
+      // null, [object Object], {} or [] into the Admin.
+      function answerText(value) {
+        if (value === null || value === undefined) return "";
+        if (typeof value === "string") return value.trim();
+        if (typeof value === "boolean") return value ? "Yes" : "No";
+        if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
+        if (Array.isArray(value)) {
+          return value
+            .map(answerText)
+            .filter(Boolean)
+            .join(" • ");
+        }
+        if (typeof value === "object") {
+          return Object.entries(value)
+            .map(([key, item]) => {
+              const text = answerText(item);
+              return text ? `${humanizeKey(key)}: ${text}` : "";
+            })
+            .filter(Boolean)
+            .join("\n");
+        }
+        return String(value).trim();
+      }
+      function answerDisplay(field, value) {
+        if (field && field.format === "datetime") {
+          if (value === null || value === undefined || value === "") return "";
+          const date = new Date(value);
+          return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+        }
+        return answerText(value);
+      }
+      function answerItem(field, value) {
+        const text = answerDisplay(field, value);
+        const label = (field && field.label) || humanizeKey(field && field.field);
+        const wide = !!(field && field.long) || text.length > 120;
+        return `<div class="answerItem${wide ? " wide" : ""}"><p class="answerQ">${esc(label)}</p><p class="answerA${text ? "" : " empty"}">${text ? esc(text) : "Not answered"}</p></div>`;
+      }
+      function paintAnswers(box, record) {
+        if (!record) {
+          box.innerHTML = '<p class="answerNote">Loading application answers…</p>';
+          return;
+        }
+        if (record.error) {
+          box.innerHTML = `<p class="answerNote">Application answers could not be loaded: ${esc(record.error)}</p>`;
+          return;
+        }
+        const answers = record.answers || {},
+          details = record.details || {},
+          schema = answerSchema;
+        const answerFields = [
+          ...schema.fields.filter(f => f.group === "answers"),
+          ...schema.extraFields,
+        ];
+        // The endpoint normally describes every stored column, but the panel
+        // still renders any stored answer it was not told about, so a column can
+        // never be silently hidden from the Admin.
+        const described = new Set(answerFields.map(f => f.field));
+        for (const key of Object.keys(answers)) {
+          if (described.has(key)) continue;
+          described.add(key);
+          answerFields.push({ field: key, label: humanizeKey(key) });
+        }
+        const answerItems = answerFields.map(f => answerItem(f, answers[f.field]));
+        const detailItems = schema.fields
+          .filter(f => f.group === "details")
+          .map(f => answerItem(f, details[f.field]))
+          .filter(html => !/class="answerA empty"/.test(html));
+        let html = '<p class="answersTitle">Application answers</p>';
+        html += answerItems.length
+          ? `<div class="answerGrid">${answerItems.join("")}</div>`
+          : '<p class="answerNote">This application has no stored answers.</p>';
+        if (detailItems.length) {
+          html += `<p class="answersTitle">Application details</p><div class="answerGrid">${detailItems.join("")}</div>`;
+        }
+        box.innerHTML = html;
+      }
+      function paintAppAnswers(id) {
+        const box = $("answers-" + id);
+        if (box) paintAnswers(box, answerCache.get(id));
+      }
+      async function fetchAppAnswers(ids) {
+        ids.forEach(id => {
+          if (!answerCache.has(id)) answerQueue.add(id);
+        });
+        // Coalesce every queued card into as few round trips as possible.
+        for (let guard = 0; answerQueue.size && guard < 6; guard += 1) {
+          const batch = [...answerQueue];
+          answerQueue.clear();
+          try {
+            const data = await req("list", { ids: batch.slice(0, 50) }, ANSWERS);
+            if (Array.isArray(data.fields)) {
+              answerSchema = {
+                fields: data.fields,
+                extraFields: Array.isArray(data.extra_fields) ? data.extra_fields : [],
+              };
+            }
+            const rows = Array.isArray(data.applications) ? data.applications : [];
+            rows.forEach(row => answerCache.set(String(row.id), row));
+            batch.forEach(id => {
+              if (!answerCache.has(id)) answerCache.set(id, { id, answers: {}, details: {} });
+            });
+          } catch (error) {
+            batch.forEach(id =>
+              answerCache.set(id, {
+                id,
+                answers: {},
+                details: {},
+                error: error.message || "Request failed",
+              }),
+            );
+          }
+        }
+      }
+      function hydrateOpenApps() {
+        const open = [...openApps].filter(id => $("app-" + id));
+        if (!open.length) return;
+        open.forEach(paintAppAnswers);
+        const missing = open.filter(id => !answerCache.has(id));
+        if (missing.length) {
+          fetchAppAnswers(missing).then(() => open.forEach(paintAppAnswers));
+        }
+      }
+      window.toggleAppAnswers = (id) => {
+        const key = String(id || "");
+        if (!SAFE_APP_ID.test(key)) return;
+        const card = $("app-" + key);
+        if (!card) return;
+        const open = !card.classList.contains("open");
+        card.classList.toggle("open", open);
+        const trigger = card.querySelector("[data-toggle-answers]");
+        if (trigger) {
+          trigger.setAttribute("aria-expanded", open ? "true" : "false");
+          const text = trigger.querySelector(".answersToggleText");
+          if (text) text.textContent = open ? "Hide answers" : "View answers";
+        }
+        if (open) {
+          openApps.add(key);
+          hydrateOpenApps();
+        } else {
+          openApps.delete(key);
+        }
+      };
       function appCard(x) {
         const unverified =
           x.payment_method === "gcash" &&
@@ -660,7 +938,10 @@
             x.gcash_followup_status || "",
           );
         const paymentLabel = unverified ? "unverified_payment" : x.payment_status === "pending" ? "payment_pending" : x.payment_status || "not_requested";
-        return `<div class="card"><div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="badges">${badge(x.decision || x.status || "new")}${badge(paymentLabel)}</div></div>${x.gcash_reference ? `<div class="detail"><b>GCash reference:</b> ${esc(x.gcash_reference)}${unverified ? "<br><b>Payment:</b> Unverified payment. Final follow-up sent." : ""}</div>` : ""}<div class="actions">${unverified ? `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>` : ""}${!x.decision ? `<button class="accept" onclick="decision('${x.id}','accepted')">Accept + email</button><button onclick="decision('${x.id}','declined')">Decline + email</button>` : ""}${x.decision === "accepted" ? `<button onclick="decision('${x.id}','accepted',true)">Resend acceptance</button>` : ""}${x.payment_status === "paid" ? `<button class="success" onclick="onboard('${x.id}')">Send account setup</button>` : ""}<button class="danger" onclick="deleteApplication('${x.id}')">Delete application</button></div></div>`;
+        const key = x.id === null || x.id === undefined ? "" : String(x.id);
+        const expandable = SAFE_APP_ID.test(key);
+        const open = expandable && openApps.has(key);
+        return `<div class="card${open ? " open" : ""}" id="app-${esc(key)}">${expandable ? `<div class="cardtop answersHead" data-toggle-answers="${esc(key)}" role="button" tabindex="0" aria-expanded="${open ? "true" : "false"}" aria-controls="answers-${esc(key)}"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="cardMeta"><div class="badges">${badge(x.decision || x.status || "new")}${badge(paymentLabel)}</div><span class="answersToggle" aria-hidden="true"><span class="answersToggleText">${open ? "Hide answers" : "View answers"}</span><span class="chev">⌄</span></span></div></div>` : `<div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="badges">${badge(x.decision || x.status || "new")}${badge(paymentLabel)}</div></div>`}${x.gcash_reference ? `<div class="detail"><b>GCash reference:</b> ${esc(x.gcash_reference)}${unverified ? "<br><b>Payment:</b> Unverified payment. Final follow-up sent." : ""}</div>` : ""}${expandable ? `<div class="answersPanel" id="answers-${esc(key)}"></div>` : ""}<div class="actions">${unverified ? `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>` : ""}${!x.decision ? `<button class="accept" onclick="decision('${x.id}','accepted')">Accept + email</button><button onclick="decision('${x.id}','declined')">Decline + email</button>` : ""}${x.decision === "accepted" ? `<button onclick="decision('${x.id}','accepted',true)">Resend acceptance</button>` : ""}${x.payment_status === "paid" ? `<button class="success" onclick="onboard('${x.id}')">Send account setup</button>` : ""}<button class="danger" onclick="deleteApplication('${x.id}')">Delete application</button></div></div>`;
       }
       function studentCard(x) {
         const suspended = !!x.suspended_at;
@@ -685,6 +966,7 @@
           $("cards").innerHTML = a.length
             ? a.map(appCard).join("")
             : '<div class="empty">No active applications.</div>';
+          hydrateOpenApps();
           return;
         }
         if (tab === "students") {
@@ -749,6 +1031,22 @@
         const e = $("student-" + id);
         if (e) e.classList.toggle("open");
       };
+      // One delegated listener so application cards need no inline handlers.
+      $("cards").addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) return;
+        const trigger = event.target.closest("[data-toggle-answers]");
+        if (!trigger) return;
+        event.preventDefault();
+        window.toggleAppAnswers(trigger.dataset.toggleAnswers);
+      });
+      $("cards").addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " " && event.key !== "Spacebar") return;
+        if (!(event.target instanceof Element)) return;
+        const trigger = event.target.closest("[data-toggle-answers]");
+        if (!trigger) return;
+        event.preventDefault();
+        window.toggleAppAnswers(trigger.dataset.toggleAnswers);
+      });
       window.approvePay = async (id) => {
         if (!confirm("Approve this GCash payment as ₱6,900 PAID?")) return;
         try {
