@@ -52,7 +52,7 @@ Deno.serve(async(req:Request)=>{
     const safeIds=ids.filter((id:string)=>SAFE_ID.test(String(id||"").trim())).map((id:string)=>String(id).trim()).slice(0,50);
     if(!safeIds.length) return new Response(JSON.stringify({ok:false,error:"A valid application id is required"}),{status:400,headers:h});
     const filter=safeIds.map(id=>`"${id}"`).join(",");
-    const {data,error}=await db.from("academy_applications").select(ANSWER_FIELDS.join(",")).in("id",safeIds);
+    const {data,error}=await db.from("academy_applications").select("id,"+ANSWER_FIELDS.join(",")).in("id",safeIds);
     if(error) return new Response(JSON.stringify({ok:false,error:"Could not load answers"}),{status:500,headers:h});
     const byId=new Map();
     for(const row of data||[]){
