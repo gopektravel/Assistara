@@ -772,6 +772,18 @@
                 "'": "&#039;",
               })[c],
           );
+      const ALLOWED_AUTH_DIAGNOSTICS = new Set([
+        "AUTH_HEADER_MISSING",
+        "BEARER_MISSING",
+        "TOKEN_FORMAT_INVALID",
+        "TOKEN_EXPIRED",
+        "SIGNATURE_INVALID",
+        "ADMIN_CLAIM_INVALID",
+        "AUTH_VALID",
+        "SERVER_AUTH_CONFIG_MISSING",
+      ]);
+      const formatAuthDiagnostic = (v) =>
+        ALLOWED_AUTH_DIAGNOSTICS.has(v) ? v : "UNKNOWN_AUTH_FAILURE";
       async function req(action, p = {}, api = API) {
         const body = api === ONBOARD || api === DEL ? p : { action, ...p };
         const r = await fetch(api, {
@@ -783,7 +795,7 @@
             body: JSON.stringify(body),
           }),
           j = await r.json().catch(() => ({}));
-        if (!r.ok) throw Error(j.error || "Request failed");
+        if (!r.ok) { const err=Error(j.error||"Request failed"); err.authDiagnostic=j.authDiagnostic; throw err; }
         return j;
       }
       async function syncTestPortalCookie(action = "exchange") {
@@ -962,7 +974,8 @@
           return;
         }
         if (record.error) {
-          box.innerHTML = `<p class="answerNote">Application answers could not be loaded: ${esc(record.error)}</p>`;
+          const diag = record.authDiagnostic ? `<p class="answerNote">Diagnostic: ${esc(formatAuthDiagnostic(record.authDiagnostic))}</p>` : "";
+          box.innerHTML = `<p class="answerNote">Application answers could not be loaded: ${esc(record.error)}</p>${diag}`;
           return;
         }
         // Only the canonical application questions are rendered, in form order.
@@ -997,6 +1010,7 @@
                 id,
                 answers: {},
                 error: error.message || "Request failed",
+                authDiagnostic: error.authDiagnostic,
               }),
             );
           }
@@ -1055,7 +1069,8 @@
           return;
         }
         if (record.error) {
-          box.innerHTML = `<p class="answerNote">Reviewer notes could not be loaded: ${esc(record.error)}</p>`;
+          const diag = record.authDiagnostic ? `<p class="answerNote">Diagnostic: ${esc(formatAuthDiagnostic(record.authDiagnostic))}</p>` : "";
+          box.innerHTML = `<p class="answerNote">Reviewer notes could not be loaded: ${esc(record.error)}</p>${diag}`;
           return;
         }
         box.innerHTML = notesFields(id, record.note || "");
@@ -1098,7 +1113,7 @@
             });
           } catch (error) {
             batch.forEach((id) =>
-              noteCache.set(id, { error: error.message || "Request failed" }),
+              noteCache.set(id, { error: error.message || "Request failed", authDiagnostic: error.authDiagnostic }),
             );
           }
         }
