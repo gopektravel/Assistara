@@ -81,6 +81,15 @@
       }
     },
     {
+      "src": "api/admin-application-notes.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "beta-account.html",
       "use": "@vercel/static"
     },
@@ -306,6 +315,10 @@
     {
       "src": "/api/admin-application-answers",
       "dest": "/api/admin-application-answers.js"
+    },
+    {
+      "src": "/api/admin-application-notes",
+      "dest": "/api/admin-application-notes.js"
     },
     {
       "src": "/api/academy-content",

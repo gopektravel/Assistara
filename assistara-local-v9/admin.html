@@ -588,6 +588,122 @@
         font-size: 13px;
         color: var(--muted);
       }
+      /* Internal reviewer notes. Same visual language as the answers toggle,
+         deliberately quieter so it never competes with applicant answers. */
+      .notesBar {
+        margin-top: 10px;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+      .notesHead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--muted);
+        user-select: none;
+      }
+      .notesToggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 28px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 5px 11px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      }
+      .notesHead:hover .notesToggle {
+        background: #faf9f5;
+        border-color: #c9c3b6;
+      }
+      .notesToggle .chev {
+        display: inline-block;
+        font-size: 12px;
+        line-height: 1;
+        transition: transform 0.15s ease;
+      }
+      .notesHead[aria-expanded="true"] .notesToggle {
+        border-color: #171717;
+        background: #171717;
+        color: #fff;
+      }
+      .notesHead[aria-expanded="true"] .chev {
+        transform: rotate(180deg);
+      }
+      .notesPanel {
+        display: none;
+        margin-top: 11px;
+      }
+      .notesPanel.open {
+        display: block;
+      }
+      .notesHint {
+        margin: 0 0 7px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .notesInput {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 74px;
+        resize: vertical;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink);
+      }
+      .notesInput:focus {
+        outline: 2px solid #171717;
+        outline-offset: 1px;
+        border-color: #171717;
+      }
+      .notesRow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 9px;
+        flex-wrap: wrap;
+      }
+      .notesSave {
+        border: 1px solid #171717;
+        background: #171717;
+        color: #fff;
+        border-radius: 999px;
+        padding: 7px 14px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .notesSave:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      .notesStatus {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .notesStatus.ok {
+        color: #1c7a4a;
+        font-weight: 800;
+      }
+      .notesStatus.bad {
+        color: #b4232a;
+        font-weight: 800;
+      }
       @media (max-width: 650px) {
         .cardMeta {
           justify-content: flex-start;
@@ -676,7 +792,8 @@
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-delete-application",
         ONBOARD =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-send-onboarding",
-        ANSWERS = "/api/admin-application-answers";
+        ANSWERS = "/api/admin-application-answers",
+        NOTES = "/api/admin-application-notes";
       let token = sessionStorage.getItem("assistara_admin_token") || "",
         apps = [],
         web = [],
@@ -689,6 +806,13 @@
       const openApps = new Set(),
         answerCache = new Map(),
         answerQueue = new Set(),
+        // Reviewer notes are internal only and live behind their own
+        // admin-only endpoint, never inside the seven-question answers panel.
+        openNotes = new Set(),
+        noteCache = new Map(),
+        noteQueue = new Set(),
+        dirtyNotes = new Set(),
+        noteDrafts = new Map(),
         SAFE_APP_ID = /^[A-Za-z0-9_-]{1,64}$/;
       // The canonical application questions, in form order, as sent by the
       // answers endpoint. Filled in on the first successful load.
@@ -737,6 +861,64 @@
       }
       function badge(s) {
         return `<span class="badge ${esc(s)}">${esc(String(s || "").replaceAll("_", " "))}</span>`;
+      }
+      /* ---------------------------------------------------------------- *
+       * Real application state on public.academy_applications.
+       *
+       * website-form creates a row with the seven answers plus contact and
+       * attribution columns, and deliberately writes NEITHER `status` NOR
+       * `payment_status`: both start at the column default. `status` and
+       * `decision` are then advanced by the admin-applications Edge Function,
+       * and `payment_status` only ever changes once a payment has actually
+       * been requested and submitted.
+       *
+       * A card therefore shows a decision badge whenever `decision` is
+       * recorded, otherwise the real `status`, otherwise NEW; and a payment
+       * badge only when `payment_status` records a payment that has actually
+       * started. A placeholder default such as `none` is not a state a
+       * reviewer cares about, so it is never rendered.
+       * ---------------------------------------------------------------- */
+      // Values that mean "nothing has been recorded yet".
+      const NO_STATE = new Set(["", "null", "none", "unknown", "n/a"]);
+      const NO_PAYMENT = new Set([
+        "",
+        "null",
+        "none",
+        "unknown",
+        "n/a",
+        "not_requested",
+        "no_payment",
+        "none_requested",
+        "no_payment_requested",
+      ]);
+      function applicationState(x) {
+        // A recorded decision is the most recent thing that happened.
+        const decision = String(x.decision || "").trim().toLowerCase();
+        if (decision && !NO_STATE.has(decision)) return decision;
+        const status = String(x.status || "").trim().toLowerCase();
+        return status && !NO_STATE.has(status) ? status : "new";
+      }
+      function isUnverifiedPayment(x) {
+        return (
+          x.payment_method === "gcash" &&
+          x.payment_status === "pending" &&
+          ["followup_sent", "no_response"].includes(x.gcash_followup_status || "")
+        );
+      }
+      function paymentState(x) {
+        // A GCash payment that has had its final follow-up is archived as
+        // unverified rather than still pending.
+        if (isUnverifiedPayment(x)) return "unverified_payment";
+        const status = String(x.payment_status || "").trim().toLowerCase();
+        if (!status || NO_PAYMENT.has(status)) return null;
+        return status === "pending" ? "payment_pending" : status;
+      }
+      // Only renders a badge when there is a real state to communicate.
+      function stateBadges(x) {
+        return (
+          badge(applicationState(x)) +
+          (paymentState(x) ? badge(paymentState(x)) : "")
+        );
       }
       function stat(a) {
         $("stats").innerHTML = a
@@ -905,18 +1087,138 @@
           openApps.delete(key);
         }
       };
+      /* ---------------------------------------------------------------- *
+       * Internal reviewer notes (admin_notes).
+       *
+       * These are deliberately kept out of the Application answers panel: the
+       * answers endpoint is a closed seven-question allowlist and never returns
+       * admin_notes. Notes are read and written through their own admin-only
+       * endpoint, so they can never reach an applicant or a student page.
+       * ---------------------------------------------------------------- */
+      function paintNotes(box, record) {
+        const id = box.id.replace(/^notes-/, "");
+        // A note being typed must survive a rebuild of the card list, so the
+        // reviewer's unsaved text is restored rather than the stored value.
+        if (dirtyNotes.has(id)) {
+          box.innerHTML = notesFields(id, noteDrafts.get(id) || "");
+          return;
+        }
+        if (!record) {
+          box.innerHTML = '<p class="answerNote">Loading reviewer notes\u2026</p>';
+          return;
+        }
+        if (record.error) {
+          box.innerHTML = `<p class="answerNote">Reviewer notes could not be loaded: ${esc(record.error)}</p>`;
+          return;
+        }
+        box.innerHTML = notesFields(id, record.note || "");
+      }
+      function notesFields(id, value) {
+        return (
+          '<p class="notesHint">Private to Admin. Applicants never see this.</p>' +
+          `<textarea class="notesInput" id="note-${esc(id)}" rows="3" maxlength="5000" placeholder="Add a private reviewer note\u2026">${esc(value)}</textarea>` +
+          '<div class="notesRow">' +
+          `<button class="notesSave" data-save-note="${esc(id)}">Save note</button>` +
+          `<span class="notesStatus" id="note-status-${esc(id)}"></span>` +
+          "</div>"
+        );
+      }
+      function paintAppNotes(id) {
+        const box = $("notes-" + id);
+        if (box) paintNotes(box, noteCache.get(id));
+      }
+      function setNoteStatus(id, text, kind) {
+        const el = $("note-status-" + id);
+        if (!el) return;
+        el.textContent = text;
+        el.setAttribute("class", "notesStatus" + (kind ? " " + kind : ""));
+      }
+      async function fetchAppNotes(ids) {
+        ids.forEach((id) => {
+          if (!noteCache.has(id)) noteQueue.add(id);
+        });
+        for (let guard = 0; noteQueue.size && guard < 6; guard += 1) {
+          const batch = [...noteQueue];
+          noteQueue.clear();
+          try {
+            const data = await req("read", { ids: batch.slice(0, 50) }, NOTES);
+            const rows = Array.isArray(data.notes) ? data.notes : [];
+            rows.forEach((row) =>
+              noteCache.set(String(row.id), { note: String(row.note || "") }),
+            );
+            batch.forEach((id) => {
+              if (!noteCache.has(id)) noteCache.set(id, { note: "" });
+            });
+          } catch (error) {
+            batch.forEach((id) =>
+              noteCache.set(id, { error: error.message || "Request failed" }),
+            );
+          }
+        }
+      }
+      function hydrateOpenNotes() {
+        const open = [...openNotes].filter((id) => $("notes-" + id));
+        if (!open.length) return;
+        open.forEach(paintAppNotes);
+        const missing = open.filter((id) => !noteCache.has(id));
+        if (missing.length) {
+          fetchAppNotes(missing).then(() => open.forEach(paintAppNotes));
+        }
+      }
+      window.toggleAppNotes = (id) => {
+        const key = String(id || "");
+        if (!SAFE_APP_ID.test(key)) return;
+        const bar = $("noteshead-" + key);
+        if (!bar) return;
+        const open = !openNotes.has(key);
+        if (open) {
+          openNotes.add(key);
+        } else {
+          openNotes.delete(key);
+        }
+        bar.setAttribute("aria-expanded", open ? "true" : "false");
+        const text = bar.querySelector(".notesToggleText");
+        if (text) text.textContent = open ? "Hide notes" : "View notes";
+        const box = $("notes-" + key);
+        if (box) box.classList.toggle("open", open);
+        if (open) hydrateOpenNotes();
+      };
+      // Saves only the note text. It never touches status, decision, payment or
+      // enrolment, and it never emails the applicant.
+      window.saveAppNote = async (id, button) => {
+        const key = String(id || "");
+        if (!SAFE_APP_ID.test(key)) return;
+        const input = $("note-" + key);
+        if (!input) return;
+        const note = input.value.trim();
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Saving\u2026";
+        }
+        setNoteStatus(key, "Saving\u2026", "");
+        try {
+          const data = await req("write", { id: key, note }, NOTES);
+          noteCache.set(key, { note: String(data.note || "") });
+          dirtyNotes.delete(key);
+          noteDrafts.delete(key);
+          setNoteStatus(key, "Saved", "ok");
+        } catch (error) {
+          setNoteStatus(key, "Not saved \u2014 try again", "bad");
+        } finally {
+          if (button) {
+            button.disabled = false;
+            button.textContent = "Save note";
+          }
+        }
+      };
       function appCard(x) {
-        const unverified =
-          x.payment_method === "gcash" &&
-          x.payment_status === "pending" &&
-          ["followup_sent", "no_response"].includes(
-            x.gcash_followup_status || "",
-          );
-        const paymentLabel = unverified ? "unverified_payment" : x.payment_status === "pending" ? "payment_pending" : x.payment_status || "not_requested";
+        const unverified = isUnverifiedPayment(x);
         const key = x.id === null || x.id === undefined ? "" : String(x.id);
         const expandable = SAFE_APP_ID.test(key);
         const open = expandable && openApps.has(key);
-        return `<div class="card${open ? " open" : ""}" id="app-${esc(key)}">${expandable ? `<div class="cardtop answersHead" data-toggle-answers="${esc(key)}" role="button" tabindex="0" aria-expanded="${open ? "true" : "false"}" aria-controls="answers-${esc(key)}"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="cardMeta"><div class="badges">${badge(x.decision || x.status || "new")}${badge(paymentLabel)}</div><span class="answersToggle" aria-hidden="true"><span class="answersToggleText">${open ? "Hide answers" : "View answers"}</span><span class="chev">⌄</span></span></div></div>` : `<div class="cardtop"><div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="badges">${badge(x.decision || x.status || "new")}${badge(paymentLabel)}</div></div>`}${x.gcash_reference ? `<div class="detail"><b>GCash reference:</b> ${esc(x.gcash_reference)}${unverified ? "<br><b>Payment:</b> Unverified payment. Final follow-up sent." : ""}</div>` : ""}${expandable ? `<div class="answersPanel" id="answers-${esc(key)}"></div>` : ""}<div class="actions">${unverified ? `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>` : ""}${!x.decision ? `<button class="accept" onclick="decision('${x.id}','accepted')">Accept + email</button><button onclick="decision('${x.id}','declined')">Decline + email</button>` : ""}${x.decision === "accepted" ? `<button onclick="decision('${x.id}','accepted',true)">Resend acceptance</button>` : ""}${x.payment_status === "paid" ? `<button class="success" onclick="onboard('${x.id}')">Send account setup</button>` : ""}<button class="danger" onclick="deleteApplication('${x.id}')">Delete application</button></div></div>`;
+        const notesOpen = expandable && openNotes.has(key);
+        const head = (badges) => `<div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div>${badges}`;
+        return `<div class="card${open ? " open" : ""}" id="app-${esc(key)}">${expandable ? `<div class="cardtop answersHead" data-toggle-answers="${esc(key)}" role="button" tabindex="0" aria-expanded="${open ? "true" : "false"}" aria-controls="answers-${esc(key)}">${head(`<div class="cardMeta"><div class="badges">${stateBadges(x)}</div><span class="answersToggle" aria-hidden="true"><span class="answersToggleText">${open ? "Hide answers" : "View answers"}</span><span class="chev">⌄</span></span></div>`)}</div>` : `<div class="cardtop">${head(`<div class="badges">${stateBadges(x)}</div>`)}</div>`}${x.gcash_reference ? `<div class="detail"><b>GCash reference:</b> ${esc(x.gcash_reference)}${unverified ? "<br><b>Payment:</b> Unverified payment. Final follow-up sent." : ""}</div>` : ""}${expandable ? `<div class="answersPanel" id="answers-${esc(key)}"></div>` : ""}${expandable ? `<div class="notesBar"><div class="notesHead" id="noteshead-${esc(key)}" data-toggle-notes="${esc(key)}" role="button" tabindex="0" aria-expanded="${notesOpen ? "true" : "false"}" aria-controls="notes-${esc(key)}"><span>Reviewer notes</span><span class="notesToggle"><span class="notesToggleText">${notesOpen ? "Hide notes" : "View notes"}</span><span class="chev">⌄</span></span></div><div class="notesPanel${notesOpen ? " open" : ""}" id="notes-${esc(key)}"></div></div>` : ""}<div class="actions">${unverified ? `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>` : ""}${!x.decision ? `<button class="accept" onclick="decision('${x.id}','accepted')">Accept + email</button><button onclick="decision('${x.id}','declined')">Decline + email</button>` : ""}${x.decision === "accepted" ? `<button onclick="decision('${x.id}','accepted',true)">Resend acceptance</button>` : ""}${x.payment_status === "paid" ? `<button class="success" onclick="onboard('${x.id}')">Send account setup</button>` : ""}<button class="danger" onclick="deleteApplication('${x.id}')">Delete application</button></div></div>`;
       }
       function studentCard(x) {
         const suspended = !!x.suspended_at;
@@ -942,6 +1244,7 @@
             ? a.map(appCard).join("")
             : '<div class="empty">No active applications.</div>';
           hydrateOpenApps();
+          hydrateOpenNotes();
           return;
         }
         if (tab === "students") {
@@ -1009,14 +1312,48 @@
       // One delegated listener so application cards need no inline handlers.
       $("cards").addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) return;
+        // The notes save button lives inside the notes toggle, so handle it
+        // first or clicking Save would also collapse the panel.
+        const saver = event.target.closest("[data-save-note]");
+        if (saver) {
+          event.preventDefault();
+          event.stopPropagation();
+          window.saveAppNote(saver.dataset.saveNote, saver);
+          return;
+        }
+        const notes = event.target.closest("[data-toggle-notes]");
+        if (notes) {
+          event.preventDefault();
+          window.toggleAppNotes(notes.dataset.toggleNotes);
+          return;
+        }
         const trigger = event.target.closest("[data-toggle-answers]");
         if (!trigger) return;
         event.preventDefault();
         window.toggleAppAnswers(trigger.dataset.toggleAnswers);
       });
+      // Marks a note as unsaved so a rebuild of the card list cannot discard
+      // what the reviewer has typed.
+      $("cards").addEventListener("input", (event) => {
+        if (!(event.target instanceof Element)) return;
+        const input = event.target.closest(".notesInput");
+        if (!input) return;
+        const id = input.id.replace(/^note-/, "");
+        noteDrafts.set(id, input.value);
+        dirtyNotes.add(id);
+        setNoteStatus(id, "Unsaved changes", "");
+      });
       $("cards").addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " " && event.key !== "Spacebar") return;
         if (!(event.target instanceof Element)) return;
+        // Let the textarea keep Enter for newlines.
+        if (event.target.closest(".notesInput")) return;
+        const notes = event.target.closest("[data-toggle-notes]");
+        if (notes) {
+          event.preventDefault();
+          window.toggleAppNotes(notes.dataset.toggleNotes);
+          return;
+        }
         const trigger = event.target.closest("[data-toggle-answers]");
         if (!trigger) return;
         event.preventDefault();

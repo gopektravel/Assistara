@@ -107,7 +107,9 @@ class Element {
     return this.getAttribute("id") || "";
   }
   get value() {
+    // An assigned value wins, then a textarea's text content, then the attribute.
     if (this._value !== "") return this._value;
+    if (this.tagName === "textarea") return this.textContent;
     return this.getAttribute("value") || "";
   }
   set value(next) {
@@ -612,6 +614,159 @@ test("a column added to the database later is never returned", async () => {
 });
 
 /* ------------------------------------------------------------------ *
+ * 1b. Reviewer notes endpoint: internal, admin-only, no side effects  *
+ * ------------------------------------------------------------------ */
+
+function notesHandler() {
+  // Fresh module registry so config() re-reads the current environment.
+  for (const key of Object.keys(require.cache)) {
+    if (/admin-application-notes|_academy-security/.test(key)) delete require.cache[key];
+  }
+  return require("./admin-application-notes");
+}
+
+test("reviewer notes fail closed for every non-Admin caller", async () => {
+  adminEnv();
+  const handler = notesHandler();
+  const before = global.fetch;
+  let touched = 0;
+  global.fetch = async () => {
+    touched += 1;
+    return new Response("[]", { status: 200 });
+  };
+  for (const [label, expected, req] of [
+    ["no token", 401, apiRequest({ body: { action: "read", ids: [EDWARD_ROW.id] } })],
+    ["garbage token", 401, apiRequest({ authorization: "Bearer not-a-real-token", body: { action: "read", ids: [EDWARD_ROW.id] } })],
+    ["tampered token", 401, apiRequest({ authorization: `Bearer ${adminToken()}-x`, body: { action: "read", ids: [EDWARD_ROW.id] } })],
+    ["learner token", 401, apiRequest({ authorization: `Bearer ${adminToken({ u: "learner", exp: Date.now() + 1000 })}`, body: { action: "read", ids: [EDWARD_ROW.id] } })],
+    ["wrong origin", 403, apiRequest({ origin: "https://evil.example", authorization: `Bearer ${adminToken()}`, body: { action: "read", ids: [EDWARD_ROW.id] } })],
+    ["wrong method", 403, { method: "GET", headers: { origin: "https://getassistara.com", authorization: `Bearer ${adminToken()}` } }],
+  ]) {
+    const res = apiResponse();
+    await handler(req, res);
+    assert.equal(res.statusCode, expected, `${label} must be rejected`);
+    assert.doesNotMatch(res.body, /Apolito|apolito/);
+  }
+  // A write attempt by a non-Admin must not reach the database at all.
+  const res = apiResponse();
+  await handler(apiRequest({ body: { action: "write", id: EDWARD_ROW.id, note: "sneaky" } }), res);
+  assert.equal(res.statusCode, 401);
+  assert.equal(touched, 0, "no database call may happen before the Admin token is verified");
+  global.fetch = before;
+});
+
+test("reviewer notes read and write only the admin_notes column", async () => {
+  adminEnv();
+  const handler = notesHandler();
+  const before = global.fetch;
+  const seen = [];
+  global.fetch = async (url, init = {}) => {
+    seen.push({ url: String(url), method: init.method || "GET", body: init.body || "" });
+    if (init.method === "PATCH") {
+      return new Response(JSON.stringify([{ ...EDWARD_ROW, admin_notes: "Strong fit. Ask about budget." }]), { status: 200 });
+    }
+    return new Response(JSON.stringify([{ id: EDWARD_ROW.id, admin_notes: "Existing private note." }]), { status: 200 });
+  };
+
+  // Read
+  const read = apiResponse();
+  await handler(apiRequest({ authorization: `Bearer ${adminToken()}`, body: { action: "read", ids: [EDWARD_ROW.id, MARIA_ROW.id] } }), read);
+  assert.equal(read.statusCode, 200);
+  assert.match(read.headers["Cache-Control"], /no-store/);
+  const readPayload = JSON.parse(read.body);
+  assert.equal(readPayload.notes[0].note, "Existing private note.");
+  assert.equal(readPayload.notes[1].note, "", "an application with no note reads empty, not missing");
+  // The read is limited to the note column and never widens the table.
+  assert.match(seen[0].url, /select=id,admin_notes/);
+  assert.doesNotMatch(seen[0].url, /select=\*/);
+
+  // Write
+  const write = apiResponse();
+  await handler(apiRequest({ authorization: `Bearer ${adminToken()}`, body: { action: "write", id: EDWARD_ROW.id, note: "  Strong fit. Ask about budget.  " } }), write);
+  assert.equal(write.statusCode, 200);
+  const patch = seen.find(s => s.method === "PATCH");
+  assert.ok(patch, "saving a note must PATCH the application row");
+  // Only admin_notes is written: no status, decision, payment or review change,
+  // so a note can never trigger an email or an enrolment step.
+  assert.deepEqual(Object.keys(JSON.parse(patch.body)), ["admin_notes"]);
+  assert.equal(JSON.parse(patch.body).admin_notes, "Strong fit. Ask about budget.");
+
+  // Clearing a note stores null rather than the empty string.
+  const clear = apiResponse();
+  await handler(apiRequest({ authorization: `Bearer ${adminToken()}`, body: { action: "write", id: EDWARD_ROW.id, note: "   " } }), clear);
+  assert.equal(JSON.parse(seen[seen.length - 1].body).admin_notes, null);
+
+  global.fetch = before;
+});
+
+test("reviewer notes reject unusable input before any database call", async () => {
+  adminEnv();
+  const handler = notesHandler();
+  const before = global.fetch;
+  let touched = 0;
+  global.fetch = async () => {
+    touched += 1;
+    return new Response("[]", { status: 200 });
+  };
+  for (const body of [
+    { action: "read", ids: [] },
+    { action: "read", ids: "not-an-array" },
+    { action: "write", id: "bad id with spaces", note: "x" },
+    { action: "write", id: EDWARD_ROW.id, note: 42 },
+    { action: "write", id: EDWARD_ROW.id, note: "x".repeat(5001) },
+    { action: "delete", id: EDWARD_ROW.id },
+  ]) {
+    const res = apiResponse();
+    await handler(apiRequest({ authorization: `Bearer ${adminToken()}`, body }), res);
+    assert.equal(res.statusCode, 400, `must reject ${JSON.stringify(body).slice(0, 60)}`);
+  }
+  assert.equal(touched, 0, "malformed input must be rejected before the database is touched");
+  global.fetch = before;
+});
+
+test("reviewer notes never leak through the application answers endpoint", async () => {
+  adminEnv();
+  const answers = require("./admin-application-answers");
+  const notes = notesHandler();
+  const before = global.fetch;
+  global.fetch = async () =>
+    new Response(JSON.stringify([{ ...EDWARD_ROW, admin_notes: "SECRET REVIEWER NOTE" }]), { status: 200 });
+
+  const answersRes = apiResponse();
+  await answers(
+    apiRequest({ authorization: `Bearer ${adminToken()}`, body: { action: "list", ids: [EDWARD_ROW.id] } }),
+    answersRes,
+  );
+  assert.equal(answersRes.statusCode, 200);
+  assert.doesNotMatch(answersRes.body, /SECRET REVIEWER NOTE/);
+  assert.doesNotMatch(answersRes.body, /admin_notes/);
+
+  const notesRes = apiResponse();
+  await notes(
+    apiRequest({ authorization: `Bearer ${adminToken()}`, body: { action: "read", ids: [EDWARD_ROW.id] } }),
+    notesRes,
+  );
+  assert.match(notesRes.body, /SECRET REVIEWER NOTE/);
+
+  global.fetch = before;
+});
+
+test("no student-facing endpoint exposes reviewer notes", () => {
+  // admin_notes must not be selectable by any applicant or learner surface.
+  for (const file of ["academy-session.js", "academy-content.js", "_academy-application-fields.js", "admin-application-answers.js"]) {
+    const source = fs.readFileSync(path.join(__dirname, file), "utf8");
+    assert.doesNotMatch(
+      source,
+      /select=[^"'`]*\badmin_notes\b/,
+      `${file} must not select admin_notes`,
+    );
+  }
+  // And it is not on the applicant-facing allowlist.
+  assert.equal(APPLICATION_FIELDS_BY_NAME.includes("admin_notes"), false);
+  assert.equal(JSON.stringify(APPLICATION_FIELDS).includes("admin_notes"), false);
+});
+
+/* ------------------------------------------------------------------ *
  * 2. Admin page behaviour                                             *
  * ------------------------------------------------------------------ */
 
@@ -620,6 +775,10 @@ function startAdmin(overrides = {}) {
   const calls = [];
   const token = adminToken();
   const store = new Map();
+  // Stands in for the admin_notes column on each application.
+  const noteStore = new Map(
+    (overrides.notes ? Object.entries(overrides.notes) : []).map(([id, note]) => [id, String(note ?? "")]),
+  );
   const sandbox = {
     document,
     console,
@@ -656,7 +815,7 @@ function startAdmin(overrides = {}) {
         return new Response(
           JSON.stringify({
             ok: true,
-            applications: [EDWARD_ROW, MARIA_ROW, JOHN_ROW],
+            applications: overrides.applications || [EDWARD_ROW, MARIA_ROW, JOHN_ROW],
             signups: [],
             b2b: [],
           }),
@@ -692,6 +851,26 @@ function startAdmin(overrides = {}) {
           { status: 200 },
         );
       }
+      if (target.includes("/api/admin-application-notes")) {
+        assert.equal((init.headers || {}).Authorization, `Bearer ${token}`, "reviewer notes must be sent with the Admin session token");
+        if (body.action === "write") {
+          if (overrides.notesFail) {
+            return new Response(JSON.stringify({ ok: false, error: "boom" }), { status: 500 });
+          }
+          noteStore.set(String(body.id), String(body.note || ""));
+          return new Response(JSON.stringify({ ok: true, id: String(body.id), note: String(body.note || "") }), { status: 200 });
+        }
+        if (overrides.notesReadFail) {
+          return new Response(JSON.stringify({ ok: false, error: "boom" }), { status: 500 });
+        }
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            notes: (body.ids || []).map(id => ({ id, note: noteStore.get(String(id)) || "" })),
+          }),
+          { status: 200 },
+        );
+      }
       return new Response(JSON.stringify({ error: "unexpected" }), { status: 404 });
     },
   };
@@ -700,7 +879,7 @@ function startAdmin(overrides = {}) {
   const context = vm.createContext(sandbox);
   const code = /<script>([\s\S]*?)<\/script>/.exec(ADMIN_HTML)[1];
   vm.runInContext(code, context, { filename: "admin.html#inline" });
-  return { context, document, calls };
+  return { context, document, calls, noteStore };
 }
 
 async function login(context, document) {
@@ -1019,4 +1198,352 @@ test("the shared gate helpers used by the answers endpoint behave as documented"
   assert.equal(security.allowedOrigin("https://getassistara.com"), true);
   assert.equal(security.allowedOrigin("https://attacker.example"), false);
   assert.equal(security.allowedOrigin(null), false);
+});
+
+/* ------------------------------------------------------------------ *
+ * 3. Application state badges display what is actually true            *
+ * ------------------------------------------------------------------ */
+
+function badgeTexts(document, id) {
+  // The real page uppercases badges in CSS, which the shim does not apply.
+  return document
+    .getElementById(`app-${id}`)
+    .querySelectorAll(".badge")
+    .map(node => node.textContent.trim().toUpperCase());
+}
+
+test("a brand-new application shows only NEW, never a NONE placeholder", async () => {
+  // A freshly submitted row: website-form writes neither status nor
+  // payment_status, so both sit at their column defaults.
+  const fresh = { ...EDWARD_ROW, status: "new", payment_status: "none", decision: null };
+  const { context, document } = startAdmin({ applications: [fresh] });
+  await login(context, document);
+
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["NEW"]);
+  const card = document.getElementById(`app-${EDWARD_ROW.id}`);
+  assert.doesNotMatch(card.innerHTML, /NONE|NOT REQUESTED|UNVERIFIED/i);
+  // No payment/enrolment detail is invented before payment begins.
+  assert.doesNotMatch(card.innerHTML, /GCash reference/);
+  // And the account-setting step is not offered yet.
+  assert.doesNotMatch(card.innerHTML, /Send account setup/);
+});
+
+test("every placeholder payment value is treated as no payment started", async () => {
+  for (const value of [null, undefined, "", "none", "not_requested", "no_payment", "NONE", "  "]) {
+    const row = { ...EDWARD_ROW, payment_status: value, status: "new", decision: null };
+    const { context, document } = startAdmin({ applications: [row] });
+    await login(context, document);
+    assert.deepEqual(
+      badgeTexts(document, EDWARD_ROW.id),
+      ["NEW"],
+      `payment_status ${JSON.stringify(value)} must not add a badge`,
+    );
+  }
+});
+
+test("an undecided application with no status at all still reads NEW", async () => {
+  for (const value of [null, undefined, "", "none", "unknown"]) {
+    const row = { ...EDWARD_ROW, status: value, decision: null, payment_status: null };
+    const { context, document } = startAdmin({ applications: [row] });
+    await login(context, document);
+    assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["NEW"]);
+  }
+});
+
+test("a real decision is shown instead of the earlier status", async () => {
+  const accepted = { ...EDWARD_ROW, status: "reviewing", decision: "accepted", payment_status: "none" };
+  const declinedStatus = { ...MARIA_ROW, status: "declined", decision: null, payment_status: "none" };
+  const { context, document } = startAdmin({ applications: [accepted, declinedStatus] });
+  await login(context, document);
+
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["ACCEPTED"]);
+  assert.deepEqual(badgeTexts(document, MARIA_ROW.id), ["DECLINED"]);
+});
+
+test("a declined decision removes the application from the active list, as before", async () => {
+  // Pre-existing behaviour: `activeApps()` filters out declined decisions, so a
+  // declined applicant leaves the applicants tab rather than showing a badge.
+  const declined = { ...EDWARD_ROW, status: "reviewing", decision: "declined", payment_status: "none" };
+  const { context, document } = startAdmin({ applications: [declined] });
+  await login(context, document);
+  assert.equal(document.getElementById(`app-${EDWARD_ROW.id}`), null);
+  assert.match(document.getElementById("cards").innerHTML, /No active applications/);
+});
+
+test("an application part-way through review shows its real status", async () => {
+  const row = { ...EDWARD_ROW, status: "reviewing", decision: null, payment_status: null };
+  const { context, document } = startAdmin({ applications: [row] });
+  await login(context, document);
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["REVIEWING"]);
+});
+
+test("a payment badge appears only once a payment has actually started", async () => {
+  const paid = { ...EDWARD_ROW, payment_status: "paid", payment_method: "gcash", gcash_reference: "GC-123" };
+  const { context, document } = startAdmin({ applications: [paid] });
+  await login(context, document);
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["NEW", "PAID"]);
+  // Once payment is real, the downstream enrolment step is offered.
+  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Send account setup/);
+});
+
+test("a pending GCash payment and its archived state read correctly", async () => {
+  const pending = {
+    ...EDWARD_ROW,
+    payment_status: "pending",
+    payment_method: "gcash",
+    gcash_reference: "GC-9",
+    gcash_followup_status: "screenshot_requested",
+  };
+  const archived = { ...pending, id: MARIA_ROW.id, name: "Maria Santos", email: MARIA_ROW.email, gcash_followup_status: "followup_sent" };
+  const { context, document } = startAdmin({ applications: [pending, archived] });
+  await login(context, document);
+
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["NEW", "PAYMENT PENDING"]);
+  assert.deepEqual(badgeTexts(document, MARIA_ROW.id), ["NEW", "UNVERIFIED PAYMENT"]);
+  // The reviewer's decision path stays available for both.
+  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Accept \+ email/);
+  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Decline \+ email/);
+  assert.match(document.getElementById(`app-${MARIA_ROW.id}`).innerHTML, /Approve payment/);
+});
+
+test("an accepted applicant no longer offers an accept or decline action", async () => {
+  const accepted = { ...EDWARD_ROW, status: "accepted", decision: "accepted", payment_status: "none" };
+  const { context, document } = startAdmin({ applications: [accepted] });
+  await login(context, document);
+  const card = document.getElementById(`app-${EDWARD_ROW.id}`);
+  assert.doesNotMatch(card.innerHTML, /Accept \+ email/);
+  assert.doesNotMatch(card.innerHTML, /Decline \+ email/);
+  assert.match(card.innerHTML, /Resend acceptance/);
+  assert.match(card.innerHTML, /Delete application/);
+});
+
+test("the delete action is unchanged and still present on every card", async () => {
+  const { context, document, calls } = startAdmin();
+  await login(context, document);
+  for (const row of [EDWARD_ROW, MARIA_ROW, JOHN_ROW]) {
+    assert.match(
+      document.getElementById(`app-${row.id}`).innerHTML,
+      /Delete application/,
+      "delete must remain available",
+    );
+  }
+  const before = document.getElementById("cards").querySelectorAll(".card").length;
+  // The delete button keeps its existing handler, unchanged by this work.
+  await context.deleteApplication(EDWARD_ROW.id);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  const del = calls.filter(c => c.url.includes("admin-delete-application"));
+  assert.equal(del.length, 1, "delete still posts to the existing endpoint");
+  assert.equal(del[0].body.id, EDWARD_ROW.id);
+  assert.equal(document.getElementById("cards").querySelectorAll(".card").length, before);
+});
+
+/* ------------------------------------------------------------------ *
+ * 4. Reviewer notes in the Admin page                                 *
+ * ------------------------------------------------------------------ */
+
+test("reviewer notes open, load the stored note and close again", async () => {
+  const { context, document } = startAdmin({ notes: { [EDWARD_ROW.id]: "Strong fit. Ask about budget." } });
+  await login(context, document);
+
+  const panel = document.getElementById(`notes-${EDWARD_ROW.id}`);
+  const head = document.getElementById(`noteshead-${EDWARD_ROW.id}`);
+  assert.ok(panel, "every application card has a reviewer notes area");
+  assert.ok(head, "every application card has a reviewer notes toggle");
+  // Collapsed by default, so it never competes with applicant answers.
+  assert.equal(panel.classList.contains("open"), false);
+  assert.equal(head.getAttribute("aria-expanded"), "false");
+
+  head.click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(panel.classList.contains("open"), true);
+  assert.equal(head.getAttribute("aria-expanded"), "true");
+  assert.equal(document.getElementById(`note-${EDWARD_ROW.id}`).value, "Strong fit. Ask about budget.");
+
+  head.click();
+  assert.equal(panel.classList.contains("open"), false);
+  assert.equal(head.getAttribute("aria-expanded"), "false");
+});
+
+test("a reviewer note is saved, and survives a page reload", async () => {
+  const first = startAdmin();
+  await login(first.context, first.document);
+  const id = EDWARD_ROW.id;
+
+  first.document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  const input = first.document.getElementById(`note-${id}`);
+  input.value = "Called on 27 Sep. Budget is tight, follow up in October.";
+  input.dispatchEvent({ type: "input", target: input, preventDefault() {}, stopPropagation() {} });
+  assert.equal(first.document.getElementById(`note-status-${id}`).textContent, "Unsaved changes");
+
+  first.document.querySelector(`[data-save-note="${id}"]`).click();
+  await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal(first.noteStore.get(id), "Called on 27 Sep. Budget is tight, follow up in October.");
+  assert.equal(first.document.getElementById(`note-status-${id}`).textContent, "Saved");
+
+  // Reload the Admin with the same stored note.
+  const second = startAdmin({ notes: { [id]: first.noteStore.get(id) } });
+  await login(second.context, second.document);
+  second.document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(
+    second.document.getElementById(`note-${id}`).value,
+    "Called on 27 Sep. Budget is tight, follow up in October.",
+  );
+});
+
+test("an existing note can be edited and the edit replaces it", async () => {
+  const { context, document, noteStore } = startAdmin({ notes: { [EDWARD_ROW.id]: "First draft." } });
+  await login(context, document);
+  const id = EDWARD_ROW.id;
+  document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  document.getElementById(`note-${id}`).value = "Second draft, much better.";
+  document.querySelector(`[data-save-note="${id}"]`).click();
+  await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal(noteStore.get(id), "Second draft, much better.");
+  // A single stored value, not an appended history.
+  assert.equal([...noteStore.values()].filter(v => v === "Second draft, much better.").length, 1);
+});
+
+test("saving a note sends only the note and never the application state", async () => {
+  const row = { ...EDWARD_ROW, status: "new", decision: null, payment_status: "none" };
+  const { context, document, calls } = startAdmin({ applications: [row] });
+  await login(context, document);
+  const id = EDWARD_ROW.id;
+  document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  // Everything the page had already called before the reviewer saved anything.
+  const endpoints = [
+    "admin-applications",
+    "admin-gcash-payment",
+    "admin-send-onboarding",
+    "admin-delete-application",
+  ];
+  const before = Object.fromEntries(
+    endpoints.map(name => [name, calls.filter(c => c.url.includes(name)).length]),
+  );
+  assert.equal(before["admin-applications"], 1, "the page loaded the application list once");
+
+  document.getElementById(`note-${id}`).value = "No changes to the applicant.";
+  document.querySelector(`[data-save-note="${id}"]`).click();
+  await new Promise(resolve => setTimeout(resolve, 10));
+
+  const writes = calls.filter(c => c.url.includes("/api/admin-application-notes") && c.body.action === "write");
+  assert.equal(writes.length, 1);
+  assert.deepEqual(writes[0].body, { action: "write", id, note: "No changes to the applicant." });
+  // Saving a note must not accept, decline, onboard, delete or touch payment.
+  for (const name of endpoints) {
+    assert.equal(
+      calls.filter(c => c.url.includes(name)).length,
+      before[name],
+      `saving a note must not call ${name}`,
+    );
+  }
+  // The applicant's own state is untouched.
+  assert.deepEqual(badgeTexts(document, id), ["NEW"]);
+  assert.match(document.getElementById(`app-${id}`).innerHTML, /Accept \+ email/);
+  assert.match(document.getElementById(`app-${id}`).innerHTML, /Decline \+ email/);
+});
+
+test("notes are per application and never leak between cards", async () => {
+  const { context, document, noteStore } = startAdmin({
+    notes: { [EDWARD_ROW.id]: "Edward only." },
+  });
+  await login(context, document);
+  document.getElementById(`noteshead-${EDWARD_ROW.id}`).click();
+  document.getElementById(`noteshead-${MARIA_ROW.id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  assert.equal(document.getElementById(`note-${EDWARD_ROW.id}`).value, "Edward only.");
+  assert.equal(document.getElementById(`note-${MARIA_ROW.id}`).value, "");
+
+  document.getElementById(`note-${MARIA_ROW.id}`).value = "Maria needs a payment plan.";
+  document.querySelector(`[data-save-note="${MARIA_ROW.id}"]`).click();
+  await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal(noteStore.get(MARIA_ROW.id), "Maria needs a payment plan.");
+  assert.equal(noteStore.get(EDWARD_ROW.id), "Edward only.", "Edward's note must be untouched");
+  // Notes are not shown on the card header, only inside the notes panel.
+  assert.doesNotMatch(document.getElementById(`app-${MARIA_ROW.id}`).querySelector(".cardtop").innerHTML, /payment plan/);
+});
+
+test("opening reviewer notes does not open the answers panel and vice versa", async () => {
+  const { context, document } = startAdmin();
+  await login(context, document);
+  const id = EDWARD_ROW.id;
+
+  document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(document.getElementById(`notes-${id}`).classList.contains("open"), true);
+  assert.equal(document.getElementById(`app-${id}`).classList.contains("open"), false, "answers stay collapsed");
+
+  document.querySelector(`[data-toggle-answers="${id}"]`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(document.getElementById(`app-${id}`).classList.contains("open"), true, "answers still expand normally");
+  assert.equal(document.getElementById(`notes-${id}`).classList.contains("open"), true, "notes stay open independently");
+});
+
+test("reviewer notes are not part of the seven applicant answers", async () => {
+  const { context, document } = startAdmin({ notes: { [EDWARD_ROW.id]: "SECRET REVIEWER NOTE" } });
+  await login(context, document);
+  const id = EDWARD_ROW.id;
+
+  // Closed until the reviewer opens them, and never inside the answers panel.
+  assert.doesNotMatch(document.getElementById(`app-${id}`).querySelector(".answersPanel").innerHTML, /SECRET REVIEWER NOTE/);
+
+  document.querySelector(`[data-toggle-answers="${id}"]`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  const panel = document.getElementById(`answers-${id}`);
+  assert.equal(panel.querySelectorAll(".answerItem").length, 7, "still exactly seven questions");
+  assert.doesNotMatch(panel.innerHTML, /SECRET REVIEWER NOTE/);
+  assert.doesNotMatch(panel.innerHTML, /Reviewer notes|admin_notes|Not answered<\/p>\s*<p class="answerQ">Reviewer/);
+
+  // The note only appears once the reviewer explicitly opens the notes.
+  assert.doesNotMatch(document.getElementById(`app-${id}`).innerHTML, /SECRET REVIEWER NOTE/);
+  document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.match(document.getElementById(`note-${id}`).value, /SECRET REVIEWER NOTE/);
+});
+
+test("a note being typed is never discarded by a background refresh", async () => {
+  const { context, document } = startAdmin({ notes: { [EDWARD_ROW.id]: "Stored note." } });
+  await login(context, document);
+  const id = EDWARD_ROW.id;
+  document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  const input = document.getElementById(`note-${id}`);
+  input.value = "Half-written thought";
+  input.dispatchEvent({ type: "input", target: input, preventDefault() {}, stopPropagation() {} });
+
+  // Something else triggers a full re-render of the cards.
+  await context.load();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(
+    document.getElementById(`note-${id}`).value,
+    "Half-written thought",
+    "unsaved typing must survive a re-render",
+  );
+});
+
+test("a failed note save is reported and the note is kept for a retry", async () => {
+  const { context, document } = startAdmin({ notesFail: true });
+  await login(context, document);
+  const id = EDWARD_ROW.id;
+  document.getElementById(`noteshead-${id}`).click();
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  document.getElementById(`note-${id}`).value = "This save will fail.";
+  document.querySelector(`[data-save-note="${id}"]`).click();
+  await new Promise(resolve => setTimeout(resolve, 10));
+
+  const status = document.getElementById(`note-status-${id}`);
+  assert.equal(status.textContent, "Not saved \u2014 try again");
+  assert.equal(document.getElementById(`note-${id}`).value, "This save will fail.");
+  // The save button is usable again.
+  const button = document.querySelector(`[data-save-note="${id}"]`);
+  assert.equal(button.disabled, false);
+  assert.equal(button.textContent, "Save note");
 });

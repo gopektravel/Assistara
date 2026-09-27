@@ -47,6 +47,21 @@ tracking metadata, internal status, internal notes, and any column added to the
 table later are discarded server-side and never reach the browser. Adding a
 question to the form therefore means deliberately adding it to that file.
 
+`/api/admin-application-notes` reads and writes the private reviewer note kept in
+`public.academy_applications.admin_notes`. It is a separate endpoint precisely
+because `admin_notes` is not an applicant answer: it is not on the allowlist
+above, so the answers response can never carry it, and no learner or applicant
+endpoint selects that column.
+
+The endpoint is gated exactly like the answers endpoint: a verified Admin token,
+an allowed `Origin`, and `POST` only, all checked before the database is
+contacted, with a `no-store` response. A read is limited to
+`select=id,admin_notes` for the requested ids. A write sends a `PATCH` whose body
+is `{ "admin_notes": ... }` and nothing else, so saving a note cannot change an
+application status or decision, cannot create a payment or enrolment record, and
+cannot send an email. Clearing a note stores `null`. Notes are trimmed and capped
+at 5000 characters.
+
 Offline security tests:
 
 ```sh
