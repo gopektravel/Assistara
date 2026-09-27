@@ -735,8 +735,8 @@
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-delete-application",
         ONBOARD =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-send-onboarding",
-        ANSWERS = "/api/admin-application-answers",
-        NOTES = "/api/admin-application-notes";
+        ANSWERS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
+        NOTES = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api";
       let token = sessionStorage.getItem("assistara_admin_token") || "",
         apps = [],
         web = [],
@@ -772,18 +772,7 @@
                 "'": "&#039;",
               })[c],
           );
-      const ALLOWED_AUTH_DIAGNOSTICS = new Set([
-        "AUTH_HEADER_MISSING",
-        "BEARER_MISSING",
-        "TOKEN_FORMAT_INVALID",
-        "TOKEN_EXPIRED",
-        "SIGNATURE_INVALID",
-        "ADMIN_CLAIM_INVALID",
-        "AUTH_VALID",
-        "SERVER_AUTH_CONFIG_MISSING",
-      ]);
-      const formatAuthDiagnostic = (v) =>
-        ALLOWED_AUTH_DIAGNOSTICS.has(v) ? v : "UNKNOWN_AUTH_FAILURE";
+
       async function req(action, p = {}, api = API) {
         const body = api === ONBOARD || api === DEL ? p : { action, ...p };
         const r = await fetch(api, {
@@ -795,7 +784,7 @@
             body: JSON.stringify(body),
           }),
           j = await r.json().catch(() => ({}));
-        if (!r.ok) { const err=Error(j.error||"Request failed"); err.authDiagnostic=j.authDiagnostic; throw err; }
+        if (!r.ok) throw Error(j.error || "Request failed");
         return j;
       }
       async function syncTestPortalCookie(action = "exchange") {
@@ -974,8 +963,7 @@
           return;
         }
         if (record.error) {
-          const diag = record.authDiagnostic ? `<p class="answerNote">Diagnostic: ${esc(formatAuthDiagnostic(record.authDiagnostic))}</p>` : "";
-          box.innerHTML = `<p class="answerNote">Application answers could not be loaded: ${esc(record.error)}</p>${diag}`;
+          box.innerHTML = `<p class="answerNote">Application answers could not be loaded: ${esc(record.error)}</p>`;
           return;
         }
         // Only the canonical application questions are rendered, in form order.
@@ -997,9 +985,8 @@
           const batch = [...answerQueue];
           answerQueue.clear();
           try {
-            const data = await req("list", { ids: batch.slice(0, 50) }, ANSWERS);
-            if (Array.isArray(data.fields)) answerSchema = data.fields;
-            const rows = Array.isArray(data.applications) ? data.applications : [];
+            const data = await req("answers", { ids: batch.slice(0, 50) }, ANSWERS);
+            const rows = Array.isArray(data.answers) ? data.answers : [];
             rows.forEach(row => answerCache.set(String(row.id), row));
             batch.forEach(id => {
               if (!answerCache.has(id)) answerCache.set(id, { id, answers: {} });
@@ -1010,7 +997,6 @@
                 id,
                 answers: {},
                 error: error.message || "Request failed",
-                authDiagnostic: error.authDiagnostic,
               }),
             );
           }
@@ -1069,8 +1055,7 @@
           return;
         }
         if (record.error) {
-          const diag = record.authDiagnostic ? `<p class="answerNote">Diagnostic: ${esc(formatAuthDiagnostic(record.authDiagnostic))}</p>` : "";
-          box.innerHTML = `<p class="answerNote">Reviewer notes could not be loaded: ${esc(record.error)}</p>${diag}`;
+          box.innerHTML = `<p class="answerNote">Reviewer notes could not be loaded: ${esc(record.error)}</p>`;
           return;
         }
         box.innerHTML = notesFields(id, record.note || "");
@@ -1103,7 +1088,7 @@
           const batch = [...noteQueue];
           noteQueue.clear();
           try {
-            const data = await req("read", { ids: batch.slice(0, 50) }, NOTES);
+            const data = await req("notes", { subaction: "read", ids: batch.slice(0, 50) }, NOTES);
             const rows = Array.isArray(data.notes) ? data.notes : [];
             rows.forEach((row) =>
               noteCache.set(String(row.id), { note: String(row.note || "") }),
@@ -1113,7 +1098,7 @@
             });
           } catch (error) {
             batch.forEach((id) =>
-              noteCache.set(id, { error: error.message || "Request failed", authDiagnostic: error.authDiagnostic }),
+              noteCache.set(id, { error: error.message || "Request failed" }),
             );
           }
         }
@@ -1141,7 +1126,7 @@
         }
         setNoteStatus(key, "Saving\u2026", "");
         try {
-          const data = await req("write", { id: key, note }, NOTES);
+          const data = await req("notes", { subaction: "write", id: key, note }, NOTES);
           noteCache.set(key, { note: String(data.note || "") });
           dirtyNotes.delete(key);
           noteDrafts.delete(key);
