@@ -915,14 +915,15 @@ test("Admin renders applications and keeps every existing control", async () => 
 
   // Counters still work.
   const stats = document.getElementById("stats").textContent;
-  assert.match(stats, /Active applications/);
+  assert.match(stats, /Applications/);
   assert.match(stats, /3/);
 
   // Every card is independently expandable and starts collapsed.
   for (const row of [EDWARD_ROW, MARIA_ROW, JOHN_ROW]) {
     const card = document.getElementById(`app-${row.id}`);
-    assert.ok(card.querySelector("[data-toggle-answers]"), `missing expand control for ${row.name}`);
+    assert.equal(card.querySelectorAll("[data-toggle-app]").length, 1, `${row.name} must have one expander`);
     assert.equal(card.classList.contains("open"), false);
+    assert.doesNotMatch(card.innerHTML, /View answers|View notes/);
     assert.equal(card.querySelector(".answersPanel").innerHTML, "", "no answers are rendered before expanding");
   }
 });
@@ -931,17 +932,17 @@ test("expanding a card reveals that applicant's real answers and collapses again
   const { context, document, calls } = startAdmin();
   await login(context, document);
   const edward = document.getElementById(`app-${EDWARD_ROW.id}`);
-  const trigger = edward.querySelector("[data-toggle-answers]");
+  const trigger = edward.querySelector("[data-toggle-app]");
 
   trigger.click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   const panel = document.getElementById(`answers-${EDWARD_ROW.id}`);
   const html = panel.innerHTML;
-  assert.match(html, /Application answers/);
+  assert.match(edward.innerHTML, /APPLICATION ANSWERS/);
   assert.equal(edward.classList.contains("open"), true);
   assert.equal(trigger.getAttribute("aria-expanded"), "true");
-  assert.match(trigger.textContent, /Hide answers/);
+  assert.match(trigger.textContent, /⌃/);
 
   // Every real question, with the real submitted answer.
   assert.match(html, /What best describes your current situation\?/);
@@ -996,7 +997,7 @@ test("expanding a card reveals that applicant's real answers and collapses again
   trigger.click();
   assert.equal(edward.classList.contains("open"), false);
   assert.equal(trigger.getAttribute("aria-expanded"), "false");
-  assert.match(trigger.textContent, /View answers/);
+  assert.match(trigger.textContent, /⌄/);
 
   // The answers are fetched once per application, not once per toggle, and the
   // panel is hidden again because the card no longer carries the open class.
@@ -1016,7 +1017,7 @@ test("expanding a card reveals that applicant's real answers and collapses again
 test("each card expands independently", async () => {
   const { context, document } = startAdmin();
   await login(context, document);
-  const open = id => document.getElementById(`app-${id}`).querySelector("[data-toggle-answers]");
+  const open = id => document.getElementById(`app-${id}`).querySelector("[data-toggle-app]");
   const settle = () => new Promise(resolve => setTimeout(resolve, 0));
 
   open(EDWARD_ROW.id).click();
@@ -1043,7 +1044,7 @@ test("each card expands independently", async () => {
 test("empty, array, boolean and object answers render cleanly", async () => {
   const { context, document } = startAdmin();
   await login(context, document);
-  document.getElementById(`app-${MARIA_ROW.id}`).querySelector("[data-toggle-answers]").click();
+  document.getElementById(`app-${MARIA_ROW.id}`).querySelector("[data-toggle-app]").click();
   await new Promise(resolve => setTimeout(resolve, 0));
   const html = document.getElementById(`answers-${MARIA_ROW.id}`).innerHTML;
 
@@ -1069,7 +1070,7 @@ test("a stored answer that is not a listed question is never shown", async () =>
     answers: { [EDWARD_ROW.id]: { laptop_access: "Yes, a laptop", referral_code: "REF-9" } },
   });
   await login(context, document);
-  document.getElementById(`app-${EDWARD_ROW.id}`).querySelector("[data-toggle-answers]").click();
+  document.getElementById(`app-${EDWARD_ROW.id}`).querySelector("[data-toggle-app]").click();
   await new Promise(resolve => setTimeout(resolve, 0));
   const panel = document.getElementById(`answers-${EDWARD_ROW.id}`);
 
@@ -1085,7 +1086,7 @@ test("a stored answer that is not a listed question is never shown", async () =>
 test("every current question is shown for an application with gaps", async () => {
   const { context, document } = startAdmin();
   await login(context, document);
-  document.getElementById(`app-${JOHN_ROW.id}`).querySelector("[data-toggle-answers]").click();
+  document.getElementById(`app-${JOHN_ROW.id}`).querySelector("[data-toggle-app]").click();
   await new Promise(resolve => setTimeout(resolve, 0));
   const panel = document.getElementById(`answers-${JOHN_ROW.id}`);
   const html = panel.innerHTML;
@@ -1108,7 +1109,7 @@ test("every current question is shown for an application with gaps", async () =>
 test("long answers wrap on a full width row and short answers stay compact", async () => {
   const { context, document } = startAdmin();
   await login(context, document);
-  document.getElementById(`app-${EDWARD_ROW.id}`).querySelector("[data-toggle-answers]").click();
+  document.getElementById(`app-${EDWARD_ROW.id}`).querySelector("[data-toggle-app]").click();
   await new Promise(resolve => setTimeout(resolve, 0));
   const panel = document.getElementById(`answers-${EDWARD_ROW.id}`);
   const wide = panel.querySelectorAll(".answerItem.wide").map(node => node.textContent);
@@ -1136,7 +1137,7 @@ test("search, tab switching and reload keep working with expanded cards", async 
   assert.equal(document.getElementById("cards").querySelectorAll(".card").length, 3);
 
   // Open state survives a re-render (typing in search) and repaints instantly.
-  document.getElementById(`app-${EDWARD_ROW.id}`).querySelector("[data-toggle-answers]").click();
+  document.getElementById(`app-${EDWARD_ROW.id}`).querySelector("[data-toggle-app]").click();
   await settle();
   search.value = "j";
   search.oninput();
@@ -1154,7 +1155,7 @@ test("search, tab switching and reload keep working with expanded cards", async 
     students: /Students/,
     webinar: /Registered/,
     b2b: /Discovery calls/,
-    applicants: /Active applications/,
+    applicants: /Applications/,
   };
   for (const tabButton of tabs) {
     tabButton.onclick();
@@ -1221,9 +1222,9 @@ test("a brand-new application shows only NEW, never a NONE placeholder", async (
 
   assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["NEW"]);
   const card = document.getElementById(`app-${EDWARD_ROW.id}`);
-  assert.doesNotMatch(card.innerHTML, /NONE|NOT REQUESTED|UNVERIFIED/i);
-  // No payment/enrolment detail is invented before payment begins.
-  assert.doesNotMatch(card.innerHTML, /GCash reference/);
+  assert.doesNotMatch(card.querySelector(".badges").textContent, /NONE|NOT REQUESTED|UNVERIFIED/i);
+  // Collapsed cards keep the operational details inside the unified panel.
+  assert.equal(card.querySelector(".appPanel").classList.contains("open"), false);
   // And the account-setting step is not offered yet.
   assert.doesNotMatch(card.innerHTML, /Send account setup/);
 });
@@ -1260,14 +1261,14 @@ test("a real decision is shown instead of the earlier status", async () => {
   assert.deepEqual(badgeTexts(document, MARIA_ROW.id), ["DECLINED"]);
 });
 
-test("a declined decision removes the application from the active list, as before", async () => {
-  // Pre-existing behaviour: `activeApps()` filters out declined decisions, so a
-  // declined applicant leaves the applicants tab rather than showing a badge.
+test("a declined decision remains visible as a read-only application record", async () => {
   const declined = { ...EDWARD_ROW, status: "reviewing", decision: "declined", payment_status: "none" };
   const { context, document } = startAdmin({ applications: [declined] });
   await login(context, document);
-  assert.equal(document.getElementById(`app-${EDWARD_ROW.id}`), null);
-  assert.match(document.getElementById("cards").innerHTML, /No active applications/);
+  const card = document.getElementById(`app-${EDWARD_ROW.id}`);
+  assert.ok(card);
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["DECLINED"]);
+  assert.doesNotMatch(card.innerHTML, /Accept \+ email|Decline \+ email|Send account-setup|Delete application/);
 });
 
 test("an application part-way through review shows its real status", async () => {
@@ -1278,17 +1279,20 @@ test("an application part-way through review shows its real status", async () =>
 });
 
 test("a payment badge appears only once a payment has actually started", async () => {
-  const paid = { ...EDWARD_ROW, payment_status: "paid", payment_method: "gcash", gcash_reference: "GC-123" };
+  const paid = { ...EDWARD_ROW, status: "accepted", decision: "accepted", payment_status: "paid", payment_method: "gcash", gcash_reference: "GC-123" };
   const { context, document } = startAdmin({ applications: [paid] });
   await login(context, document);
-  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["NEW", "PAID"]);
-  // Once payment is real, the downstream enrolment step is offered.
-  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Send account setup/);
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["ACCEPTED", "PAID"]);
+  const card = document.getElementById(`app-${EDWARD_ROW.id}`);
+  assert.match(card.innerHTML, /Resend account-setup link/);
+  assert.doesNotMatch(card.innerHTML, /Accept \+ email|Decline \+ email|Delete application/);
 });
 
 test("a pending GCash payment and its archived state read correctly", async () => {
   const pending = {
     ...EDWARD_ROW,
+    status: "accepted",
+    decision: "accepted",
     payment_status: "pending",
     payment_method: "gcash",
     gcash_reference: "GC-9",
@@ -1298,12 +1302,11 @@ test("a pending GCash payment and its archived state read correctly", async () =
   const { context, document } = startAdmin({ applications: [pending, archived] });
   await login(context, document);
 
-  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["NEW", "PAYMENT PENDING"]);
-  assert.deepEqual(badgeTexts(document, MARIA_ROW.id), ["NEW", "UNVERIFIED PAYMENT"]);
-  // The reviewer's decision path stays available for both.
-  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Accept \+ email/);
-  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Decline \+ email/);
-  assert.match(document.getElementById(`app-${MARIA_ROW.id}`).innerHTML, /Approve payment/);
+  assert.deepEqual(badgeTexts(document, EDWARD_ROW.id), ["ACCEPTED", "PAYMENT PENDING"]);
+  assert.deepEqual(badgeTexts(document, MARIA_ROW.id), ["ACCEPTED", "UNVERIFIED PAYMENT"]);
+  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Verify GCash payment/);
+  assert.doesNotMatch(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Accept \+ email|Decline \+ email|Delete application/);
+  assert.doesNotMatch(document.getElementById(`app-${MARIA_ROW.id}`).innerHTML, /Verify GCash payment|Delete application/);
 });
 
 test("an accepted applicant no longer offers an accept or decline action", async () => {
@@ -1314,19 +1317,15 @@ test("an accepted applicant no longer offers an accept or decline action", async
   assert.doesNotMatch(card.innerHTML, /Accept \+ email/);
   assert.doesNotMatch(card.innerHTML, /Decline \+ email/);
   assert.match(card.innerHTML, /Resend acceptance/);
-  assert.match(card.innerHTML, /Delete application/);
+  assert.doesNotMatch(card.innerHTML, /Delete application/);
 });
 
-test("the delete action is unchanged and still present on every card", async () => {
+test("Delete remains available only on new/reviewing applications", async () => {
   const { context, document, calls } = startAdmin();
   await login(context, document);
-  for (const row of [EDWARD_ROW, MARIA_ROW, JOHN_ROW]) {
-    assert.match(
-      document.getElementById(`app-${row.id}`).innerHTML,
-      /Delete application/,
-      "delete must remain available",
-    );
-  }
+  assert.match(document.getElementById(`app-${EDWARD_ROW.id}`).innerHTML, /Delete application/);
+  assert.match(document.getElementById(`app-${MARIA_ROW.id}`).innerHTML, /Delete application/);
+  assert.match(document.getElementById(`app-${JOHN_ROW.id}`).innerHTML, /Delete application/);
   const before = document.getElementById("cards").querySelectorAll(".card").length;
   // The delete button keeps its existing handler, unchanged by this work.
   await context.deleteApplication(EDWARD_ROW.id);
@@ -1337,31 +1336,118 @@ test("the delete action is unchanged and still present on every card", async () 
   assert.equal(document.getElementById("cards").querySelectorAll(".card").length, before);
 });
 
+test("one expanded applicant record covers every lifecycle fixture and guards actions", async () => {
+  const fixtures = [
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000001", name: "New Applicant", status: "new", decision: null, payment_status: "not_requested" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000002", name: "Reviewing Applicant", status: "reviewing", decision: null, payment_status: "not_requested" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000003", name: "Accepted Unpaid", status: "accepted", decision: "accepted", payment_status: "not_requested", payment_readiness: "Need payment plan", accepted_at: "2026-09-21T10:00:00Z" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000004", name: "Stripe Pending", status: "accepted", decision: "accepted", payment_status: "pending", payment_method: "stripe", payment_requested_at: "2026-09-22T10:00:00Z" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000005", name: "GCash Pending", status: "accepted", decision: "accepted", payment_status: "pending", payment_method: "gcash", gcash_reference: "GC-TEST-5", gcash_submitted_at: "2026-09-22T12:00:00Z", gcash_followup_status: "screenshot_requested" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000006", name: "Paid Setup Pending", status: "accepted", decision: "accepted", payment_status: "paid", payment_method: "stripe", paid_at: "2026-09-23T10:00:00Z", receipt_number: "RCPT-6" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000007", name: "Active Learner", status: "onboarded", decision: "accepted", payment_status: "paid", payment_method: "stripe", onboarding_completed_at: "2026-09-24T10:00:00Z", auth_user_id: "auth-user-7" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000008", name: "Declined Applicant", status: "declined", decision: "declined", payment_status: "not_requested", declined_at: "2026-09-21T10:00:00Z" },
+    { ...EDWARD_ROW, id: "10000000-0000-4000-8000-000000000009", name: "Suspended Learner", status: "onboarded", decision: "accepted", payment_status: "paid", payment_method: "gcash", onboarding_completed_at: "2026-09-24T10:00:00Z", auth_user_id: "auth-user-9", suspended_at: "2026-09-25T10:00:00Z" },
+  ];
+  const { context, document } = startAdmin({ applications: fixtures });
+  await login(context, document);
+
+  const expectedActions = [
+    [/Accept \+ email/, /Decline \+ email/, /Delete application/],
+    [/Accept \+ email/, /Decline \+ email/, /Delete application/],
+    [/Resend acceptance\/payment email/],
+    [/Resend acceptance\/payment email/],
+    [/Resend acceptance\/payment email/, /Verify GCash payment/],
+    [/Resend account-setup link/],
+    [],
+    [],
+    [],
+  ];
+  const expectedAccount = [
+    "NOT ELIGIBLE YET",
+    "NOT ELIGIBLE YET",
+    "WAITING FOR PAYMENT",
+    "PAYMENT PENDING",
+    "PAYMENT PENDING",
+    "PAID — ACCOUNT SETUP PENDING",
+    "ACTIVE LEARNER",
+    "NOT ELIGIBLE YET",
+    "SUSPENDED",
+  ];
+
+  for (let i = 0; i < fixtures.length; i += 1) {
+    const row = fixtures[i];
+    const card = document.getElementById(`app-${row.id}`);
+    assert.ok(card, `${row.name} is listed`);
+    assert.equal(card.querySelectorAll("[data-toggle-app]").length, 1, `${row.name} has exactly one expander`);
+    assert.equal(card.querySelectorAll(".expandArrow").length, 1, `${row.name} has exactly one chevron`);
+    assert.doesNotMatch(card.innerHTML, /View answers|View notes|data-toggle-answers|data-toggle-notes/);
+    const actionText = card.querySelector(".applicationActions").textContent;
+    for (const pattern of expectedActions[i]) assert.match(actionText, pattern, `${row.name}: expected action ${pattern}`);
+    if (i >= 2) assert.doesNotMatch(actionText, /Delete application/, `${row.name} must not be deletable after review starts`);
+    if (i >= 2) assert.doesNotMatch(actionText, /Accept \+ email|Decline \+ email/, `${row.name} must not have ordinary decision actions`);
+    if (i === 3) assert.doesNotMatch(actionText, /Verify GCash|Approve payment/, "Stripe pending must never offer manual approval");
+    if (i === 6) assert.doesNotMatch(actionText, /Delete|Accept|Decline/, "active learner is not a disposable application");
+
+    card.querySelector("[data-toggle-app]").click();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const panel = document.getElementById(`app-panel-${row.id}`);
+    assert.equal(panel.classList.contains("open"), true, `${row.name} expands`);
+    assert.equal(panel.querySelectorAll(".recordSection").length, 5);
+    assert.equal(panel.querySelectorAll(".answerItem").length, 7, `${row.name} has exactly 7 answers`);
+    assert.ok(document.getElementById(`note-${row.id}`), `${row.name} notes editor is inside this panel`);
+    assert.equal(panel.querySelectorAll("[data-toggle-app], .expandArrow").length, 0, "no nested or second chevrons");
+    assert.ok(panel.textContent.includes("PAYMENT & ENROLLMENT"));
+    assert.ok(panel.textContent.includes("ACADEMY ACCOUNT"));
+    assert.ok(panel.textContent.includes("ACTIVITY"));
+    assert.ok(panel.textContent.includes(expectedAccount[i]), `${row.name} account state`);
+    assert.doesNotMatch(panel.textContent, /tracking_token|contact_id|application_id|auth_user_id|payment_status|created_at|reviewed_at|admin_notes|service_role/i);
+  }
+
+  const plan = document.getElementById("app-panel-10000000-0000-4000-8000-000000000003").textContent;
+  assert.match(plan, /Payment plan requested \(informational only\)/);
+  assert.match(plan, /would need a payment plan/i);
+  const stripe = document.getElementById("app-panel-10000000-0000-4000-8000-000000000004").textContent;
+  assert.match(stripe, /Stripe/);
+  assert.match(stripe, /Payment requested/);
+  const gcash = document.getElementById("app-panel-10000000-0000-4000-8000-000000000005").textContent;
+  assert.match(gcash, /GCash/);
+  assert.match(gcash, /GC-TEST-5/);
+  const paid = document.getElementById("app-panel-10000000-0000-4000-8000-000000000006").textContent;
+  assert.match(paid, /RCPT-6/);
+  assert.match(paid, /Payment received/);
+});
+
 /* ------------------------------------------------------------------ *
  * 4. Reviewer notes in the Admin page                                 *
  * ------------------------------------------------------------------ */
 
-test("reviewer notes open, load the stored note and close again", async () => {
+test("one record expander reveals notes and all record sections, then collapses", async () => {
   const { context, document } = startAdmin({ notes: { [EDWARD_ROW.id]: "Strong fit. Ask about budget." } });
   await login(context, document);
 
-  const panel = document.getElementById(`notes-${EDWARD_ROW.id}`);
-  const head = document.getElementById(`noteshead-${EDWARD_ROW.id}`);
-  assert.ok(panel, "every application card has a reviewer notes area");
-  assert.ok(head, "every application card has a reviewer notes toggle");
-  // Collapsed by default, so it never competes with applicant answers.
+  const card = document.getElementById(`app-${EDWARD_ROW.id}`);
+  const panel = document.getElementById(`app-panel-${EDWARD_ROW.id}`);
+  const trigger = card.querySelector("[data-toggle-app]");
+  assert.ok(panel, "every application card has one unified record panel");
+  assert.equal(card.querySelectorAll("[data-toggle-app]").length, 1);
+  assert.equal(card.querySelectorAll("[data-toggle-answers], [data-toggle-notes]").length, 0);
+  assert.doesNotMatch(card.innerHTML, /View answers|View notes/);
   assert.equal(panel.classList.contains("open"), false);
-  assert.equal(head.getAttribute("aria-expanded"), "false");
+  assert.equal(trigger.getAttribute("aria-expanded"), "false");
 
-  head.click();
+  trigger.click();
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(panel.classList.contains("open"), true);
-  assert.equal(head.getAttribute("aria-expanded"), "true");
+  assert.equal(trigger.getAttribute("aria-expanded"), "true");
   assert.equal(document.getElementById(`note-${EDWARD_ROW.id}`).value, "Strong fit. Ask about budget.");
+  assert.equal(panel.querySelectorAll(".answerItem").length, 7);
+  for (const section of ["APPLICATION ANSWERS", "INTERNAL NOTES", "PAYMENT & ENROLLMENT", "ACADEMY ACCOUNT", "ACTIVITY"]) {
+    assert.ok(panel.textContent.includes(section), `missing ${section} in unified panel`);
+  }
 
-  head.click();
+  trigger.click();
   assert.equal(panel.classList.contains("open"), false);
-  assert.equal(head.getAttribute("aria-expanded"), "false");
+  assert.equal(trigger.getAttribute("aria-expanded"), "false");
 });
 
 test("a reviewer note is saved, and survives a page reload", async () => {
@@ -1369,7 +1455,7 @@ test("a reviewer note is saved, and survives a page reload", async () => {
   await login(first.context, first.document);
   const id = EDWARD_ROW.id;
 
-  first.document.getElementById(`noteshead-${id}`).click();
+  first.document.querySelector(`[data-toggle-app="${id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
   const input = first.document.getElementById(`note-${id}`);
   input.value = "Called on 27 Sep. Budget is tight, follow up in October.";
@@ -1384,7 +1470,7 @@ test("a reviewer note is saved, and survives a page reload", async () => {
   // Reload the Admin with the same stored note.
   const second = startAdmin({ notes: { [id]: first.noteStore.get(id) } });
   await login(second.context, second.document);
-  second.document.getElementById(`noteshead-${id}`).click();
+  second.document.querySelector(`[data-toggle-app="${id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(
     second.document.getElementById(`note-${id}`).value,
@@ -1396,7 +1482,7 @@ test("an existing note can be edited and the edit replaces it", async () => {
   const { context, document, noteStore } = startAdmin({ notes: { [EDWARD_ROW.id]: "First draft." } });
   await login(context, document);
   const id = EDWARD_ROW.id;
-  document.getElementById(`noteshead-${id}`).click();
+  document.querySelector(`[data-toggle-app="${id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   document.getElementById(`note-${id}`).value = "Second draft, much better.";
@@ -1412,7 +1498,7 @@ test("saving a note sends only the note and never the application state", async 
   const { context, document, calls } = startAdmin({ applications: [row] });
   await login(context, document);
   const id = EDWARD_ROW.id;
-  document.getElementById(`noteshead-${id}`).click();
+  document.querySelector(`[data-toggle-app="${id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   // Everything the page had already called before the reviewer saved anything.
@@ -1453,8 +1539,8 @@ test("notes are per application and never leak between cards", async () => {
     notes: { [EDWARD_ROW.id]: "Edward only." },
   });
   await login(context, document);
-  document.getElementById(`noteshead-${EDWARD_ROW.id}`).click();
-  document.getElementById(`noteshead-${MARIA_ROW.id}`).click();
+  document.querySelector(`[data-toggle-app="${EDWARD_ROW.id}"]`).click();
+  document.querySelector(`[data-toggle-app="${MARIA_ROW.id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   assert.equal(document.getElementById(`note-${EDWARD_ROW.id}`).value, "Edward only.");
@@ -1466,23 +1552,24 @@ test("notes are per application and never leak between cards", async () => {
   assert.equal(noteStore.get(MARIA_ROW.id), "Maria needs a payment plan.");
   assert.equal(noteStore.get(EDWARD_ROW.id), "Edward only.", "Edward's note must be untouched");
   // Notes are not shown on the card header, only inside the notes panel.
-  assert.doesNotMatch(document.getElementById(`app-${MARIA_ROW.id}`).querySelector(".cardtop").innerHTML, /payment plan/);
+  assert.doesNotMatch(document.getElementById(`app-${MARIA_ROW.id}`).querySelector(".applicationCardHead").innerHTML, /payment plan/);
 });
 
-test("opening reviewer notes does not open the answers panel and vice versa", async () => {
+test("answers and notes are inside the same expansion with exactly one chevron", async () => {
   const { context, document } = startAdmin();
   await login(context, document);
   const id = EDWARD_ROW.id;
 
-  document.getElementById(`noteshead-${id}`).click();
+  const card = document.getElementById(`app-${id}`);
+  const toggle = card.querySelector("[data-toggle-app]");
+  assert.equal(card.querySelectorAll(".expandArrow, [data-toggle-app]").length, 1);
+  toggle.click();
   await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(document.getElementById(`notes-${id}`).classList.contains("open"), true);
-  assert.equal(document.getElementById(`app-${id}`).classList.contains("open"), false, "answers stay collapsed");
-
-  document.querySelector(`[data-toggle-answers="${id}"]`).click();
-  await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(document.getElementById(`app-${id}`).classList.contains("open"), true, "answers still expand normally");
-  assert.equal(document.getElementById(`notes-${id}`).classList.contains("open"), true, "notes stay open independently");
+  assert.equal(document.getElementById(`app-panel-${id}`).classList.contains("open"), true);
+  assert.equal(document.getElementById(`answers-${id}`).querySelectorAll(".answerItem").length, 7);
+  assert.ok(document.getElementById(`note-${id}`));
+  assert.equal(card.querySelectorAll("[data-toggle-app]").length, 1);
+  assert.doesNotMatch(card.innerHTML, /View answers|View notes|data-toggle-answers|data-toggle-notes/);
 });
 
 test("reviewer notes are not part of the seven applicant answers", async () => {
@@ -1493,17 +1580,15 @@ test("reviewer notes are not part of the seven applicant answers", async () => {
   // Closed until the reviewer opens them, and never inside the answers panel.
   assert.doesNotMatch(document.getElementById(`app-${id}`).querySelector(".answersPanel").innerHTML, /SECRET REVIEWER NOTE/);
 
-  document.querySelector(`[data-toggle-answers="${id}"]`).click();
+  document.querySelector(`[data-toggle-app="${id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
   const panel = document.getElementById(`answers-${id}`);
   assert.equal(panel.querySelectorAll(".answerItem").length, 7, "still exactly seven questions");
   assert.doesNotMatch(panel.innerHTML, /SECRET REVIEWER NOTE/);
   assert.doesNotMatch(panel.innerHTML, /Reviewer notes|admin_notes|Not answered<\/p>\s*<p class="answerQ">Reviewer/);
 
-  // The note only appears once the reviewer explicitly opens the notes.
-  assert.doesNotMatch(document.getElementById(`app-${id}`).innerHTML, /SECRET REVIEWER NOTE/);
-  document.getElementById(`noteshead-${id}`).click();
-  await new Promise(resolve => setTimeout(resolve, 0));
+  // Notes load in the same expanded panel but never inside applicant answers.
+  assert.match(document.getElementById(`app-panel-${id}`).innerHTML, /SECRET REVIEWER NOTE/);
   assert.match(document.getElementById(`note-${id}`).value, /SECRET REVIEWER NOTE/);
 });
 
@@ -1511,7 +1596,7 @@ test("a note being typed is never discarded by a background refresh", async () =
   const { context, document } = startAdmin({ notes: { [EDWARD_ROW.id]: "Stored note." } });
   await login(context, document);
   const id = EDWARD_ROW.id;
-  document.getElementById(`noteshead-${id}`).click();
+  document.querySelector(`[data-toggle-app="${id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   const input = document.getElementById(`note-${id}`);
@@ -1532,7 +1617,7 @@ test("a failed note save is reported and the note is kept for a retry", async ()
   const { context, document } = startAdmin({ notesFail: true });
   await login(context, document);
   const id = EDWARD_ROW.id;
-  document.getElementById(`noteshead-${id}`).click();
+  document.querySelector(`[data-toggle-app="${id}"]`).click();
   await new Promise(resolve => setTimeout(resolve, 0));
 
   document.getElementById(`note-${id}`).value = "This save will fail.";

@@ -484,68 +484,8 @@
         flex-wrap: wrap;
         justify-content: flex-end;
       }
-      .answersHead {
-        cursor: pointer;
-        align-items: flex-start;
-      }
-      .answersHead:hover .name {
-        text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 3px;
-      }
-      .answersToggle {
-        min-height: 30px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid var(--line);
-        background: #fff;
-        color: var(--ink);
-        border-radius: 999px;
-        padding: 6px 12px;
-        font-size: 12px;
-        font-weight: 800;
-        white-space: nowrap;
-        user-select: none;
-        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-      }
-      .answersHead:hover .answersToggle {
-        background: #faf9f5;
-        border-color: #c9c3b6;
-      }
-      .answersToggle .chev {
-        display: inline-block;
-        font-size: 12px;
-        line-height: 1;
-        transition: transform 0.15s ease;
-      }
-      .card.open .answersToggle {
-        border-color: #171717;
-        background: #171717;
-        color: #fff;
-      }
-      .card.open .answersToggle .chev {
-        transform: rotate(180deg);
-      }
       .answersPanel {
-        display: none;
-        margin-top: 14px;
-        border-top: 1px solid var(--line);
-        padding-top: 14px;
-      }
-      .card.open .answersPanel {
         display: block;
-      }
-      .answersTitle {
-        margin: 0 0 9px;
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
-        color: var(--muted);
-      }
-      .answersTitle:not(:first-child) {
-        margin-top: 16px;
       }
       .answerGrid {
         display: grid;
@@ -587,64 +527,6 @@
         margin: 0;
         font-size: 13px;
         color: var(--muted);
-      }
-      /* Internal reviewer notes. Same visual language as the answers toggle,
-         deliberately quieter so it never competes with applicant answers. */
-      .notesBar {
-        margin-top: 10px;
-        border-top: 1px solid var(--line);
-        padding-top: 10px;
-      }
-      .notesHead {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 800;
-        color: var(--muted);
-        user-select: none;
-      }
-      .notesToggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        min-height: 28px;
-        border: 1px solid var(--line);
-        background: #fff;
-        color: var(--ink);
-        border-radius: 999px;
-        padding: 5px 11px;
-        font-size: 12px;
-        font-weight: 800;
-        white-space: nowrap;
-        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-      }
-      .notesHead:hover .notesToggle {
-        background: #faf9f5;
-        border-color: #c9c3b6;
-      }
-      .notesToggle .chev {
-        display: inline-block;
-        font-size: 12px;
-        line-height: 1;
-        transition: transform 0.15s ease;
-      }
-      .notesHead[aria-expanded="true"] .notesToggle {
-        border-color: #171717;
-        background: #171717;
-        color: #fff;
-      }
-      .notesHead[aria-expanded="true"] .chev {
-        transform: rotate(180deg);
-      }
-      .notesPanel {
-        display: none;
-        margin-top: 11px;
-      }
-      .notesPanel.open {
-        display: block;
       }
       .notesHint {
         margin: 0 0 7px;
@@ -704,6 +586,61 @@
         color: #b4232a;
         font-weight: 800;
       }
+      .applicationCardHead {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .applicationIdentity { min-width: 0; }
+      .applicationIdentity .name,
+      .applicationIdentity .sub { overflow-wrap: anywhere; }
+      .applicationHeadRight {
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        gap: 10px;
+        min-width: 0;
+      }
+      .applicationHeadRight .badges { justify-content: flex-end; }
+      .expandArrow {
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        display: inline-grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: #fff;
+        color: var(--ink);
+        font: 700 18px/1 "DM Sans", sans-serif;
+        cursor: pointer;
+      }
+      .expandArrow:hover,
+      .expandArrow:focus-visible { background: #faf9f5; border-color: #a9a398; }
+      .applicationActions { margin-top: 10px; }
+      .appPanel { display: none; margin-top: 14px; border-top: 1px solid var(--line); }
+      .appPanel.open { display: block; }
+      .recordSection { padding: 14px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+      .recordSection:last-child { border-bottom: 0; padding-bottom: 0; }
+      .recordSection h3 {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .06em;
+      }
+      .recordSection .answerGrid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+      .notesEditor { min-width: 0; }
+      .recordFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+      .recordFacts > div { min-width: 0; border-radius: 10px; background: #faf9f5; padding: 9px 11px; }
+      .recordFacts dt { color: var(--muted); font-size: 11px; font-weight: 700; }
+      .recordFacts dd { margin: 3px 0 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+      .accountState { display: inline-flex; margin: 0; padding: 7px 10px; border-radius: 8px; background: #f5f3ee; font-size: 12px; font-weight: 800; }
+      .activityTimeline { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+      .activityTimeline li { display: grid; grid-template-columns: minmax(105px, auto) 1fr; gap: 10px; font-size: 12px; }
+      .activityTimeline time { color: var(--muted); }
+      .recordEmpty { margin: 0; color: var(--muted); font-size: 12px; }
       @media (max-width: 650px) {
         .cardMeta {
           justify-content: flex-start;
@@ -712,6 +649,12 @@
         .answerGrid {
           grid-template-columns: 1fr;
         }
+        .applicationCardHead { align-items: flex-start; }
+        .applicationHeadRight { gap: 7px; }
+        .applicationHeadRight .badges { max-width: 220px; }
+        .recordSection .answerGrid { grid-template-columns: 1fr; }
+        .recordFacts { grid-template-columns: 1fr; }
+        .activityTimeline li { grid-template-columns: 92px minmax(0, 1fr); gap: 7px; }
       }
     </style>
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
@@ -808,7 +751,6 @@
         answerQueue = new Set(),
         // Reviewer notes are internal only and live behind their own
         // admin-only endpoint, never inside the seven-question answers panel.
-        openNotes = new Set(),
         noteCache = new Map(),
         noteQueue = new Set(),
         dirtyNotes = new Set(),
@@ -932,11 +874,15 @@
         return !q || JSON.stringify(x).toLowerCase().includes(q);
       }
       function activeApps() {
-        return apps.filter((x) => x.decision !== "declined" && !x.auth_user_id);
+        // Keep the full application record visible through the end of its
+        // lifecycle; completed and declined records are not reviewable, but
+        // remain useful records and have their actions guarded separately.
+        return apps;
       }
       function actionablePending() {
         return activeApps().filter(
           (x) =>
+            currentDecision(x) !== "declined" &&
             x.payment_method === "gcash" &&
             x.payment_status === "pending" &&
             !["followup_sent", "no_response"].includes(
@@ -1023,9 +969,7 @@
         // Nothing else about the stored row is shown here.
         const answers = record.answers || {};
         const items = answerSchema.map(field => answerItem(field, answers[field.field]));
-        box.innerHTML =
-          '<p class="answersTitle">Application answers</p>' +
-          `<div class="answerGrid">${items.join("")}</div>`;
+        box.innerHTML = `<div class="answerGrid">${items.join("")}</div>`;
       }
       function paintAppAnswers(id) {
         const box = $("answers-" + id);
@@ -1067,22 +1011,25 @@
           fetchAppAnswers(missing).then(() => open.forEach(paintAppAnswers));
         }
       }
-      window.toggleAppAnswers = (id) => {
+      window.toggleApp = (id) => {
         const key = String(id || "");
         if (!SAFE_APP_ID.test(key)) return;
         const card = $("app-" + key);
         if (!card) return;
         const open = !card.classList.contains("open");
         card.classList.toggle("open", open);
-        const trigger = card.querySelector("[data-toggle-answers]");
+        const panel = $("app-panel-" + key);
+        if (panel) panel.classList.toggle("open", open);
+        const trigger = card.querySelector("[data-toggle-app]");
         if (trigger) {
           trigger.setAttribute("aria-expanded", open ? "true" : "false");
-          const text = trigger.querySelector(".answersToggleText");
-          if (text) text.textContent = open ? "Hide answers" : "View answers";
+          trigger.setAttribute("aria-label", `${open ? "Collapse" : "Expand"} applicant record`);
+          trigger.textContent = open ? "⌃" : "⌄";
         }
         if (open) {
           openApps.add(key);
           hydrateOpenApps();
+          hydrateOpenNotes();
         } else {
           openApps.delete(key);
         }
@@ -1157,7 +1104,7 @@
         }
       }
       function hydrateOpenNotes() {
-        const open = [...openNotes].filter((id) => $("notes-" + id));
+        const open = [...openApps].filter((id) => $("notes-" + id));
         if (!open.length) return;
         open.forEach(paintAppNotes);
         const missing = open.filter((id) => !noteCache.has(id));
@@ -1165,24 +1112,6 @@
           fetchAppNotes(missing).then(() => open.forEach(paintAppNotes));
         }
       }
-      window.toggleAppNotes = (id) => {
-        const key = String(id || "");
-        if (!SAFE_APP_ID.test(key)) return;
-        const bar = $("noteshead-" + key);
-        if (!bar) return;
-        const open = !openNotes.has(key);
-        if (open) {
-          openNotes.add(key);
-        } else {
-          openNotes.delete(key);
-        }
-        bar.setAttribute("aria-expanded", open ? "true" : "false");
-        const text = bar.querySelector(".notesToggleText");
-        if (text) text.textContent = open ? "Hide notes" : "View notes";
-        const box = $("notes-" + key);
-        if (box) box.classList.toggle("open", open);
-        if (open) hydrateOpenNotes();
-      };
       // Saves only the note text. It never touches status, decision, payment or
       // enrolment, and it never emails the applicant.
       window.saveAppNote = async (id, button) => {
@@ -1212,13 +1141,127 @@
         }
       };
       function appCard(x) {
-        const unverified = isUnverifiedPayment(x);
         const key = x.id === null || x.id === undefined ? "" : String(x.id);
         const expandable = SAFE_APP_ID.test(key);
         const open = expandable && openApps.has(key);
-        const notesOpen = expandable && openNotes.has(key);
-        const head = (badges) => `<div><div class="name">${esc(x.name || "No name")}</div><div class="sub">${esc(x.email || "")}</div></div>${badges}`;
-        return `<div class="card${open ? " open" : ""}" id="app-${esc(key)}">${expandable ? `<div class="cardtop answersHead" data-toggle-answers="${esc(key)}" role="button" tabindex="0" aria-expanded="${open ? "true" : "false"}" aria-controls="answers-${esc(key)}">${head(`<div class="cardMeta"><div class="badges">${stateBadges(x)}</div><span class="answersToggle" aria-hidden="true"><span class="answersToggleText">${open ? "Hide answers" : "View answers"}</span><span class="chev">⌄</span></span></div>`)}</div>` : `<div class="cardtop">${head(`<div class="badges">${stateBadges(x)}</div>`)}</div>`}${x.gcash_reference ? `<div class="detail"><b>GCash reference:</b> ${esc(x.gcash_reference)}${unverified ? "<br><b>Payment:</b> Unverified payment. Final follow-up sent." : ""}</div>` : ""}${expandable ? `<div class="answersPanel" id="answers-${esc(key)}"></div>` : ""}${expandable ? `<div class="notesBar"><div class="notesHead" id="noteshead-${esc(key)}" data-toggle-notes="${esc(key)}" role="button" tabindex="0" aria-expanded="${notesOpen ? "true" : "false"}" aria-controls="notes-${esc(key)}"><span>Reviewer notes</span><span class="notesToggle"><span class="notesToggleText">${notesOpen ? "Hide notes" : "View notes"}</span><span class="chev">⌄</span></span></div><div class="notesPanel${notesOpen ? " open" : ""}" id="notes-${esc(key)}"></div></div>` : ""}<div class="actions">${unverified ? `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>` : ""}${!x.decision ? `<button class="accept" onclick="decision('${x.id}','accepted')">Accept + email</button><button onclick="decision('${x.id}','declined')">Decline + email</button>` : ""}${x.decision === "accepted" ? `<button onclick="decision('${x.id}','accepted',true)">Resend acceptance</button>` : ""}${x.payment_status === "paid" ? `<button class="success" onclick="onboard('${x.id}')">Send account setup</button>` : ""}<button class="danger" onclick="deleteApplication('${x.id}')">Delete application</button></div></div>`;
+        const submitted = x.created_at ? `<div class="sub appSubmitted">Applied ${esc(formatDate(x.created_at))}</div>` : "";
+        return `<div class="card applicationCard${open ? " open" : ""}" id="app-${esc(key)}">
+          <div class="applicationCardHead">
+            <div class="applicationIdentity">
+              <div class="name">${esc(x.name || "No name")}</div>
+              <div class="sub">${esc(x.email || "")}</div>
+              ${submitted}
+            </div>
+            <div class="applicationHeadRight">
+              <div class="badges">${stateBadges(x)}</div>
+              ${expandable ? `<button class="expandArrow" type="button" data-toggle-app="${esc(key)}" aria-label="${open ? "Collapse" : "Expand"} applicant record" aria-controls="app-panel-${esc(key)}" aria-expanded="${open ? "true" : "false"}">${open ? "⌃" : "⌄"}</button>` : ""}
+            </div>
+          </div>
+          <div class="actions applicationActions">${applicationActions(x)}</div>
+          ${expandable ? `<div class="appPanel${open ? " open" : ""}" id="app-panel-${esc(key)}">
+            <section class="recordSection">
+              <h3>APPLICATION ANSWERS</h3>
+              <div class="answersPanel" id="answers-${esc(key)}"></div>
+            </section>
+            <section class="recordSection">
+              <h3>INTERNAL NOTES</h3>
+              <div class="notesEditor" id="notes-${esc(key)}"></div>
+            </section>
+            <section class="recordSection">
+              <h3>PAYMENT &amp; ENROLLMENT</h3>
+              ${paymentEnrollmentInfo(x)}
+            </section>
+            <section class="recordSection">
+              <h3>ACADEMY ACCOUNT</h3>
+              <p class="accountState">${esc(academyAccountLabel(x))}</p>
+            </section>
+            <section class="recordSection recordActivity">
+              <h3>ACTIVITY</h3>
+              ${activityTimeline(x)}
+            </section>
+          </div>` : ""}
+        </div>`;
+      }
+      function currentDecision(x) {
+        const decision = String(x.decision || "").trim().toLowerCase();
+        if (decision === "accepted" || decision === "declined") return decision;
+        const status = String(x.status || "").trim().toLowerCase();
+        return status === "accepted" || status === "declined" ? status : "";
+      }
+      function applicationActions(x) {
+        const decision = currentDecision(x);
+        const status = String(x.status || "").toLowerCase();
+        const payment = String(x.payment_status || "not_requested").toLowerCase();
+        const isGcashPending = x.payment_method === "gcash" && payment === "pending" && !["followup_sent", "no_response"].includes(x.gcash_followup_status || "");
+        const isActiveLearner = status === "onboarded" && payment === "paid" && !!x.onboarding_completed_at && !!x.auth_user_id && !x.suspended_at;
+        const isReviewable = !decision && ["new", "reviewing"].includes(status) && ["", "none", "not_requested"].includes(payment) && !x.auth_user_id && !x.onboarding_completed_at && !x.suspended_at;
+        if (isReviewable) {
+          return `<button class="accept" onclick="decision('${esc(x.id)}','accepted')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}')">Delete application</button>`;
+        }
+        if (x.suspended_at || isActiveLearner || decision === "declined") return "";
+        if (decision === "accepted" && payment !== "paid") {
+          return `<button onclick="decision('${esc(x.id)}','accepted',true)">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}`;
+        }
+        if (payment === "pending") {
+          return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
+        }
+        if (payment === "paid") return `<button class="success" onclick="onboard('${esc(x.id)}')">Resend account-setup link</button>`;
+        return "";
+      }
+      function paymentEnrollmentInfo(x) {
+        const decision = currentDecision(x);
+        const payment = String(x.payment_status || "not_requested").toLowerCase();
+        const method = String(x.payment_method || "").toLowerCase();
+        const readiness = String(x.payment_readiness || "");
+        const paymentField = answerSchema.find(field => field.field === "payment_readiness") || { options: { "Willing to invest in myself": "Yes, I’m willing to invest in myself.", "Need payment plan": "I’m ready to join, but I would need a payment plan." } };
+        const preference = answerText(paymentField, readiness);
+        const paymentLabels = { not_requested: "Not requested", pending: "Pending", paid: "Paid", failed: "Failed", refunded: "Refunded" };
+        const methodLabels = { stripe: "Stripe", gcash: "GCash" };
+        const rows = [
+          ["Decision", decision ? decision.charAt(0).toUpperCase() + decision.slice(1) : ["new", "reviewing"].includes(String(x.status || "").toLowerCase()) ? "Awaiting review" : "—"],
+          ["Payment", paymentLabels[payment] || "Not requested"],
+          ["Payment method", methodLabels[method] || "—"],
+        ];
+        if (preference) rows.push(["Payment preference", preference]);
+        const planRequested = readiness === "Need payment plan" || /would need a payment plan/i.test(preference);
+        if (planRequested) rows.push(["Payment plan", "Payment plan requested (informational only)"]);
+        if (x.payment_requested_at) rows.push(["Payment requested", formatDate(x.payment_requested_at)]);
+        if (x.paid_at) rows.push(["Paid date", formatDate(x.paid_at)]);
+        if (x.receipt_number) rows.push(["Receipt number", String(x.receipt_number)]);
+        if (x.gcash_reference) rows.push(["GCash reference", String(x.gcash_reference)]);
+        if (x.gcash_submitted_at) rows.push(["GCash submitted", formatDate(x.gcash_submitted_at)]);
+        if (x.gcash_reviewed_at) rows.push(["GCash reviewed", formatDate(x.gcash_reviewed_at)]);
+        return `<dl class="recordFacts">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("")}</dl>`;
+      }
+      function academyAccountLabel(x) {
+        const status = String(x.status || "").toLowerCase();
+        const payment = String(x.payment_status || "not_requested").toLowerCase();
+        if (x.suspended_at) return "SUSPENDED";
+        if (status === "onboarded" && payment === "paid" && x.onboarding_completed_at && x.auth_user_id) return "ACTIVE LEARNER";
+        if (payment === "paid") return "PAID — ACCOUNT SETUP PENDING";
+        if (payment === "pending") return "PAYMENT PENDING";
+        if (currentDecision(x) === "accepted") return "WAITING FOR PAYMENT";
+        return "NOT ELIGIBLE YET";
+      }
+      function activityTimeline(x) {
+        const events = [
+          [x.created_at, "Applied"],
+          [x.reviewed_at, "Reviewed"],
+          [x.accepted_at, "Accepted"],
+          [x.declined_at, "Declined"],
+          [x.payment_requested_at, "Payment requested"],
+          [x.gcash_submitted_at, "GCash payment submitted"],
+          [x.gcash_reviewed_at, "GCash payment reviewed"],
+          [x.paid_at, "Payment received"],
+          [x.onboarding_completed_at, "Account setup completed"],
+        ].filter(([date]) => date && Number.isFinite(Date.parse(date))).sort((a, b) => Date.parse(a[0]) - Date.parse(b[0]));
+        if (!events.length) return '<p class="recordEmpty">No dated activity recorded.</p>';
+        return `<ol class="activityTimeline">${events.map(([date, label]) => `<li><time datetime="${esc(date)}">${esc(formatDate(date))}</time><span>${esc(label)}</span></li>`).join("")}</ol>`;
+      }
+      function formatDate(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
       }
       function studentCard(x) {
         const suspended = !!x.suspended_at;
@@ -1229,7 +1272,7 @@
         if (tab === "applicants") {
           const a = activeApps().filter(match);
           stat([
-            [a.length, "Active applications"],
+            [a.length, "Applications"],
             [actionablePending().length, "Payment needs action"],
             [
               a.filter((x) => x.decision === "accepted").length,
@@ -1242,7 +1285,7 @@
           ]);
           $("cards").innerHTML = a.length
             ? a.map(appCard).join("")
-            : '<div class="empty">No active applications.</div>';
+            : '<div class="empty">No applications found.</div>';
           hydrateOpenApps();
           hydrateOpenNotes();
           return;
@@ -1309,11 +1352,9 @@
         const e = $("student-" + id);
         if (e) e.classList.toggle("open");
       };
-      // One delegated listener so application cards need no inline handlers.
+      // One record expander per application; all record sections live inside it.
       $("cards").addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) return;
-        // The notes save button lives inside the notes toggle, so handle it
-        // first or clicking Save would also collapse the panel.
         const saver = event.target.closest("[data-save-note]");
         if (saver) {
           event.preventDefault();
@@ -1321,16 +1362,11 @@
           window.saveAppNote(saver.dataset.saveNote, saver);
           return;
         }
-        const notes = event.target.closest("[data-toggle-notes]");
-        if (notes) {
+        const expander = event.target.closest("[data-toggle-app]");
+        if (expander) {
           event.preventDefault();
-          window.toggleAppNotes(notes.dataset.toggleNotes);
-          return;
+          window.toggleApp(expander.dataset.toggleApp);
         }
-        const trigger = event.target.closest("[data-toggle-answers]");
-        if (!trigger) return;
-        event.preventDefault();
-        window.toggleAppAnswers(trigger.dataset.toggleAnswers);
       });
       // Marks a note as unsaved so a rebuild of the card list cannot discard
       // what the reviewer has typed.
@@ -1348,16 +1384,10 @@
         if (!(event.target instanceof Element)) return;
         // Let the textarea keep Enter for newlines.
         if (event.target.closest(".notesInput")) return;
-        const notes = event.target.closest("[data-toggle-notes]");
-        if (notes) {
-          event.preventDefault();
-          window.toggleAppNotes(notes.dataset.toggleNotes);
-          return;
-        }
-        const trigger = event.target.closest("[data-toggle-answers]");
-        if (!trigger) return;
+        const expander = event.target.closest("[data-toggle-app]");
+        if (!expander) return;
         event.preventDefault();
-        window.toggleAppAnswers(trigger.dataset.toggleAnswers);
+        window.toggleApp(expander.dataset.toggleApp);
       });
       window.approvePay = async (id) => {
         if (!confirm("Approve this GCash payment as ₱6,900 PAID?")) return;
