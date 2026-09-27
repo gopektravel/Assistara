@@ -24,6 +24,15 @@ async function send(to:string,subject:string,html:string){if(!RESEND_API_KEY) re
 function emailShell(title:string,body:string,cta?:{label:string,href:string}){return `<!doctype html><html><body style="margin:0;background:#f4f3ef;font-family:Arial,sans-serif;color:#151515"><table width="100%" role="presentation" cellspacing="0" cellpadding="0" style="padding:28px 12px"><tr><td align="center"><table width="100%" role="presentation" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fff;border:1px solid #e2dfd7;border-radius:24px;overflow:hidden"><tr><td style="background:#171717;color:#fff;padding:22px 30px;font-size:22px;font-weight:700">Assistara Academy</td></tr><tr><td style="padding:34px 30px 8px"><h1 style="margin:0;font-size:30px">${esc(title)}</h1></td></tr><tr><td style="padding:12px 30px 26px;font-size:16px;line-height:1.6;color:#4f4b45">${body}</td></tr>${cta?`<tr><td style="padding:0 30px 34px"><a href="${cta.href}" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-weight:700;padding:15px 21px;border-radius:999px">${cta.label}</a></td></tr>`:""}</table></td></tr></table></body></html>`}
 
 const ANSWER_FIELDS=["current_situation","why_remote_work","what_tried","biggest_obstacle","remote_work_interest","weekly_commitment","payment_readiness"];
+const ANSWER_FIELD_SCHEMA=[
+  {field:"current_situation",label:"What best describes your current situation?"},
+  {field:"why_remote_work",label:"Why do you want to start working remotely?",long:true},
+  {field:"what_tried",label:"What have you already tried to get a remote job or client?",long:true},
+  {field:"biggest_obstacle",label:"What is your biggest obstacle right now?",long:true},
+  {field:"remote_work_interest",label:"What type of remote work interests you most?"},
+  {field:"weekly_commitment",label:"Can you commit consistent time every week to complete the Academy and take action?"},
+  {field:"payment_readiness",label:"If selected, would you be ready to join at ₱6,900?",options:{"Willing to invest in myself":"Yes, I'm willing to invest in myself.","Need payment plan":"I'm ready to join, but I would need a payment plan."}}
+];
 const MAX_NOTE_LENGTH=5000;
 const SAFE_ID=/^[A-Za-z0-9_-]{1,64}$/;
 
@@ -61,7 +70,8 @@ Deno.serve(async(req:Request)=>{
       for(const field of ANSWER_FIELDS) answers[field]=row[field]??null;
       byId.set(String(row.id),answers);
     }
-    return new Response(JSON.stringify({ok:true,answers:safeIds.map(id=>byId.get(id)||null)}),{status:200,headers:h});
+    const applications=safeIds.map(id=>{const record=byId.get(id);return record?{...record,found:true}:{id,answers:{},found:false};});
+    return new Response(JSON.stringify({ok:true,fields:ANSWER_FIELD_SCHEMA,applications}),{status:200,headers:h});
   }
   if(action==="notes"){
     const sub=String(body.subaction||"read");
