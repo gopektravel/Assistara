@@ -68,7 +68,7 @@ Deno.serve(async(req:Request)=>{
       if(!row||row.id===undefined||row.id===null) continue;
       const answers:any={};
       for(const field of ANSWER_FIELDS) answers[field]=row[field]??null;
-      byId.set(String(row.id),answers);
+      byId.set(String(row.id),{id:String(row.id),answers});
     }
     const applications=safeIds.map(id=>{const record=byId.get(id);return record?{...record,found:true}:{id,answers:{},found:false};});
     return new Response(JSON.stringify({ok:true,fields:ANSWER_FIELD_SCHEMA,applications}),{status:200,headers:h});

@@ -6,9 +6,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ADMIN_API_PATH = path.join(__dirname, "..", "..", "supabase", "functions", "admin-api", "index.ts");
+const ADMIN_HTML_PATH = path.join(__dirname, "..", "admin.html");
 
 function source() {
   return fs.readFileSync(ADMIN_API_PATH, "utf8");
+}
+
+function adminHtml() {
+  return fs.readFileSync(ADMIN_HTML_PATH, "utf8");
 }
 
 test("answers select includes id column", () => {
@@ -76,8 +81,24 @@ test("answers response includes id in application objects", () => {
 test("answers response includes nested answers object", () => {
   const src = source();
   assert.ok(
-    src.includes("...record,found:true"),
-    "existing applications must spread record (which contains answers)"
+    src.includes('byId.set(String(row.id),{id:String(row.id),answers});'),
+    "existing applications must be stored as id plus nested answers"
+  );
+});
+
+test("found application answers expose only the seven approved fields", () => {
+  const src = source();
+  const answersBlock = src.slice(
+    src.indexOf('if(action==="answers")'),
+    src.indexOf('if(action==="notes")')
+  );
+  assert.ok(
+    answersBlock.includes("for(const field of ANSWER_FIELDS) answers[field]=row[field]??null;"),
+    "found answers must be projected through ANSWER_FIELDS"
+  );
+  assert.ok(
+    answersBlock.includes("{id:String(row.id),answers}"),
+    "found applications must contain id and nested answers"
   );
 });
 
@@ -112,6 +133,17 @@ test("answers field schema preserves field ordering", () => {
     assert.ok(idx > lastIdx, `field ${field} must appear in correct order`);
     lastIdx = idx;
   }
+});
+
+test("answers response defines exactly seven canonical fields", () => {
+  const src = source();
+  const schemaMatch = src.match(/const ANSWER_FIELD_SCHEMA=\[([\s\S]*?)\];/);
+  assert.ok(schemaMatch, "ANSWER_FIELD_SCHEMA must be defined");
+  assert.strictEqual(
+    (schemaMatch[1].match(/\{field:/g) || []).length,
+    7,
+    "response schema must contain exactly seven field definitions"
+  );
 });
 
 test("answers skips rows without valid id", () => {
@@ -152,4 +184,21 @@ test("no arbitrary academy_applications columns exposed in answers", () => {
   assert.ok(!answersBlock.includes("select('*')"), "must not use select('*')");
   assert.ok(!answersBlock.includes('select("*")'), 'must not use select("*")');
   assert.ok(answersBlock.includes("ANSWER_FIELDS.join"), "must use ANSWER_FIELDS allowlist");
+});
+
+test("fetchAppAnswers consumes fields and applications contract", () => {
+  const src = adminHtml();
+  const block = src.slice(src.indexOf("async function fetchAppAnswers"), src.indexOf("function hydrateOpenApps"));
+  assert.ok(block.includes("answerSchema = Array.isArray(data.fields) ? data.fields : [];"), "client must populate answerSchema from data.fields");
+  assert.ok(block.includes("Array.isArray(data.applications)"), "client must consume data.applications");
+  assert.ok(!block.includes("data.answers"), "client must not depend on obsolete data.answers");
+  assert.ok(block.includes("answerCache.set(String(row.id), row)"), "application id must be the cache key");
+  assert.ok(block.includes("answers: {}"), "missing applications must retain a safe nested answers fallback");
+});
+
+test("paintAnswers uses populated schema and nested answers", () => {
+  const src = adminHtml();
+  const block = src.slice(src.indexOf("function paintAnswers"), src.indexOf("function paintAppAnswers"));
+  assert.ok(block.includes("answerSchema.map"), "paintAnswers must render the populated schema");
+  assert.ok(block.includes("record.answers || {}"), "paintAnswers must read nested answers");
 });

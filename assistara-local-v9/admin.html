@@ -986,7 +986,8 @@
           answerQueue.clear();
           try {
             const data = await req("answers", { ids: batch.slice(0, 50) }, ANSWERS);
-            const rows = Array.isArray(data.answers) ? data.answers : [];
+            answerSchema = Array.isArray(data.fields) ? data.fields : [];
+            const rows = Array.isArray(data.applications) ? data.applications : [];
             rows.forEach(row => answerCache.set(String(row.id), row));
             batch.forEach(id => {
               if (!answerCache.has(id)) answerCache.set(id, { id, answers: {} });
