@@ -42,8 +42,33 @@
       "use": "@vercel/static"
     },
     {
-      "src": "academy-dashboard.html",
-      "use": "@vercel/static"
+      "src": "api/academy-content.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js",
+          "academy-dashboard.html",
+          "academy/slides/**/*.pdf"
+        ]
+      }
+    },
+    {
+      "src": "api/academy-session.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
+      "src": "api/test-portal-session.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
     },
     {
       "src": "beta-account.html",
@@ -233,6 +258,46 @@
   ],
   "routes": [
     {
+      "src": "/academy/dashboard",
+      "dest": "/api/academy-content.js?audience=learner"
+    },
+    {
+      "src": "/academy/dashboard/",
+      "dest": "/api/academy-content.js?audience=learner"
+    },
+    {
+      "src": "/academy-dashboard.html",
+      "dest": "/api/academy-content.js?audience=learner"
+    },
+    {
+      "src": "/academy/test-portal",
+      "dest": "/api/academy-content.js?audience=qa"
+    },
+    {
+      "src": "/academy/test-portal/",
+      "dest": "/api/academy-content.js?audience=qa"
+    },
+    {
+      "src": "/academy/slides/drive/(?<driveId>[^/]+)",
+      "dest": "/api/academy-content.js?audience=learner&drive=$driveId"
+    },
+    {
+      "src": "/academy/slides/(?<asset>[^/]+\\.pdf)$",
+      "dest": "/api/academy-content.js?audience=learner&asset=$asset"
+    },
+    {
+      "src": "/api/academy-session",
+      "dest": "/api/academy-session.js"
+    },
+    {
+      "src": "/api/test-portal-session",
+      "dest": "/api/test-portal-session.js"
+    },
+    {
+      "src": "/api/academy-content",
+      "dest": "/api/academy-content.js"
+    },
+    {
       "src": "/styles.css",
       "dest": "/styles.css"
     },
@@ -303,22 +368,6 @@
     {
       "src": "/academy/beta-account/",
       "dest": "/beta-account.html"
-    },
-    {
-      "src": "/academy/dashboard",
-      "dest": "/academy-dashboard.html"
-    },
-    {
-      "src": "/academy/dashboard/",
-      "dest": "/academy-dashboard.html"
-    },
-    {
-      "src": "/academy/test-portal",
-      "dest": "/academy-dashboard.html"
-    },
-    {
-      "src": "/academy/test-portal/",
-      "dest": "/academy-dashboard.html"
     },
     {
       "src": "/academy/tools/client-finder",

@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex,nofollow" />
     <title>Admin | Assistara</title>
     <link rel="icon" href="/assistara-logo.svg" />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
       :root {
         --ink: #171717;
@@ -27,13 +27,13 @@
       input,
       select,
       textarea {
-        font-family: "Manrope", Arial, sans-serif;
+        font-family: "DM Sans", sans-serif;
       }
       body {
         margin: 0;
         background: var(--cream);
         color: var(--ink);
-        font-family: "Manrope", Arial, sans-serif;
+        font-family: "DM Sans", sans-serif;
       }
       .shell {
         width: min(1120px, calc(100% - 28px));
@@ -82,7 +82,7 @@
       }
       .top #testPortal,
       .top #logout {
-        font: 700 13px/1 "Manrope", Arial, sans-serif;
+        font: 700 13px/1 "DM Sans", sans-serif;
       }
       .top #logout {
         min-height: 40px;
@@ -590,6 +590,16 @@
         if (!r.ok) throw Error(j.error || "Request failed");
         return j;
       }
+      async function syncTestPortalCookie(action = "exchange") {
+        const r = await fetch("/api/test-portal-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(action === "logout" ? { action } : { action, token }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) throw Error(j.error || "Test Portal authorization failed");
+        return j;
+      }
       function toast(s) {
         $("toast").textContent = s;
         $("toast").className = "toast show";
@@ -904,11 +914,19 @@
           $("loginError").textContent = e.message;
         }
       };
-      $("logout").onclick = () => {
+      $("logout").onclick = async () => {
         sessionStorage.removeItem("assistara_admin_token");
+        try { await syncTestPortalCookie("logout"); } catch {}
         location.reload();
       };
-      $("testPortal").onclick = () => (location.href = "/academy/test-portal");
+      $("testPortal").onclick = async () => {
+        try {
+          await syncTestPortalCookie();
+          location.href = "/academy/test-portal";
+        } catch (e) {
+          alert(e.message);
+        }
+      };
       function show() {
         $("login").style.display = "none";
         $("dash").style.display = "block";

@@ -51,6 +51,17 @@ There is no fixed question count. Use the smallest source-grounded assessment th
 
 When the existing Quick Check primitive is appropriate: all required items are visible; selecting does not grade immediately; Check Answers activates after required responses are complete; correct responses lock; incorrect responses remain retryable; full pass exposes Complete Class; completion persists and unlocks progression.
 
+#### Writing wrong-answer feedback
+
+Every incorrect option needs its own explanation, and that explanation is the teaching moment. Write it in `whyWrong` on the question, keyed by the option's index.
+
+- Open with a short, human, varied acknowledgment, then explain in one or two sentences why the option the learner picked does not work. Address that option directly instead of restating what the lesson covered.
+- Never reveal, name, mark, highlight, or strongly hint at the correct answer, and never reuse the correct-answer rationale as the wrong-answer explanation.
+- After an incorrect attempt every option stays visually neutral. The feedback message carries the result, the options do not, and the learner can immediately try again.
+- A correct answer keeps its positive feedback and may be marked and locked.
+
+The result is a learner who is told something useful about their own reasoning, not told they were wrong. Full requirements and the acceptance check live in `ACADEMY-PRODUCTION-STANDARD.md` § Quick Check behavior.
+
 ### Resources
 Never automatic. Create a PDF, workbook, checklist, template, or other download only when the learner would genuinely benefit from using it outside the lesson.
 
@@ -209,6 +220,9 @@ Do not change something merely to make classes look different.
 - [ ] real approved logo in slides
 - [ ] slides rendered and visually inspected
 - [ ] assessment tests taught material
+- [ ] every incorrect option has its own `whyWrong` explanation
+- [ ] wrong-answer feedback is friendly, varied, option-specific, and reveals nothing
+- [ ] options stay neutral after an incorrect attempt and the learner can retry
 - [ ] optional resources exist only when useful
 - [ ] skill mapping only when justified
 - [ ] preview/download works

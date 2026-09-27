@@ -4,19 +4,72 @@ Last initialized: 2026-09-23
 Repository: gopektravel/Assistara
 Branch: main
 Canonical implementation: assistara-local-v9/academy-dashboard.html
-Canonical production guide: docs/academy/LESSON-SYSTEM.md
+Canonical production guide: docs/academy/ACADEMY-PRODUCTION-STANDARD.md (workflow, gates, queue, evidence)
+Canonical lesson design standard: docs/academy/LESSON-SYSTEM.md
 Binding visual lesson standard: docs/academy/VISUAL-LESSON-STANDARD.md
 Binding slide standard: assistara-local-v9/academy/LESSON_SLIDE_PRODUCTION_STANDARD.md
 Drive source root: Assistara / 05 Assistara Academy / Course Material / Original Course Material
 Drive production root: Assistara / 05 Assistara Academy / Course Material / Production Course Material
 
 ## Queue position
-Current class under production/QA: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1)
-Build state: implementation + learner PDF slides created; independent CONTENT / VISUAL / FUNCTIONAL / DOUBLE-CHECK / FINAL QA still required.
-NEXT BUILD: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1)
-Current source: Phase 2_ AI-Powered VA Guidebook.pdf → Module 1: Build Your VA Brand → Lesson 1: Canva Navigation: Colors, Elements & Fonts
-Previous completed queue class: P1 M6 C4 — Client Project Management with Notion (p1m6c4) — BUILT + FINAL LOCAL QA.
-Queue rule: p1m6c4 FINAL QA is complete and the manifest has advanced. The following BUILD prompt may build p2m1c1; this FINAL QA did not build it.
+Current module batch: P2 M2 Canva Design & Visual Branding — p2m2c1, p2m2c2, p2m2c3
+Build state: BUILT + FINAL LOCAL QA + HUMAN-EYE SLIDE INSPECTION PASS for all locally/verifiably testable gates; live/deployed verification remains blocked.
+Queue advancement: yes — manifest only; the batch completed its final gate and the queue advanced to Module 3. The batch is NOT promoted to LIVE + VERIFIED.
+Next build target: Phase 2 -> Module 3 — Social Media Management (p2m3c1), Introduction to Social Media Marketing; currently NOT BUILT / Coming soon. PRODUCTION QUEUE IS PAUSED BY THE OWNER and this class is NOT authorized to start.
+Current source: Phase 2_ AI-Powered VA Guidebook.pdf -> Module 2: Canva Design & Visual Branding -> Lessons 2.1, 2.2 and 2.3.
+Previous completed queue batch: P2 M1 Build Your VA Brand — p2m1c1, p2m1c2, p2m1c3, p2m1c4 — BUILT + FINAL LOCAL QA.
+Queue rule: a batch is built and locally verified, and the queue advances at the final gate; promotion to LIVE + VERIFIED still requires live-production verification.
+
+## Production mode
+- Production unit is one complete module per batch, per docs/academy/ACADEMY-PRODUCTION-STANDARD.md §3-§4.
+- This supersedes the historical class-at-a-time queue in C:\Users\jesse\Downloads\assistara_academy_automation_queue.txt and the "NEXT BUILD" single-class pointer above, which is retained as history.
+- Required batch pipeline: SOURCE RESEARCH -> CONTENT PLAN -> BUILD ALL CLASSES IN MODULE -> CREATE/CONNECT SLIDES -> CREATE QUICK CHECKS -> CONNECT RESOURCES -> CONNECT COMPLETION -> VERIFY PROGRESSION -> CONTENT QA -> FUNCTIONAL QA -> VISUAL QA -> MOBILE QA -> FINAL MODULE REPORT.
+- Only one batch is active at a time. A batch entry does not authorize the next batch; advancing the queue is a manifest-only action after the final gate.
+
+## Active module batch — P2 M2 Canva Design & Visual Branding
+- Batch scope: all classes of Phase 2 -> Module 2 (Canva Design & Visual Branding): p2m2c1, p2m2c2, p2m2c3.
+- Reference module: P2 M1 Build Your VA Brand (BUILT + FINAL LOCAL QA); used for architecture, assessment and slide consistency and is NOT rebuilt in this batch.
+- Identity source: curriculum array in assistara-local-v9/academy-dashboard.html, cross-checked against the Phase 2 inventory below.
+- Source: Phase 2_ AI-Powered VA Guidebook.pdf, pages 7-11 -> Module 2: Canva Design & Visual Branding (Drive ID 1BMZwJWChFviuL0bdJEB87YoiFJQcIZPE); SHA-256 780E0D6B73E85620437EC6D2DE9AB3F85C04EC0D2B498A1D684529E52FB2E4A2.
+
+| Class key | Class title | Source lesson | Verified state | Batch work |
+| --- | --- | --- | --- | --- |
+| p2m2c1 | Build a Brand Strategy for Clients | Lesson 2.1 | BUILT + FINAL LOCAL QA (renderLesson27; local PDF p2m2c1-brand-strategy.pdf; 8 pages) | complete |
+| p2m2c2 | Create a Logo | Lesson 2.2 | BUILT + FINAL LOCAL QA (renderLesson28; local PDF p2m2c2-create-a-logo.pdf; 8 pages) | complete |
+| p2m2c3 | Build a Brand Kit & Guidelines | Lesson 2.3 | BUILT + FINAL LOCAL QA (renderLesson29; local PDF p2m2c3-brand-kit.pdf; 8 pages) | complete |
+
+### Batch pipeline status
+| Step | Status | Evidence |
+| --- | --- | --- |
+| 1 Source research | complete | Module 2 pages 7-11 read in full from the approved Phase 2 guidebook; source scope, terminology and the exact AI prompts cross-checked |
+| 2 Content plan | complete | Per-class objectives, source-grounded teaching flow, four-question Quick Checks and no-resource decisions recorded before any build work |
+| 3 Build all classes | complete | renderLesson27/renderLesson28/renderLesson29, lesson27-29 metadata, shared renderVisualBrandLesson, dispatch and responsive visual components implemented |
+| 4 Create/connect slides | complete | Three local landscape 16:9 PDFs, 8 pages each, generated deterministically and connected through openLessonSlidesPreview; all local PDF routes return 200 application/pdf |
+| 5 Quick Checks | complete | Four questions per class; 12 questions and 36 option-specific wrong-answer explanations; selection, all-answer gate, feedback, retry and all-correct completion flow tested locally |
+| 6 Resources | complete | No separate class resources required; no dead or optional links introduced |
+| 7 Completion | complete structurally | markClassComplete path used for p2m2c1/p2m2c2/p2m2c3; live authenticated persistence remains unverified |
+| 8 Progression | complete locally | p2m1c4 -> p2m2c1 -> p2m2c2 -> p2m2c3; p2m2c3 completion unlocks Module 3, and p2m2c1/p2m2c2 completion returns to the Module 2 view |
+| 9 Content QA | complete locally | Independent source re-read and learner copy/question alignment checks completed for all three classes |
+| 10 Functional QA | complete locally | Dedicated current/done Test Student Portal states, slide modal, retry, completion and unlocks exercised through local Edge/CDP; live browser blocked |
+| 11 Visual QA | PASS | Automated PDF geometry/font/palette/glyph/content checks passed, and the project owner completed and approved the mandatory human-eye page-by-page inspection of all 24 rendered slide pages on 2026-09-26; no page defects were reported |
+| 12 Mobile QA | complete locally | No horizontal overflow at 375px, 390px and 430px; the two-column teaching stage collapses to one column; physical/live device verification remains blocked |
+| 13 Final module report | complete, not LIVE | Report issued; all locally/verifiably testable gates pass including the human-eye slide inspection. Promotion to LIVE + VERIFIED still requires the live-production gate |
+
+### Batch decisions resolved
+- Canva skill milestone: p2m1c1, p2m1c2, p2m1c3, p2m1c4, p2m2c1, p2m2c2 and p2m2c3 form the Canva Design & Visual Branding skill; the Demonstrated threshold of 2 is unchanged and every mapped class is now built.
+- p2m2c3 completion state: Module 2 complete and Module 3 unlocked; p2m2c1/p2m2c2 completion returns to the Module 2 class list.
+- Test Student Portal states: p2m2c1qa/p2m2c1done, p2m2c2qa/p2m2c2done and p2m2c3qa/p2m2c3done are implemented and listed in the selector.
+- Source fidelity: the source AI prompts are reproduced verbatim in the learner pages and the decks; looka.com stays a free alternative to Canva rather than a requirement; no free-Pro implication is made.
+- Slide delivery: local PDFs are the production fallback because Drive credentials are unavailable; the shared preview helper supports local paths and legacy Drive IDs.
+- Web typography: Assistara learner-facing web surfaces use DM Sans only; PDF/slide production retains Manrope as required by the binding slide standard.
+
+### Batch blockers and limitations
+- Human-eye slide inspection is SATISFIED: the project owner completed and approved the page-by-page review of all 24 slide pages on 2026-09-26 with no defects reported. The earlier `Image read error - could not load image` was a model-side reading limitation and is now historical.
+- Live/deployed verification remains blocked because connected Vercel authorization exposes zero teams/projects. Deployed portal clicks, Drive preview/download responses, authenticated persistence, and physical device checks remain NOT VERIFIED LIVE.
+- Drive production binaries may present as online-only placeholders until accessed; hydrate before use. Local PDF delivery does not remove the live Drive verification gap.
+
+## Manifest provenance
+- 2026-09-25: the local workspace containing this manifest and the Academy app was deleted. The repository was restored from gopektravel/Assistara main (HEAD 3b2105f) and this manifest's p2m1c1 DOUBLE-CHECK and FINAL QA records, which existed only in the deleted local copy, were preserved. Those records are local-only until committed.
 
 ## Status semantics
 - LIVE + VERIFIED: learner-facing production was directly tested end-to-end after deployment.
@@ -57,8 +110,8 @@ M6 Project Management for VAs
 - p1m6c4 Client Project Management with Notion — BUILT + FINAL LOCAL QA
 
 ### Phase 2 — Creative & Digital Marketing Skills
-M1 Build Your VA Brand: p2m1c1 Canva Navigation: Colors, Elements & Fonts; p2m1c2 Create Your Profile Picture; p2m1c3 Create Your Facebook & LinkedIn Cover; p2m1c4 Create Your Email Signature — NOT BUILT
-M2 Canva Design & Visual Branding: p2m2c1 Build a Brand Strategy for Clients; p2m2c2 Create a Logo; p2m2c3 Build a Brand Kit & Guidelines — NOT BUILT
+M1 Build Your VA Brand: p2m1c1 Canva Navigation: Colors, Elements & Fonts — BUILT + FINAL LOCAL QA; p2m1c2 Create Your Profile Picture — BUILT + FINAL LOCAL QA; p2m1c3 Create Your Facebook & LinkedIn Cover — BUILT + FINAL LOCAL QA; p2m1c4 Create Your Email Signature — BUILT + FINAL LOCAL QA
+M2 Canva Design & Visual Branding: p2m2c1 Build a Brand Strategy for Clients — BUILT + FINAL LOCAL QA; p2m2c2 Create a Logo — BUILT + FINAL LOCAL QA; p2m2c3 Build a Brand Kit & Guidelines — BUILT + FINAL LOCAL QA
 M3 Social Media Management: p2m3c1 Introduction to Social Media Marketing; p2m3c2 Set Up a Facebook Page; p2m3c3 Meta Business Suite Navigation; p2m3c4 Social Media Analytics & Measurement — NOT BUILT
 M4 Content Planning & Workflow: p2m4c1 AI Content Planning & Strategy; p2m4c2 Content Planning with ClickUp; p2m4c3 Content Planning with Asana; p2m4c4 Content Planning with Google Sheets — NOT BUILT
 M5 Social Media Content Design: p2m5c1 The Power of Visuals; p2m5c2 Create Engaging Social Media Graphics — NOT BUILT
@@ -1442,3 +1495,142 @@ Initialization note: direct production browser verification was blocked because 
 - responsive static check: mobile stacking/min-width hardening and >=44px slide / >=48px answer targets remain present; no class-specific fixed-width overflow regression found.
 - live limitation: connected Vercel authorization again returns zero teams/projects, so deployed Test Student Portal clicks, external Canva link, Drive iframe/download response, authenticated Complete→refresh→reopen, and physical desktop/mobile interaction remain NOT VERIFIED LIVE.
 - status remains: LIVE BUT NEEDS QA.
+
+
+### p2m1c1 DOUBLE-CHECK — 2026-09-24
+- queue_advanced: no; p2m1c1 remains current until the FINAL QA gate completes.
+- class: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1) only.
+- trigger: prior BUILD/QA claims were not trusted; the actual current state was independently re-verified from the repository and the canonical Drive artifacts.
+- original_source_reread_again: yes — Phase 2 AI-Powered VA Guidebook (Drive ID 1BMZwJWChFviuL0bdJEB87YoiFJQcIZPE), Module 1 "Setting up your VA Brand", Lesson 1.2 read in full through the Lesson 1.3 boundary.
+- written_lesson_rechecked_against_source: yes — all six learner teaching sections verified against the source items: service direction + changeability; exact "I am a VA. I offer Admin Support and Executive Assistance." example; target client + brand vibe; tagline prompt; Google Docs output note; ColorHunt.co + tone examples; screenshot/note the colors; Windows Win + Shift + S / Mac Cmd + Shift + 4; Canva Templates/Elements/Text; source keyboard-shortcuts reference URL; readable fonts (Sans Serif / Montserrat / Open Sans); two complementary fonts; matching elements; visual harmony; simple/consistent; save + duplicate templates; desktop/mobile preview.
+- actual_current_learner_PDF_downloaded: yes — Drive ID 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi; 74,994 bytes; SHA-256 74426c0e70ec8938212901e17123ec6ba3e3336c82ee95081fad617e3e36bb3e (matches the recorded corrected artifact exactly).
+- rendered_all_pages_again: yes — 6/6 pages rendered and checked.
+- meaningful_slide_issue_found: no — the previously corrected panels (slide 1 VISUAL SYSTEM, slide 3 TONE → PALETTE swatches, slide 6 COLOR/FONTS/ELEMENTS + DESKTOP ↔ MOBILE) remain contained inside their colored panels in the current artifact.
+- quick_check_rechecked: yes — all five questions are source-grounded, unambiguous and each has exactly one supported answer; objectives/description alignment verified.
+- visual_QA_method_note: this model cannot read image input, so page inspection was performed programmatically (geometry, safe margins, collision, palette, typeface, brand lockup and glyph-integrity checks) rather than by eye; the prior corrective-recheck record above documents the page-by-page eye inspection of this same PDF artifact.
+- fixes_required_in_this_double_check: none — changing source-faithful learner copy further would be churn rather than a meaningful correction.
+- status_remains: LIVE BUT NEEDS QA — FINAL QA is the remaining gate.
+
+
+### p2m1c1 FINAL QA — 2026-09-24
+- queue_advanced: yes, manifest only; see Queue position header and next NOT_BUILT class below.
+- class: P2 M1 C1 — Canva Navigation: Colors, Elements & Fonts (p2m1c1) only.
+- latest_repository_rechecked: HEAD 3bcdd77 with a clean working tree; single inline script is 288,323 characters and parses successfully (static syntax gate PASS).
+- runtime_render_smoke_test: PASS — the class render path was executed in an isolated DOM-stubbed Node environment. renderLesson23 produced the full learner view: six teaching sections, source-faithful copy (service example, tagline prompt, ColorHunt, keyboard-shortcuts reference, screenshot shortcuts), Lesson Slides preview control, 16:9 "video coming soon" state, status eyebrow, Module 1 back route, and the 5-question Quick Check with Check Answers disabled until all five answers are selected and Complete Class withheld until all-correct.
+- slide_preview_download_wiring: PASS structurally — lesson23.slidesFileId still points to 1-Ax-M2uuDwnXPNZIdC30yfl3nVd7p6oi and openLessonSlidesPreview download name is "Assistara_Academy_P2_M1_C1_Canva_Navigation_Colors_Elements_and_Fonts_Lesson_Slides.pdf".
+- completion_persistence: PASS structurally — markClassComplete("p2m1c1") upserts academy_class_progress on (user_id, class_key); completed reopen clears transient quiz state and re-renders saved completion.
+- progression: PASS — completion unlocks only p2m1c2 Create Your Profile Picture; completion copy marks it Coming soon; Continue returns to Module 1; Module 1 progress and Phase 2 remain incomplete until later classes/exam.
+- skills: PASS — existing Canva mapping is ["p2m1c1","p2m2c1"], so completing this class yields Learning (1 of 2 milestones), not a false Demonstrated/Verified state.
+- test_portal_states: PASS — p2m1c1qa and p2m1c1done preview states remain present and listed in the Test Student Portal selector.
+- programmatic_visual_gate: PASS — canonical learner PDF re-analyzed programmatically: all 6 pages are 720×405 pt (16:9); no text outside the safe-margin inset; no text-on-text collisions; brand lockup "Assistara" is present top-right at a consistent position on every page; body type is Manrope-Regular/Manrope-Bold only (Arial-BoldMT and MS-PGothic are reserved for dingbat glyphs ● ▣ ◇ ○ □ △ ✓ ↔); pixel sampling matches the brand palette (cream #F7F1E5, dark #171713, yellow #FFD928, white); text-extraction PUA codes were proven to be genuine Manrope ligature glyphs (ff / fi / fl / tt composites with valid outlines), so visual rendering is correct and only the copy/paste text layer is affected.
+- known_issue_cosmetic: extracting/copying text from the learner PDF yields ligature-to-PUA codes (e.g., "pale<PUA>e", "di<PUA>erent"); pixels are correct, this does not affect learner viewing.
+- known_limitation_visual: no in-pass human-eye pixel inspection was possible with this model; the programmatic gates above independently re-verified the same 74,994-byte artifact that the earlier corrective-recheck record inspected page-by-page. A human eye review remains recommended before any future LIVE promotion.
+- live_external_gate: NOT VERIFIED — connected Vercel authorization again exposes zero teams/projects. Deployed Test Student Portal clicks, external Canva-link navigation, Drive iframe/preview and direct-download HTTP behavior, authenticated Complete→refresh→reopen persistence, and physical desktop/mobile interaction remain explicitly unverified.
+- fixes_this_final_gate: none required.
+- final_status: BUILT + FINAL LOCAL QA.
+- next_NOT_BUILT_class: P2 M1 C2 — Create Your Profile Picture (p2m1c2), from guidebook Lesson 1.3.
+- p2m1c2_built_in_this_pass: no.
+
+
+### P2 M1 batch BUILD + FINAL LOCAL QA — 2026-09-25
+- queue_advanced: no.
+- batch: P2 M1 Build Your VA Brand — p2m1c2 Create Your Profile Picture, p2m1c3 Create Your Facebook & LinkedIn Cover, p2m1c4 Create Your Email Signature.
+- source: Phase 2_ AI-Powered VA Guidebook.pdf, Module 1, Lessons 1.3–1.5, read in full from the approved source before authoring.
+- implementation: lesson24/lesson25/lesson26 metadata, renderLesson24/renderLesson25/renderLesson26, explicit openClass dispatch, source-grounded teaching sections, four-question Quick Checks, local slide connections, completion and progression wiring completed in academy-dashboard.html.
+- local_slide_delivery: /academy/slides/p2m1c2-profile-picture.pdf, /academy/slides/p2m1c3-cover-photo.pdf and /academy/slides/p2m1c4-email-signature.pdf are connected through openLessonSlidesPreview; local HTTP fetches returned 200 with application/pdf.
+- artifact_p2m1c2: 7 pages; 437,969 bytes; SHA-256 D5E13188AF69C1E36B23BDE7E6C159C5E2473BDDFBD94AB1D283A2872D5C4FC1.
+- artifact_p2m1c3: 7 pages; 523,185 bytes; SHA-256 2287AF7EFE5E4A34B21644042001233935223962E29E1FC0C83C1DBC4C5FF395.
+- artifact_p2m1c4: 8 pages; 671,387 bytes; SHA-256 36E6650B27F8C43CE999B906D0697F8227CB69CD8AE5AD6B0B97677196323355.
+- automated_PDF_QA: PASS for all three decks; 0 detected issues, landscape 16:9 geometry checks, contrast/overflow checks, distinct page fingerprints and embedded-font checks completed.
+- content_QA: PASS locally; objectives, conditional Canva Pro/free remove.bg treatment, cover dimensions, palette reuse, email-signature hierarchy and export/testing guidance align to the source.
+- functional_QA: PASS locally through temporary Edge/CDP; current/done portal states, four-question checks, wrong-answer retry, correct-answer completion, slide modal/download links, c2/c3/c4 unlocks, Module 2 continuation, Canva threshold assertions and responsive checks exercised without runtime exceptions.
+- mobile_QA: PASS locally at approximately 375px, 390px and 430px; no horizontal overflow observed. Physical/live device verification remains pending.
+- progression_QA: PASS locally; p2m1c2 unlocks p2m1c3, p2m1c3 unlocks p2m1c4, and p2m1c4 completes Module 1 and routes to Module 2 with p2m2c1 Coming soon.
+- skills_QA: PASS after regression fix; Canva mapping is [p2m1c1,p2m1c2,p2m1c3,p2m1c4,p2m2c1] with an explicit Demonstrated threshold of 2, verified after p2m1c1 plus p2m1c2 and after p2m1c4; existing skills retain the all-mapped default.
+- skills_fix: skillState now uses skillThreshold instead of comparing completed classes with the full mapped-class list.
+- visual_QA: automated PDF checks passed; mandatory human-eye inspection is still BLOCKED because the attempted screenshot read returned `Image read error - could not load image`.
+- live_production_QA: BLOCKED; connected Vercel authorization exposes zero teams/projects, so deployed portal interaction, Drive preview/download responses, authenticated persistence and physical device checks are NOT VERIFIED LIVE.
+- web_typography: learner-facing Academy web surfaces now use DM Sans only; Manrope remains confined to the binding PDF/slide production standard and slide assets.
+- final_status: BUILT + FINAL LOCAL QA.
+- final_status_phrase: `PHASE 2 MODULE 1 BLOCKED — mandatory human-eye slide inspection and live/deployed verification are unavailable.`
+- next_target_after_unblock: P2 M2 C1 — Build a Brand Strategy for Clients (p2m2c1); do not start or advance the queue until the blocked gates are resolved.
+- implementation_commit: none; no commit was created.
+
+### P2 M1 VISUAL RE-CHECK — 2026-09-26
+- scope: p2m1c2 (7 pages), p2m1c3 (7 pages) and p2m1c4 (8 pages); existing renders were inspected without rebuilding the decks or starting Module 2.
+- automated_pdf_QA: PASS for all 22 pages; 0 issues, safe-area checks, text-size checks, contrast checks, collision checks, embedded-font checks and distinct-composition checks completed.
+- page_render_audit: PASS for 22/22 existing PNG renders; every render is 1280x720, nonblank, uniquely fingerprinted, OCR key-content checked, and free of detected OCR text edge contact.
+- human_eye_QA: BLOCKED — attempts to read a rendered PNG and a slide PDF through the available file reader returned `this model does not support image/pdf input`; no human-eye pass is claimed.
+- live_production_QA: BLOCKED — Vercel authorization exposes zero teams/projects; deployed interaction, Drive responses, authenticated persistence and physical-device checks remain unverified.
+- module2_started: no.
+- final_status: BUILT + FINAL LOCAL QA; mandatory human-eye inspection and live/deployed verification remain blocked.
+- final_status_phrase: `PHASE 2 MODULE 1 BLOCKED — mandatory human-eye slide inspection and live/deployed verification are unavailable.`
+- implementation_commit: none; no commit was created.
+
+### ASSESSMENT WRONG-ANSWER RULE — CORRECTED AND ENFORCED — 2026-09-26
+- scope: every Academy Quick Check and assessment in Phases 1–4. Assessment architecture plus full authored content for p2m1c1–p2m1c4. No Module 2 work and no new classes.
+- rule_superseded: the previous behavior marked the chosen option with a `wrong` class and reused the correct-answer rationale (`q.why`) as the wrong-answer explanation. That is no longer the standard anywhere in the Academy.
+- rule_now: an incorrect attempt opens with a short, human, varied acknowledgment, then explains in one or two sentences why the specific selected option does not work; it never reveals, names, marks, highlights or hints at the correct answer; every answer option stays visually neutral; the attempt stays retryable. Correct-answer positive feedback, correct-answer locking, the all-answers-before-Check-Answers gate, completion, persistence and unlock are unchanged.
+- central_helper: `QC_CORRECT_PREFIX`, `QC_RETRY_CUE`, `QC_WRONG_FALLBACK`, `QC_WRONG_OPENERS` (8 openers), `qcCorrectExplanation(q)`, `qcWrongExplanation(q,sel)`, `qcWrongOpener(q,sel)`, `qcFeedback(q,ok,sel)` added to academy-dashboard.html. All 25 feedback-bearing renderer implementations now route through `qcFeedback`; no renderer formats feedback inline.
+- rationale_isolation: `qcWrongExplanation` reads only `q.whyWrong[sel]` and can never read `q.why`. `q.why` is referenced in exactly two places, both inside the correct-answer path.
+- neutral_options: 0 `'wrong'` class literals remain in academy-dashboard.html. All 24 learner-facing `correct` mark sites are guarded by the stored selection, so an incorrect attempt marks nothing. The 25th site is the intentional post-completion Module 6 review, which shows answers after the class is already complete.
+- critical_answer_leak_fixed: `renderBrandLesson` (shared by p2m1c2, p2m1c3, p2m1c4) applied `correct` to the correct option on every submission, and `renderLesson21`, `renderLesson22`, `renderLesson23` and `renderLesson11`–`renderLesson20` had the same unconditional mark. Every one of these revealed the answer before the learner chose. All now require the stored selection to be the correct option.
+- p2m1_content: authored `whyWrong` for all 17 questions and all 51 incorrect options. Coverage p2m1c1 15/15, p2m1c2 12/12, p2m1c3 12/12, p2m1c4 12/12. Each explanation addresses the option the learner picked, in one or two sentences, with no lesson restatement and no answer disclosure.
+- validator: `scripts/validate_quick_checks.js` created and extended. It enforces `whyWrong` coverage, 1–2 sentence length, no lesson-pointing phrasing, no question restatement, no correct-option text, no correct-answer rationale reuse, no pointer phrases, zero `wrong` classes, zero unguarded `correct` marks, helper wiring across all 25 renderers, a minimum friendly-opener count, and the exact incorrect-branch shape.
+- validator_self_test: 8 deliberate regressions were each detected and the file restored clean — `wrong` class reintroduced, unguarded `correct` mark, correct rationale used on the answer branch, correct rationale made reachable from `qcWrongExplanation`, friendly opener removed, lesson-pointing copy, three-sentence copy, and an explanation that restates the question. The checks are proven non-vacuous.
+- validator_result: `node scripts/validate_quick_checks.js` → `RESULT: PASS (0 enforced failures; 22 class(es) still on the tracked content backlog)`.
+- functional_QA: PASS in real Edge driven over CDP. All 51 incorrect options across p2m1c1–p2m1c4 were exercised and all 17 correct answers plus progression were verified, in 105s. All eight acceptance steps passed for every incorrect option: a result is produced, it reads as incorrect, the explanation is specific to the selected option, nothing is revealed or marked, the explanation is not obvious, the learner can retry, the correct answer still works, and completion/progression still work. 8 distinct friendly openers were observed.
+- phase1_regression_QA: PASS in real Edge. 6 Phase 1 classes spanning every renderer variant were re-checked after the system-wide markup change — lesson1, lesson5, lesson10 (Variant B), lesson19 (Variant A), lesson21, lesson22 (Variant E) — covering 18 incorrect answers, all neutral and retryable with the fallback prompt. The shared change did not regress Phase 1.
+- phase1_content_backlog: 98 questions / 294 incorrect options across 22 classes still use the neutral fallback prompt. Behavior is correct today; authored `whyWrong` copy for Phase 1 is deliberately deferred to the Phase 1 retrospective audit below.
+- phase2_exam_note: the Phase 2 Exam still has no authored questions, renderer or grading path; its control states that the exam questions are not authored yet. When it is built it must use the same `qcFeedback` helper and the same rule. No exam was authored in this pass.
+- standards_updated: `docs/academy/ACADEMY-PRODUCTION-STANDARD.md` now carries the binding wrong-answer rule, the implementation requirements, the eight-step acceptance check, a `wrong_answer_tested` manifest QA key, and the rule in the Functional QA gate. `docs/academy/LESSON-SYSTEM.md` now carries the wrong-answer writing guidance and three new shipping-checklist items.
+- human_eye_QA: BLOCKED, unchanged — the available file reader returns `this model does not support image/pdf input`.
+- live_production_QA: BLOCKED, unchanged — Vercel authorization exposes zero teams/projects, so deployed interaction, Drive responses, authenticated persistence and physical-device checks remain unverified.
+- module2_started: no.
+- implementation_commit: none; no commit was created.
+
+### FUTURE TASK — PHASE 1 RETROSPECTIVE AUDIT (complete before deployment)
+- status: not started. This is a required gate before the Academy is deployed, not an optional improvement.
+- scope: the complete Phase 1 retrospective audit — all 22 built Phase 1 classes, every section, not only the assessments.
+- must_cover: source fidelity and content accuracy; the written lesson as a taught experience; visual teaching composition and repetition; every slide PDF; the assessments including authored wrong-answer explanations for all 294 Phase 1 incorrect options; resources; skill mapping; completion and progression; desktop and mobile layout; full functional QA.
+- assessment_work: author `whyWrong` for all 98 Phase 1 questions and all 294 incorrect options, then re-run the validator with the Phase 1 keys enforced instead of backlogged, and re-run the browser acceptance test.
+- exit_criteria: `node scripts/validate_quick_checks.js --require=<all phase 1 class keys>` passes with zero failures and no backlogged class; the browser acceptance test passes for every Phase 1 incorrect option; no open content defect remains; findings and fixes are recorded in this manifest.
+- constraint: do not start Module 2 work ahead of this audit.
+
+### FUTURE TASK — ACADEMY SKILLS + GAMIFICATION SYSTEM PASS (after core class production)
+- status: not started. Deliberately sequenced after core class production and not mixed into the current assessment pass.
+- scope: the complete Academy, Phases 1–4.
+- intent: make progression motivating by surfacing the skills a learner has actually demonstrated, the designs and artifacts they have actually produced, and meaningful accomplishments — instead of disconnected badges and counters.
+- requirements: every surfaced skill, badge or accomplishment must trace to real demonstrated work; preserve and reuse the existing skill logic rather than replacing it; no invented achievements; no rewards for behavior that does not represent learning.
+- exit_criteria: a reviewed mapping from demonstrated work to surfaced skill/accomplishment states across all four phases, with the reasoning recorded in this manifest.
+- implementation_now: none; this pass records the requirement only.
+
+### P2 M2 BATCH BUILD + FINAL LOCAL QA — 2026-09-26
+- queue_advanced: yes, manifest only; see Queue position. Not promoted to LIVE + VERIFIED.
+- batch: P2 M2 Canva Design & Visual Branding — p2m2c1 Build a Brand Strategy for Clients, p2m2c2 Create a Logo, p2m2c3 Build a Brand Kit & Guidelines.
+- source: Phase 2_ AI-Powered VA Guidebook.pdf, pages 7-11; SHA-256 780E0D6B73E85620437EC6D2DE9AB3F85C04EC0D2B498A1D684529E52FB2E4A2.
+- implementation: lesson27, lesson28 and lesson29 metadata; `vbrandLessonStates` and `vbrandLessonContent`; one shared `renderVisualBrandLesson(lesson, number, config)`; renderLesson27/renderLesson28/renderLesson29; three `openClass` dispatches; six Test Student Portal states (p2m2c1qa/p2m2c1done through p2m2c3qa/p2m2c3done) plus matching selector options; 63 rendered `vb*` teaching components.
+- module_2_css: the M2 ruleset lives inside the second `<style>` block, which also holds the ClickUp lesson rules; a third block holds the existing brand rules. Verified structurally (block 2 spans the M2 marker) and at runtime through computed styles.
+- dead_css_removed: 13 rules covering 6 classes that no M2 content ever rendered (vbTag and its 5 colour variants, vbEyebrowRow, vbDoNote, vbFontChip x3, vbFontsRow, vbKit) were removed; the compound responsive selector was reduced to `.vbStage,.vbSplit2`. No rendered class lost styling, and the file still has exactly 3 balanced `<style>` blocks. Dashboard 548,177 -> 546,998 bytes.
+- web_typography: PASS — computed `font-family` on the M2 teaching components resolves to DM Sans with no Manrope fallback in the learner pages; the M2 ruleset declares DM Sans only.
+- assessments: 4 questions per class, 12 questions and 36 option-specific `whyWrong` explanations, authored from the source with no answer disclosure. `node scripts/validate_quick_checks.js` -> `RESULT: PASS (0 enforced failures)`; enforced set p2m1c1-p2m1c4 and p2m2c1-p2m2c3, 29 questions, 87 incorrect options, 26 `qcFeedback()` references and 26 guarded correct-mark sites, zero `'wrong'` literals. Inline script parses clean.
+- local_slide_delivery: /academy/slides/p2m2c1-brand-strategy.pdf, /academy/slides/p2m2c2-create-a-logo.pdf and /academy/slides/p2m2c3-brand-kit.pdf are connected through openLessonSlidesPreview; local HTTP fetches returned 200 with application/pdf and a %PDF- header.
+- artifact_p2m2c1: 8 pages; 256,340 bytes; SHA-256 8FA0F5B245F2B1AB747D0AB027CB536036BAB3DC8556B615F484EB87DB05B03C.
+- artifact_p2m2c2: 8 pages; 290,955 bytes; SHA-256 B70CDBE5C1D5C71237BA7B4860A26F876AF33DCD4B4260181D07FCDF78F97B68.
+- artifact_p2m2c3: 8 pages; 276,675 bytes; SHA-256 0263531CAEB48F1ED426CFDABAACACAA413B6E143B554B732DBE0EC64F2F6BFF.
+- slide_determinism: PASS — two consecutive builds of all three decks produced byte-identical output; PyMuPDF creation/modification dates are pinned and no fresh document /ID is generated.
+- slide_automated_QA: PASS — every page 1280x720, Manrope Regular/Medium/Bold/ExtraBold embedded in all three decks, 0 raster images on all 24 pages, the real assistara-logo.svg stamped as vector art, drawing fills and strokes limited to the 23 approved palette colours, all non-ASCII glyphs present in Manrope (U+00B7, U+2014, U+201C, U+201D), the Academy lockup present on all 24 pages, no text outside the page, no placeholder or unfinished copy, and per-class source spot checks on the taught content, the verbatim AI prompts and the pro tips.
+- visual_review_artifacts: 24 page renders at 1.5x were archived at C:\Users\jesse\AppData\Local\Temp\opencode\p2m2_png (p2m2c1, p2m2c2, p2m2c3) and re-staged as a flat, sequentially numbered review set at C:\Users\jesse\AppData\Local\Temp\opencode\p2m2_review (01_p2m2c1_p01.png through 24_p2m2c3_p08.png). All 24 review copies were verified byte-identical to the archived renders by SHA-256, and the 24 archived renders were re-verified unchanged by size and mtime after copying, so the inspected pixels are the exact built artifacts recorded above.
+- human_eye_QA: PASS — the project owner completed and approved the mandatory page-by-page inspection of all 24 Phase 2 Module 2 slide pages on 2026-09-26, reviewing p2m2c1 (8 pages), p2m2c2 (8 pages) and p2m2c3 (8 pages) in a single sequential pass over the numbered review set. No page was reported as defective and no rebuild or correction was requested. This closes the gate that was previously blocked as `Image read error - could not load image`; that model-side reading limitation is now historical and the visual gate is independently satisfied by a human reviewer.
+- progression_QA: PASS locally — p2m1c4 hands off to p2m2c1; p2m2c1 unlocks p2m2c2; p2m2c2 unlocks p2m2c3; p2m2c3 completion unlocks Module 3, verified as unlocked modules [0,1,2] in the p2m2c3done state. The shared M2 back control reads "Module 2" and returns to the Module 2 class list, not to Module 1.
+- functional_QA: PASS in real Edge driven over CDP. All 36 incorrect options across p2m2c1-p2m2c3 were exercised and all 12 correct answers plus retry and completion verified, in 92s, with 7 distinct friendly openers. Every incorrect option produced a real result, kept all four options visually neutral, carried its own specific explanation, leaked neither the correct option text nor the correct-answer rationale, left the options unlocked and offered a retry that then scored as correct.
+- mobile_QA: PASS locally at 375px, 390px and 430px — no horizontal overflow on any class, the two-column teaching stage collapses to a single column, and all answer buttons keep a 44px-or-taller touch target. Physical device verification remains blocked.
+- regression_QA: PASS — all 51 incorrect options and 17 correct/progression checks across p2m1c1-p2m1c4 still pass in 105s with 8 friendly openers; the Phase 1 regression harness passes 18 incorrect-answer checks across 6 classes; all four P2 M1 classes still render with their original shell variants and no M2 shell leaks into them.
+- defects_found_and_fixed: (1) the p2m2c2 six-step ladder overflowed the page canvas, putting body text below the trim edge — rebuilt as a 3x2 grid inside the safe area; (2) the p2m2c3 "recoloured outside the palette" example used an off-palette red, replaced with the approved muted tone; (3) PDF output was not byte-reproducible because PyMuPDF stamped a fresh creation/modification date and /ID — both pinned; (4) 13 dead CSS rules removed; (5) two deck-helper defects fixed, font aliases were not resolved to font files and `draw_rect` rejected a zero radius.
+- final_status: BUILT + FINAL LOCAL QA + HUMAN-EYE SLIDE INSPECTION PASS.
+- final_status_phrase: `PHASE 2 MODULE 2 LOCAL PRODUCTION COMPLETE - all locally/verifiably testable gates pass and the mandatory human-eye slide inspection is PASS; live/deployed verification remains unavailable.`
+- blocked_gates: human-eye slide inspection is no longer blocked. Still open: live/deployed portal, Drive delivery and authenticated persistence checks; physical device checks.
+- next_NOT_BUILT_class: P2 M3 C1 - Introduction to Social Media Marketing (p2m3c1), from guidebook Module 3: Social Media Management.
+- next_production_target_set: p2m3c1. No Module 3 work has been started.
+- outstanding_pre_deployment_gate: the PHASE 1 RETROSPECTIVE AUDIT above is still not started and remains required before deployment; it was already superseded for P2 M1 and is now equally outstanding for P2 M2.
+- implementation_commit: none; no commit was created.
