@@ -52,13 +52,13 @@ Deno.serve(async req=>{
   }
 
   const intent=await paymongo("payment_intents",SECRET,{method:"POST",body:JSON.stringify({data:{attributes:{amount,currency:"PHP",payment_method_allowed:["qrph"],description:"Assistara Academy Founding Cohort",metadata:{source:"assistara_academy",application_id:app.id,enrollment_token:token}}}})});
-  if(!intent.ok||!intent.data?.data?.id){console.error("paymongo_intent_create_failed",intent.status);return reply({ok:false,error:"Could not start QR payment. Please try again."},502,origin)}
+  if(!intent.ok||!intent.data?.data?.id){console.error("paymongo_intent_create_failed",intent.status);await db.from("academy_applications").update({payment_status:"not_requested",payment_requested_at:null}).eq("id",app.id).eq("payment_status","pending");return reply({ok:false,error:"Could not start QR payment. Please try again."},502,origin)}
   const pi=intent.data.data,clientKey=pi.attributes?.client_key;
   const pm=await paymongo("payment_methods",PUBLIC,{method:"POST",body:JSON.stringify({data:{attributes:{type:"qrph",billing:{name:app.name,email:app.email}}}})});
-  if(!pm.ok||!pm.data?.data?.id){console.error("paymongo_method_create_failed",pm.status);return reply({ok:false,error:"Could not generate QR payment. Please try again."},502,origin)}
+  if(!pm.ok||!pm.data?.data?.id){console.error("paymongo_method_create_failed",pm.status);await db.from("academy_applications").update({payment_status:"not_requested",payment_requested_at:null}).eq("id",app.id).eq("payment_status","pending");return reply({ok:false,error:"Could not generate QR payment. Please try again."},502,origin)}
   const attached=await paymongo("payment_intents/"+encodeURIComponent(pi.id)+"/attach",PUBLIC,{method:"POST",body:JSON.stringify({data:{attributes:{payment_method:pm.data.data.id,client_key:clientKey,return_url:SITE+"/academy/checkout?token="+encodeURIComponent(token)}}})});
   const attrs=attached.data?.data?.attributes,image=attrs?.next_action?.code?.image_url,testUrl=attrs?.next_action?.code?.test_url||null;
-  if(!attached.ok||!image){console.error("paymongo_attach_failed",attached.status,attrs?.status);return reply({ok:false,error:"Could not generate QR payment. Please try again."},502,origin)}
+  if(!attached.ok||!image){console.error("paymongo_attach_failed",attached.status,attrs?.status);await db.from("academy_applications").update({payment_status:"not_requested",payment_requested_at:null}).eq("id",app.id).eq("payment_status","pending");return reply({ok:false,error:"Could not generate QR payment. Please try again."},502,origin)}
 
   const expiresAt=new Date(now+30*60*1000).toISOString();
   const saved=await db.from("academy_applications").update({
