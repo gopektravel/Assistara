@@ -292,13 +292,14 @@
         background: #efede8;
       }
       .badge.paid,
-      .badge.accepted {
+      .badge.active_account {
         background: var(--green);
         color: var(--greenInk);
         border: 1px solid #b9e4c8;
       }
       .badge.pending,
-      .badge.payment_pending {
+      .badge.payment_pending,
+      .badge.waiting_for_payment {
         background: var(--orange);
         color: #8a4b00;
         border: 1px solid #f1c889;
@@ -873,10 +874,16 @@
       }
       // Only renders a badge when there is a real state to communicate.
       function stateBadges(x) {
-        return (
-          badge(applicationState(x)) +
-          (paymentState(x) ? badge(paymentState(x)) : "")
-        );
+        const decision = currentDecision(x);
+        const payment = String(x.payment_status || "not_requested").trim().toLowerCase();
+        const status = String(x.status || "").trim().toLowerCase();
+        const active = status === "onboarded" && payment === "paid" && !!x.onboarding_completed_at && !!x.auth_user_id && !x.suspended_at;
+        if (x.suspended_at) return badge("suspended");
+        if (active) return badge("active_account");
+        if (payment === "paid") return badge("paid");
+        if (decision === "accepted") return badge("waiting_for_payment");
+        if (decision === "declined") return badge("declined");
+        return badge(applicationState(x));
       }
       function stat(a) {
         $("stats").innerHTML = a
@@ -1290,14 +1297,17 @@
           const a = activeApps().filter(match);
           stat([
             [a.length, "Applications"],
-            [actionablePending().length, "Payment needs action"],
             [
-              a.filter((x) => x.decision === "accepted").length,
-              "Accepted / enrolling",
+              a.filter((x) => currentDecision(x) === "accepted" && String(x.payment_status || "not_requested").toLowerCase() !== "paid").length,
+              "Waiting for payment",
             ],
             [
-              a.filter((x) => x.payment_status === "paid").length,
-              "Paid / setup pending",
+              a.filter((x) => String(x.payment_status || "").toLowerCase() === "paid" && !(String(x.status || "").toLowerCase() === "onboarded" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at)).length,
+              "Paid",
+            ],
+            [
+              a.filter((x) => String(x.status || "").toLowerCase() === "onboarded" && String(x.payment_status || "").toLowerCase() === "paid" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at).length,
+              "Active accounts",
             ],
           ]);
           $("cards").innerHTML = a.length
@@ -1690,7 +1700,8 @@
         };
         render = () => {
           if (tab !== "b2b") return previousRender();
-          drawPending();
+          $("payCount").textContent = "";
+          $("pendingBox").innerHTML = "";
           const list = calls.filter(match),
             up = list.filter(
               (x) =>
