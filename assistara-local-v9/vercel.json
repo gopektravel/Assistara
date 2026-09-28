@@ -34,10 +34,6 @@
       "use": "@vercel/static"
     },
     {
-      "src": "academy-checkout-test.html",
-      "use": "@vercel/static"
-    },
-    {
       "src": "academy-payment-success.html",
       "use": "@vercel/static"
     },
@@ -473,10 +469,6 @@
     {
       "src": "/academy/checkout",
       "dest": "/academy-checkout.html"
-    },
-    {
-      "src": "/academy/checkout-test",
-      "dest": "/academy-checkout-test.html"
     },
     {
       "src": "/academy/checkout/",
