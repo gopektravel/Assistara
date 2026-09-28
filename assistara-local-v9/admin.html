@@ -1198,16 +1198,16 @@
         const isTestRecord = String(x.payment_method || "").toLowerCase() === "paymongo_qrph" || /^(internal_.*(qa|test)|sandbox)/i.test(String(x.source || "")) || String(x.email || "").toLowerCase() === "paymongo-qa@getassistara.com";
         const isReviewable = !decision && ["new", "reviewing"].includes(status) && ["", "none", "not_requested"].includes(payment) && !x.auth_user_id && !x.onboarding_completed_at && !x.suspended_at;
         if (isReviewable) {
-          return `<button class="accept" onclick="decision('${esc(x.id)}','accepted')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}')">Delete application</button>`;
+          return `<button class="accept" onclick="decision('${esc(x.id)}','accepted')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
         if (x.suspended_at || isActiveLearner || decision === "declined") return "";
         if (decision === "accepted" && payment !== "paid") {
-          return `<button onclick="decision('${esc(x.id)}','accepted',true)">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}')">Delete application</button>`;
+          return `<button onclick="decision('${esc(x.id)}','accepted',true)">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
         if (payment === "pending") {
           return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
         }
-        if (payment === "paid") return `<button class="success" onclick="onboard('${esc(x.id)}')">Resend account-setup link</button>${isTestRecord && !x.auth_user_id && !x.onboarding_completed_at ? `<button class="danger" onclick="deleteApplication('${esc(x.id)}',true)">Delete test record</button>` : ""}`;
+        if (payment === "paid") return `<button class="success" onclick="onboard('${esc(x.id)}')">Resend account-setup link</button>${isTestRecord && !x.auth_user_id && !x.onboarding_completed_at ? `<button class="danger" onclick="deleteApplication('${esc(x.id)}',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete test record</button>` : ""}`;
         return "";
       }
       function paymentEnrollmentInfo(x) {
@@ -1515,12 +1515,14 @@
           alert(e.message);
         }
       };
-      window.deleteApplication = async (id, isTest = false) => {
+      window.deleteApplication = async (id, isTest = false, name = "Unknown", email = "No email") => {
         let confirmation = "";
+        const who = `${name} (${email})`;
         if (isTest) {
-          confirmation = prompt("This permanently deletes the TEST application and its test payment records. Type DELETE TEST to continue.") || "";
+          if (!confirm(`Are you sure you want to delete this TEST application?\n\nName: ${name}\nEmail: ${email}\n\nThis also permanently deletes its test payment records.`)) return;
+          confirmation = prompt(`Final confirmation for ${who}\n\nType DELETE TEST to continue.`) || "";
           if (confirmation !== "DELETE TEST") return;
-        } else if (!confirm("Permanently delete this unpaid application? This cannot be undone.")) return;
+        } else if (!confirm(`Are you sure you want to delete this application?\n\nName: ${name}\nEmail: ${email}\n\nThis cannot be undone.`)) return;
         try {
           await req("", { id, confirmation }, DEL);
           toast(isTest ? "Test record deleted" : "Application deleted");
