@@ -1198,11 +1198,11 @@
         const isTestRecord = String(x.payment_method || "").toLowerCase() === "paymongo_qrph" || /^(internal_.*(qa|test)|sandbox)/i.test(String(x.source || "")) || String(x.email || "").toLowerCase() === "paymongo-qa@getassistara.com";
         const isReviewable = !decision && ["new", "reviewing"].includes(status) && ["", "none", "not_requested"].includes(payment) && !x.auth_user_id && !x.onboarding_completed_at && !x.suspended_at;
         if (isReviewable) {
-          return `<button class="accept" onclick="decision('${esc(x.id)}','accepted')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
+          return `<button class="accept" onclick="decision('${esc(x.id)}','accepted',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
         if (x.suspended_at || isActiveLearner || decision === "declined") return "";
         if (decision === "accepted" && payment !== "paid") {
-          return `<button onclick="decision('${esc(x.id)}','accepted',true)">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
+          return `<button onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
         if (payment === "pending") {
           return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
@@ -1443,17 +1443,14 @@
           alert(e.message);
         }
       };
-      window.decision = async (id, d, resend = false) => {
+      window.decision = async (id, d, resend = false, name = "Unknown", email = "No email") => {
         try {
-          if (
-            !resend &&
-            !confirm(
-              d === "accepted"
-                ? "Accept and send enrollment email?"
-                : "Decline and send email?",
-            )
-          )
-            return;
+          const action = resend
+            ? "Resend the acceptance/payment email?"
+            : d === "accepted"
+              ? "Accept this application and send the acceptance email?"
+              : "Decline this application and send the decline email?";
+          if (!confirm(`${action}\n\nName: ${name}\nEmail: ${email}`)) return;
           await req(resend ? "resend_decision" : "decision", {
             id,
             decision: d,
