@@ -7,7 +7,7 @@ const SECRET=Deno.env.get("PAYMONGO_SECRET_KEY")||"";
 const WEBHOOK_SECRET=Deno.env.get("PAYMONGO_WEBHOOK_SECRET")||"";
 const U=Deno.env.get("SUPABASE_URL")!,K=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND=Deno.env.get("RESEND_API_KEY")||"",FROM=Deno.env.get("EMAIL_FROM")||"Assistara <forms@getassistara.com>";
-const SITE="https://www.getassistara.com",enc=new TextEncoder();
+const SITE="https://www.getassistara.com",SELF_URL="https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/paymongo-webhook",enc=new TextEncoder();
 
 const json=(x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{"Content-Type":"application/json"}});
 const hex=(b:ArrayBuffer)=>Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
@@ -21,7 +21,17 @@ async function verify(raw:string,header:string){
   const t=parts.t||"",sig=SECRET.includes("_live_")?parts.li:parts.te;
   if(!/^\d+$/.test(t)||!sig)return false;
   if(Math.abs(Date.now()/1000-Number(t))>300)return false;
-  const key=await crypto.subtle.importKey("raw",enc.encode(WEBHOOK_SECRET),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+  let secret=WEBHOOK_SECRET;
+  if(SECRET.includes("_test_")){
+    try{
+      const hooks=await paymongo("webhooks");
+      const list=Array.isArray(hooks.data?.data)?hooks.data.data:[];
+      const hook=list.find((x:any)=>x?.attributes?.url===SELF_URL&&x?.attributes?.livemode===false&&x?.attributes?.status==="enabled");
+      if(typeof hook?.attributes?.secret_key==="string")secret=hook.attributes.secret_key;
+    }catch{}
+  }
+  if(!secret)return false;
+  const key=await crypto.subtle.importKey("raw",enc.encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
   const expected=hex(await crypto.subtle.sign("HMAC",key,enc.encode(t+"."+raw)));
   return safeEqual(expected,sig);
 }
