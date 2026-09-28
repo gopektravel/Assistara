@@ -53,8 +53,8 @@ Deno.serve(async req=>{
     const existing=await paymongo("payment_intents/"+encodeURIComponent(app.paymongo_payment_intent_id),SECRET);
     const a=existing.data?.data?.attributes;
     if(existing.ok&&a?.status==="succeeded")return reply({ok:false,paid:true,error:"This payment has already completed. Please refresh your enrollment page."},409,origin);
-    const image=a?.next_action?.code?.image_url;
-    if(existing.ok&&image&&a?.status==="awaiting_next_action")return reply({ok:true,payment_intent_id:app.paymongo_payment_intent_id,image_url:image,amount_php:amountPhp,currency:"PHP",expires_at:app.paymongo_qr_expires_at,test_mode:SECRET.includes("_test_")},200,origin);
+    const image=a?.next_action?.code?.image_url,testUrl=a?.next_action?.code?.test_url||null;
+    if(existing.ok&&image&&a?.status==="awaiting_next_action")return reply({ok:true,payment_intent_id:app.paymongo_payment_intent_id,image_url:image,test_url:SECRET.includes("_test_")?testUrl:null,amount_php:amountPhp,currency:"PHP",expires_at:app.paymongo_qr_expires_at,test_mode:SECRET.includes("_test_")},200,origin);
   }
 
   const intent=await paymongo("payment_intents",SECRET,{method:"POST",body:JSON.stringify({data:{attributes:{amount,currency:"PHP",payment_method_allowed:["qrph"],description:"Assistara Academy Founding Cohort",metadata:{source:"assistara_academy",application_id:app.id,enrollment_token:token}}}})});
@@ -63,7 +63,7 @@ Deno.serve(async req=>{
   const pm=await paymongo("payment_methods",PUBLIC,{method:"POST",body:JSON.stringify({data:{attributes:{type:"qrph",billing:{name:app.name,email:app.email}}}})});
   if(!pm.ok||!pm.data?.data?.id){console.error("paymongo_method_create_failed",pm.status);return reply({ok:false,error:"Could not generate QR payment. Please try again."},502,origin)}
   const attached=await paymongo("payment_intents/"+encodeURIComponent(pi.id)+"/attach",PUBLIC,{method:"POST",body:JSON.stringify({data:{attributes:{payment_method:pm.data.data.id,client_key:clientKey,return_url:SITE+"/academy/checkout?token="+encodeURIComponent(token)}}})});
-  const attrs=attached.data?.data?.attributes,image=attrs?.next_action?.code?.image_url;
+  const attrs=attached.data?.data?.attributes,image=attrs?.next_action?.code?.image_url,testUrl=attrs?.next_action?.code?.test_url||null;
   if(!attached.ok||!image){console.error("paymongo_attach_failed",attached.status,attrs?.status);return reply({ok:false,error:"Could not generate QR payment. Please try again."},502,origin)}
 
   const expiresAt=new Date(now+30*60*1000).toISOString();
@@ -74,5 +74,5 @@ Deno.serve(async req=>{
   if(saved.error||!saved.data?.length)return reply({ok:false,error:"QR was created, but enrollment could not be reserved. Please refresh before paying."},409,origin);
 
   await db.from("admin_activity_log").insert({entity_type:"application",entity_id:app.id,action:"paymongo_qr_created",details:{payment_intent_id:pi.id,amount_php:amountPhp,test_mode:SECRET.includes("_test_")}});
-  return reply({ok:true,payment_intent_id:pi.id,image_url:image,amount_php:amountPhp,currency:"PHP",expires_at:expiresAt,test_mode:SECRET.includes("_test_")},200,origin);
+  return reply({ok:true,payment_intent_id:pi.id,image_url:image,test_url:SECRET.includes("_test_")?testUrl:null,amount_php:amountPhp,currency:"PHP",expires_at:expiresAt,test_mode:SECRET.includes("_test_")},200,origin);
 });
