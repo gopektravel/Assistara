@@ -34,15 +34,9 @@ Deno.serve(async req=>{
   if(app.decision!=="accepted"&&app.status!=="accepted"&&app.status!=="waitlisted")return reply({ok:false,error:"This enrollment invitation is not active yet."},403,origin);
   if(app.payment_status==="paid")return reply({ok:false,error:"This enrollment has already been paid."},409,origin);
 
-  const cutoff=new Date(Date.now()-31*60*1000).toISOString();
-  const [{count:paid},{count:reserved}]=await Promise.all([
-    db.from("academy_applications").select("id",{count:"exact",head:true}).eq("payment_status","paid"),
-    db.from("academy_applications").select("id",{count:"exact",head:true}).eq("payment_status","pending").gte("payment_requested_at",cutoff).neq("id",app.id)
-  ]);
-  if((paid||0)+(reserved||0)>=LIMIT){
-    await db.from("academy_applications").update({status:"waitlisted",waitlisted_at:new Date().toISOString()}).eq("id",app.id);
-    return reply({ok:false,full:true,error:"The Founding Cohort is currently full. You have been moved to the waitlist and we will contact you if a place opens."},409,origin);
-  }
+  const {data:reservation,error:reservationError}=await db.rpc("reserve_academy_seat",{p_application_id:app.id});
+  if(reservationError)return reply({ok:false,error:"Could not reserve your Academy place. Please try again."},500,origin);
+  if(!reservation?.ok)return reply({ok:false,full:true,error:"This cohort is currently full. You have been added to the waitlist. We’ll let you know if a place opens or when the next cohort opens."},409,origin);
 
   const amountPhp=(Number(app.checkout_amount_php)>0?Number(app.checkout_amount_php):6900);
   const amount=Math.round(amountPhp*100);
@@ -68,7 +62,7 @@ Deno.serve(async req=>{
 
   const expiresAt=new Date(now+30*60*1000).toISOString();
   const saved=await db.from("academy_applications").update({
-    payment_status:"pending",payment_method:"paymongo_qrph",payment_requested_at:new Date(now).toISOString(),
+    payment_method:"paymongo_qrph",
     paymongo_payment_intent_id:pi.id,paymongo_payment_id:null,paymongo_qr_created_at:new Date(now).toISOString(),paymongo_qr_expires_at:expiresAt
   }).eq("id",app.id).neq("payment_status","paid").select("id");
   if(saved.error||!saved.data?.length)return reply({ok:false,error:"QR was created, but enrollment could not be reserved. Please refresh before paying."},409,origin);
