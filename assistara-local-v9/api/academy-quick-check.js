@@ -4,7 +4,6 @@ const {
   ACADEMY_COOKIE,
   QA_COOKIE,
   allowedOrigin,
-  adminTokenClaims,
   config,
   cookieValue,
   noStore,
@@ -200,10 +199,11 @@ async function serverComplete(cfg, userId, classKey) {
 
 async function authenticate(req, body, cfg) {
   if (body.preview === true) {
+    // Preview is a QA session this deployment sealed itself; see
+    // api/test-portal-session.js. unseal() rejects anything forged, tampered
+    // or expired, so the sealed audience claim is the whole check.
     const qaCookie = unseal(cookieValue(req, QA_COOKIE), cfg.cookieSecret);
     if (!qaCookie || qaCookie.aud !== "academy-test-portal") return { error: "Admin QA access is required" };
-    const claims = adminTokenClaims(qaCookie.token, cfg.service);
-    if (!claims) return { error: "Admin QA access is required" };
     return { preview: true };
   }
 

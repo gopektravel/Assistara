@@ -169,8 +169,13 @@ async function validatedLearnerSession(tokens, cfg = config()) {
   return { access_token: accessToken, user_id: user.id, expires_at: expiresAt };
 }
 
-function adminTokenClaims(token, serviceKey) {
-  if (!token || !serviceKey) return null;
+// One definition of the deployed Admin token's serialization: exactly two
+// unpadded Base64URL segments, the second an HMAC-SHA256 signature over the
+// literal encoded first segment, carrying u === "admin" and a millisecond
+// expiry. Everything here is keyless, so it can reject a JWT, a learner token
+// or an expired token before any signature work or network call happens.
+function adminTokenParts(token) {
+  if (!token) return null;
   const parts = String(token).split(".");
   if (parts.length !== 2) return null;
   const [payloadPart, signaturePart] = parts;
@@ -187,11 +192,49 @@ function adminTokenClaims(token, serviceKey) {
   let payload;
   try { payload = JSON.parse(payloadBytes.toString("utf8")); } catch { return null; }
   if (!payload || payload.u !== "admin") return null;
-
-  const expected = crypto.createHmac("sha256", serviceKey).update(payloadPart, "utf8").digest();
-  if (!crypto.timingSafeEqual(expected, signatureBytes)) return null;
   if (typeof payload.exp !== "number" || !Number.isFinite(payload.exp) || payload.exp < 1e12 || payload.exp <= Date.now()) return null;
-  return { ...payload, expiry_ms: payload.exp };
+
+  return { payload, payloadPart, signature: signatureBytes };
+}
+
+function adminTokenClaims(token, serviceKey) {
+  if (!serviceKey) return null;
+  const parts = adminTokenParts(token);
+  if (!parts) return null;
+
+  const expected = crypto.createHmac("sha256", serviceKey).update(parts.payloadPart, "utf8").digest();
+  if (!crypto.timingSafeEqual(expected, parts.signature)) return null;
+  return { ...parts.payload, expiry_ms: parts.payload.exp };
+}
+
+// The Admin token is signed and checked inside the `admin-api` Edge Function,
+// which is the only holder of that signing key. The Vercel side must not need
+// a second copy of it: the two values are configured independently and a
+// mismatch silently fails every Admin token. So the server-to-server check is
+// made by the authority itself. `session-check` sits directly behind the same
+// verifyToken() gate that guards every other Admin action and returns nothing
+// but an acknowledgement, so a successful call proves the caller still holds a
+// live Admin token and nothing more. Anything other than an explicit
+// acknowledgement - 401, an error, a timeout, a missing action - is a refusal.
+async function adminTokenAuthorized(token, cfg = config()) {
+  const parts = adminTokenParts(token);
+  if (!parts) return null;
+  try {
+    const { response, body } = await fetchJSON(`${cfg.url}/functions/v1/admin-api`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action: "session-check" }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok || !body || body.ok !== true) return null;
+  } catch {
+    return null;
+  }
+  return { ...parts.payload, expiry_ms: parts.payload.exp };
 }
 
 function issueCookie(res, cookieName, payload, secret, ttlSeconds) {
@@ -219,5 +262,6 @@ module.exports = {
   academyHasAccess,
   validatedLearnerSession,
   adminTokenClaims,
+  adminTokenAuthorized,
   issueCookie,
 };

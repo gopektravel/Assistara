@@ -5,7 +5,7 @@ const {
   QA_COOKIE_TTL_SECONDS,
   config,
   allowedOrigin,
-  adminTokenClaims,
+  adminTokenAuthorized,
   issueCookie,
   clearCookie,
   noStore,
@@ -44,7 +44,12 @@ module.exports = async function testPortalSession(req, res) {
 
   try {
     const cfg = config();
-    const claims = adminTokenClaims(body.token, cfg.service);
+    // The Admin token is confirmed by the Admin API itself, which owns the
+    // signing key. Only after that does this function mint a QA session: a
+    // short-lived value sealed with the server-only cookie secret. The Admin
+    // token is deliberately not stored in the cookie, so the QA session can
+    // never be replayed as an Admin credential anywhere.
+    const claims = await adminTokenAuthorized(body.token, cfg);
     if (!claims) {
       clearCookie(res, QA_COOKIE);
       return json(res, 403, { ok: false, error: "Valid Admin authorization is required" });
@@ -53,7 +58,6 @@ module.exports = async function testPortalSession(req, res) {
     const expiry = Math.min(claims.expiry_ms, Date.now() + QA_COOKIE_TTL_SECONDS * 1000);
     issueCookie(res, QA_COOKIE, {
       aud: "academy-test-portal",
-      token: body.token,
       exp: expiry,
     }, cfg.cookieSecret, QA_COOKIE_TTL_SECONDS);
     return json(res, 200, { ok: true });

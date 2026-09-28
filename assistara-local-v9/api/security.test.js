@@ -52,6 +52,29 @@ function setMockFetch({ entitled = false, banned = false } = {}) {
   };
 }
 
+// Stands in for the `admin-api` Edge Function, which is the only holder of the
+// Admin token signing key. It confirms exactly one token, returns nothing but
+// an acknowledgement, and refuses everything else the way the deployed gate
+// does.
+function setMockAdminApi(validToken) {
+  global.fetch = async (input, init = {}) => {
+    const url = String(input);
+    if (url.endsWith("/functions/v1/admin-api")) {
+      assert.equal(JSON.parse(init.body).action, "session-check");
+      const presented = String((init.headers || {}).Authorization || "").replace(/^Bearer\s+/i, "");
+      return presented && presented === validToken
+        ? response({ ok: true })
+        : response({ ok: false, error: "Session expired" }, 401);
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+}
+
+function cookieValueFrom(setCookie, name) {
+  const match = new RegExp(`${name}=([^;]*)`).exec(String(setCookie || ""));
+  return match ? match[1] : "";
+}
+
 function mockResponse() {
   return {
     statusCode: 200,
@@ -257,8 +280,7 @@ test("Test Portal requires a valid Admin QA cookie and never learner entitlement
   global.fetch = async () => { throw new Error("Test Portal must not call learner entitlement"); };
   t.after(() => { global.fetch = previous; });
   const handler = require("./academy-content");
-  const validToken = adminToken();
-  const cookie = security.seal({ aud: "academy-test-portal", token: validToken, exp: Date.now() + 60_000 }, COOKIE_SECRET);
+  const cookie = security.seal({ aud: "academy-test-portal", exp: Date.now() + 60_000 }, COOKIE_SECRET);
   const okRes = mockResponse();
   await handler({ method: "GET", url: "?audience=qa", headers: { cookie: `assistara_qa=${cookie}` }, query: { audience: "qa" } }, okRes);
   assert.equal(okRes.statusCode, 200);
@@ -296,17 +318,22 @@ test("session exchange denies arbitrary Auth users and issues a hardened cookie 
 
 test("Admin-token exchange creates a separate short-lived QA cookie", async t => {
   configEnv();
+  const previous = global.fetch;
+  t.after(() => { global.fetch = previous; });
+  const valid = adminToken();
+  setMockAdminApi(valid);
   const handler = require("./test-portal-session");
-  const valid = mockResponse();
+  const ok = mockResponse();
   await handler({
     method: "POST",
     headers: { origin: "http://localhost:3000" },
-    body: { action: "exchange", token: adminToken() },
-  }, valid);
-  assert.equal(valid.statusCode, 200);
-  assert.match(valid.headers["Set-Cookie"], /assistara_qa=/);
-  assert.match(valid.headers["Set-Cookie"], /HttpOnly/);
-  assert.match(valid.headers["Set-Cookie"], /Max-Age=(5[0-9]|60)/);
+    body: { action: "exchange", token: valid },
+  }, ok);
+  assert.equal(ok.statusCode, 200);
+  assert.match(ok.headers["Set-Cookie"], /assistara_qa=/);
+  assert.match(ok.headers["Set-Cookie"], /HttpOnly/);
+  assert.match(ok.headers["Set-Cookie"], /Max-Age=(5[0-9]|60)/);
+  assert.equal(ok.headers["Set-Cookie"].includes(valid), false, "the QA cookie must not carry the Admin token");
 
   const invalid = mockResponse();
   await handler({
@@ -316,6 +343,130 @@ test("Admin-token exchange creates a separate short-lived QA cookie", async t =>
   }, invalid);
   assert.equal(invalid.statusCode, 403);
   assert.match(invalid.headers["Set-Cookie"], /Max-Age=0/);
+});
+
+// Regression: the Test Portal used to be gated by re-deriving the Admin
+// token's HMAC signature on the Vercel side, using a second copy of the
+// service-role key. The two copies are configured independently, so a
+// perfectly valid Admin token was rejected and the portal never opened. The
+// token is now confirmed by the Admin API that actually signs it, and the QA
+// session is sealed with the server-only cookie secret.
+test("the QA gate authorizes from its own sealed session, never from a second copy of the Admin signing key", () => {
+  const edge = fs.readFileSync(path.join(__dirname, "../../supabase/functions/admin-api/index.ts"), "utf8");
+  const verifyIdx = edge.indexOf("if(!await verifyToken(auth))");
+  const sessionCheckIdx = edge.indexOf('if(action==="session-check")');
+  const clientIdx = edge.indexOf("createClient(SUPABASE_URL,SERVICE_KEY");
+  assert.ok(verifyIdx >= 0 && sessionCheckIdx > verifyIdx, "session-check must sit behind verifyToken()");
+  assert.ok(clientIdx > sessionCheckIdx, "session-check must answer before any database client exists");
+  assert.match(edge.slice(sessionCheckIdx, clientIdx), /\{ok:true\}/, "session-check must return nothing");
+  assert.doesNotMatch(edge.slice(sessionCheckIdx, clientIdx), /db\.|academy_applications|admin_notes/);
+
+  // The three functions that serve the Test Portal must not re-derive the Admin
+  // HMAC signature here. That is what silently failed when the two configured
+  // copies of the signing key drifted apart.
+  for (const name of ["test-portal-session.js", "academy-content.js", "academy-quick-check.js"]) {
+    const source = fs.readFileSync(path.join(__dirname, name), "utf8");
+    assert.doesNotMatch(source, /adminTokenClaims/, `${name} must not verify the Admin token locally`);
+    assert.doesNotMatch(source, /token: saved\.token|token: body\.token/, `${name} must not store an Admin token in the QA cookie`);
+  }
+  const exchange = fs.readFileSync(path.join(__dirname, "test-portal-session.js"), "utf8");
+  assert.match(exchange, /await adminTokenAuthorized\(body\.token, cfg\)/);
+  assert.ok(
+    exchange.indexOf("adminTokenAuthorized(body.token, cfg)") < exchange.indexOf("issueCookie(res, QA_COOKIE"),
+    "the QA cookie may only be minted after the Admin API has confirmed the token"
+  );
+});
+
+test("regression: a valid Admin token opens the Test Portal and no weaker authorization does", async t => {
+  configEnv();
+  const previous = global.fetch;
+  t.after(() => { global.fetch = previous; });
+
+  const valid = adminToken();
+  setMockAdminApi(valid);
+  const exchange = require("./test-portal-session");
+  const content = require("./academy-content");
+
+  // 1. A valid Admin token opens the Academy as the test learner.
+  const opened = mockResponse();
+  await exchange({ method: "POST", headers: { origin: "https://getassistara.com" }, body: { action: "exchange", token: valid } }, opened);
+  assert.equal(opened.statusCode, 200);
+  const qaCookie = cookieValueFrom(opened.headers["Set-Cookie"], "assistara_qa");
+  assert.ok(qaCookie, "no QA cookie was issued");
+  assert.ok(qaCookie.length > 0);
+  assert.equal(security.unseal(qaCookie, COOKIE_SECRET).aud, "academy-test-portal");
+  assert.equal(security.unseal(qaCookie, COOKIE_SECRET).token, undefined, "the QA session must not embed the Admin token");
+
+  // The dashboard is then served with no further call to the Admin API.
+  global.fetch = async () => { throw new Error("an open Test Portal must not re-verify the Admin token"); };
+  const dashboard = mockResponse();
+  await content({ method: "GET", url: "?audience=qa", headers: { cookie: `assistara_qa=${qaCookie}` }, query: { audience: "qa" } }, dashboard);
+  assert.equal(dashboard.statusCode, 200);
+  assert.match(dashboard.body, /Assistara Academy/);
+
+  // 2, 3, 4. Missing, malformed, expired, wrongly signed and learner
+  // credentials are all refused, and the refused exchange clears the cookie.
+  setMockAdminApi(valid);
+  const learnerAccessToken = userAccessToken();
+  // The shape of a real Admin token, signed with a key the Admin API does not
+  // use: exactly what a stale copy of the signing key used to produce.
+  const foreignKeyPayload = productionBase64Url(Buffer.from(JSON.stringify({ u: "admin", exp: Date.now() + 60_000 }), "utf8"));
+  const foreignKeyToken = `${foreignKeyPayload}.${productionBase64Url(crypto.createHmac("sha256", "some-other-service-role-key").update(foreignKeyPayload, "utf8").digest())}`;
+  const refused = {
+    "no token at all": undefined,
+    "an empty token": "",
+    "a learner Supabase access token": learnerAccessToken,
+    "a learner-claimed Admin token": adminToken({ u: "learner", exp: Date.now() + 60_000 }),
+    "an expired Admin token": adminToken({ u: "admin", exp: Date.now() - 1 }),
+    "an Admin token signed with another key": foreignKeyToken,
+    "an object instead of a token": { token: "nope" },
+  };
+  for (const [label, token] of Object.entries(refused)) {
+    const res = mockResponse();
+    await exchange({ method: "POST", headers: { origin: "https://getassistara.com" }, body: { action: "exchange", token } }, res);
+    assert.equal(res.statusCode, 403, `${label} must be refused`);
+    assert.equal(res.body.includes("Valid Admin authorization is required"), true);
+    assert.match(res.headers["Set-Cookie"], /assistara_qa=.*Max-Age=0/, `${label} must not leave a QA cookie`);
+  }
+
+  // A learner cannot reach the Test Portal by replaying their own session, and
+  // a QA cookie that was not sealed by this deployment is refused.
+  global.fetch = async () => { throw new Error("the QA audience must never touch learner entitlement"); };
+  const learnerCookie = security.seal({ aud: "academy", access_token: learnerAccessToken, user_id: "auth-user-1", exp: Date.now() + 60_000 }, COOKIE_SECRET);
+  const asQa = mockResponse();
+  await content({ method: "GET", url: "?audience=qa", headers: { cookie: `assistara_academy=${learnerCookie}` }, query: { audience: "qa" } }, asQa);
+  assert.equal(asQa.statusCode, 302);
+  assert.equal(asQa.headers.Location, "/admin");
+
+  const forged = mockResponse();
+  await content({
+    method: "GET",
+    url: "?audience=qa",
+    headers: { cookie: `assistara_qa=${security.seal({ aud: "academy-test-portal", exp: Date.now() + 60_000 }, "a-different-secret-that-is-long-enough-32")}` },
+    query: { audience: "qa" },
+  }, forged);
+  assert.equal(forged.statusCode, 302);
+  assert.equal(forged.headers.Location, "/admin");
+
+  const wrongAudience = mockResponse();
+  await content({
+    method: "GET",
+    url: "?audience=qa",
+    headers: { cookie: `assistara_qa=${security.seal({ aud: "academy", exp: Date.now() + 60_000 }, COOKIE_SECRET)}` },
+    query: { audience: "qa" },
+  }, wrongAudience);
+  assert.equal(wrongAudience.statusCode, 302);
+  assert.equal(wrongAudience.headers.Location, "/admin");
+
+  const expired = mockResponse();
+  await content({
+    method: "GET",
+    url: "?audience=qa",
+    headers: { cookie: `assistara_qa=${security.seal({ aud: "academy-test-portal", exp: Date.now() - 1 }, COOKIE_SECRET)}` },
+    query: { audience: "qa" },
+  }, expired);
+  assert.equal(expired.statusCode, 302);
+  assert.equal(expired.headers.Location, "/admin");
 });
 
 test("logout clears both server cookie scopes", async () => {

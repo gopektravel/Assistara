@@ -50,6 +50,11 @@ Deno.serve(async(req:Request)=>{
   }
   const auth=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");
   if(!await verifyToken(auth)) return new Response(JSON.stringify({ok:false,error:"Session expired"}),{status:401,headers:h});
+  // Lets the Vercel Test Portal gate confirm an Admin token with the one
+  // service that holds the signing key, instead of needing a second copy of
+  // that key configured here. It sits directly behind verifyToken() and
+  // returns nothing: no table, no column, no application data.
+  if(action==="session-check")return new Response(JSON.stringify({ok:true}),{status:200,headers:h});
   const db=createClient(SUPABASE_URL,SERVICE_KEY,{auth:{persistSession:false}});
   if(action==="list"){
     const {data,error}=await db.from("academy_applications").select("id,created_at,name,email,current_situation,why_remote_work,what_tried,biggest_obstacle,remote_work_interest,weekly_commitment,payment_readiness,status,decision,payment_status,accepted_at,paid_at,enrollment_token,onboarding_completed_at").order("created_at",{ascending:false}).limit(100);

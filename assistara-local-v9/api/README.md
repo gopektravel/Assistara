@@ -14,12 +14,18 @@ token. Its expiry is capped by the signed Auth token expiry and renewed from
 the existing browser Supabase session. Refresh tokens remain in the Supabase
 client's existing storage and are not copied into the Academy cookie.
 
-The Test Portal cookie contains an encrypted Admin token and is independently
-validated using the Admin HMAC key and expiry. The verifier accepts only the
-deployed two-segment unpadded-Base64URL `payload.signature` format:
-HMAC-SHA256 is checked over the literal encoded payload segment, and
-`u === "admin"` plus a future millisecond `exp` are required. It does not grant
-learner access.
+The Test Portal cookie contains no Admin token. `/api/test-portal-session`
+confirms the caller's Admin token with the `admin-api` Edge Function — the only
+holder of the key that signs it — through its `session-check` action, which sits
+directly behind the same `verifyToken()` gate as every other Admin action and
+returns nothing. Only then is a short-lived QA session minted, sealed with
+`ACADEMY_COOKIE_SECRET` and marked `aud: "academy-test-portal"`. Every later
+QA request is authorized by unsealing that cookie, so the QA gate never needs a
+second copy of the Admin signing key and a QA session can never be replayed as
+an Admin credential. Before the confirmation is issued, the token must still be
+the deployed two-segment unpadded-Base64URL `payload.signature` format with
+`u === "admin"` and a future millisecond `exp`; anything else is refused without
+a network call. The QA cookie does not grant learner access.
 
 Local slide PDFs and existing Google Drive lesson PDFs are returned through the
 learner gate. The Drive proxy serves only a PDF response from the existing file

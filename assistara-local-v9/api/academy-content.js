@@ -14,7 +14,6 @@ const {
   clearCookie,
   noStore,
   validatedLearnerSession,
-  adminTokenClaims,
 } = require("./_academy-security");
 
 function deny(res, destination) {
@@ -138,16 +137,18 @@ module.exports = async function academyContent(req, res) {
   }
 
   if (audience === "qa") {
+    // The QA session is a value this deployment sealed itself, after
+    // api/test-portal-session.js had the Admin token confirmed by the Admin
+    // API. Unsealing with the server-only secret is the whole check: a forged,
+    // replayed or tampered cookie cannot produce readable plaintext, and
+    // unseal() already refuses an expired one. Nothing here depends on an
+    // Admin token, and nothing here can be used to obtain one.
     const saved = unseal(cookieValue(req, QA_COOKIE), cfg.cookieSecret);
-    const claims = saved && saved.aud === "academy-test-portal"
-      ? adminTokenClaims(saved.token, cfg.service)
-      : null;
-    if (!saved || !claims || claims.expiry_ms <= Date.now()) return deny(res, "/admin");
+    if (!saved || saved.aud !== "academy-test-portal") return deny(res, "/admin");
 
-    const expiry = Math.min(claims.expiry_ms, Date.now() + QA_COOKIE_TTL_SECONDS * 1000);
+    const expiry = Math.min(saved.exp, Date.now() + QA_COOKIE_TTL_SECONDS * 1000);
     issueCookie(res, QA_COOKIE, {
       aud: "academy-test-portal",
-      token: saved.token,
       exp: expiry,
     }, cfg.cookieSecret, QA_COOKIE_TTL_SECONDS);
 
