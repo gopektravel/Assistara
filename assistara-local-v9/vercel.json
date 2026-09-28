@@ -112,6 +112,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "paymongo-sandbox.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "404.html",
       "use": "@vercel/static"
     },
@@ -457,6 +461,10 @@
     {
       "src": "/live.html",
       "dest": "/live.html"
+    },
+    {
+      "src": "/paymongo-sandbox.html",
+      "dest": "/paymongo-sandbox.html"
     },
     {
       "src": "/academy/payment-success",
