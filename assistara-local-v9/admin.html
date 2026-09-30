@@ -1222,7 +1222,8 @@
         if (isReviewable) {
           return `<button class="accept" onclick="decision('${esc(x.id)}','accepted',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
-        if (x.suspended_at || isActiveLearner || decision === "declined") return "";
+        if (decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected") return `<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete test record</button>`;
+        if (x.suspended_at || isActiveLearner) return "";
         if (decision === "accepted" && payment !== "paid") {
           return `<button onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
