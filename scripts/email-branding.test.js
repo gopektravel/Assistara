@@ -1,7 +1,8 @@
 "use strict";
 
 // Guard: every Assistara transactional email must render its brand from
-// email-safe HTML/CSS only. No remote logo, no SVG email image, no data URI.
+// email-safe HTML/CSS only (no remote logo, no SVG email image, no data URI),
+// and the email inventory must stay down to the approved senders.
 //
 // Run with: node --test scripts/email-branding.test.js
 
@@ -30,8 +31,34 @@ const SOURCES = functionSources();
 // Anything that talks to Resend is, by definition, constructing an outgoing email.
 const EMAIL_SOURCES = SOURCES.filter((fn) => fn.code.includes("api.resend.com"));
 
+// The only senders allowed after the B2B-email and duplicate-decision cleanup.
+const EXPECTED_SENDERS = [
+  "admin-applications",
+  "admin-gcash-payment",
+  "admin-send-onboarding",
+  "payment-complete",
+  "paymongo-webhook",
+  "review-gcash-payment",
+  "submit-gcash-payment",
+  "website-form",
+];
+
+function sender(name) {
+  const fn = EMAIL_SOURCES.find((entry) => entry.name === name);
+  assert.ok(fn, `${name} should be an email sender`);
+  return fn;
+}
+
 test("the audit can see the email-sending Edge Functions", () => {
   assert.ok(EMAIL_SOURCES.length >= 8, `expected the Resend senders, found ${EMAIL_SOURCES.length}`);
+});
+
+test("the email inventory is exactly the approved senders", () => {
+  assert.deepEqual(
+    EMAIL_SOURCES.map((fn) => fn.name).sort(),
+    [...EXPECTED_SENDERS].sort(),
+    "unexpected email sender in the Edge Functions"
+  );
 });
 
 test("no Edge Function references an external Assistara logo asset", () => {
@@ -112,20 +139,59 @@ test("critical CTAs keep a visible fallback URL", () => {
     "admin-send-onboarding": /word-break:break-all">\$\{url\}/,
     "payment-complete": /word-break:break-all">\$\{cta\.href\}/,
     "paymongo-webhook": /word-break:break-all">\$\{cta\.href\}/,
-    "admin-api": /word-break:break-all/,
   };
   for (const [name, pattern] of Object.entries(expectations)) {
-    const fn = EMAIL_SOURCES.find((entry) => entry.name === name);
-    assert.ok(fn, `${name} should be an email sender`);
-    assert.match(fn.code, pattern, `${name} lost its plain-text fallback CTA URL`);
+    assert.match(sender(name).code, pattern, `${name} lost its plain-text fallback CTA URL`);
   }
 });
 
-test("legacy Google Apps Script notifications use the same brand mark", () => {
-  const gasPath = path.join(ROOT, "google-apps-script.gs");
-  assert.ok(fs.existsSync(gasPath), "google-apps-script.gs missing");
-  const gas = fs.readFileSync(gasPath, "utf8");
-  assert.ok(!/assistara-logo|assistara-icon/i.test(gas), "Apps Script references an external logo");
-  assert.match(gas, /background:#FFD51F;border-radius:12px/i, "Apps Script brand mark missing");
-  assert.ok(gas.includes("BRAND_HEADER"), "Apps Script brand header constant missing");
+test("the obsolete B2B email flow is gone from website-form", () => {
+  const fn = sender("website-form");
+  assert.ok(!fn.code.includes("New B2B request"), "the internal B2B email template is still present");
+  assert.ok(
+    !fn.code.includes("We received your request | Assistara"),
+    "the applicant B2B email template is still present"
+  );
+  assert.ok(!/B2B_REPLY_TO/.test(fn.code), "the orphaned B2B reply-to constant is still present");
+});
+
+test("the B2B submission path itself is preserved", () => {
+  const fn = sender("website-form");
+  assert.ok(fn.code.includes("insert('b2b_leads'"), "the b2b_leads write must stay");
+  assert.ok(fn.code.includes("if(type==='b2b')"), "the b2b form branch must stay");
+});
+
+test("admin-api no longer sends email", () => {
+  const fn = SOURCES.find((entry) => entry.name === "admin-api");
+  assert.ok(fn, "admin-api must still exist");
+  assert.ok(!fn.code.includes("api.resend.com"), "admin-api must not call Resend");
+  assert.ok(!fn.code.includes("emailShell"), "the duplicate email shell must be gone");
+  assert.ok(!/RESEND_API_KEY/.test(fn.code), "the orphaned Resend key constant must be gone");
+  assert.ok(!/EMAIL_FROM/.test(fn.code), "the orphaned email-from constant must be gone");
+  assert.ok(!fn.code.includes('if(action==="decision")'), "the duplicate decision action must be gone");
+});
+
+test("admin-applications is the single canonical decision email implementation", () => {
+  const canonical = sender("admin-applications");
+  assert.ok(canonical.code.includes("resend_decision"), "resend must stay canonical");
+  assert.ok(canonical.code.includes("fear not"), "the canonical waitlist email must stay");
+  assert.ok(canonical.code.includes("You're IN!"), "the canonical acceptance email must stay");
+  for (const other of EMAIL_SOURCES) {
+    if (other.name === "admin-applications") continue;
+    assert.ok(
+      !other.code.includes("You've been accepted | Assistara Academy"),
+      `${other.name} still implements an application-decision email`
+    );
+    assert.ok(
+      !other.code.includes("Update on your Assistara Academy application"),
+      `${other.name} still implements an application-decision email`
+    );
+  }
+});
+
+test("the legacy Google Apps Script form handler is retired", () => {
+  assert.ok(!fs.existsSync(path.join(ROOT, "google-apps-script.gs")), "google-apps-script.gs must be gone");
+  for (const fn of SOURCES) {
+    assert.ok(!fn.code.includes("script.google.com"), `${fn.name} still calls Apps Script`);
+  }
 });

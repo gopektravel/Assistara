@@ -3,8 +3,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL=Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND_API_KEY=Deno.env.get("RESEND_API_KEY")||"";
-const EMAIL_FROM=Deno.env.get("EMAIL_FROM")||"Assistara <forms@getassistara.com>";
 const SITE_URL="https://www.getassistara.com";
 const USERNAME="admin";
 const PASSWORD_SALT="97bfe0c623966592a8bc9d515275b3a6";
@@ -19,10 +17,6 @@ async function sha256Hex(s:string){const d=new Uint8Array(await crypto.subtle.di
 async function sign(payload:string){const key=await crypto.subtle.importKey("raw",enc.encode(SERVICE_KEY),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return b64url(new Uint8Array(await crypto.subtle.sign("HMAC",key,enc.encode(payload))))}
 async function issueToken(){const payload=b64url(enc.encode(JSON.stringify({u:USERNAME,exp:Date.now()+12*60*60*1000})));return `${payload}.${await sign(payload)}`}
 async function verifyToken(token:string){try{const [p,s]=token.split(".");if(!p||!s||await sign(p)!==s)return false;const data=JSON.parse(new TextDecoder().decode(fromB64url(p)));return data.u===USERNAME&&Date.now()<data.exp}catch{return false}}
-function esc(s:string){return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-async function send(to:string,subject:string,html:string,text?:string){if(!RESEND_API_KEY) return false;const r=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${RESEND_API_KEY}`},body:JSON.stringify({from:EMAIL_FROM,to:[to],reply_to:"academy@getassistara.com",subject,html,...(text?{text}:{})})});return r.ok}
-function emailShell(title:string,body:string,cta?:{label:string,href:string}){return `<!doctype html><html><body style="margin:0;background:#f4f3ef;font-family:Arial,sans-serif;color:#151515"><table width="100%" role="presentation" cellspacing="0" cellpadding="0" style="padding:28px 12px"><tr><td align="center"><table width="100%" role="presentation" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fff;border:1px solid #e2dfd7;border-radius:24px;overflow:hidden"><tr><td style="background:#171717;padding:20px 30px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td width="42" height="42" align="center" valign="middle" style="width:42px;height:42px;background:#FFD51F;border-radius:12px;color:#151515;font-family:Arial,sans-serif;font-size:27px;font-weight:900;line-height:42px">A</td><td style="padding-left:12px;color:#fff;font-size:21px;font-weight:700">Assistara Academy</td></tr></table></td></tr><tr><td style="padding:34px 30px 8px"><h1 style="margin:0;font-size:30px">${esc(title)}</h1></td></tr><tr><td style="padding:12px 30px 26px;font-size:16px;line-height:1.6;color:#4f4b45">${body}</td></tr>${cta?`<tr><td style="padding:0 30px 34px"><a href="${cta.href}" target="_blank" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-weight:700;padding:15px 21px;border-radius:999px">${cta.label}</a><p style="margin:18px 0 6px;color:#77716a;font-size:12px;line-height:1.5">Button not working? Copy and paste this link into your browser:</p><a href="${cta.href}" target="_blank" style="color:#5b574f;font-size:12px;line-height:1.5;word-break:break-all">${cta.href}</a></td></tr>`:""}</table></td></tr></table></body></html>`}
-
 const ANSWER_FIELDS=["current_situation","why_remote_work","what_tried","biggest_obstacle","remote_work_interest","weekly_commitment","payment_readiness"];
 const ANSWER_FIELD_SCHEMA=[
   {field:"current_situation",label:"What best describes your current situation?"},
@@ -103,24 +97,6 @@ Deno.serve(async(req:Request)=>{
       byId.set(String(row.id),typeof row.admin_notes==="string"?row.admin_notes:"");
     }
     return new Response(JSON.stringify({ok:true,notes:safeIds.map(id=>({id,note:byId.get(id)||""}))}),{status:200,headers:h});
-  }
-  if(action==="decision"){
-    const id=String(body.id||"");const decision=String(body.decision||"");
-    if(!id||!["accepted","declined"].includes(decision)) return new Response(JSON.stringify({ok:false,error:"Invalid decision"}),{status:400,headers:h});
-    const {data:app}=await db.from("academy_applications").select("id,name,email,enrollment_token").eq("id",id).maybeSingle();
-    if(!app) return new Response(JSON.stringify({ok:false,error:"Application not found"}),{status:404,headers:h});
-    const now=new Date().toISOString();
-    const update=decision==="accepted"?{decision:"accepted",status:"accepted",accepted_at:now,declined_at:null}:{decision:"declined",status:"declined",declined_at:now,accepted_at:null};
-    const {error}=await db.from("academy_applications").update(update).eq("id",id);
-    if(error) return new Response(JSON.stringify({ok:false,error:"Could not update application"}),{status:500,headers:h});
-    let enrollmentUrl="";
-    if(decision==="accepted"){
-      enrollmentUrl=`${SITE_URL}/academy/checkout?token=${encodeURIComponent(app.enrollment_token)}`;
-      await send(app.email,"You've been accepted | Assistara Academy",emailShell("You've been accepted.",`<p>Hi ${esc((app.name||"there").split(/\s+/)[0])},</p><p>Your application to Assistara Academy has been accepted.</p><p>Your next step is to secure your place in the founding cohort. Use your private enrollment link below to review your place and complete payment.</p>`,{label:"Complete my enrollment",href:enrollmentUrl}));
-    } else {
-      await send(app.email,"Update on your Assistara Academy application",emailShell("Thank you for applying.",`<p>Hi ${esc((app.name||"there").split(/\s+/)[0])},</p><p>Thank you for taking the time to apply to Assistara Academy. We are not able to offer you a place in this cohort.</p><p>We appreciate your interest and wish you the best with your remote-work journey.</p>`));
-    }
-    return new Response(JSON.stringify({ok:true,enrollment_url:enrollmentUrl}),{status:200,headers:h});
   }
   return new Response(JSON.stringify({ok:false,error:"Unknown action"}),{status:400,headers:h});
 });

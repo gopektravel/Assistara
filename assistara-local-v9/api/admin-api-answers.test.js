@@ -165,7 +165,13 @@ test("existing admin actions remain present", () => {
   const src = source();
   assert.ok(src.includes('if(action==="login")'), "login action must exist");
   assert.ok(src.includes('if(action==="list")'), "list action must exist");
-  assert.ok(src.includes('if(action==="decision")'), "decision action must exist");
+});
+
+test("duplicate application-decision emails were removed from admin-api", () => {
+  const src = source();
+  assert.ok(!src.includes('if(action==="decision")'), "admin-api must not own application decisions");
+  assert.ok(!src.includes("api.resend.com"), "admin-api must not send email");
+  assert.ok(!src.includes("emailShell"), "the duplicate email shell must be gone");
 });
 
 test("verifyToken is required for answers", () => {
