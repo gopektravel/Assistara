@@ -4,6 +4,12 @@ const MASTERCLASS_SHEET = 'Masterclass Signups';
 const ACADEMY_SHEET = 'Academy Applications';
 const LEAD_NOTIFICATION_EMAIL = 'support@getassistara.com';
 
+// Email-safe Assistara brand mark. Dark-on-light lockup, inline CSS, no external image.
+const BRAND_HEADER =
+  '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px">' +
+  '<tr><td width="42" height="42" align="center" valign="middle" style="width:42px;height:42px;background:#FFD51F;border-radius:12px;color:#151515;font-family:Arial,sans-serif;font-size:27px;font-weight:900;line-height:42px">A</td>' +
+  '<td style="padding-left:12px;font-family:Arial,sans-serif;font-size:21px;font-weight:700;color:#171717">Assistara</td></tr></table>';
+
 function doPost(e) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   const p = (e && e.parameter) ? e.parameter : {};
@@ -53,6 +59,7 @@ function doPost(e) {
       subject: 'New Assistara Academy application' + (name ? ' - ' + name : ''),
       htmlBody:
         '<div style="font-family:Arial,sans-serif;line-height:1.6;color:#171717">' +
+        BRAND_HEADER +
         '<h2 style="margin:0 0 18px">New Founding Cohort application</h2>' +
         '<p><strong>Name:</strong> ' + escapeHtml(name || 'Not provided') + '</p>' +
         '<p><strong>Email:</strong> ' + escapeHtml(email || 'Not provided') + '</p>' +
@@ -82,6 +89,7 @@ function doPost(e) {
     subject: 'New Assistara lead' + (name ? ' - ' + name : ''),
     htmlBody:
       '<div style="font-family:Arial,sans-serif;line-height:1.6;color:#171717">' +
+      BRAND_HEADER +
       '<h2 style="margin:0 0 18px">New Assistara lead</h2>' +
       '<p><strong>Name:</strong> ' + escapeHtml(name || 'Not provided') + '</p>' +
       '<p><strong>Email:</strong> ' + escapeHtml(email || 'Not provided') + '</p>' +
