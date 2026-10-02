@@ -72,6 +72,28 @@
       }
     },
     {
+      "src": "api/academy-exam.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_exam-bank.js",
+          "api/_curriculum.js",
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
+      "src": "api/academy-certificate.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_certificate-pdf.js",
+          "api/_curriculum.js",
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "api/test-portal-session.js",
       "use": "@vercel/node",
       "config": {
@@ -321,6 +343,14 @@
     {
       "src": "/api/academy-quick-check",
       "dest": "/api/academy-quick-check.js"
+    },
+    {
+      "src": "/api/academy-exam",
+      "dest": "/api/academy-exam.js"
+    },
+    {
+      "src": "/api/academy-certificate",
+      "dest": "/api/academy-certificate.js"
     },
     {
       "src": "/api/test-portal-session",
