@@ -1163,11 +1163,25 @@
           }
         }
       };
+      function applicationSource(x) {
+        const token = String(x.tracking_token || "").trim();
+        if (!token) return { label: "Direct / untracked", token: "" };
+        const link = acquisitionLinks.find((l) =>
+          String(l.token || "").trim() === token ||
+          String(l.id || "").trim() === token
+        );
+        if (!link) return { label: "Unknown tracking source", token };
+        return {
+          label: [link.channel, link.placement, link.label].filter(Boolean).join(" → "),
+          token,
+        };
+      }
       function appCard(x) {
         const key = x.id === null || x.id === undefined ? "" : String(x.id);
         const expandable = SAFE_APP_ID.test(key);
         const open = expandable && openApps.has(key);
         const submitted = x.created_at ? `<div class="sub appSubmitted">Applied ${esc(formatDate(x.created_at))}</div>` : "";
+        const source = applicationSource(x);
         return `<div class="card applicationCard${open ? " open" : ""}" id="app-${esc(key)}">
           <div class="applicationCardHead">
             <div class="applicationIdentity">
@@ -1182,6 +1196,10 @@
           </div>
           <div class="actions applicationActions">${applicationActions(x)}</div>
           ${expandable ? `<div class="appPanel${open ? " open" : ""}" id="app-panel-${esc(key)}">
+            <section class="recordSection">
+              <h3>ACQUISITION SOURCE</h3>
+              <p class="accountState"><b>${esc(source.label)}</b>${source.token ? `<br><span class="sub">Tracking token: ${esc(source.token)}</span>` : ""}</p>
+            </section>
             <section class="recordSection">
               <h3>APPLICATION ANSWERS</h3>
               <div class="answersPanel" id="answers-${esc(key)}"></div>
