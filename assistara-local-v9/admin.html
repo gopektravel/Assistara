@@ -1164,7 +1164,8 @@
         }
       };
       function applicationSource(x) {
-        const token = String(x.tracking_token || "").trim();
+        const linkedSignup = web.find((w) => String(w.application_id || "") === String(x.id || "")) || web.find((w) => String(w.email || "").trim().toLowerCase() === String(x.email || "").trim().toLowerCase() && w.tracking_token);
+        const token = String(x.tracking_token || linkedSignup?.tracking_token || "").trim();
         if (!token) return { label: "Direct / untracked", token: "" };
         const link = acquisitionLinks.find((l) =>
           String(l.token || "").trim() === token ||
