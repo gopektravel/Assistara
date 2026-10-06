@@ -61,6 +61,7 @@ module.exports = async function academySession(req, res) {
     issueCookie(res, ACADEMY_COOKIE, {
       aud: "academy",
       access_token: session.access_token,
+      user_id: session.user_id,
       exp: session.expires_at,
     }, cfg.cookieSecret, COOKIE_TTL_SECONDS);
     return json(res, 200, { ok: true });

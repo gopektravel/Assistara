@@ -210,7 +210,7 @@ async function authenticate(req, body, cfg) {
   const cookie = unseal(cookieValue(req, ACADEMY_COOKIE), cfg.cookieSecret);
   if (!cookie || cookie.aud !== "academy" || !cookie.access_token) return { error: "Academy session required" };
   const session = await validatedLearnerSession({ access_token: cookie.access_token }, cfg);
-  if (!session || session.user_id !== cookie.user_id) return { error: "Academy access is not available" };
+  if (!session || session.user_id !== cookie.user_id) return { error: "Something went wrong with this page. Please contact support@getassistara.com." };
   return { preview: false, session };
 }
 
