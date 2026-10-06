@@ -1351,8 +1351,12 @@
           return;
         }
         if (tab === "webinar") {
-          const visibleWeb=web.filter(x=>!/^diag(?:nostic)?[-_]/i.test(String(x.email||""))&&!/diagnostic/i.test(String(x.name||""))&&!/diagnostic/i.test(String(x.source||""))),goal=400,pct=Math.min(100,Math.round((visibleWeb.length/goal)*100));
-          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${visibleWeb.length} / ${goal}</b><div><span>Webinar signup goal</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
+          const visibleWeb=web.filter(x=>!/^diag(?:nostic)?[-_]/i.test(String(x.email||""))&&!/diagnostic/i.test(String(x.name||""))&&!/diagnostic/i.test(String(x.source||"")));
+          const applicationByEmail=new Map(apps.filter(x=>x.email).map(x=>[String(x.email).trim().toLowerCase(),x]));
+          const acquisitionWeight=x=>{const app=applicationByEmail.get(String(x.email||"").trim().toLowerCase());const readiness=String(app?.payment_readiness||"").trim().toLowerCase();if(readiness==="willing to invest in myself")return 15;if(readiness==="need payment plan")return 8;return 1};
+          const acquisitionPoints=visibleWeb.reduce((sum,x)=>sum+acquisitionWeight(x),0),goal=400,pct=Math.min(100,Math.round((acquisitionPoints/goal)*100));
+          const paymentPlanCount=visibleWeb.filter(x=>acquisitionWeight(x)===8).length,fullPayCount=visibleWeb.filter(x=>acquisitionWeight(x)===15).length;
+          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${acquisitionPoints} / ${goal} points</b><div><span>Acquisition goal · ${visibleWeb.length} webinar signups · ${paymentPlanCount} payment plan ×8 · ${fullPayCount} full pay ×15</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
           stat([
             [visibleWeb.length, "Registered"],
             [visibleWeb.filter((x) => x.attended).length, "Attended"],
