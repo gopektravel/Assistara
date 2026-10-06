@@ -162,6 +162,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "oaiq-pixel.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "assistara-logo.svg",
       "use": "@vercel/static"
     },
@@ -383,6 +387,10 @@
     {
       "src": "/app.js",
       "dest": "/app.js"
+    },
+    {
+      "src": "/oaiq-pixel.js",
+      "dest": "/oaiq-pixel.js"
     },
     {
       "src": "/assistara-logo.svg",
