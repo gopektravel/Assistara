@@ -1732,23 +1732,23 @@
 
 /* --- Founding Cohort Community card --------------------------------------
    One deliberate Community entry point on the authenticated Home dashboard.
-   A native Assistara card (dark, yellow mark), never a WhatsApp-green block.
+   A native Assistara card (pale-cream, yellow mark), never a WhatsApp-green block.
    Shown until the learner confirms they have joined; then the big card is
    replaced by the small permanent Community link in the navigation. */
-.communityCard{display:flex;align-items:center;gap:24px;background:#171717;color:#fff;border-radius:24px;padding:26px 28px;margin:24px 0 0;position:relative;overflow:hidden}
+.communityCard{display:flex;align-items:center;gap:24px;background:#fff6d9;color:#171717;border:1px solid #ecd98c;border-radius:24px;padding:26px 28px;margin:24px 0 0;position:relative;overflow:hidden}
 .communityCard[hidden]{display:none}
-.communityCard:after{content:"";position:absolute;right:-70px;bottom:-110px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle at 38% 38%,rgba(255,213,31,.5),rgba(255,213,31,.07) 60%,transparent 72%);pointer-events:none}
-.ccIllustration{flex:none;width:88px;height:88px;border-radius:24px;background:var(--yellow);color:#171717;display:grid;place-items:center;font-size:44px;line-height:1;box-shadow:0 16px 38px rgba(0,0,0,.30)}
+.communityCard:after{content:"";position:absolute;right:-70px;bottom:-110px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle at 38% 38%,rgba(234,219,130,.55),rgba(234,219,130,.14) 55%,transparent 72%);pointer-events:none}
+.ccIllustration{flex:none;width:88px;height:88px;border-radius:24px;background:var(--yellow);color:#171717;display:grid;place-items:center;font-size:44px;line-height:1;box-shadow:0 14px 30px rgba(163,134,34,.30)}
 .ccBody{flex:1;min-width:0;position:relative;z-index:1}
-.communityCard .eyebrow{color:var(--yellow)}
+.communityCard .eyebrow{color:#7a6100}
 .ccBody h2{margin:7px 0 9px;font-size:clamp(21px,2.4vw,27px);line-height:1.14;letter-spacing:-.02em}
-.ccBody>p{margin:0;color:#d9d5ca;font-size:14.5px;line-height:1.6;max-width:660px}
+.ccBody>p{margin:0;color:#57524a;font-size:14.5px;line-height:1.6;max-width:660px}
 .ccActions{display:flex;flex-wrap:wrap;align-items:center;gap:11px;margin-top:17px}
 .communityCard .btn{min-height:44px;padding:12px 18px;font-size:13px;border-radius:999px}
-.ccJoined{min-height:44px;padding:12px 17px;border:1.5px solid #3d3d3d;background:transparent;color:#fff;border-radius:999px;font:800 13px Manrope, system-ui;cursor:pointer;transition:border-color .18s ease,color .18s ease,background .18s ease}
-.ccJoined:hover{border-color:var(--yellow);color:var(--yellow)}
-.ccJoined:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
-.ccNote{display:block;margin-top:13px;font-size:11.5px;font-weight:700;color:#aaa59b;letter-spacing:.02em}
+.ccJoined{min-height:44px;padding:12px 17px;border:1.5px solid #171717;background:transparent;color:#171717;border-radius:999px;font:800 13px Manrope, system-ui;cursor:pointer;transition:border-color .18s ease,color .18s ease,background .18s ease}
+.ccJoined:hover{border-color:var(--yellow);background:var(--yellow);color:#171717}
+.ccJoined:focus-visible{outline:2px solid #171717;outline-offset:2px}
+.ccNote{display:block;margin-top:13px;font-size:11.5px;font-weight:700;color:#716b63;letter-spacing:.02em}
 
 /* Small permanent Community link, shown only after the learner joins. */
 .communityNav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 4px 10px;padding:10px 12px;border-radius:12px;color:#d2cdc2;text-decoration:none;font:700 13px/1.2 Manrope, system-ui;transition:background .18s ease,color .18s ease}
@@ -1772,6 +1772,19 @@
  .ccNote{font-size:11px}
 }
 
+/* --- Warm Assistara polish --------------------------------------------------
+   Lighter, warmer and more rewarding. The Founding Cohort card now reads as a
+   pale-cream community surface (black type, yellow mark - never WhatsApp
+   green); unlocked and next-up surfaces pick up subtle pale-yellow states;
+   and the certificate exam card stops being a second black block. Continue
+   Learning stays dark as the primary learning action, locked content stays
+   neutral, and all typography changes remain desktop-only in the block below. */
+#certificate .card.dark{background:#fff8cf;color:#171717;border:1px solid #eadb82}
+#certificate .card.dark .muted{color:#716b63}
+.skill.available{background:#fffaf0;border-color:#e6dfc8}
+#home .hero .pill{background:#fff8cf;border-color:#eadb82;color:#6d5a00}
+#home .journey button:not(.doneCard):not(.lockedCard):not(:disabled){background:#fffaf0;border-color:#e6dfc8}
+
 /* --- Desktop readability for Quick Access, My Skills and Achievements ------
    The CTA scale block below re-declares these base sizes with equal
    specificity, so only a LATER rule can raise them on desktop. Still strictly
@@ -1779,9 +1792,17 @@
 @media(min-width:851px){
  .shortcutText strong{font-size:14px;line-height:1.3}
  .shortcutText small{font-size:12.5px;line-height:1.4}
- #skills .skill>small{font-size:12px;line-height:1.45}
+ /* My Skills: one notch bigger titles and status lines, with room to breathe. */
+ #skills .skill{padding:13px 16px;gap:4px 12px}
+ #skills .skill>strong{font-size:15px;line-height:1.35}
+ #skills .skill>small{font-size:13px;line-height:1.5;margin-top:3px}
+ /* Home Skills snapshot keeps the same reading scale. */
+ #home #skillsSnapshot .skill strong{font-size:15px;line-height:1.35}
+ /* Academy Progress: warm stat tiles and a sand progress track. */
+ #home .dashboardGrid>.card:nth-child(2) .stat{background:#fffdf3;border-color:#eadb82}
+ #home .dashboardGrid>.card:nth-child(2) .track{background:#ece2b6}
  .achvBody strong{font-size:14.5px}
- .achvBody small{font-size:12.5px;line-height:1.45}
+ .achvBody small{font-size:13px;line-height:1.5}
 }
 </style>
 </head><body>
@@ -1792,7 +1813,7 @@
 <section id="course" class="page"><div class="hero"><div><div class="eyebrow">MY COURSE</div><h1>Zero to Remote.</h1><p class="lead">Move through the Academy phase by phase, module by module, class by class.</p></div><span class="pill" id="coursePct">0% complete</span></div><div id="courseView"></div></section>
 <section id="skills" class="page"><div class="hero"><div><div class="eyebrow">MY SKILLS</div><h1>Professional skill collection.</h1><p class="lead">Turn dormant capabilities into demonstrated professional skills as you progress.</p></div><span class="pill" id="skillsSummary">0 / 23 unlocked</span></div><div id="skillUnlockMoment"></div><div id="skillsMetrics" class="skillsHeader"></div><div id="skillsList" class="skillGrid"></div><div class="sectionTitle achvAnchor" id="achievementsAnchor"><h2>Achievements</h2><span id="achievementsSummary"></span></div><div id="achievementsList"></div></section><section id="resources" class="page"><div class="hero"><div><div class="eyebrow">RESOURCES</div><h1>Your toolkit.</h1><p class="lead">Academy resources and interactive tools live together here.</p></div></div><div class="stack" id="resourcesList"></div></section>
 <section id="sessions" class="page"><div class="hero"><div><div class="eyebrow">LIVE SESSIONS</div><h1>Learn together.</h1><p class="lead">Cohort calls, workshops, Q&A sessions and recordings will appear here.</p></div></div><div id="sessionsList"></div></section>
-<section id="certificate" class="page"><div class="hero"><div><div class="eyebrow">CERTIFICATE</div><h1>Graduation requirements.</h1><p class="lead">Course completion alone is not enough. Pass every phase exam and the final Academy exam to graduate.</p></div></div><div class="grid"><div class="card"><h2>Certificate of Completion</h2><div id="certificateRequirements"></div></div><div class="card dark"><div class="eyebrow" style="color:#aaa">FINAL ACADEMY EXAM</div><h2 id="finalExamTitle">Locked</h2><p class="muted" id="finalExamText">Pass all four phase exams to unlock the final Academy exam.</p><span class="status" id="certificateStatus">Locked</span><div class="lessonActions" id="certExams"></div></div></div></section>
+<section id="certificate" class="page"><div class="hero"><div><div class="eyebrow">CERTIFICATE</div><h1>Graduation requirements.</h1><p class="lead">Course completion alone is not enough. Pass every phase exam and the final Academy exam to graduate.</p></div></div><div class="grid"><div class="card"><h2>Certificate of Completion</h2><div id="certificateRequirements"></div></div><div class="card dark"><div class="eyebrow" style="color:#7a6100">FINAL ACADEMY EXAM</div><h2 id="finalExamTitle">Locked</h2><p class="muted" id="finalExamText">Pass all four phase exams to unlock the final Academy exam.</p><span class="status" id="certificateStatus">Locked</span><div class="lessonActions" id="certExams"></div></div></div></section>
 <section id="settings" class="page"><div class="hero"><div><div class="eyebrow">ACCOUNT</div><h1>Settings.</h1><p class="lead">Manage your Academy access and support.</p></div></div><div class="stack"><div class="resource"><div><strong>Profile</strong><small id="settingsEmail"></small></div><span class="pill">Active student</span></div><div class="resource"><div><strong>Password</strong><small>Send yourself a secure password reset email.</small></div><button class="btn" id="resetPassword">Reset password</button></div><div class="resource"><div><strong>Help & support</strong><small>academy@getassistara.com</small></div><a class="btn" href="mailto:academy@getassistara.com">Contact support</a></div></div><p id="settingsMsg" class="muted"></p></section>
 </main></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
