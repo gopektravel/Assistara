@@ -22,6 +22,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-finance.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "academy-apply.html",
       "use": "@vercel/static"
     },
@@ -452,6 +456,14 @@
     {
       "src": "/admin/acquisition/",
       "dest": "/admin-acquisition.html"
+    },
+    {
+      "src": "/admin/finance",
+      "dest": "/admin-finance.html"
+    },
+    {
+      "src": "/admin/finance/",
+      "dest": "/admin-finance.html"
     },
     {
       "src": "/academy/beta-account",
