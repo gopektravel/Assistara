@@ -118,8 +118,33 @@ module.exports = async function academyContent(req, res) {
   }
 
   const audience = query(req, "audience");
+  const asset = query(req, "asset");
+  const driveId = query(req, "drive");
+  const wantsAsset = !!(asset || driveId);
+
   if (audience === "learner" || audience === "welcome") {
     const saved = unseal(cookieValue(req, ACADEMY_COOKIE), cfg.cookieSecret);
+    const qa = unseal(cookieValue(req, QA_COOKIE), cfg.cookieSecret);
+    const qaSession = !!qa && qa.aud === "academy-test-portal";
+
+    // The Test Portal (a sealed QA session) may preview lesson slides, so its
+    // viewer shows the same deck a learner sees. It is only ever served the PDF
+    // asset - never the learner dashboard, welcome or progress - and the QA
+    // session itself is minted only from a valid Admin token.
+    if (wantsAsset && qaSession) {
+      const bytes = driveId ? await readDriveAsset(driveId) : await readProtectedAsset(asset);
+      if (!bytes) {
+        res.statusCode = 404;
+        return res.end();
+      }
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/pdf");
+      const filename = asset || `${driveId}.pdf`;
+      res.setHeader("Content-Disposition", `${query(req, "download") === "1" ? "attachment" : "inline"}; filename="${filename}"`);
+      res.setHeader("Content-Length", String(bytes.length));
+      return req.method === "HEAD" ? res.end() : res.end(bytes);
+    }
+
     if (!saved || saved.aud !== "academy") return deny(res, "/login");
 
     const session = await validatedLearnerSession(saved, cfg);
@@ -168,9 +193,7 @@ module.exports = async function academyContent(req, res) {
       }
     }
 
-    const asset = query(req, "asset");
-    const driveId = query(req, "drive");
-    if (asset || driveId) {
+    if (wantsAsset) {
       const bytes = driveId ? await readDriveAsset(driveId) : await readProtectedAsset(asset);
       if (!bytes) {
         res.statusCode = 404;
