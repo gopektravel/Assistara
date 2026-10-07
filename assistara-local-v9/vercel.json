@@ -72,6 +72,15 @@
       }
     },
     {
+      "src": "api/academy-community.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "api/academy-exam.js",
       "use": "@vercel/node",
       "config": {
@@ -347,6 +356,10 @@
     {
       "src": "/api/academy-quick-check",
       "dest": "/api/academy-quick-check.js"
+    },
+    {
+      "src": "/api/academy-community",
+      "dest": "/api/academy-community.js"
     },
     {
       "src": "/api/academy-exam",

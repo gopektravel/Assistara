@@ -586,19 +586,36 @@ test("Home Recent Achievement stays compact — one row, not a dashboard section
 // 5. Home Quick Access
 // ---------------------------------------------------------------------------
 
-test("Home carries a compact Quick Access row with Resources, Live Sessions and Founding Cohort", () => {
+test("Home carries the two Quick Access shortcuts and one deliberate Founding Cohort Community card", () => {
   const home = html.slice(html.indexOf('<section id="home"'), html.indexOf('<section id="course"'));
   assert.match(home, /<h2>Quick access<\/h2>/, "Home must have a Quick access section");
   assert.match(home, /class="shortcutCard" data-open="resources"/, "a Resources shortcut");
   assert.match(home, /class="shortcutCard" data-open="sessions"/, "a Live Sessions shortcut");
-  assert.match(home, /<a class="shortcutCard" href="https:\/\/chat\.whatsapp\.com\/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer"/,
-    "a Founding Cohort WhatsApp shortcut");
-  assert.equal((home.match(/class="shortcutCard"/g) || []).length, 3,
-    "exactly three shortcut cards — no giant quick-action wall");
+  assert.equal((home.match(/class="shortcutCard"/g) || []).length, 2,
+    "exactly two shortcut cards in Quick Access — the WhatsApp shortcut must not be duplicated there");
 
   const icons = [...home.matchAll(/shortcutIcon" aria-hidden="true">([^<]+)</g)].map((m) => m[1]);
-  assert.equal(icons.length, 3);
-  assert.equal(new Set(icons).size, 3, "each shortcut needs its own clear icon");
+  assert.equal(icons.length, 2);
+  assert.equal(new Set(icons).size, 2, "each shortcut needs its own clear icon");
+
+  // One deliberate Community card between Academy Progress and Quick Access.
+  const WA = "https://chat.whatsapp.com/H8Dn5NK3OxZC2nYlekvBDt";
+  assert.match(home, /<div class="communityCard" id="communityCard"/,
+    "the Founding Cohort Community card must live on the Home dashboard");
+  assert.ok(home.indexOf('class="communityCard"') < home.indexOf("Quick access"),
+    "the Community card must sit before Quick Access");
+  assert.match(home, /class="eyebrow">FOUNDING COHORT<\/div>/,
+    "the Community card must carry the FOUNDING COHORT eyebrow");
+  assert.match(home, /You're not doing this alone\./,
+    "the Community card must carry its approved headline");
+  assert.match(home, /href="https:\/\/chat\.whatsapp\.com\/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer"/,
+    "Join the Community must open the private WhatsApp invite in a new tab");
+  assert.match(home, /class="ccJoined" id="communityJoinedBtn"/,
+    "the secondary I've joined confirmation action must exist");
+  assert.match(home, /Private WhatsApp community · Founding Cohort only/,
+    "the supporting note must describe the private community");
+  assert.equal((home.match(/chat.whatsapp.com/g) || []).length, 1,
+    "exactly ONE WhatsApp entry point on the Home dashboard — no duplicate shortcut card");
 
   // Compact, side-by-side on desktop; a single column only on a phone.
   assert.match(htmlNoComments, /\.shortcutCard\{[^}]*padding:11px 13px/,

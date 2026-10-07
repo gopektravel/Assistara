@@ -293,16 +293,23 @@ test("the curriculum, Quick Check bank, exam bank and skills count stay at relea
 // ---------------------------------------------------------------------------
 // Founding Cohort WhatsApp community
 // ---------------------------------------------------------------------------
-test("the Founding Cohort WhatsApp shortcut is inside the dashboard only", () => {
-  // Enrolled students get one native Quick Access card that opens the private
-  // Founding Cohort community in a new tab. The invite link must never appear
-  // on the public Academy landing / application pages.
+test("the Founding Cohort Community card is dashboard-only with one deliberate entry point", () => {
+  // Enrolled students get one deliberate Community card that opens the private
+  // Founding Cohort community in a new tab, and (after joining) a small
+  // permanent Community link in the sidebar and the mobile menu. The invite
+  // link must never appear on the public Academy landing / application pages.
   const WA = "https://chat.whatsapp.com/H8Dn5NK3OxZC2nYlekvBDt";
   assert.match(html,
-    /<a class="shortcutCard" href="https:\/\/chat\.whatsapp\.com\/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer"/,
-    "the Founding Cohort WhatsApp card must live in the dashboard Quick Access");
+    /<a class="btn communityJoin" id="communityJoin" href="https:\/\/chat\.whatsapp\.com\/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer"/,
+    "the Community card must be the primary Join entry point");
   assert.match(html, /aria-label="Join the Founding Cohort WhatsApp community"/,
-    "the WhatsApp card must carry an accessible label");
+    "the WhatsApp entry must carry an accessible label");
+  assert.equal(/class="shortcutCard"[^>]*href="https:\/\/chat\.whatsapp\.com/.test(html), false,
+    "the WhatsApp entry must NOT be duplicated as a Quick Access shortcut");
+  assert.match(html, /<a class="communityNav" id="communityNav" href="https:\/\/chat\.whatsapp\.com\/H8Dn5NK3OxZC2nYlekvBDt"[^>]*hidden/,
+    "the permanent sidebar Community link must exist but stay hidden until the learner joins");
+  assert.equal((html.match(/chat\.whatsapp\.com/g) || []).length, 3,
+    "the WhatsApp URL must live only on the card, the sidebar link and the mobile-menu link constant");
   for (const name of ["index.html", "academy.html", "login.html", "academy-apply.html",
     "academy-checkout.html", "academy-onboarding.html", "academy-payment-success.html"]) {
     const file = path.join(ROOT, name);
