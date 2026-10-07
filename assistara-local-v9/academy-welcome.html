@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Welcome to Assistara Academy | Assistara</title>
+<link rel="icon" href="/assistara-logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/manrope-lock.css?v=20260922-1">
+<style>
+:root{
+  --ink:#171717;--cream:#f7f5ef;--card:#fff;--yellow:#ffd51f;
+  --line:#e3e0d8;--muted:#716b63;--green:#dff3df;
+  --mustard:#7a6100;--warm-cream:#fff6d9;--warm-border:#ecd98c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Manrope,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+.shell{width:min(820px,calc(100% - 32px));margin:auto;padding:40px 0 60px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;font-size:18px;font-weight:700;margin-bottom:12px}
+.brand img{width:38px;height:38px}
+
+.welcome{background:#fff;border:1px solid var(--line);border-radius:30px;padding:48px 40px;box-shadow:0 22px 65px rgba(0,0,0,.06)}
+@media(max-width:640px){.welcome{padding:36px 24px;border-radius:24px}}
+@media(max-width:420px){.welcome{padding:28px 20px}}
+
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--mustard);text-transform:uppercase;display:inline-flex;align-items:center;gap:8px}
+.eyebrow::before{content:"";width:8px;height:8px;background:var(--yellow);border-radius:50%;flex-shrink:0}
+
+h1{font-size:clamp(40px,7vw,64px);line-height:1.02;letter-spacing:-.045em;margin:16px 0 10px;font-weight:800}
+@media(max-width:640px){h1{font-size:clamp(36px,8vw,52px)}}
+.subhead{font-size:clamp(20px,3.5vw,28px);line-height:1.3;color:var(--muted);margin:0 0 28px;font-weight:500}
+@media(max-width:640px){.subhead{font-size:clamp(18px,3vw,24px)}}
+
+.primary-msg{font-size:17px;line-height:1.7;color:#3d3a34;margin-bottom:36px;max-width:700px}
+.primary-msg strong{color:var(--ink)}
+
+.section{margin-top:36px;padding-top:28px;border-top:1px solid var(--line)}
+.section:first-of-type{border-top:none;margin-top:28px;padding-top:0}
+.section-title{font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--mustard);text-transform:uppercase;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:"";width:6px;height:6px;background:var(--yellow);border-radius:50%;flex-shrink:0}
+
+.section-body{font-size:15px;line-height:1.65;color:#4a4741}
+.section-body p{margin:0 0 12px}
+.section-body p:last-child{margin-bottom:0}
+.section-body strong{color:var(--ink)}
+
+.highlight-box{background:#fff8cf;border:1px solid #eadb82;border-radius:16px;padding:18px 20px;margin:16px 0;font-size:14px;line-height:1.6;color:#4a4741}
+.highlight-box::before{content:"🎥 ";margin-right:6px}
+
+.cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:40px;padding-top:28px;border-top:1px solid var(--line)}
+.btn{border:0;border-radius:999px;padding:16px 28px;font:800 14px Manrope,system-ui;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--yellow);color:#171717}
+.btn-primary:hover{box-shadow:0 8px 24px rgba(255,213,31,.4)}
+.btn-secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn-secondary:hover{background:#f7f5ef;border-color:#cfc9ba}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(247,245,239,.96);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:16px}
+.loading-overlay.hidden{display:none}
+.spinner{width:40px;height:40px;border:3px solid var(--line);border-top-color:var(--yellow);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--muted);font-weight:600}
+
+@media(max-width:640px){
+  .cta-row{flex-direction:column}
+  .btn{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <a class="brand" href="/academy"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></a>
+
+  <main class="welcome" id="welcomeMain" hidden>
+    <div class="eyebrow">FOUNDING COHORT · EARLY ACCESS</div>
+    <h1>You're in 🎉</h1>
+    <p class="subhead">Welcome to Assistara, <span id="firstName" style="font-weight:700">there</span>.</p>
+
+    <div class="primary-msg">
+      You're officially part of our <strong>Founding Cohort</strong>.
+      <br><br>
+      We officially start <strong>October 19, 2026</strong>.
+      <br><br>
+      Until then, you're getting <strong>early access</strong> to the Academy. Feel free to look around, explore what's already available and join the community.
+    </div>
+
+    <section class="section">
+      <div class="section-title">How the Academy works</div>
+      <div class="section-body">
+        <p>We teach the program through <strong>live sessions with the cohort</strong>.</p>
+        <p>After each live session, the recording and content are added to the relevant classes inside the Academy.</p>
+        <p>That means some classes may not have a video yet simply because that live session hasn't happened yet. You can still explore whatever materials are already available.</p>
+        <div class="highlight-box">
+          <strong>Can't make a live session?</strong> No problem. Every session is recorded, so you can catch up afterward.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">Help us build it</div>
+      <div class="section-body">
+        <p>You're one of our first students, and we want your input.</p>
+        <p><strong>Found a bug?</strong><br>Something confusing?<br>Have an idea that would make Assistara better?</p>
+        <p style="margin-top:14px"><strong>Tell us.</strong></p>
+        <p>You're helping shape the Academy that future students will use.</p>
+        <p style="margin-top:14px">If you have a question at any point, ask in the community. We're there to help.</p>
+      </div>
+    </section>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" id="enterBtn" href="#">Enter the Academy →</a>
+      <a class="btn btn-secondary" id="communityBtn" href="https://chat.whatsapp.com/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer">Join the Community</a>
+    </div>
+  </main>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading your welcome...</div>
+  </div>
+
+  <div class="loading-overlay hidden" id="savingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Saving your progress...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+<script>
+(() => {
+  const API = 'https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/';
+  const KEY = 'sb_publishable_-hXhNTcQ7T2yW0SgVAXSrg_2FaPui1E';
+  const SITE = 'https://www.getassistara.com';
+
+  const $ = id => document.getElementById(id);
+  const welcomeMain = $('welcomeMain');
+  const loadingOverlay = $('loadingOverlay');
+  const savingOverlay = $('savingOverlay');
+  const enterBtn = $('enterBtn');
+  const firstNameEl = $('firstName');
+
+  const params = new URLSearchParams(location.search);
+  const token = params.get('token') || '';
+  const urlToken = token; // keep for redirect
+
+  async function loadStudentName() {
+    if (!token) return;
+    try {
+      const res = await fetch(API + 'enrollment-invitation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+        body: JSON.stringify({ token })
+      });
+      const data = await res.json();
+      if (data.ok && data.name) {
+        const first = data.name.trim().split(/\s+/)[0];
+        firstNameEl.textContent = first;
+      }
+    } catch (e) {
+      // fallback to generic
+    }
+  }
+
+  async function checkWelcomeSeen() {
+    if (!token) return false;
+    try {
+      const res = await fetch(API + 'enrollment-invitation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+        body: JSON.stringify({ token })
+      });
+      const data = await res.json();
+      if (data.ok && data.welcome_seen_at) {
+        return true;
+      }
+    } catch (e) {
+      // if check fails, show welcome anyway
+    }
+    return false;
+  }
+
+  async function markWelcomeSeen() {
+    if (!token) return;
+    savingOverlay.classList.remove('hidden');
+    try {
+      await fetch(API + 'mark-welcome-seen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+        body: JSON.stringify({ token })
+      });
+    } catch (e) {
+      // if marking fails, still proceed to dashboard
+    } finally {
+      savingOverlay.classList.add('hidden');
+    }
+  }
+
+  enterBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    enterBtn.disabled = true;
+    enterBtn.textContent = 'Opening...';
+    await markWelcomeSeen();
+    window.location.href = '/academy/dashboard' + (urlToken ? '?token=' + encodeURIComponent(urlToken) : '');
+  });
+
+  async function init() {
+    if (!token) {
+      loadingOverlay.querySelector('.loading-text').textContent = 'Invalid welcome link. Please use your enrollment link.';
+      return;
+    }
+
+    const alreadySeen = await checkWelcomeSeen();
+    if (alreadySeen) {
+      window.location.href = '/academy/dashboard?token=' + encodeURIComponent(token);
+      return;
+    }
+
+    await loadStudentName();
+    loadingOverlay.classList.add('hidden');
+    welcomeMain.hidden = false;
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
