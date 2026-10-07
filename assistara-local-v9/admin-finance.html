@@ -292,6 +292,25 @@
         border-radius: 999px;
         white-space: nowrap;
       }
+      .fxRateDisplay {
+        grid-column: 1 / -1;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        padding: 8px 12px;
+        background: #faf9f5;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .fxRateDisplay .auto {
+        color: var(--greenInk);
+      }
+      .fxRateDisplay .manual {
+        color: var(--orangeInk);
+      }
+      .fxRateDisplay .error {
+        color: var(--redInk);
+      }
       .primary {
         border: 0;
         background: var(--yellow);
@@ -745,8 +764,9 @@
         stripe: "Card",
         paymongo_qrph: "QR Ph",
       };
-      const CURRENCY_SYMBOL = { PHP: "₱", USD: "$" };
+      const CURRENCY_SYMBOL = { PHP: "₱", USD: "$", EUR: "€" };
       const DEFAULT_USD_RATE = 56;
+      const DEFAULT_EUR_RATE = 60;
 
       const token = sessionStorage.getItem("assistara_admin_token") || "";
       if (!token) location.href = "/admin";
@@ -1272,13 +1292,12 @@
           `<div class="stat"><b>${num(recurringCount)}</b><span>Recurring schedules</span><span class="statSub">Materialised per month automatically</span></div>` +
           `<div class="stat"><b>${num(expenses.filter((e) => e.link_id).length)}</b><span>Campaign-linked</span><span class="statSub">Included in marketing spend</span></div></div>` +
           `<div class="tool">${expenseFormHtml()}</div>` +
-          `<div class="toolbar"><h2 style="margin:0;font-size:18px">All expenses</h2><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="expenseSearch" class="search" placeholder="Search vendor, category, reference…" value="${esc(searchQ)}" /><button class="primary" id="addExpense">+ Add expense</button></div></div>` +
+          `<div class="toolbar"><h2 style="margin:0;font-size:18px">All expenses</h2><input id="expenseSearch" class="search" placeholder="Search vendor, category, reference…" value="${esc(searchQ)}" /></div>` +
           `<div class="expenseList" id="expenseList"></div>`;
         $("expenseSearch")?.addEventListener("input", () => {
           searchQ = $("expenseSearch").value;
           paintExpenseList();
         });
-        $("addExpense")?.addEventListener("click", () => openForm());
         paintExpenseList();
         wireForm();
       }
@@ -1308,7 +1327,8 @@
       }
       function expenseRowHtml(e) {
         const link = links.find((l) => String(l.id) === String(e.link_id || ""));
-        const orig = `${CURRENCY_SYMBOL[e.currency] || ""}${num(e.amount)} ${e.currency === "USD" ? "USD" : ""}`.trim();
+        const currencyLabel = e.currency === "PHP" ? "" : ` ${e.currency}`;
+        const orig = `${CURRENCY_SYMBOL[e.currency] || ""}${num(e.amount)}${currencyLabel}`.trim();
         const badges =
           (e.recurring ? `<span class="badge recurring">↻ ${esc(FREQ_LABEL[e.recurrence_frequency] || "Recurring")}${e.ends_on ? " · until " + esc(new Date(e.ends_on + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })) : ""}</span>` : "") +
           (link && e.link_id ? `<span class="badge source">Marketing · ${esc(sourceLabelOfLink(link))}</span>` : e.link_id ? `<span class="badge source">Marketing · deleted campaign</span>` : "");
@@ -1324,8 +1344,10 @@
         return `<div class="formHead"><div><h2 id="formTitle">Add expense</h2><div class="toolSub">Original amount and currency are stored exactly as entered; totals are converted to ₱ PHP for reporting.</div></div><button class="ghost" id="formCancel" type="button" style="display:none">Cancel</button></div>
           <div class="form" id="expenseForm">
             <label class="field"><span>Amount</span><input id="f-amount" type="number" min="0" step="0.01" required /></label>
-            <label class="field"><span>Currency</span><select id="f-currency"><option value="PHP">PHP (₱)</option><option value="USD">USD ($)</option></select></label>
-            <label class="field" id="fxWrap" style="display:none"><span>PHP per 1 USD <span class="hint">(rate at entry)</span></span><input id="f-fx" type="number" min="0.000001" step="0.000001" value="${DEFAULT_USD_RATE}" /></label>
+            <label class="field"><span>Currency</span><select id="f-currency"><option value="PHP">PHP (₱)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option></select></label>
+            <label class="field" id="fxWrap" style="display:none"><span>PHP per 1 <span id="fxCurrencyLabel">USD</span> <span class="hint" id="fxHint">(automatic from Frankfurter)</span></span><input id="f-fx" type="number" min="0.000001" step="0.000001" /></label>
+            <div id="fxRateDisplay" class="fxRateDisplay" style="display:none"></div>
+            <label class="field" id="fxManualWrap" style="display:none"><span>Use custom exchange rate <span class="hint">(override automatic rate)</span></span><input id="f-fx-manual" type="number" min="0.000001" step="0.000001" placeholder="Enter custom rate" /></label>
             <label class="field"><span>Date</span><input id="f-date" type="date" required /></label>
             <label class="field"><span>Category</span><select id="f-category">${CATEGORIES.map((c) => `<option>${esc(c)}</option>`).join("")}</select></label>
             <label class="field" id="otherWrap" style="display:none"><span>Custom category</span><input id="f-other" maxlength="80" placeholder="e.g. Freelance tools" /></label>
@@ -1346,7 +1368,7 @@
         $("formCancel").style.display = "";
         $("f-amount").value = expense ? expense.amount : "";
         $("f-currency").value = expense?.currency || "PHP";
-        $("f-fx").value = expense ? expense.fx_rate_php || "" : DEFAULT_USD_RATE;
+        $("f-fx").value = expense ? expense.fx_rate_php || "" : "";
         $("f-date").value = expense?.expense_date || new Date().toISOString().slice(0, 10);
         setCategorySelect(expense?.category || "Advertising");
         $("f-vendor").value = expense?.vendor || "";
@@ -1364,8 +1386,39 @@
         }
         $("f-receipt").value = expense?.receipt_reference || "";
         syncFxVisibility();
+        // If editing an existing expense with a stored rate, show it as manual/custom
+        if (expense && (expense.currency === "USD" || expense.currency === "EUR")) {
+          const display = $("fxRateDisplay");
+          const currencySymbol = CURRENCY_SYMBOL[expense.currency];
+          const phpSymbol = CURRENCY_SYMBOL.PHP;
+          const rate = expense.fx_rate_php;
+          const amountPhp = Math.round(expense.amount * rate * 100) / 100;
+          display.innerHTML = `<span class="manual">Custom rate used: 1 ${currencySymbol}1 = ${phpSymbol}${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} · ${currencySymbol}${expense.amount.toLocaleString()} = ${phpSymbol}${amountPhp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+          display.className = "fxRateDisplay";
+        }
         $("expenseForm").scrollIntoView({ behavior: "smooth", block: "start" });
         $("f-amount").focus();
+      }
+
+      function resetForm() {
+        editingId = null;
+        $("formTitle").textContent = "Add expense";
+        $("formCancel").style.display = "none";
+        $("f-amount").value = "";
+        $("f-currency").value = "PHP";
+        $("f-fx").value = "";
+        $("f-date").value = new Date().toISOString().slice(0, 10);
+        setCategorySelect("Advertising");
+        $("f-vendor").value = "";
+        $("f-description").value = "";
+        $("f-recurring").value = "no";
+        $("f-frequency").value = "monthly";
+        $("f-ends").value = "";
+        $("f-link").value = "";
+        $("f-receipt").value = "";
+        $("fxRateDisplay").innerHTML = "";
+        $("fxRateDisplay").className = "fxRateDisplay";
+        syncFxVisibility();
       }
       function setCategorySelect(cat) {
         const known = CATEGORIES.includes(cat);
@@ -1374,15 +1427,67 @@
         $("otherWrap").style.display = cat === "Other" || !known ? "" : "none";
       }
       function syncFxVisibility() {
-        const usd = $("f-currency").value === "USD";
-        $("fxWrap").style.display = usd ? "" : "none";
+        const currency = $("f-currency").value;
+        const isForeign = currency === "USD" || currency === "EUR";
         const recurring = $("f-recurring").value === "yes";
+        $("fxWrap").style.display = isForeign ? "" : "none";
+        $("fxManualWrap").style.display = isForeign ? "" : "none";
+        $("fxRateDisplay").style.display = isForeign ? "" : "none";
         $("freqWrap").style.display = recurring ? "" : "none";
         $("stopWrap").style.display = recurring ? "" : "none";
         $("recNote").style.display = recurring ? "" : "none";
+
+        // Update currency label in FX field
+        const label = currency === "EUR" ? "EUR" : "USD";
+        $("fxCurrencyLabel").textContent = label;
+        // Update placeholder for manual override
+        const placeholderRate = currency === "EUR" ? DEFAULT_EUR_RATE : DEFAULT_USD_RATE;
+        $("f-fx-manual").placeholder = `Enter custom rate (e.g. ${placeholderRate})`;
+
+        // Clear any previous rate display when currency changes
+        if (isForeign) {
+          fetchAutoFxRate();
+        } else {
+          $("fxRateDisplay").innerHTML = "";
+          $("f-fx").value = "";
+        }
+      }
+
+      async function fetchAutoFxRate() {
+        const currency = $("f-currency").value;
+        const date = $("f-date").value;
+        if (!currency || !date || currency === "PHP") return;
+
+        const display = $("fxRateDisplay");
+        display.innerHTML = `<span class="hint">Fetching automatic rate from Frankfurter…</span>`;
+        display.className = "fxRateDisplay";
+
+        try {
+          const res = await req(FIN, "fx", { currency, date });
+          if (res.ok && res.fx_rate_php) {
+            const rate = res.fx_rate_php;
+            const amount = Number($("f-amount").value) || 0;
+            const amountPhp = amount > 0 ? Math.round(amount * rate * 100) / 100 : 0;
+            const currencySymbol = CURRENCY_SYMBOL[currency];
+            const phpSymbol = CURRENCY_SYMBOL.PHP;
+            display.innerHTML = `<span class="auto">Automatic rate: 1 ${currencySymbol}1 = ${phpSymbol}${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` +
+              (amount > 0 ? ` · ${currencySymbol}${amount.toLocaleString()} ≈ ${phpSymbol}${amountPhp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "") +
+              ` <span class="hint">(Frankfurter, ${date})</span></span>`;
+            // Store the auto rate in the hidden input for form submission
+            $("f-fx").value = String(rate);
+          } else {
+            display.innerHTML = `<span class="error">Could not fetch automatic rate: ${res.error || "unknown error"}. You can enter a custom rate below.</span>`;
+            $("f-fx").value = "";
+          }
+        } catch (e) {
+          display.innerHTML = `<span class="error">Failed to fetch rate: ${e.message}. You can enter a custom rate below.</span>`;
+          $("f-fx").value = "";
+        }
       }
       function wireForm() {
         $("f-currency").addEventListener("change", syncFxVisibility);
+        $("f-date").addEventListener("change", () => { const currency = $("f-currency").value; if (currency === "USD" || currency === "EUR") fetchAutoFxRate(); });
+        $("f-amount").addEventListener("input", () => { const currency = $("f-currency").value; if (currency === "USD" || currency === "EUR") fetchAutoFxRate(); });
         $("f-recurring").addEventListener("change", syncFxVisibility);
         $("f-category").addEventListener("change", () => {
           const other = $("f-category").value === "Other";
@@ -1392,6 +1497,7 @@
         $("formCancel").addEventListener("click", () => {
           editingId = null;
           $("formCancel").style.display = "none";
+          resetForm();
           $("expenseForm").scrollIntoView({ behavior: "smooth", block: "start" });
         });
         $("f-save").addEventListener("click", saveExpense);
@@ -1400,9 +1506,25 @@
         const amount = Number($("f-amount").value);
         if (!Number.isFinite(amount) || amount < 0) throw Error("Enter a valid amount.");
         const currency = $("f-currency").value;
-        if (!["PHP", "USD"].includes(currency)) throw Error("Choose a currency.");
-        let fx = currency === "PHP" ? 1 : Number($("f-fx").value);
-        if (!Number.isFinite(fx) || fx <= 0) throw Error("Enter a valid PHP exchange rate.");
+        if (!["PHP", "USD", "EUR"].includes(currency)) throw Error("Choose a currency.");
+
+        // Determine the FX rate: manual override takes precedence, then auto-fetched (in f-fx), then error
+        let fx = 1;
+        if (currency !== "PHP") {
+          const manualOverride = Number($("f-fx-manual").value);
+          if (Number.isFinite(manualOverride) && manualOverride > 0) {
+            fx = manualOverride;
+          } else {
+            const autoRate = Number($("f-fx").value);
+            if (Number.isFinite(autoRate) && autoRate > 0) {
+              fx = autoRate;
+            } else {
+              throw Error(`Enter a custom exchange rate for ${currency} or wait for automatic rate to load.`);
+            }
+          }
+          if (!Number.isFinite(fx) || fx <= 0 || fx > 100000) throw Error("Enter a valid PHP exchange rate.");
+        }
+
         const recurring = $("f-recurring").value === "yes";
         const category = $("f-category").value === "Other" ? ($("f-other").value || "Other").trim() : $("f-category").value;
         if (!category) throw Error("Choose a category.");
@@ -1443,6 +1565,7 @@
           }
           editingId = null;
           $("formCancel").style.display = "none";
+          resetForm();
           await loadAll(true);
         } catch (e) {
           alert(e.message);

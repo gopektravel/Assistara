@@ -6,6 +6,7 @@
 //   { action: "create", expense: {...} }              -> insert, return row
 //   { action: "update", id, expense: {...} }          -> update, return row
 //   { action: "delete", id }                          -> delete
+//   { action: "fx", currency, date }                  -> fetch PHP rate for currency on date
 //
 // The expense object mirrors public.finance_expenses. The server always
 // recomputes the normalised `amount_php` from `amount`, `currency` and
@@ -65,8 +66,37 @@ async function verifyToken(token: string) {
   }
 }
 
-const CURRENCIES = ["PHP", "USD"];
+const CURRENCIES = ["PHP", "USD", "EUR"];
 const FREQUENCIES = ["monthly", "quarterly", "yearly"];
+
+// Frankfurter API base URL (no API key required)
+const FRANKFURTER_BASE = "https://api.frankfurter.dev/v1";
+
+// In-memory cache for FX rates to avoid repeated calls during a single request
+const fxCache = new Map<string, number>();
+
+async function fetchFxRate(currency: string, date: string): Promise<number | null> {
+  if (currency === "PHP") return 1;
+  const cacheKey = `${currency}:${date}`;
+  if (fxCache.has(cacheKey)) return fxCache.get(cacheKey)!;
+
+  try {
+    // Frankfurter uses date in URL: /v1/2026-09-15?from=EUR&to=PHP
+    // It automatically handles weekends/holidays by returning the latest available rate
+    const url = `${FRANKFURTER_BASE}/${date}?from=${currency}&to=PHP`;
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const rate = data.rates?.PHP;
+    if (typeof rate === "number" && rate > 0) {
+      fxCache.set(cacheKey, rate);
+      return rate;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 function clean(value: unknown, max: number): string {
   return String(value ?? "").trim().slice(0, max);
@@ -79,13 +109,13 @@ function validateExpense(raw: any): { ok: true; value: Record<string, unknown> }
   }
   const currency = clean(raw?.currency, 10).toUpperCase();
   if (!CURRENCIES.includes(currency)) {
-    return { ok: false, error: "Currency must be PHP or USD." };
+    return { ok: false, error: "Currency must be PHP, USD, or EUR." };
   }
-  let fxRate = currency === "PHP" ? 1 : Number(raw?.fx_rate_php ?? 0);
-  if (!Number.isFinite(fxRate) || fxRate <= 0 || fxRate > 100000) {
-    return { ok: false, error: "Enter a valid PHP exchange rate for USD." };
-  }
-  const amountPhp = Math.round(amount * fxRate * 100) / 100;
+
+  // fx_rate_php: server-authoritative. If client provides a manual override, validate it.
+  // Otherwise, we will fetch the rate server-side (for create/update without manual override).
+  let fxRate = Number(raw?.fx_rate_php ?? 0);
+  const hasManualOverride = Number.isFinite(fxRate) && fxRate > 0;
 
   const dateRaw = clean(raw?.expense_date, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateRaw) || Number.isNaN(Date.parse(dateRaw + "T00:00:00Z"))) {
@@ -101,9 +131,7 @@ function validateExpense(raw: any): { ok: true; value: Record<string, unknown> }
     return { ok: false, error: "Choose a recurrence frequency for the recurring expense." };
   }
 
-  // Optional end date for a recurring schedule ("stop" / "cancel"). Once the
-  // end date passes, no further occurrences are materialised, so cancelling
-  // never requires re-entering history.
+  // Optional end date for a recurring schedule ("stop" / "cancel").
   let endsOn: string | null = null;
   const endsRaw = clean(raw?.ends_on, 10) || null;
   if (endsRaw) {
@@ -113,6 +141,22 @@ function validateExpense(raw: any): { ok: true; value: Record<string, unknown> }
     if (endsRaw < dateRaw) return { ok: false, error: "The end date must be on or after the expense date." };
     endsOn = endsRaw;
   }
+
+  // If no manual override provided, fetch the rate server-side
+  if (!hasManualOverride) {
+    const fetched = await fetchFxRate(currency, dateRaw);
+    if (fetched === null) {
+      return { ok: false, error: `Could not retrieve automatic ${currency}→PHP rate for ${dateRaw}. Please enter a custom exchange rate.` };
+    }
+    fxRate = fetched;
+  } else {
+    // Manual override provided - validate it
+    if (!Number.isFinite(fxRate) || fxRate <= 0 || fxRate > 100000) {
+      return { ok: false, error: "Enter a valid PHP exchange rate." };
+    }
+  }
+
+  const amountPhp = Math.round(amount * fxRate * 100) / 100;
 
   return {
     ok: true,
@@ -158,8 +202,26 @@ Deno.serve(async (req: Request) => {
     return out({ ok: true, expenses: data || [] }, 200, origin);
   }
 
+  if (action === "fx") {
+    // Fetch FX rate for a given currency and date
+    // Body: { currency: "USD" | "EUR", date: "2026-09-15" }
+    const currency = String(body.currency || "").toUpperCase();
+    const date = String(body.date || "");
+    if (!["USD", "EUR"].includes(currency)) {
+      return out({ ok: false, error: "Currency must be USD or EUR." }, 400, origin);
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date + "T00:00:00Z"))) {
+      return out({ ok: false, error: "Enter a valid date." }, 400, origin);
+    }
+    const rate = await fetchFxRate(currency, date);
+    if (rate === null) {
+      return out({ ok: false, error: `Could not retrieve ${currency}→PHP rate for ${date}.` }, 400, origin);
+    }
+    return out({ ok: true, fx_rate_php: rate, source: "frankfurter" }, 200, origin);
+  }
+
   if (action === "create") {
-    const check = validateExpense(body.expense);
+    const check = await validateExpense(body.expense);
     if (!check.ok) return out({ ok: false, error: check.error }, 400, origin);
     const { data, error } = await db
       .from("finance_expenses")
@@ -173,7 +235,7 @@ Deno.serve(async (req: Request) => {
   if (action === "update") {
     const id = clean(body.id, 64);
     if (!/^[A-Za-z0-9-]{1,64}$/.test(id)) return out({ ok: false, error: "Invalid expense id." }, 400, origin);
-    const check = validateExpense(body.expense);
+    const check = await validateExpense(body.expense);
     if (!check.ok) return out({ ok: false, error: check.error }, 400, origin);
     const { data, error } = await db
       .from("finance_expenses")
