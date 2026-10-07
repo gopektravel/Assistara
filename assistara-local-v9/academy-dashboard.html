@@ -1816,28 +1816,6 @@
 <div id="app" class="app" hidden><aside class="side"><div class="brand"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Academy</span></div><nav class="nav" id="desktopNav"></nav><a class="communityNav" id="communityNav" href="https://chat.whatsapp.com/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer" hidden>Community<span style="font-size:12px" aria-hidden="true">&nbsp;↗</span></a><div class="sidefoot"><div id="profile" class="profile"></div><button class="logout" id="logout">← Log out</button></div></aside>
 <main class="main"><div class="mobileTop" id="mobileTop"><strong><img src="/assistara-logo.svg" alt="Assistara">Assistara Academy</strong><span>Menu</span></div><nav class="nav mobileNav" id="mobileNav"></nav>
 <section id="home" class="page active">
-  <!-- Pre-launch early-access banner (shows before Oct 19) -->
-  <div class="earlyAccessBanner" id="earlyAccessBanner" hidden>
-    <div class="earlyAccessContent">
-      <div class="earlyAccessMain">
-        <div class="eyebrow">FOUNDING COHORT · EARLY ACCESS</div>
-        <div class="earlyAccessHeadline">We officially start <strong>October 19, 2026</strong> 🚀</div>
-        <p class="earlyAccessDesc">You're in early. Explore what's already available, meet the community and get comfortable before we officially begin.</p>
-      </div>
-      <div class="earlyAccessNote">
-        <span aria-hidden="true">🎥</span>
-        <div>
-          <strong>Videos are added after the relevant live sessions.</strong>
-          Can't attend live? No worries. Every session is recorded.
-        </div>
-      </div>
-      <div class="earlyAccessCtas">
-        <button class="btn btn-outline" data-open="course">Explore Academy →</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('communityCard').scrollIntoView({behavior:'smooth'});">Join Community →</button>
-      </div>
-    </div>
-  </div>
-
     <div class="hero">
       <div>
         <div class="eyebrow">STUDENT DASHBOARD</div>
@@ -1847,15 +1825,6 @@
       <span class="pill">Founding Cohort</span>
     </div>
     <div id="previewControls"></div>
-
-    <!-- Next Live Session placeholder -->
-    <div class="nextSession" id="nextSession">
-      <div class="nextSessionCard">
-        <div class="eyebrow">NEXT SESSION</div>
-        <h2>Founding Cohort Kickoff</h2>
-        <p class="muted">Schedule will be announced soon.</p>
-      </div>
-    </div>
 
     <div class="dashboardGrid">
       <div id="continueCard" class="card dark"></div>
@@ -1891,15 +1860,13 @@
       <button type="button" class="shortcutCard" data-open="sessions"><span class="shortcutIcon" aria-hidden="true">📚</span><span class="shortcutText"><strong>Live Sessions</strong><small id="quickAccessSessions">View upcoming sessions</small></span><span class="shortcutGo" aria-hidden="true">→</span></button>
     </div>
 
-    <!-- Ideas & Feedback section -->
-    <div class="sectionTitle"><h2>Ideas & Feedback</h2></div>
-    <div class="feedbackCard" id="feedbackCard">
-      <div class="feedbackContent">
-        <div class="eyebrow">IDEAS & FEEDBACK</div>
-        <h3>Help us build Assistara with you</h3>
-        <p>Found a bug, something confusing, or have an idea that would make the Academy better? Drop it here. We read everything. 💛</p>
+    <!-- Next Live Session placeholder -->
+    <div class="nextSession" id="nextSession">
+      <div class="nextSessionCard">
+        <div class="eyebrow">NEXT SESSION</div>
+        <h2>Founding Cohort Kickoff</h2>
+        <p class="muted">Schedule will be announced soon.</p>
       </div>
-      <button class="btn btn-outline" id="feedbackCta" onclick="document.getElementById('communityCard').scrollIntoView({behavior:'smooth'});">💡 Got an idea or found something weird? Tell us →</button>
     </div>
 
     <div class="sectionTitle"><h2>Phase journey</h2><span class="pill">Your path</span></div>
@@ -3923,9 +3890,10 @@ try{
 }catch(e){}
 await loadProgress();await loadCommunityState();if(preview){let ps=document.getElementById("previewState");ps.value=localStorage.getItem("assistara_preview_state")||"new";ps.onchange=()=>{previewState(ps.value);updateProgress()}}updateProgress();updateCommunityUI();wireCommunity()
 
-// Show/hide early-access banner based on date (Philippines timezone = UTC+8)
-function updateEarlyAccessBanner(){const banner=document.getElementById("earlyAccessBanner");if(!banner)return;const now=new Date();const phTime=new Date(now.toLocaleString("en-US",{timeZone:"Asia/Manila"}));const launch=new Date("2026-10-19T00:00:00+08:00");const isPreLaunch=phTime<launch;if(isPreLaunch){banner.hidden=false}else{banner.hidden=true;const hero=document.querySelector("#home .hero");if(hero){const pill=hero.querySelector(".pill");if(pill)pill.textContent="Founding Cohort"};const nextLive=document.getElementById("nextSession");if(nextLive)nextLive.style.display="none"}}
-updateEarlyAccessBanner()
+// The Next Live Session placeholder applies before launch only (Philippines
+// timezone = UTC+8). After October 19 it is hidden; the Academy keeps working.
+function applyLaunchState(){const now=new Date();const phTime=new Date(now.toLocaleString("en-US",{timeZone:"Asia/Manila"}));const launch=new Date("2026-10-19T00:00:00+08:00");const nextLive=document.getElementById("nextSession");if(nextLive&&phTime>=launch)nextLive.style.display="none"}
+applyLaunchState()
 
 updateProgress();updateCommunityUI();wireCommunity();document.getElementById("app").hidden=false;document.getElementById("loading").style.display="none";scrollAcademyTop();
 }
