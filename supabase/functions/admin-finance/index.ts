@@ -102,7 +102,7 @@ function clean(value: unknown, max: number): string {
   return String(value ?? "").trim().slice(0, max);
 }
 
-function validateExpense(raw: any): { ok: true; value: Record<string, unknown> } | { ok: false; error: string } {
+async function validateExpense(raw: any): Promise<{ ok: true; value: Record<string, unknown> } | { ok: false; error: string }> {
   const amount = Number(raw?.amount);
   if (!Number.isFinite(amount) || amount < 0 || amount > 1e9) {
     return { ok: false, error: "Enter a valid amount." };
