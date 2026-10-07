@@ -289,3 +289,37 @@ test("the curriculum, Quick Check bank, exam bank and skills count stay at relea
   const skills = count(source, "const skills=[");
   assert.equal(skills, 1, "exactly one skills array must exist");
 });
+
+// ---------------------------------------------------------------------------
+// Founding Cohort WhatsApp community
+// ---------------------------------------------------------------------------
+test("the Founding Cohort WhatsApp shortcut is inside the dashboard only", () => {
+  // Enrolled students get one native Quick Access card that opens the private
+  // Founding Cohort community in a new tab. The invite link must never appear
+  // on the public Academy landing / application pages.
+  const WA = "https://chat.whatsapp.com/H8Dn5NK3OxZC2nYlekvBDt";
+  assert.match(html,
+    /<a class="shortcutCard" href="https:\/\/chat\.whatsapp\.com\/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer"/,
+    "the Founding Cohort WhatsApp card must live in the dashboard Quick Access");
+  assert.match(html, /aria-label="Join the Founding Cohort WhatsApp community"/,
+    "the WhatsApp card must carry an accessible label");
+  for (const name of ["index.html", "academy.html", "login.html", "academy-apply.html",
+    "academy-checkout.html", "academy-onboarding.html", "academy-payment-success.html"]) {
+    const file = path.join(ROOT, name);
+    if (!fs.existsSync(file)) continue;
+    assert.equal(fs.readFileSync(file, "utf8").includes(WA), false,
+      "the WhatsApp invite must not appear on the public page " + name);
+  }
+});
+
+test("the mobile nav dropdown is the compact, viewport-anchored production shape", () => {
+  // The approved mobile menu is a compact fixed dropdown under the top bar.
+  // A near-full-width in-flow panel (the old `position:absolute` full-width
+  // state) pushed navigation off-screen when the page was scrolled and was
+  // rejected.
+  assert.match(htmlNoComments,
+    /\.mobileNav\.open\{display:grid;position:fixed;z-index:80;top:76px;right:var\(--mobile-gutter\);width:min\(300px,calc\(100vw - 48px\)\)/,
+    "the open mobile menu must be a compact fixed dropdown");
+  assert.equal(/\.mobileNav\.open\{display:grid;position:absolute;left:var\(--mobile-gutter\);right:var\(--mobile-gutter\);top:70px/.test(htmlNoComments),
+    false, "the rejected full-width absolute mobile menu must not ship");
+});

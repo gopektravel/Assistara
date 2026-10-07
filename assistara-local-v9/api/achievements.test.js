@@ -586,17 +586,19 @@ test("Home Recent Achievement stays compact — one row, not a dashboard section
 // 5. Home Quick Access
 // ---------------------------------------------------------------------------
 
-test("Home carries a compact Quick Access row with Resources and Live Sessions", () => {
+test("Home carries a compact Quick Access row with Resources, Live Sessions and Founding Cohort", () => {
   const home = html.slice(html.indexOf('<section id="home"'), html.indexOf('<section id="course"'));
   assert.match(home, /<h2>Quick access<\/h2>/, "Home must have a Quick access section");
   assert.match(home, /class="shortcutCard" data-open="resources"/, "a Resources shortcut");
   assert.match(home, /class="shortcutCard" data-open="sessions"/, "a Live Sessions shortcut");
-  assert.equal((home.match(/class="shortcutCard"/g) || []).length, 2,
-    "exactly two shortcut cards — no giant quick-action wall");
+  assert.match(home, /<a class="shortcutCard" href="https:\/\/chat\.whatsapp\.com\/H8Dn5NK3OxZC2nYlekvBDt" target="_blank" rel="noopener noreferrer"/,
+    "a Founding Cohort WhatsApp shortcut");
+  assert.equal((home.match(/class="shortcutCard"/g) || []).length, 3,
+    "exactly three shortcut cards — no giant quick-action wall");
 
   const icons = [...home.matchAll(/shortcutIcon" aria-hidden="true">([^<]+)</g)].map((m) => m[1]);
-  assert.equal(icons.length, 2);
-  assert.equal(new Set(icons).size, 2, "each shortcut needs its own clear icon");
+  assert.equal(icons.length, 3);
+  assert.equal(new Set(icons).size, 3, "each shortcut needs its own clear icon");
 
   // Compact, side-by-side on desktop; a single column only on a phone.
   assert.match(htmlNoComments, /\.shortcutCard\{[^}]*padding:11px 13px/,
