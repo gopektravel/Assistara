@@ -98,6 +98,35 @@
         color: var(--muted);
         margin-top: 5px;
       }
+      .currencySwitch {
+        display: inline-flex;
+        gap: 2px;
+        padding: 3px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+      }
+      .currencySwitch button {
+        border: 0;
+        background: none;
+        border-radius: 999px;
+        padding: 8px 15px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--muted);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .currencySwitch button:not(.active):hover {
+        background: #f1eee5;
+        color: var(--ink);
+      }
+      .currencySwitch button.active {
+        background: #171717;
+        color: #fff;
+      }
       .fnav {
         margin: 16px 0 12px;
         background: #fff;
@@ -697,9 +726,14 @@
         <div>
           <h1>Finance</h1>
           <div class="sub">
-            Revenue, expenses and marketing ROI. Totals are kept in PHP (₱) so they
-            compare directly with Academy tuition.
+            Revenue, expenses and marketing ROI. Amounts are stored in PHP (₱); switch the
+            display currency to view them in PHP, USD or EUR.
           </div>
+        </div>
+        <div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency">
+          <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
+          <button type="button" data-cur="USD" aria-pressed="false">USD</button>
+          <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
         </div>
       </div>
 
@@ -767,6 +801,29 @@
       const CURRENCY_SYMBOL = { PHP: "₱", USD: "$", EUR: "€" };
       const DEFAULT_USD_RATE = 56;
       const DEFAULT_EUR_RATE = 60;
+
+      /* ---------------------------------------------------------------- *
+       * Display currency (client-only preference)
+       *
+       * Every stored financial value is canonical PHP (amount_php /
+       * purchase_amount / checkout_amount_php). The switcher only changes
+       * how those PHP values are DISPLAYED: money() divides the canonical
+       * PHP value by the current FX rate each time, so switching
+       * PHP -> EUR -> USD -> PHP always returns to the original PHP amount
+       * with no drift. Rates come from the finance backend's Frankfurter
+       * source, never hardcoded.
+       * ---------------------------------------------------------------- */
+      const DISPLAY_CURRENCIES = ["PHP", "USD", "EUR"];
+      const DISPLAY_KEY = "assistara_finance_display_currency";
+      const displayRates = { PHP: 1 }; // PHP per 1 unit of the display currency
+      let displayCurrency = (() => {
+        try {
+          const saved = localStorage.getItem(DISPLAY_KEY);
+          return DISPLAY_CURRENCIES.includes(saved) ? saved : "PHP";
+        } catch {
+          return "PHP";
+        }
+      })();
 
       const token = sessionStorage.getItem("assistara_admin_token") || "";
       if (!token) location.href = "/admin";
@@ -839,6 +896,19 @@
       function dayUTC(s) {
         const [y, m, d] = String(s).split("-").map(Number);
         return Date.UTC(y, m - 1, d);
+      }
+      /* Today's calendar date in the browser's LOCAL timezone. Never uses
+       * toISOString() (UTC), which can show yesterday/tomorrow in the
+       * Philippines around midnight. */
+      function todayLocalISO() {
+        const d = new Date();
+        return (
+          d.getFullYear() +
+          "-" +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(d.getDate()).padStart(2, "0")
+        );
       }
       function labelForRange(r) {
         if (!r.start) return "All time";
@@ -938,11 +1008,26 @@
        * ---------------------------------------------------------------- */
       function money(n) {
         if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
-        const v = Number(n);
+        // `n` is always canonical PHP. Convert for display only.
+        const php = Number(n);
+        const cur = displayCurrency;
+        const rate = displayRates[cur];
+        let v = php;
+        let symbol = CURRENCY_SYMBOL[cur] || "";
+        if (cur !== "PHP") {
+          if (Number.isFinite(rate) && rate > 0) {
+            v = php / rate;
+          } else {
+            // Rate not loaded yet: never mislabel a PHP value with a foreign
+            // symbol. Show it as PHP until the rate arrives.
+            v = php;
+            symbol = CURRENCY_SYMBOL.PHP;
+          }
+        }
         const s = v % 1 === 0
           ? v.toLocaleString("en-US", { maximumFractionDigits: 0 })
           : v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return "₱" + (v < 0 ? "−" : "") + s.replace("-", "");
+        return symbol + (v < 0 ? "−" : "") + s.replace("-", "");
       }
       function num(n, frac = 2) {
         if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
@@ -1163,7 +1248,7 @@
 
         const stats = [
           [money(revenue), "Total Revenue", "Known paid tuition within range" + (unknownAmountCount ? ` · ${unknownAmountCount} paid without a recorded amount` : "")],
-          [money(totalExpenses), "Total Expenses", "Normalised to PHP, incl. recurring"],
+          [money(totalExpenses), "Total Expenses", "Includes recurring occurrences"],
           [money(net), "Net Profit / Loss", net < 0 ? "Spending exceeds revenue" : "Revenue minus expenses"],
           [money(marketingSpend), "Marketing Spend", "Advertising + expenses tied to a campaign"],
           [num(paid.length), "Paid Students", "Tuition received within range"],
@@ -1341,7 +1426,7 @@
           .sort((a, b) => String(a.destination).localeCompare(String(b.destination)) || String(a.channel).localeCompare(String(b.channel)))
           .map((l) => `<option value="${esc(String(l.id))}">${l.destination === "b2b" ? "B2B · " : "Academy · "}${esc([l.channel, l.placement, l.label].filter(Boolean).join(" → "))} (${esc(String(l.token))})</option>`)
           .join("");
-        return `<div class="formHead"><div><h2 id="formTitle">Add expense</h2><div class="toolSub">Original amount and currency are stored exactly as entered; totals are converted to ₱ PHP for reporting.</div></div><button class="ghost" id="formCancel" type="button" style="display:none">Cancel</button></div>
+        return `<div class="formHead"><div><h2 id="formTitle">Add expense</h2><div class="toolSub">Original amount and currency are stored exactly as entered; reporting converts them to PHP, then to your display currency.</div></div><button class="ghost" id="formCancel" type="button" style="display:none">Cancel</button></div>
           <div class="form" id="expenseForm">
             <label class="field"><span>Amount</span><input id="f-amount" type="number" min="0" step="0.01" required /></label>
             <label class="field"><span>Currency</span><select id="f-currency"><option value="PHP">PHP (₱)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option></select></label>
@@ -1360,7 +1445,7 @@
             <label class="field wide"><span>Marketing source / campaign <span class="hint">(optional — ties into the Acquisition Tracker)</span></span><select id="f-link"><option value="">— Not linked —</option>${linkOptions}</select></label>
             <label class="field wide"><span>Receipt / reference <span class="hint">(optional)</span></span><input id="f-receipt" maxlength="200" /></label>
           </div>
-          <div class="formActions"><button class="primary" id="f-save">Save expense</button><span class="fxNote">Stored in the original currency. Reporting totals always use ₱ PHP.</span></div>`;
+          <div class="formActions"><button class="primary" id="f-save">Save expense</button><span class="fxNote">Stored in the original currency. Reporting converts to PHP, then to your selected display currency.</span></div>`;
       }
       function openForm(expense) {
         editingId = expense?.id || null;
@@ -1369,7 +1454,7 @@
         $("f-amount").value = expense ? expense.amount : "";
         $("f-currency").value = expense?.currency || "PHP";
         $("f-fx").value = expense ? expense.fx_rate_php || "" : "";
-        $("f-date").value = expense?.expense_date || new Date().toISOString().slice(0, 10);
+        $("f-date").value = expense?.expense_date || todayLocalISO();
         setCategorySelect(expense?.category || "Advertising");
         $("f-vendor").value = expense?.vendor || "";
         $("f-description").value = expense?.description || "";
@@ -1407,7 +1492,7 @@
         $("f-amount").value = "";
         $("f-currency").value = "PHP";
         $("f-fx").value = "";
-        $("f-date").value = new Date().toISOString().slice(0, 10);
+        $("f-date").value = todayLocalISO();
         setCategorySelect("Advertising");
         $("f-vendor").value = "";
         $("f-description").value = "";
@@ -1717,6 +1802,47 @@
       }
 
       /* ---------------------------------------------------------------- *
+       * Display-currency switching
+       * ---------------------------------------------------------------- */
+      // Resolve PHP-per-1-unit for a display currency from the finance
+      // backend (Frankfurter). Cached per currency for the session.
+      async function ensureDisplayRate(cur) {
+        if (cur === "PHP") return true;
+        if (Number.isFinite(displayRates[cur]) && displayRates[cur] > 0) return true;
+        try {
+          const res = await req(FIN, "fx", { currency: cur, date: todayLocalISO() });
+          if (res.ok && Number(res.fx_rate_php) > 0) {
+            displayRates[cur] = Number(res.fx_rate_php);
+            return true;
+          }
+        } catch (e) {
+          /* fall through to false */
+        }
+        return false;
+      }
+      function paintCurrencySwitch() {
+        document.querySelectorAll("#currencySwitch button").forEach((b) => {
+          const on = b.dataset.cur === displayCurrency;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      }
+      async function setDisplayCurrency(cur) {
+        if (!DISPLAY_CURRENCIES.includes(cur) || cur === displayCurrency) return;
+        const ready = await ensureDisplayRate(cur);
+        if (!ready) {
+          toast("Could not load the " + cur + " exchange rate.");
+          return;
+        }
+        displayCurrency = cur;
+        try {
+          localStorage.setItem(DISPLAY_KEY, cur);
+        } catch {}
+        paintCurrencySwitch();
+        render();
+      }
+
+      /* ---------------------------------------------------------------- *
        * Top-level render + load
        * ---------------------------------------------------------------- */
       function render() {
@@ -1786,12 +1912,26 @@
       $("rangeStart").addEventListener("change", () => { customStart = $("rangeStart").value; rangeUI(); render(); });
       $("rangeEnd").addEventListener("change", () => { customEnd = $("rangeEnd").value; rangeUI(); render(); });
 
+      document.querySelectorAll("#currencySwitch button").forEach((b) => {
+        b.addEventListener("click", () => { setDisplayCurrency(b.dataset.cur); });
+      });
       window.addEventListener("focus", () => {
         if (!document.hidden) loadAll(true).catch(() => {});
       });
 
       rangeUI();
-      loadAll().catch((e) => alert(e.message));
+      paintCurrencySwitch();
+      (async () => {
+        // Make sure the remembered display currency has a live rate before the
+        // first render, so numbers are never briefly mislabelled.
+        const ready = await ensureDisplayRate(displayCurrency);
+        if (!ready && displayCurrency !== "PHP") {
+          displayCurrency = "PHP";
+          try { localStorage.setItem(DISPLAY_KEY, "PHP"); } catch {}
+          paintCurrencySwitch();
+        }
+        await loadAll().catch((e) => alert(e.message));
+      })();
     </script>
   </body>
 </html>
