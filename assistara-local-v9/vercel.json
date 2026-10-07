@@ -90,6 +90,15 @@
       }
     },
     {
+      "src": "api/academy-tool-votes.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "api/academy-exam.js",
       "use": "@vercel/node",
       "config": {
@@ -386,6 +395,10 @@
     {
       "src": "/api/academy-community",
       "dest": "/api/academy-community.js"
+    },
+    {
+      "src": "/api/academy-tool-votes",
+      "dest": "/api/academy-tool-votes.js"
     },
     {
       "src": "/api/academy-exam",

@@ -579,6 +579,52 @@
  #settings .stack{gap:7px}
  .slideFrameShell{max-height:calc(100dvh - env(safe-area-inset-top))}
 }
+ /* Toolkit page */
+ .toolkit-journey{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px}
+ .toolkit-journey .journey-step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:11px;font-weight:800;letter-spacing:.06em}
+ .toolkit-journey .journey-arrow{color:#b0aa9e;font-size:12px;font-weight:700}
+ .toolkit-section{margin-top:36px}
+ .toolkit-section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+ .toolkit-section-head h2{margin:0;font-size:20px;letter-spacing:-.02em}
+ .toolkit-section-head .section-sub{font-size:13px;color:var(--muted)}
+ .toolkit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+ .tool-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+ .tool-card:hover{transform:translateY(-2px);border-color:#cfc9ba;box-shadow:0 8px 24px rgba(23,23,23,.06)}
+ .tool-card .tool-icon{width:44px;height:44px;border-radius:12px;background:#fff6c9;display:grid;place-items:center;font-size:20px}
+ .tool-card .tool-label{font-size:10px;font-weight:800;letter-spacing:.1em;color:#8b857b;text-transform:uppercase}
+ .tool-card h3{margin:0;font-size:16px;letter-spacing:-.015em;line-height:1.25}
+ .tool-card p{margin:0;font-size:13px;color:var(--muted);line-height:1.5;flex:1}
+ .tool-card .tool-status{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:10px;font-weight:800}
+ .tool-card .tool-status.available{background:#dff3df;color:#285b32}
+ .tool-card .tool-status.roadmap{background:#fff4b8;color:#6d5a00}
+ .tool-card .tool-vote-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font:800 12px Manrope,system-ui;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease;align-self:flex-start}
+ .tool-card .tool-vote-btn:hover{border-color:#171717}
+ .tool-card .tool-vote-btn.voted{background:#fff8cf;border-color:#e4c20e;color:#171717}
+ .tool-card .tool-vote-btn .heart{font-size:13px;line-height:1}
+ .tool-card .tool-vote-count{font-size:11px;font-weight:700;color:var(--muted);margin-left:2px}
+ .tool-card.voted-card{background:#fffdf3;border-color:#e4c20e}
+ .tool-card.featured{grid-column:1/-1;flex-direction:row;align-items:center;gap:20px;padding:24px 28px}
+ .tool-card.featured .tool-icon{width:56px;height:56px;font-size:26px;flex:0 0 auto}
+ .tool-card.featured .featured-body{flex:1;min-width:0}
+ .tool-card.featured h3{font-size:22px}
+ .tool-card.featured p{font-size:14px;max-width:520px}
+ .tool-card.featured .btn{flex:0 0 auto}
+ .tool-card.suggest-card{border-style:dashed;border-width:2px;border-color:#d5cfc2;background:#faf8f2}
+ .tool-card.suggest-card .tool-icon{background:#efe9dd}
+ .tool-card.suggest-card:hover{border-color:#b0aa9e}
+ .tool-card.locked-card{opacity:.6}
+ .tool-card .unlock-tag{font-size:10px;font-weight:800;color:#8b857b;letter-spacing:.06em}
+ .downloads-section{margin-top:36px}
+ .downloads-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+ .download-item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+ .download-item .dl-icon{width:36px;height:36px;border-radius:10px;background:#f4f1e8;display:grid;place-items:center;font-size:16px;flex:0 0 auto}
+ .download-item .dl-body{flex:1;min-width:0}
+ .download-item .dl-body strong{font-size:13px;display:block}
+ .download-item .dl-body small{font-size:11px;color:var(--muted)}
+ .download-item .dl-action{flex:0 0 auto}
+ 
+ @media(max-width:700px){.toolkit-grid{grid-template-columns:1fr}.tool-card.featured{flex-direction:column;align-items:flex-start;padding:20px}.tool-card.featured .btn{align-self:stretch;justify-content:center}.downloads-grid{grid-template-columns:1fr}.toolkit-journey{gap:4px}.toolkit-journey .journey-step{padding:6px 10px;font-size:10px}.tool-card.featured{flex-direction:column;align-items:flex-start;padding:20px}.tool-card.featured .btn{align-self:stretch;justify-content:center}}
+
 @media(max-width:390px){
  #courseView .classCard{grid-template-columns:27px minmax(0,1fr)}
  #courseView .classCard .btn,#courseView .classCard .status{grid-column:2;justify-self:start;margin-top:4px}
@@ -1877,7 +1923,7 @@
     <div id="recentAchievement"></div>
   </section>
 <section id="course" class="page"><div class="hero"><div><div class="eyebrow">MY COURSE</div><h1>Zero to Remote.</h1><p class="lead">Move through the Academy phase by phase, module by module, class by class.</p></div><span class="pill" id="coursePct">0% complete</span></div><div id="courseView"></div></section>
-<section id="skills" class="page"><div class="hero"><div><div class="eyebrow">MY SKILLS</div><h1>Professional skill collection.</h1><p class="lead">Turn dormant capabilities into demonstrated professional skills as you progress.</p></div><span class="pill" id="skillsSummary">0 / 23 unlocked</span></div><div id="skillUnlockMoment"></div><div id="skillsMetrics" class="skillsHeader"></div><div id="skillsList" class="skillGrid"></div><div class="sectionTitle achvAnchor" id="achievementsAnchor"><h2>Achievements</h2><span id="achievementsSummary"></span></div><div id="achievementsList"></div></section><section id="resources" class="page"><div class="hero"><div><div class="eyebrow">RESOURCES</div><h1>Your toolkit.</h1><p class="lead">Academy resources and interactive tools live together here.</p></div></div><div class="stack" id="resourcesList"></div></section>
+<section id="skills" class="page"><div class="hero"><div><div class="eyebrow">MY SKILLS</div><h1>Professional skill collection.</h1><p class="lead">Turn dormant capabilities into demonstrated professional skills as you progress.</p></div><span class="pill" id="skillsSummary">0 / 23 unlocked</span></div><div id="skillUnlockMoment"></div><div id="skillsMetrics" class="skillsHeader"></div><div id="skillsList" class="skillGrid"></div><div class="sectionTitle achvAnchor" id="achievementsAnchor"><h2>Achievements</h2><span id="achievementsSummary"></span></div><div id="achievementsList"></div></section><section id="resources" class="page"><div class="hero"><div><div class="eyebrow">YOUR TOOLKIT</div><h1>Practical tools to land your first client.</h1><p class="lead">Practical tools to help you go from learning → finding clients → getting hired.</p></div></div><div class="toolkit-journey" aria-label="Client journey"><span class="journey-step">FIND</span><span class="journey-arrow">→</span><span class="journey-step">POSITION</span><span class="journey-arrow">→</span><span class="journey-step">PITCH</span><span class="journey-arrow">→</span><span class="journey-step">FOLLOW UP</span><span class="journey-arrow">→</span><span class="journey-step">WIN</span></div><div id="toolkitContent"></div></section>
 <section id="sessions" class="page"><div class="hero"><div><div class="eyebrow">LIVE SESSIONS</div><h1>Learn together.</h1><p class="lead">Cohort calls, workshops, Q&A sessions and recordings will appear here.</p></div></div><div id="sessionsList"></div></section>
 <section id="certificate" class="page"><div class="hero"><div><div class="eyebrow">CERTIFICATE</div><h1>Graduation requirements.</h1><p class="lead">Course completion alone is not enough. Pass every phase exam and the final Academy exam to graduate.</p></div></div><div class="grid"><div class="card"><h2>Certificate of Completion</h2><div id="certificateRequirements"></div></div><div class="card dark"><div class="eyebrow" style="color:#7a6100">FINAL ACADEMY EXAM</div><h2 id="finalExamTitle">Locked</h2><p class="muted" id="finalExamText">Pass all four phase exams to unlock the final Academy exam.</p><span class="status" id="certificateStatus">Locked</span><div class="lessonActions" id="certExams"></div></div></div></section>
 <section id="settings" class="page"><div class="hero"><div><div class="eyebrow">ACCOUNT</div><h1>Settings.</h1><p class="lead">Manage your Academy access and support.</p></div></div><div class="stack"><div class="resource"><div><strong>Profile</strong><small id="settingsEmail"></small></div><span class="pill">Active student</span></div><div class="resource"><div><strong>Password</strong><small>Send yourself a secure password reset email.</small></div><button class="btn" id="resetPassword">Reset password</button></div><div class="resource"><div><strong>Help & support</strong><small>academy@getassistara.com</small></div><a class="btn" href="mailto:academy@getassistara.com">Contact support</a></div></div><p id="settingsMsg" class="muted"></p></section>
@@ -3866,7 +3912,142 @@ async function loadCommunityState(){if(preview){communityJoined=localStorage.get
 function updateCommunityUI(){let card=document.getElementById("communityCard"),nav=document.getElementById("communityNav"),mn=document.getElementById("mobileNav");if(card)card.hidden=communityJoined;if(nav)nav.hidden=!communityJoined;if(!mn)return;let existing=mn.querySelector(".mobileCommunityNav");if(communityJoined&&!existing){let a=document.createElement("a");a.className="mobileCommunityNav";a.href=WA_COMMUNITY_URL;a.target="_blank";a.rel="noopener noreferrer";a.setAttribute("aria-label","Join the Founding Cohort WhatsApp community");a.innerHTML="Community&nbsp;<span style=\"font-size:12px\" aria-hidden=\"true\">↗</span>";mn.appendChild(a)}else if(!communityJoined&&existing){existing.remove()}}
 async function confirmCommunity(){if(preview){communityJoined=true;localStorage.setItem("assistara_preview_community","joined");let cb=document.getElementById("previewCommunityToggleInput");if(cb)cb.checked=true;updateCommunityUI();return}let r;try{r=await fetch("/api/academy-community",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"confirm"})})}catch(e){return}if(r.ok){let j=await r.json().catch(()=>({}));if(j&&j.ok){communityJoined=true;updateCommunityUI()}}}
 function wireCommunity(){let jb=document.getElementById("communityJoinedBtn");if(jb)jb.onclick=()=>{confirmCommunity()};if(preview){let host=document.getElementById("previewControls");if(host&&!document.getElementById("previewCommunityToggle")){let wrap=document.createElement("label");wrap.className="previewCommunityToggle";wrap.htmlFor="previewCommunityToggleInput";let input=document.createElement("input");input.type="checkbox";input.id="previewCommunityToggleInput";input.checked=communityJoined;input.onchange=()=>{communityJoined=input.checked;localStorage.setItem("assistara_preview_community",communityJoined?"joined":"");if(!communityJoined)localStorage.removeItem("assistara_preview_community");updateCommunityUI()};wrap.appendChild(input);wrap.appendChild(document.createTextNode("Community joined (test the card and nav-link states)"));host.appendChild(wrap)}}}
-function buildResources(){document.getElementById("resourcesList").innerHTML=[["Client Finder","Find client sources, save opportunities and track your client hunt.","/academy/tools/client-finder"],["Remote Career Roadmap","Your step-by-step Academy action plan.",""],["CV & Profile Checklist","Position your experience for remote opportunities.",""],["Application & Outreach Templates","Templates for applications, messages and follow-ups.",""],["Interview Preparation Workbook","Prepare your stories, proof and interview answers.",""]].map(r=>'<div class="resource"><div><strong>'+r[0]+'</strong><small>'+r[1]+'</small></div>'+(r[2]?'<a class="btn" href="'+r[2]+'">Open</a>':'<span class="status">Coming soon</span>')+'</div>').join("")}
+function buildResources(){
+const TOOL_VOTES_KEY="assistara_preview_tool_votes";
+const TOOL_CONFIG=[
+{id:"client-finder",name:"Client Finder",label:"FIND CLIENTS",description:"Find real places and opportunities to start your client search.",icon:"🔍",status:"available",href:"/academy/tools/client-finder",featured:true},
+{id:"offer-builder",name:"Offer Builder",label:"BUILD YOUR OFFER",description:"Turn your skills into a clear service offer clients can understand and buy.",icon:"📋",status:"roadmap"},
+{id:"profile-builder",name:"Profile Builder",label:"GET MARKET-READY",description:"Turn your experience and skills into a stronger remote-work profile.",icon:"👤",status:"roadmap"},
+{id:"job-post-analyzer",name:"Job Post Analyzer",label:"UNDERSTAND THE OPPORTUNITY",description:"Paste a real job post and understand what the client wants, how well you fit, and what matters most.",icon:"🔬",status:"roadmap"},
+{id:"proposal-builder",name:"Proposal Builder",label:"WIN THE OPPORTUNITY",description:"Build a personalized proposal around a real client opportunity.",icon:"📝",status:"roadmap"},
+{id:"portfolio-builder",name:"Portfolio Builder",label:"PROVE WHAT YOU CAN DO",description:"Turn your skills and sample work into proof you can confidently show potential clients.",icon:"💼",status:"roadmap"},
+{id:"rate-calculator",name:"Rate Calculator",label:"PRICE YOUR WORK",description:"Turn your income goal and available time into practical hourly and project rates.",icon:"💰",status:"roadmap"},
+{id:"discovery-call-prep",name:"Discovery Call Prep",label:"GET READY TO CLOSE",description:"Prepare the right questions, talking points and next steps before a client call.",icon:"📞",status:"roadmap"},
+{id:"client-interview-simulator",name:"Client Interview Simulator",label:"PRACTICE THE CONVERSATION",description:"Practice a realistic client interview or discovery call and get useful feedback.",icon:"🎯",status:"roadmap"},
+{id:"outreach-tracker",name:"Outreach Tracker",label:"STAY CONSISTENT",description:"Track prospects, outreach, replies, follow-ups, calls and client wins.",icon:"📊",status:"roadmap"},
+{id:"client-red-flag-checker",name:"Client Red Flag Checker",label:"CHECK THE OPPORTUNITY",description:"Spot warning signs, unclear expectations and risky client opportunities before saying yes.",icon:"🚩",status:"roadmap"}
+];
+const DOWNLOADS=[
+{name:"Remote Career Roadmap",description:"Your step-by-step Academy action plan.",icon:"🗺️",href:""},
+{name:"CV & Profile Checklist",description:"Position your experience for remote opportunities.",icon:"✅",href:""},
+{name:"Application & Outreach Templates",description:"Templates for applications, messages and follow-ups.",icon:"📧",href:""},
+{name:"Interview Preparation Workbook",description:"Prepare your stories, proof and interview answers.",icon:"📖",href:""}
+];
+let toolVotes={};
+let myVotedTools=new Set();
+let voteLoading=false;
+function getPreviewVotes(){try{return JSON.parse(localStorage.getItem(TOOL_VOTES_KEY)||"{}")}catch{return{}}}
+function setPreviewVotes(v){localStorage.setItem(TOOL_VOTES_KEY,JSON.stringify(v))}
+function getPreviewVoted(){try{return new Set(JSON.parse(localStorage.getItem(TOOL_VOTES_KEY+"_voted")||"[]"))}catch{return new Set()}}
+function setPreviewVoted(s){localStorage.setItem(TOOL_VOTES_KEY+"_voted",JSON.stringify([...s]))}
+function voteCountText(n){return n===1?"1 vote":n+" votes"}
+function renderToolkit(){
+const featured=TOOL_CONFIG.find(t=>t.featured);
+const roadmap=TOOL_CONFIG.filter(t=>t.status==="roadmap");
+let html='<div class="toolkit-section"><div class="toolkit-section-head"><h2>AVAILABLE NOW</h2></div><div class="toolkit-grid">';
+html+='<div class="tool-card featured"><div class="tool-icon" aria-hidden="true">'+featured.icon+'</div><div class="featured-body"><div class="tool-label">'+featured.label+'</div><h3>'+featured.name+'</h3><p>'+featured.description+'</p></div><a class="btn" href="'+featured.href+'">Open Client Finder →</a></div>';
+html+='</div></div>';
+html+='<div class="toolkit-section"><div class="toolkit-section-head"><div><h2>YOU DECIDE WHAT WE BUILD NEXT</h2><span class="section-sub">Vote for as many as you\'d genuinely use. The most requested tools move up our build list.</span></div><span class="pill">FOUNDING COHORT ROADMAP</span></div><div class="toolkit-grid">';
+for(const tool of roadmap){
+const voted=myVotedTools.has(tool.id);
+const count=toolVotes[tool.id]||0;
+html+='<div class="tool-card'+(voted?' voted-card':'')+'" data-tool-id="'+tool.id+'"><div class="tool-icon" aria-hidden="true">'+tool.icon+'</div><div class="tool-label">'+tool.label+'</div><h3>'+tool.name+'</h3><p>'+tool.description+'</p><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><button class="tool-vote-btn'+(voted?' voted':'')+'" data-vote="'+tool.id+'" aria-pressed="'+voted+'" aria-label="'+(voted?'Remove vote for ':'Vote for ')+tool.name+'"><span class="heart" aria-hidden="true">'+(voted?'♥':'♡')+'</span><span>'+(voted?'Voted':'Vote for this tool')+'</span></button><span class="tool-vote-count" aria-label="'+count+' votes">'+voteCountText(count)+'</span></div></div>';
+}
+html+='<div class="tool-card suggest-card"><div class="tool-icon" aria-hidden="true">💡</div><div class="tool-label">YOUR IDEA</div><h3>What are we missing?</h3><p>Tell us what would make landing or working with your first client easier.</p><a class="btn" href="'+WA_COMMUNITY_URL+'" target="_blank" rel="noopener noreferrer">Suggest a tool →</a></div>';
+html+='</div></div>';
+html+='<div class="downloads-section"><div class="toolkit-section-head"><div><h2>DOWNLOADS & TEMPLATES</h2><span class="section-sub">Practical resources you can use while working through the Academy.</span></div></div><div class="downloads-grid">';
+for(const dl of DOWNLOADS){
+html+='<div class="download-item"><div class="dl-icon" aria-hidden="true">'+dl.icon+'</div><div class="dl-body"><strong>'+dl.name+'</strong><small>'+dl.description+'</small></div>'+(dl.href?'<a class="btn dl-action" href="'+dl.href+'">Open</a>':'<span class="status dl-action">In development</span>')+'</div>';
+}
+html+='</div></div>';
+document.getElementById("toolkitContent").innerHTML=html;
+document.querySelectorAll("[data-vote]").forEach(btn=>{
+btn.addEventListener("click",()=>handleVote(btn.dataset.vote,btn));
+});
+}
+async function loadVoteState(){
+if(preview){
+toolVotes=getPreviewVotes();
+myVotedTools=getPreviewVoted();
+renderToolkit();
+return;
+}
+if(!user){renderToolkit();return}
+try{
+const r=await fetch("/api/academy-tool-votes",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"state"})});
+if(r.ok){
+const j=await r.json();
+if(j&&j.ok){
+toolVotes=j.votes||{};
+myVotedTools=new Set(j.voted||[]);
+}
+}
+}catch(e){}
+renderToolkit();
+}
+async function handleVote(toolId,btn){
+if(voteLoading)return;
+const tool=TOOL_CONFIG.find(t=>t.id===toolId);
+if(!tool)return;
+const wasVoted=myVotedTools.has(toolId);
+const oldCount=toolVotes[toolId]||0;
+const newCount=wasVoted?Math.max(0,oldCount-1):oldCount+1;
+// Optimistic UI
+toolVotes[toolId]=newCount;
+if(wasVoted){myVotedTools.delete(toolId)}else{myVotedTools.add(toolId)}
+updateVoteUI(toolId);
+if(preview){
+setPreviewVotes(toolVotes);
+setPreviewVoted(myVotedTools);
+return;
+}
+voteLoading=true;
+btn.disabled=true;
+try{
+const action=wasVoted?"remove":"add";
+const r=await fetch("/api/academy-tool-votes",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,tool_id:toolId})});
+if(r.ok){
+const j=await r.json();
+if(j&&j.ok){
+toolVotes[toolId]=j.count;
+if(wasVoted){myVotedTools.delete(toolId)}else{myVotedTools.add(toolId)}
+updateVoteUI(toolId);
+}else{
+// Rollback
+toolVotes[toolId]=oldCount;
+if(wasVoted){myVotedTools.add(toolId)}else{myVotedTools.delete(toolId)}
+updateVoteUI(toolId);
+}
+}
+}catch(e){
+// Rollback
+toolVotes[toolId]=oldCount;
+if(wasVoted){myVotedTools.add(toolId)}else{myVotedTools.delete(toolId)}
+updateVoteUI(toolId);
+}
+voteLoading=false;
+const btn2=document.querySelector('[data-vote="'+toolId+'"]');
+if(btn2)btn2.disabled=false;
+}
+function updateVoteUI(toolId){
+const card=document.querySelector('[data-tool-id="'+toolId+'"]');
+if(!card)return;
+const btn=card.querySelector('[data-vote="'+toolId+'"]');
+const count=toolVotes[toolId]||0;
+const voted=myVotedTools.has(toolId);
+card.classList.toggle("voted-card",voted);
+if(btn){
+btn.classList.toggle("voted",voted);
+btn.setAttribute("aria-pressed",voted);
+btn.setAttribute("aria-label",(voted?"Remove vote for ":"Vote for ")+TOOL_CONFIG.find(t=>t.id===toolId).name);
+btn.querySelector(".heart").textContent=voted?"♥":"♡";
+btn.querySelector("span:last-child").textContent=voted?"Voted":"Vote for this tool";
+}
+const countEl=card.querySelector(".tool-vote-count");
+if(countEl){countEl.textContent=voteCountText(count);countEl.setAttribute("aria-label",count+" votes")}
+}
+loadVoteState();
+}
 function previewState(mode){completed=new Set();examAttempts=[];function completeModule(pi,mi){curriculum[pi].modules[mi][1].forEach((x,ci)=>completed.add(key(pi,mi,ci)))}function completePhase(pi){curriculum[pi].modules.forEach((m,mi)=>completeModule(pi,mi))}if(["p2m1c2qa","p2m1c2done","p2m1c3qa","p2m1c3done","p2m1c4qa","p2m1c4done"].includes(mode)){completePhase(0);examAttempts=[{exam_key:"phase_1",score:100,passing_score:80,passed:true,attempted_at:new Date().toISOString()}];completed.add(key(1,0,0));if(mode==="p2m1c2done"||mode==="p2m1c3qa"||mode==="p2m1c3done"||mode==="p2m1c4qa"||mode==="p2m1c4done")completed.add(key(1,0,1));if(mode==="p2m1c3done"||mode==="p2m1c4qa"||mode==="p2m1c4done")completed.add(key(1,0,2));if(mode==="p2m1c4done")completed.add(key(1,0,3))}if(["p2m2c1qa","p2m2c1done","p2m2c2qa","p2m2c2done","p2m2c3qa","p2m2c3done"].includes(mode)){completePhase(0);examAttempts=[{exam_key:"phase_1",score:100,passing_score:80,passed:true,attempted_at:new Date().toISOString()}];[0,1,2,3].forEach(ci=>completed.add(key(1,0,ci)));if(mode==="p2m2c1done"||mode==="p2m2c2qa"||mode==="p2m2c2done"||mode==="p2m2c3qa"||mode==="p2m2c3done")completed.add(key(1,1,0));if(mode==="p2m2c2done"||mode==="p2m2c3qa"||mode==="p2m2c3done")completed.add(key(1,1,1));if(mode==="p2m2c3done")completed.add(key(1,1,2))}if(["p2m3c1qa","p2m3c1done","p2m3c2qa","p2m3c2done","p2m3c3qa","p2m3c3done","p2m3c4qa","p2m3c4done"].includes(mode)){completePhase(0);examAttempts=[{exam_key:"phase_1",score:100,passing_score:80,passed:true,attempted_at:new Date().toISOString()}];[0,1].forEach(mi=>curriculum[1].modules[mi][1].forEach((x,ci)=>completed.add(key(1,mi,ci))));if(mode==="p2m3c1done"||mode==="p2m3c2qa"||mode==="p2m3c2done"||mode==="p2m3c3qa"||mode==="p2m3c3done"||mode==="p2m3c4qa"||mode==="p2m3c4done")completed.add(key(1,2,0));if(mode==="p2m3c2done"||mode==="p2m3c3qa"||mode==="p2m3c3done"||mode==="p2m3c4qa"||mode==="p2m3c4done")completed.add(key(1,2,1));if(mode==="p2m3c3done"||mode==="p2m3c4qa"||mode==="p2m3c4done")completed.add(key(1,2,2));if(mode==="p2m3c4done")completed.add(key(1,2,3))}if(mode==="class1")completed.add(key(0,0,0));if(mode==="midm1"){completed.add(key(0,0,0));completed.add(key(0,0,1))}if(mode==="m1done")completeModule(0,0);if(mode==="midp1"){completeModule(0,0);completeModule(0,1);completed.add(key(0,2,0))}if(mode==="p1m5c1qa"){completeModule(0,0);completeModule(0,1);completeModule(0,2);completeModule(0,3)}if(mode==="p1m5c1done"||mode==="p1m5c2qa"||mode==="p1m5c2done"||mode==="p1m5c3qa"||mode==="p1m5c3done"){completeModule(0,0);completeModule(0,1);completeModule(0,2);completeModule(0,3);completed.add("p1m5c1")}if(mode==="p1m5c2done"||mode==="p1m5c3qa"||mode==="p1m5c3done"){completed.add("p1m5c2")}if(mode==="p1m5c3done"||mode==="p1m6c1qa"||mode==="p1m6c1done"||mode==="p1m6c2qa"||mode==="p1m6c2done"||mode==="p1m6c3qa"||mode==="p1m6c3done"||mode==="p1m6c4qa"||mode==="p1m6c4done"){completed.add("p1m5c3")}if(mode==="p1m6c1qa"||mode==="p1m6c1done"||mode==="p1m6c2qa"||mode==="p1m6c2done"||mode==="p1m6c3qa"||mode==="p1m6c3done"||mode==="p1m6c4qa"||mode==="p1m6c4done"){completeModule(0,0);completeModule(0,1);completeModule(0,2);completeModule(0,3);completeModule(0,4)}if(mode==="p1m6c1done"||mode==="p1m6c2qa"||mode==="p1m6c2done"||mode==="p1m6c3qa"||mode==="p1m6c3done"||mode==="p1m6c4qa"||mode==="p1m6c4done"){completed.add("p1m6c1")}if(mode==="p1m6c2done"||mode==="p1m6c3qa"||mode==="p1m6c3done"||mode==="p1m6c4qa"||mode==="p1m6c4done"){completed.add("p1m6c2")}if(mode==="p1m6c3done"||mode==="p1m6c4qa"||mode==="p1m6c4done"){completed.add("p1m6c3")}if(mode==="p1m6c4done"){completed.add("p1m6c4")}if(["ready1","failed1","passed1","passed2","passed3","passed4","complete","p2m1c1qa","p2m1c1done"].includes(mode))completePhase(0);if(mode==="failed1")examAttempts.push({exam_key:"phase_1",score:68,passed:false});if(["passed1","passed2","passed3","passed4","complete","p2m1c1qa","p2m1c1done"].includes(mode))examAttempts.push({exam_key:"phase_1",score:87,passed:true});if(mode==="p2m1c1done")completed.add("p2m1c1");if(["passed2","passed3","passed4","complete"].includes(mode)){completePhase(1);examAttempts.push({exam_key:"phase_2",score:88,passed:true})}if(["passed3","passed4","complete"].includes(mode)){completePhase(2);examAttempts.push({exam_key:"phase_3",score:89,passed:true})}if(["passed4","complete"].includes(mode)){completePhase(3);examAttempts.push({exam_key:"phase_4",score:90,passed:true})}if(mode==="complete")examAttempts.push({exam_key:"final",score:91,passed:true});if(mode==="reviewall"){completePhase(0);completePhase(1);completePhase(2);completePhase(3);for(let pi=0;pi<4;pi++)examAttempts.push({exam_key:"phase_"+(pi+1),score:100,passing_score:80,passed:true,attempted_at:new Date().toISOString()})}localStorage.setItem("assistara_preview_state",mode)}
 async function loadProgress(){if(preview){previewState(localStorage.getItem("assistara_preview_state")||"new");return}if(!user||!client)return;try{let [r,e]=await Promise.all([client.from("academy_class_progress").select("class_key").eq("user_id",user.id).eq("completed",true),client.from("academy_exam_attempts").select("exam_key,score,passing_score,passed,attempted_at").eq("user_id",user.id)]);if(!r.error)completed=new Set((r.data||[]).map(x=>x.class_key));if(!e.error)examAttempts=e.data||[]}catch(e){}}
 async function syncAcademyCookie(session){const r=await fetch("/api/academy-session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"exchange",access_token:session.access_token})});const j=await r.json().catch(()=>({}));return r.ok&&!!j.ok}

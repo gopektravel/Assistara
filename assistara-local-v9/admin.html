@@ -314,6 +314,11 @@
       .studentHead {
         cursor: pointer;
       }
+      .studentHeadRight {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
       .studentBody {
         display: none;
         border-top: 1px solid var(--line);
@@ -322,6 +327,246 @@
       }
       .student.open .studentBody {
         display: block;
+      }
+      .studentGrid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+      .studentCol {
+        background: #faf9f5;
+        border-radius: 10px;
+        padding: 12px;
+      }
+      .studentLabel {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .studentPct {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .studentSub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .studentPosition {
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+      .studentExams {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .studentLastActive {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .progressTrack {
+        height: 8px;
+        background: #e8e4db;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+      .progressFill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width .3s ease;
+      }
+      .badge.suspended {
+        background: var(--red);
+        color: var(--redInk);
+        border: 1px solid #efb8b3;
+      }
+      .studentDetail {
+        margin-top: 14px;
+      }
+      .studentDetailSection {
+        margin-bottom: 18px;
+      }
+      .studentDetailSection h4 {
+        margin: 0 0 10px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--muted);
+      }
+      .phaseBlock {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        overflow: hidden;
+      }
+      .phaseBlockHead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        background: #faf9f5;
+        cursor: pointer;
+      }
+      .phaseBlockHead h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 800;
+      }
+      .phaseBlockHead .phasePct {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .phaseBlockBody {
+        display: none;
+        padding: 10px 14px;
+        border-top: 1px solid var(--line);
+      }
+      .phaseBlock.open .phaseBlockBody {
+        display: block;
+      }
+      .moduleRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0ede6;
+        font-size: 13px;
+      }
+      .moduleRow:last-child {
+        border-bottom: 0;
+      }
+      .moduleRow .moduleName {
+        font-weight: 700;
+      }
+      .moduleRow .moduleStatus {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 6px;
+      }
+      .moduleStatus.completed {
+        background: var(--green);
+        color: var(--greenInk);
+      }
+      .moduleStatus.current {
+        background: var(--yellow);
+        color: var(--ink);
+      }
+      .moduleStatus.locked {
+        background: #efede8;
+        color: var(--muted);
+      }
+      .classRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+        font-size: 12px;
+      }
+      .classRow .classDot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .classDot.completed { background: #1d6a3b; }
+      .classDot.current { background: var(--yellow); border: 2px solid #171717; }
+      .classDot.locked { background: #d0ccc2; }
+      .classRow .className {
+        flex: 1;
+      }
+      .classRow .classState {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .examBlock {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+      }
+      .examBlockHead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .examBlockHead h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 800;
+      }
+      .examBlockHead .examResult {
+        font-size: 12px;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 999px;
+      }
+      .examResult.passed { background: var(--green); color: var(--greenInk); }
+      .examResult.failed { background: var(--red); color: var(--redInk); }
+      .examResult.pending { background: #efede8; color: var(--muted); }
+      .examAttempts {
+        margin-top: 10px;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+      .examAttemptRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 12px;
+        border-bottom: 1px solid #f0ede6;
+      }
+      .examAttemptRow:last-child { border-bottom: 0; }
+      .examAttemptRow .attemptScore {
+        font-weight: 800;
+      }
+      .examAttemptRow .attemptResult {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 6px;
+      }
+      .attemptResult.pass { background: var(--green); color: var(--greenInk); }
+      .attemptResult.fail { background: var(--red); color: var(--redInk); }
+      .studentFilters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+        align-items: center;
+      }
+      .studentFilters select {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 9px 12px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        background: #fff;
+      }
+      @media (max-width: 900px) {
+        .studentGrid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 650px) {
+        .studentGrid {
+          grid-template-columns: 1fr;
+        }
       }
       .empty {
         background: #fff;
@@ -734,6 +979,23 @@
         </div>
         <div id="pendingBox"></div>
         <input id="search" class="search" placeholder="Search..." />
+        <div class="studentFilters" id="studentFilters" style="display:none">
+          <select id="studentFilter">
+            <option value="all">All Students</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="completed">Completed</option>
+            <option value="in_progress">In Progress</option>
+            <option value="failed_exam">Failed Exam</option>
+          </select>
+          <select id="studentSort">
+            <option value="recent">Most Recently Active</option>
+            <option value="least_recent">Least Recently Active</option>
+            <option value="highest_progress">Highest Progress</option>
+            <option value="lowest_progress">Lowest Progress</option>
+            <option value="recently_enrolled">Recently Enrolled</option>
+          </select>
+        </div>
         <div id="signupGoal"></div><div id="stats" class="stats"></div>
         <div id="cards" class="cards"></div>
       </section>
@@ -753,13 +1015,16 @@
         ONBOARD =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-send-onboarding",
         ANSWERS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
-        NOTES = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api";
+        NOTES = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
+        PROGRESS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api";
       let token = sessionStorage.getItem("assistara_admin_token") || "",
         apps = [],
+        students = [],
         web = [],
         b2b = [],
         accounts = [],
         acquisitionLinks = [],
+        studentProgress = [],
         tab = "applicants";
       // Every application card keeps its own expand state so reviewing one
       // applicant never opens or closes another.
@@ -1308,9 +1573,154 @@
         const date = new Date(value);
         return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
       }
+      /* ---------------------------------------------------------------- *
+       * Curriculum + progress calculation.
+       *
+       * Mirrors the learner Academy's own curriculum structure and progress
+       * rules exactly. The admin reads the SAME canonical tables
+       * (academy_class_progress, academy_exam_attempts) that drive the
+       * learner dashboard — no parallel progress system.
+       * ---------------------------------------------------------------- */
+      const CURRICULUM = [
+        { n: "01", title: "Freelancing Foundations", modules: [
+          ["Freelancing & Virtual Assistance Basics", ["What is Freelancing? What is Virtual Assistance?","Employee vs. Freelancer Mindset","VA Niches & Specializations","Remote Work Expectations & Client Communication"]],
+          ["Core VA Skills", ["Time Management & Productivity","Communication & Professionalism","Problem-Solving & Critical Thinking","Managing Multiple Clients & Workload"]],
+          ["Admin & Executive Support", ["Google Workspace Navigation","Email Management","Calendar Management","File Management"]],
+          ["Customer Support & Business Operations", ["Customer Service","Sales","Travel Research & Booking"]],
+          ["Market Research & Data Organization", ["AI Research & Creating a Customer Avatar","Tools for Manual Market Research","Organizing Your Findings"]],
+          ["Project Management for VAs", ["Project & Business Management for VAs","Client Project Management with ClickUp","Client Project Management with Trello","Client Project Management with Notion"]]
+        ]},
+        { n: "02", title: "Creative & Digital Marketing Skills", modules: [
+          ["Build Your VA Brand", ["Canva Navigation: Colors, Elements & Fonts","Create Your Profile Picture","Create Your Facebook & LinkedIn Cover","Create Your Email Signature"]],
+          ["Canva Design & Visual Branding", ["Build a Brand Strategy for Clients","Create a Logo","Build a Brand Kit & Guidelines"]],
+          ["Social Media Management", ["Introduction to Social Media Marketing","Set Up a Facebook Page","Meta Business Suite Navigation","Social Media Analytics & Measurement"]],
+          ["Content Planning & Workflow", ["AI Content Planning & Strategy","Content Planning with ClickUp","Content Planning with Asana","Content Planning with Google Sheets"]],
+          ["Social Media Content Design", ["The Power of Visuals","Create Engaging Social Media Graphics"]],
+          ["Video Editing", ["Create Your VA Video Introduction","Social Media Video Editing"]],
+          ["Meta Ads Fundamentals", ["Set Up Meta Business Manager & Ads","Set Up a Meta Business Page","Create Your First Facebook Ad Campaign","Facebook Ad Payment Structure","Read Meta Ads Results"]],
+          ["Influencer Marketing", ["Influencer Collaboration & Sourcing","Finding Influencers"]],
+          ["Funnels & Lead Conversion", ["Landing Pages & Lead Magnets","Sales Page Copywriting for Clients","Sales Page Copywriting for VAs","High-Converting Funnel Design"]],
+          ["Email Marketing", ["Buy Your Own Domain","Create Your First Email Marketing Campaign"]]
+        ]},
+        { n: "03", title: "AI & Digital Systems", modules: [
+          ["AI for VAs", ["Types of AI","How to Not Be Replaced by AI","Prompt Engineering Basics","Customize Your ChatGPT","Create GPTs"]],
+          ["Automation & Workflow Optimization", ["Introduction to Automation Tools","Create a GPT Tutor","Write AI Prompts for Client Work","Build AI-Powered Workflows"]],
+          ["Systems & Digital Operations", ["Set Up Your Digital Workspace","Cloud Storage & File Systems","Security & Privacy Essentials","Automation Tools for Client Operations"]],
+          ["Client Systems & Handover", ["Document Client Processes","Create Client Handover Systems","Build Repeatable Client Workflows"]]
+        ]},
+        { n: "04", title: "Landing Your First Client", modules: [
+          ["Positioning & Your Offer", ["Define Your Service Offer","Build Your Service Package","Set Your Pricing"]],
+          ["Finding Clients", ["Where to Find Remote Clients","Job Platforms & Outreach","Networking & Referrals"]],
+          ["The Discovery Call", ["Prepare Before the Call","VA Interview Questions & Winning Answers","Create a Discovery Call Script","Create a Proposal","Build Unshakeable Confidence"]]
+        ]}
+      ];
+      const TOTAL_CLASSES = CURRICULUM.reduce((n, p) => n + p.modules.reduce((a, m) => a + m[1].length, 0), 0);
+      const PASSING_SCORE = 80;
+      const EXAM_KEYS = ["phase_1", "phase_2", "phase_3", "phase_4", "final"];
+      const EXAM_LABELS = { phase_1: "Phase 1 Exam", phase_2: "Phase 2 Exam", phase_3: "Phase 3 Exam", phase_4: "Phase 4 Exam", final: "Final Academy Exam" };
+
+      function classKey(pi, mi, ci) { return "p" + (pi + 1) + "m" + (mi + 1) + "c" + (ci + 1); }
+      function parseClassKey(key) {
+        const m = /^p(\d+)m(\d+)c(\d+)$/.exec(String(key || ""));
+        return m ? { pi: Number(m[1]) - 1, mi: Number(m[2]) - 1, ci: Number(m[3]) - 1 } : null;
+      }
+      function isPhaseUnlocked(pi, completedSet) {
+        if (pi === 0) return true;
+        for (let prev = 0; prev < pi; prev++) {
+          const e = bestExamFor("phase_" + (prev + 1), completedSet);
+          if (!e || !e.passed) return false;
+        }
+        return true;
+      }
+      function isModuleUnlocked(pi, mi, completedSet) {
+        return isPhaseUnlocked(pi, completedSet) && (mi === 0 || isModuleComplete(pi, mi - 1, completedSet));
+      }
+      function isModuleComplete(pi, mi, completedSet) {
+        const m = CURRICULUM[pi].modules[mi];
+        return m && m[1].every((_, ci) => completedSet.has(classKey(pi, mi, ci)));
+      }
+      function bestExamFor(examKey, completedSet) {
+        const attempts = (studentProgress.find(s => s.user_id === completedSet._uid)?.exam_attempts || []).filter(a => a.exam_key === examKey);
+        if (!attempts.length) return null;
+        return attempts.sort((a, b) => b.score - a.score)[0];
+      }
+      function computeStudentProgress(app, progressEntry) {
+        const completedSet = new Set((progressEntry?.completed_classes || []).filter(k => parseClassKey(k)));
+        completedSet._uid = app.auth_user_id;
+        const totalCompleted = completedSet.size;
+        const pct = TOTAL_CLASSES ? Math.round(totalCompleted / TOTAL_CLASSES * 100) : 0;
+        // Find current position: first incomplete class in the first unlocked module
+        let currentPhase = null, currentModule = null, currentClass = null;
+        for (let pi = 0; pi < CURRICULUM.length; pi++) {
+          if (!isPhaseUnlocked(pi, completedSet)) break;
+          for (let mi = 0; mi < CURRICULUM[pi].modules.length; mi++) {
+            if (!isModuleUnlocked(pi, mi, completedSet)) break;
+            const m = CURRICULUM[pi].modules[mi];
+            for (let ci = 0; ci < m[1].length; ci++) {
+              if (!completedSet.has(classKey(pi, mi, ci))) {
+                currentPhase = pi; currentModule = mi; currentClass = ci;
+                break;
+              }
+            }
+            if (currentClass !== null) break;
+          }
+          if (currentClass !== null) break;
+        }
+        // If all classes complete, current position is the end
+        if (currentClass === null && totalCompleted >= TOTAL_CLASSES) {
+          currentPhase = CURRICULUM.length - 1;
+          currentModule = CURRICULUM[currentPhase].modules.length - 1;
+          currentClass = CURRICULUM[currentPhase].modules[currentModule][1].length - 1;
+        }
+        // Exam stats
+        const examStats = {};
+        for (const key of EXAM_KEYS) {
+          const attempts = (progressEntry?.exam_attempts || []).filter(a => a.exam_key === key);
+          const best = attempts.sort((a, b) => b.score - a.score)[0] || null;
+          examStats[key] = {
+            attempts: attempts.length,
+            best,
+            passed: !!(best && best.passed),
+            failed: !!(best && !best.passed),
+            pending: attempts.length === 0
+          };
+        }
+        const examsPassed = EXAM_KEYS.filter(k => examStats[k].passed).length;
+        const examsFailed = EXAM_KEYS.filter(k => examStats[k].failed).length;
+        const examsPending = EXAM_KEYS.filter(k => examStats[k].pending).length;
+        return {
+          totalCompleted, pct, currentPhase, currentModule, currentClass,
+          examStats, examsPassed, examsFailed, examsPending,
+          lastActivity: progressEntry?.last_activity || null,
+          _completedSet: completedSet
+        };
+      }
+      function timeAgo(dateStr) {
+        if (!dateStr) return "Never";
+        const then = new Date(dateStr);
+        if (isNaN(then.getTime())) return "Unknown";
+        const secs = Math.floor((Date.now() - then.getTime()) / 1000);
+        if (secs < 60) return "Just now";
+        const mins = Math.floor(secs / 60);
+        if (mins < 60) return mins + "m ago";
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + "h ago";
+        const days = Math.floor(hrs / 24);
+        if (days < 30) return days + "d ago";
+        const months = Math.floor(days / 30);
+        return months + "mo ago";
+      }
+      function progressBar(pct, color) {
+        const c = color || "#171717";
+        return `<div class="progressTrack"><div class="progressFill" style="width:${pct}%;background:${c}"></div></div>`;
+      }
       function studentCard(x) {
         const suspended = !!x.suspended_at;
-        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div class="name">${esc(x.name || "Student")}</div><span>⌄</span></div><div class="studentBody"><div class="sub">${esc(x.email || "")}</div><div class="detail"><b>Account:</b> ${suspended ? "Suspended" : "Active"}${x.receipt_number ? `<br><b>Receipt:</b> ${esc(x.receipt_number)}` : ""}</div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
+        const prog = x._progress || { pct: 0, totalCompleted: 0, currentPhase: null, currentModule: null, currentClass: null, examsPassed: 0, examsFailed: 0, examsPending: 0, lastActivity: null };
+        const statusBadge = suspended ? '<span class="badge suspended">Suspended</span>' : '<span class="badge active_account">Active</span>';
+        const phaseLabel = prog.currentPhase !== null ? `Phase ${prog.currentPhase + 1} → Module ${prog.currentModule + 1} → Class ${prog.currentClass + 1}` : "Not started";
+        const examSummary = `${prog.examsPassed} Passed · ${prog.examsFailed} Failed · ${prog.examsPending} Pending`;
+        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">⌄</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
       }
       function render() {
         drawPending();
@@ -1339,16 +1749,34 @@
           return;
         }
         if (tab === "students") {
-          const studentIds=new Set(accounts.map(a=>String(a.id||'')));const s = apps.filter((x) => x.auth_user_id && studentIds.has(String(x.auth_user_id))).filter(match);
+          const s = students.filter(match);
+          // Apply status filter
+          const statusFilter = $("studentFilter") ? $("studentFilter").value : "all";
+          let filtered = s;
+          if (statusFilter === "active") filtered = s.filter(x => !x.suspended_at);
+          else if (statusFilter === "inactive") filtered = s.filter(x => !!x.suspended_at);
+          else if (statusFilter === "completed") filtered = s.filter(x => x._progress && x._progress.pct >= 100);
+          else if (statusFilter === "in_progress") filtered = s.filter(x => x._progress && x._progress.pct > 0 && x._progress.pct < 100);
+          else if (statusFilter === "failed_exam") filtered = s.filter(x => x._progress && x._progress.examsFailed > 0);
+          // Apply sorting
+          const sortBy = $("studentSort") ? $("studentSort").value : "recent";
+          const sorted = [...filtered].sort((a, b) => {
+            if (sortBy === "recent") return (b._progress?.lastActivity || "").localeCompare(a._progress?.lastActivity || "");
+            if (sortBy === "least_recent") return (a._progress?.lastActivity || "").localeCompare(b._progress?.lastActivity || "");
+            if (sortBy === "highest_progress") return (b._progress?.pct || 0) - (a._progress?.pct || 0);
+            if (sortBy === "lowest_progress") return (a._progress?.pct || 0) - (b._progress?.pct || 0);
+            if (sortBy === "recently_enrolled") return (b.onboarding_completed_at || "").localeCompare(a.onboarding_completed_at || "");
+            return 0;
+          });
           stat([
             [s.length, "Students"],
             [s.filter((x) => !x.suspended_at).length, "Active"],
             [s.filter((x) => x.suspended_at).length, "Suspended"],
-            [s.filter((x) => x.onboarding_completed_at).length, "Onboarded"],
+            [s.filter((x) => x._progress && x._progress.pct >= 100).length, "Completed"],
           ]);
-          $("cards").innerHTML = s.length
-            ? s.map(studentCard).join("")
-            : '<div class="empty">No students yet.</div>';
+          $("cards").innerHTML = sorted.length
+            ? sorted.map(studentCard).join("")
+            : '<div class="empty">No students found.</div>';
           return;
         }
         if (tab === "webinar") {
@@ -1390,6 +1818,7 @@
       async function load() {
         const d = await req("list");
         apps = d.applications || [];
+        students = d.students || [];
         web = d.signups || [];
         b2b = d.b2b || [];
         try { const a=await fetch("https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"list"})}); const aj=await a.json(); acquisitionLinks=a.ok?(aj.links||[]):[] } catch { acquisitionLinks=[] }
@@ -1398,12 +1827,96 @@
         } catch {
           accounts = [];
         }
+        // Fetch student progress from the canonical progress tables
+        try {
+          const pData = await req("student-progress", {}, PROGRESS);
+          studentProgress = pData.students || [];
+        } catch {
+          studentProgress = [];
+        }
+        // Attach progress to each student record
+        const progressByUid = new Map();
+        for (const sp of studentProgress) {
+          progressByUid.set(sp.user_id, sp);
+        }
+        for (const s of students) {
+          const pe = progressByUid.get(s.auth_user_id);
+          s._progress = computeStudentProgress(s, pe);
+        }
         render();
       }
       window.toggleStudent = (id) => {
         const e = $("student-" + id);
         if (e) e.classList.toggle("open");
+        // Render detail view when opened
+        const detail = $("student-detail-" + id);
+        if (detail && e.classList.contains("open")) {
+          const student = students.find(s => String(s.id) === String(id));
+          if (student) detail.innerHTML = renderStudentDetail(student);
+        }
       };
+      function renderStudentDetail(student) {
+        const prog = student._progress;
+        if (!prog) return '<div class="empty">No progress data available.</div>';
+        let html = '<div class="studentDetailSection"><h4>Curriculum Progress</h4>';
+        for (let pi = 0; pi < CURRICULUM.length; pi++) {
+          const phase = CURRICULUM[pi];
+          const phaseClasses = phase.modules.reduce((a, m) => a + m[1].length, 0);
+          let phaseDone = 0;
+          for (let mi = 0; mi < phase.modules.length; mi++) {
+            for (let ci = 0; ci < phase.modules[mi][1].length; ci++) {
+              if (prog._completedSet && prog._completedSet.has(classKey(pi, mi, ci))) phaseDone++;
+            }
+          }
+          const phasePct = phaseClasses ? Math.round(phaseDone / phaseClasses * 100) : 0;
+          const isCurrentPhase = prog.currentPhase === pi;
+          html += '<div class="phaseBlock' + (isCurrentPhase ? ' open' : '') + '">';
+          html += '<div class="phaseBlockHead" onclick="this.parentElement.classList.toggle(\'open\')">';
+          html += '<h5>Phase ' + (pi + 1) + ' — ' + esc(phase.title) + '</h5>';
+          html += '<span class="phasePct">' + phaseDone + ' / ' + phaseClasses + ' classes · ' + phasePct + '%</span>';
+          html += '</div><div class="phaseBlockBody">';
+          for (let mi = 0; mi < phase.modules.length; mi++) {
+            const mod = phase.modules[mi];
+            const modDone = mod[1].filter((_, ci) => prog._completedSet && prog._completedSet.has(classKey(pi, mi, ci))).length;
+            const modTotal = mod[1].length;
+            const isModComplete = modDone === modTotal;
+            const isCurrentMod = isCurrentPhase && prog.currentModule === mi;
+            const modStatus = isModComplete ? 'completed' : isCurrentMod ? 'current' : 'locked';
+            html += '<div class="moduleRow"><span class="moduleName">Module ' + (mi + 1) + ' — ' + esc(mod[0]) + '</span><span class="moduleStatus ' + modStatus + '">' + (isModComplete ? 'Completed' : isCurrentMod ? 'In Progress' : 'Locked') + '</span></div>';
+            if (isCurrentMod) {
+              for (let ci = 0; ci < mod[1].length; ci++) {
+                const isDone = prog._completedSet && prog._completedSet.has(classKey(pi, mi, ci));
+                const isCurrent = prog.currentClass === ci;
+                const dotClass = isDone ? 'completed' : isCurrent ? 'current' : 'locked';
+                const stateLabel = isDone ? 'Completed' : isCurrent ? 'Current' : 'Locked';
+                html += '<div class="classRow"><span class="classDot ' + dotClass + '"></span><span className="className">' + esc(mod[1][ci]) + '</span><span class="classState">' + stateLabel + '</span></div>';
+              }
+            }
+          }
+          html += '</div></div>';
+        }
+        html += '</div>';
+        // Exam results
+        html += '<div class="studentDetailSection"><h4>Exam Results</h4>';
+        for (const key of EXAM_KEYS) {
+          const es = prog.examStats[key];
+          const label = EXAM_LABELS[key] || key;
+          const resultClass = es.passed ? 'passed' : es.failed ? 'failed' : 'pending';
+          const resultText = es.passed ? 'Passed' : es.failed ? 'Failed' : 'Not Attempted';
+          html += '<div class="examBlock"><div class="examBlockHead"><h5>' + esc(label) + '</h5><span class="examResult ' + resultClass + '">' + resultText + '</span></div>';
+          if (es.attempts > 0) {
+            const attempts = (studentProgress.find(s => s.user_id === student.auth_user_id)?.exam_attempts || []).filter(a => a.exam_key === key).sort((a, b) => new Date(a.attempted_at) - new Date(b.attempted_at));
+            html += '<div class="examAttempts">';
+            attempts.forEach((a, i) => {
+              html += '<div class="examAttemptRow"><span>Attempt ' + (i + 1) + '</span><span class="attemptScore">' + a.score + '%</span><span class="attemptResult ' + (a.passed ? 'pass' : 'fail') + '">' + (a.passed ? 'Passed' : 'Failed') + '</span><span>' + esc(formatDate(a.attempted_at)) + '</span></div>';
+            });
+            html += '</div>';
+          }
+          html += '</div>';
+        }
+        html += '</div>';
+        return html;
+      }
       // One record expander per application; all record sections live inside it.
       $("cards").addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) return;
@@ -1583,10 +2096,18 @@
             document
               .querySelectorAll(".nav button")
               .forEach((x) => x.classList.toggle("active", x === b));
+            // Show/hide student filters
+            const filters = $("studentFilters");
+            if (filters) filters.style.display = tab === "students" ? "flex" : "none";
             render();
           }),
       );
       $("search").oninput = render;
+      // Student filter/sort listeners
+      const studentFilter = $("studentFilter");
+      if (studentFilter) studentFilter.onchange = render;
+      const studentSort = $("studentSort");
+      if (studentSort) studentSort.onchange = render;
       $("loginBtn").onclick = async () => {
         try {
           const d = await req(

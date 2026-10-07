@@ -149,7 +149,7 @@ test("boot() completes: the Academy becomes visible instead of the fallback", as
     "the Phase Journey must render exactly four cards during boot");
   assert.ok(run.document.getElementById("desktopNav").children.length > 0,
     "the sidebar navigation must be built during boot");
-  assert.ok(run.document.getElementById("resourcesList").innerHTML.length > 0,
+  assert.ok(run.document.getElementById("toolkitContent").innerHTML.length > 0,
     "Resources must be built during boot");
   assert.ok(run.document.getElementById("achievementsList").innerHTML.length > 0,
     "the Achievements area must render during boot");

@@ -72,6 +72,43 @@ Deno.serve(async(req:Request)=>{
     const applications=safeIds.map(id=>{const record=byId.get(id);return record?{...record,found:true}:{id,answers:{},found:false};});
     return new Response(JSON.stringify({ok:true,fields:ANSWER_FIELD_SCHEMA,applications}),{status:200,headers:h});
   }
+  if(action==="student-progress"){
+    // Return progress data for all enrolled students.
+    // Reads from the canonical academy_class_progress and academy_exam_attempts tables.
+    const {data:progressRows,error:progressError}=await db.from("academy_class_progress").select("user_id,class_key,completed,completed_at").eq("completed",true);
+    if(progressError) return new Response(JSON.stringify({ok:false,error:"Could not load class progress"}),{status:500,headers:h});
+    const {data:examRows,error:examError}=await db.from("academy_exam_attempts").select("user_id,exam_key,score,passing_score,passed,attempted_at");
+    if(examError) return new Response(JSON.stringify({ok:false,error:"Could not load exam attempts"}),{status:500,headers:h});
+    // Group by user
+    const progressByUser=new Map();
+    for(const row of progressRows||[]){
+      const uid=String(row.user_id);
+      if(!progressByUser.has(uid)) progressByUser.set(uid,{classes:[],lastActivity:null});
+      const entry=progressByUser.get(uid);
+      entry.classes.push({class_key:String(row.class_key),completed_at:row.completed_at});
+      if(row.completed_at&&(!entry.lastActivity||row.completed_at>entry.lastActivity)) entry.lastActivity=row.completed_at;
+    }
+    const examsByUser=new Map();
+    for(const row of examRows||[]){
+      const uid=String(row.user_id);
+      if(!examsByUser.has(uid)) examsByUser.set(uid,[]);
+      examsByUser.get(uid).push({exam_key:String(row.exam_key),score:Number(row.score),passing_score:Number(row.passing_score),passed:!!row.passed,attempted_at:row.attempted_at});
+    }
+    // Merge into a single response
+    const allUserIds=new Set([...progressByUser.keys(),...examsByUser.keys()]);
+    const students=[];
+    for(const uid of allUserIds){
+      const p=progressByUser.get(uid)||{classes:[],lastActivity:null};
+      const e=examsByUser.get(uid)||[];
+      // Last activity = max of last class completion and last exam attempt
+      let lastActivity=p.lastActivity;
+      for(const exam of e){
+        if(exam.attempted_at&&(!lastActivity||exam.attempted_at>lastActivity)) lastActivity=exam.attempted_at;
+      }
+      students.push({user_id:uid,completed_classes:p.classes.map((c:any)=>c.class_key),exam_attempts:e,last_activity:lastActivity});
+    }
+    return new Response(JSON.stringify({ok:true,students}),{status:200,headers:h});
+  }
   if(action==="notes"){
     const sub=String(body.subaction||"read");
     if(sub!=="read"&&sub!=="write") return new Response(JSON.stringify({ok:false,error:"Unknown notes action"}),{status:400,headers:h});
