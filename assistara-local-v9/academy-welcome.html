@@ -182,16 +182,16 @@ h1{font-size:clamp(40px,7vw,64px);line-height:1.02;letter-spacing:-.045em;margin
   }
 
   async function markWelcomeSeen() {
-    if (!token) return;
+    if (!token) throw new Error('Missing enrollment token');
     savingOverlay.classList.remove('hidden');
     try {
-      await fetch(API + 'mark-welcome-seen', {
+      const res = await fetch(API + 'mark-welcome-seen', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': KEY },
         body: JSON.stringify({ token })
       });
-    } catch (e) {
-      // if marking fails, still proceed to dashboard
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not save your welcome progress');
     } finally {
       savingOverlay.classList.add('hidden');
     }
@@ -201,8 +201,14 @@ h1{font-size:clamp(40px,7vw,64px);line-height:1.02;letter-spacing:-.045em;margin
     e.preventDefault();
     enterBtn.disabled = true;
     enterBtn.textContent = 'Opening...';
-    await markWelcomeSeen();
-    window.location.href = '/academy/dashboard' + (urlToken ? '?token=' + encodeURIComponent(urlToken) : '');
+    try {
+      await markWelcomeSeen();
+      window.location.href = '/academy/dashboard';
+    } catch (error) {
+      enterBtn.disabled = false;
+      enterBtn.textContent = 'Try Entering Again →';
+      window.alert(error.message || 'Could not save your welcome progress. Please try again.');
+    }
   });
 
   async function init() {

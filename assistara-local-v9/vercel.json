@@ -46,12 +46,17 @@
       "use": "@vercel/static"
     },
     {
+      "src": "academy-welcome.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "api/academy-content.js",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
           "api/_academy-security.js",
           "academy-dashboard.html",
+          "academy-welcome.html",
           "academy/slides/**/*.pdf"
         ]
       }
@@ -252,6 +257,15 @@
       ]
     },
     {
+      "source": "/academy/welcome",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
       "source": "/academy/test-portal",
       "headers": [
         {
@@ -332,6 +346,14 @@
     {
       "src": "/academy/dashboard/",
       "dest": "/api/academy-content.js?audience=learner"
+    },
+    {
+      "src": "/academy/welcome",
+      "dest": "/api/academy-content.js?audience=welcome"
+    },
+    {
+      "src": "/academy/welcome/",
+      "dest": "/api/academy-content.js?audience=welcome"
     },
     {
       "src": "/academy-dashboard.html",

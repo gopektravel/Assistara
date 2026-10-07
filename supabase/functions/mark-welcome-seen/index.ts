@@ -19,8 +19,9 @@ const good = (o: string | null) => !o || allowed.has(o) || o.endsWith(".vercel.a
 const cors = (o: string | null) => ({
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": o && good(o) ? o : SITE,
-  "Access-Control-Allow-Headers": "content-type",
+  "Access-Control-Allow-Headers": "content-type, apikey, authorization, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
   "Vary": "Origin",
 });
 

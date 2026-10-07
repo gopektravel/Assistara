@@ -24,7 +24,7 @@ function configEnv() {
   process.env.ACADEMY_COOKIE_SECRET = COOKIE_SECRET;
 }
 
-function setMockFetch({ entitled = false, banned = false } = {}) {
+function setMockFetch({ entitled = false, banned = false, welcomeSeen = true } = {}) {
   global.fetch = async (input, init = {}) => {
     const url = String(input);
     if (url.endsWith("/auth/v1/user")) return response({ id: "auth-user-1", email: "not-used-for-entitlement@example.test" });
@@ -38,6 +38,12 @@ function setMockFetch({ entitled = false, banned = false } = {}) {
     if (url.endsWith("/rest/v1/rpc/academy_has_access")) {
       assert.deepEqual(JSON.parse(init.body), { p_user_id: "auth-user-1" });
       return response(entitled);
+    }
+    if (url.includes("/rest/v1/academy_applications?auth_user_id=")) {
+      return response([{
+        enrollment_token: "11111111-1111-1111-1111-111111111111",
+        welcome_seen_at: welcomeSeen ? "2026-10-07T12:00:00.000Z" : null,
+      }]);
     }
     if (url.startsWith("https://drive.google.com/uc?export=download&id=")) {
       return new Response(Buffer.from("%PDF-1.7\nlocal fixture"), {
@@ -272,6 +278,41 @@ test("authorized learner gate serves the existing dashboard HTML and protects sl
   await handler(req, assetRes);
   assert.equal(assetRes.statusCode, 404);
   assert.equal(assetRes.body, "");
+});
+
+test("authenticated learner with unseen welcome is redirected once without exposing the token", async t => {
+  configEnv();
+  const before = global.fetch;
+  t.after(() => { global.fetch = before; });
+  setMockFetch({ entitled: true, welcomeSeen: false });
+  const handler = require("./academy-content");
+  const value = security.seal({ aud: "academy", access_token: userAccessToken(), exp: Date.now() + 60_000 }, COOKIE_SECRET);
+  const headers = { cookie: `assistara_academy=${value}` };
+
+  const dashboard = mockResponse();
+  await handler({ method: "GET", url: "?audience=learner", headers, query: { audience: "learner" } }, dashboard);
+  assert.equal(dashboard.statusCode, 302);
+  assert.equal(dashboard.headers.Location, "/academy/welcome");
+  assert.doesNotMatch(dashboard.headers.Location, /token=/);
+
+  const welcome = mockResponse();
+  await handler({ method: "GET", url: "?audience=welcome", headers, query: { audience: "welcome" } }, welcome);
+  assert.equal(welcome.statusCode, 200);
+  assert.match(welcome.body, /Welcome to Assistara Academy/);
+  assert.match(welcome.body, /const token = "11111111-1111-1111-1111-111111111111";/);
+});
+
+test("authenticated learner who has seen welcome skips it on later login", async t => {
+  configEnv();
+  const before = global.fetch;
+  t.after(() => { global.fetch = before; });
+  setMockFetch({ entitled: true, welcomeSeen: true });
+  const handler = require("./academy-content");
+  const value = security.seal({ aud: "academy", access_token: userAccessToken(), exp: Date.now() + 60_000 }, COOKIE_SECRET);
+  const res = mockResponse();
+  await handler({ method: "GET", url: "?audience=welcome", headers: { cookie: `assistara_academy=${value}` }, query: { audience: "welcome" } }, res);
+  assert.equal(res.statusCode, 302);
+  assert.equal(res.headers.Location, "/academy/dashboard");
 });
 
 test("Test Portal requires a valid Admin QA cookie and never learner entitlement", async t => {

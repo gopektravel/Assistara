@@ -58,6 +58,31 @@ async function readDashboardHtml() {
   return null;
 }
 
+async function readWelcomeHtml() {
+  for (const root of projectRoots()) {
+    try { return await fs.readFile(path.join(root, "academy-welcome.html"), "utf8"); } catch {}
+  }
+  return null;
+}
+
+async function welcomeState(userId, cfg) {
+  const response = await fetch(
+    `${cfg.url}/rest/v1/academy_applications?auth_user_id=eq.${encodeURIComponent(userId)}&select=enrollment_token,welcome_seen_at&limit=1`,
+    {
+      headers: {
+        apikey: cfg.service,
+        Authorization: `Bearer ${cfg.service}`,
+      },
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) return null;
+  const rows = await response.json();
+  const application = Array.isArray(rows) ? rows[0] : null;
+  if (!application || !application.enrollment_token) return null;
+  return application;
+}
+
 async function readDriveAsset(fileId) {
   if (!/^[A-Za-z0-9_-]{10,200}$/.test(fileId || "")) return null;
   try {
@@ -93,7 +118,7 @@ module.exports = async function academyContent(req, res) {
   }
 
   const audience = query(req, "audience");
-  if (audience === "learner") {
+  if (audience === "learner" || audience === "welcome") {
     const saved = unseal(cookieValue(req, ACADEMY_COOKIE), cfg.cookieSecret);
     if (!saved || saved.aud !== "academy") return deny(res, "/login");
 
@@ -106,6 +131,42 @@ module.exports = async function academyContent(req, res) {
       user_id: session.user_id,
       exp: session.expires_at,
     }, cfg.cookieSecret, COOKIE_TTL_SECONDS);
+
+    const welcome = await welcomeState(session.user_id, cfg);
+    if (!welcome) return deny(res, "/login");
+
+    if (audience === "learner" && !welcome.welcome_seen_at) {
+      res.statusCode = 302;
+      res.setHeader("Location", "/academy/welcome");
+      res.setHeader("Content-Length", "0");
+      return res.end();
+    }
+
+    if (audience === "welcome") {
+      if (welcome.welcome_seen_at) {
+        res.statusCode = 302;
+        res.setHeader("Location", "/academy/dashboard");
+        res.setHeader("Content-Length", "0");
+        return res.end();
+      }
+      try {
+        const html = await readWelcomeHtml();
+        if (!html) throw new Error("Bundled Academy welcome HTML is unavailable");
+        const rendered = html.replace(
+          "const token = params.get('token') || '';",
+          `const token = ${JSON.stringify(welcome.enrollment_token)};`,
+        );
+        const bytes = Buffer.from(rendered, "utf8");
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("Content-Length", String(bytes.length));
+        return req.method === "HEAD" ? res.end() : res.end(bytes);
+      } catch (error) {
+        console.error("academy-welcome asset", error);
+        res.statusCode = 503;
+        return res.end();
+      }
+    }
 
     const asset = query(req, "asset");
     const driveId = query(req, "drive");
