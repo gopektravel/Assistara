@@ -1236,7 +1236,7 @@
         const payment = String(x.payment_status || "not_requested").toLowerCase();
         const isGcashPending = x.payment_method === "gcash" && payment === "pending" && !["followup_sent", "no_response"].includes(x.gcash_followup_status || "");
         const isActiveLearner = status === "onboarded" && payment === "paid" && !!x.onboarding_completed_at && !!x.auth_user_id && !x.suspended_at;
-        const isTestRecord = String(x.payment_method || "").toLowerCase() === "paymongo_qrph" || /^(internal_.*(qa|test)|sandbox)/i.test(String(x.source || "")) || String(x.email || "").toLowerCase() === "paymongo-qa@getassistara.com";
+        const isTestRecord = String(x.payment_method || "").toLowerCase() === "paymongo_qrph" || /^(internal_.*(qa|test)|sandbox)/i.test(String(x.source || "")) || /(^|\b)test(\b|$)/i.test(String(x.name || "")) || String(x.email || "").toLowerCase() === "paymongo-qa@getassistara.com";
         const isReviewable = !decision && ["new", "reviewing"].includes(status) && ["", "none", "not_requested"].includes(payment) && !x.auth_user_id && !x.onboarding_completed_at && !x.suspended_at;
         if (isReviewable) {
           return `<button class="accept" onclick="decision('${esc(x.id)}','accepted',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
