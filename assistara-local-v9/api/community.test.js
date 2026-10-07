@@ -230,11 +230,13 @@ test("a cookie bound to a different user cannot read or confirm another account'
 
 test("the dashboard keeps the community write server-side and wires both states", () => {
   const html = fs.readFileSync(path.join(v9Root, "academy-dashboard.html"), "utf8");
-  // The client may only SELECT its own row, and only for rendering the card.
-  assert.match(html, /client\.from\("academy_student_community"\)\.select\("community_joined"\)/,
-    "the dashboard must read its own join flag");
-  assert.equal(/client\.from\(["']academy_student_community["']\)\.(insert|upsert|update|delete)/.test(html), false,
-    "the dashboard must never write the community flag directly");
+  // The join flag lives in a service-role-only table, so the dashboard reads
+  // it through the same server API that writes it - never with client-held
+  // credentials (a direct client read is blocked by RLS and silently fails).
+  assert.match(html, /fetch\("\/api\/academy-community",\{method:"POST",credentials:"same-origin",headers:\{"Content-Type":"application\/json"\},body:JSON\.stringify\(\{action:"state"\}\)\}\)/,
+    "the dashboard must read its join flag through the server API");
+  assert.equal(/client\.from\(["']academy_student_community["']\)/.test(html), false,
+    "the dashboard must never touch academy_student_community directly");
   // Confirmation always round-trips through the server API.
   assert.match(html, /fetch\("\/api\/academy-community",\{method:"POST"/,
     "I've joined must post to the server API");

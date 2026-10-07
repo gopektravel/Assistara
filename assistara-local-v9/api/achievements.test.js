@@ -661,7 +661,7 @@ test("the Live Sessions subtitle is compact, and names the next session when one
     // A scheduled session, in the future.
     const future = new Date(Date.now() + 3 * 86400000).toISOString();
     qc.LIVE_SESSIONS.push({ title: "Client Q&A", when: future, detail: "Bring your questions." });
-    assert.equal(qc.nextLiveSession().title, "Client Q&A");
+    assert.equal(qc.nextSession().title, "Client Q&A");
     const sub = qc.liveSessionSubtitle();
     assert.match(sub, /^Next: Client Q&A/, "a scheduled session must be named: " + sub);
     assert.ok(sub.length < 44, "the subtitle must stay compact, got: " + sub);
@@ -674,7 +674,7 @@ test("the Live Sessions subtitle is compact, and names the next session when one
     // A past session is not "upcoming".
     qc.LIVE_SESSIONS.length = 0;
     qc.LIVE_SESSIONS.push({ title: "Old Q&A", when: new Date(Date.now() - 86400000).toISOString() });
-    assert.equal(qc.nextLiveSession(), null, "a past session must not count as upcoming");
+    assert.equal(qc.nextSession(), null, "a past session must not count as upcoming");
     assert.equal(qc.liveSessionSubtitle(), "View upcoming sessions");
   } finally { session.dispose(); }
 });

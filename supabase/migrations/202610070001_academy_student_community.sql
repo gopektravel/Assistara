@@ -35,7 +35,7 @@ BEGIN
       AND table_name = 'academy_student_community'
   LOOP
     EXECUTE format(
-      'REVOKE SELECT (%1$I), INSERT (%1$I), UPDATE (%1$I), REFERENCES (%1$I), TRIGGER (%1$I) ON TABLE public.academy_student_community FROM PUBLIC, anon, authenticated',
+      'REVOKE SELECT (%1$I), INSERT (%1$I), UPDATE (%1$I), REFERENCES (%1$I) ON TABLE public.academy_student_community FROM PUBLIC, anon, authenticated',
       column_row.column_name
     );
   END LOOP;

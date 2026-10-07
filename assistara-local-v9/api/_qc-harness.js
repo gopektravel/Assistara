@@ -67,7 +67,7 @@ const EXPORTS = [
   // Achievements + Home Quick Access (owner directive, 2 October 2026).
   "achievements", "ACHIEVEMENT_MILESTONES", "renderAchievements",
   "modulesDone", "totalModules", "skillsDemonstrated",
-  "LIVE_SESSIONS", "upcomingSessions", "nextLiveSession", "liveSessionSubtitle",
+  "LIVE_SESSIONS", "upcomingSessions", "nextSession", "liveSessionSubtitle",
   "buildSessions",
   // Desktop portal composition pass: navigation vs progression (owner A5).
   "browse", "browseBarHTML", "guardProgression", "progressionFingerprint",
