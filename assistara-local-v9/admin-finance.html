@@ -1385,6 +1385,9 @@
         });
         paintExpenseList();
         wireForm();
+        // The "Add expense" form is always on screen; initialise it with the
+        // defaults (today's LOCAL date, PHP) so the date is never blank.
+        resetForm();
       }
       function paintExpenseList() {
         const q = searchQ.trim().toLowerCase();
