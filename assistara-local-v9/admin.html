@@ -1805,7 +1805,20 @@
         const examSummary = `${prog.examsPassed} Passed · ${prog.examsFailed} Failed · ${prog.examsPending} Pending`;
         return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">⌄</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
       }
+      // Every tab-scoped container is reset here, before the active tab renders,
+      // so components from a previous tab (capacity overview, waitlist, payment
+      // exceptions, webinar attribution/points, the pending-payment alert, the
+      // student filters) can never remain visible in another tab. This is the
+      // single place that owns tab isolation — no scattered per-branch resets.
+      function resetTabScaffold() {
+        $("capacityPanel").style.display = "none";
+        $("signupGoal").innerHTML = "";
+        $("pendingBox").innerHTML = "";
+        const f = $("studentFilters");
+        if (f) f.style.display = "none";
+      }
       async function render() {
+        resetTabScaffold();
         drawPending();
         if (tab === "applicants") {
           const a = activeApps().filter(match);
@@ -1861,6 +1874,7 @@
             [s.filter((x) => x.suspended_at).length, "Suspended"],
             [s.filter((x) => x._progress && x._progress.pct >= 100).length, "Completed"],
           ]);
+          $("studentFilters").style.display = "flex";
           $("cards").innerHTML = sorted.length
             ? sorted.map(studentCard).join("")
             : '<div class="empty">No students found.</div>';
@@ -2269,9 +2283,8 @@
             document
               .querySelectorAll(".nav button")
               .forEach((x) => x.classList.toggle("active", x === b));
-            // Show/hide student filters
-            const filters = $("studentFilters");
-            if (filters) filters.style.display = tab === "students" ? "flex" : "none";
+            // Student filters and all other tab-scoped containers are managed
+            // centrally by resetTabScaffold() inside render().
             // Refresh the integrated capacity block each time Applicants is opened.
             if (tab === "applicants") capacityDirty = true;
             render();
@@ -2447,8 +2460,10 @@
         };
         render = () => {
           if (tab !== "b2b") return previousRender();
+          // Same central isolation as the base render, so the Capacity panel,
+          // attribution/points block and student filters never leak into B2B.
+          resetTabScaffold();
           $("payCount").textContent = "";
-          $("pendingBox").innerHTML = "";
           const list = calls.filter(match),
             up = list.filter(
               (x) =>
