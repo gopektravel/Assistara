@@ -13,8 +13,9 @@
  * load, so no re-render can re-run this file twice in one document.
  *
  * Base tag only. No conversion events are fired from this file. The Masterclass
- * signup conversion will be added here once Google provides the conversion
- * ID/label for the configured conversion action.
+ * Lead Form conversion is fired from academy.html at the exact point where a
+ * signup has been confirmed by the backend - never from here, so a page load
+ * can never register a conversion.
  */
 !function(w,d,s,u,id){
   if(w._assistaraGoogleAds)return;

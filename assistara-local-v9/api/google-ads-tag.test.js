@@ -10,8 +10,9 @@
 //   3. Every page that carries the OpenAI Ads pixel also carries the Google
 //      Ads include - the "public pages" set stays in sync.
 //   4. Each public page includes googletag.js exactly once, inside <head>.
-//   5. The AW ID and gtag bootstrap live only in googletag.js - never inlined
-//      into a page, so the ID cannot be changed in more than one place.
+//   5. A page never inlines the global tag (loader URL, bootstrap function or
+//      config call). The AW ID may appear in a page only inside a conversion
+//      send_to - the base tag itself lives in googletag.js.
 //   6. vercel.json builds and routes /googletag.js ahead of the catch-all.
 
 const test = require("node:test");
@@ -71,15 +72,19 @@ test("each public page includes googletag.js exactly once, inside <head>", () =>
   }
 });
 
-test("the AW ID and gtag bootstrap never leak into a page", () => {
+test("pages never inline the global tag; the AW ID appears only as a conversion send_to", () => {
   for (const file of htmlFiles) {
     const html = read(file);
-    assert.equal(html.includes(TAG_ID), false,
-      `${file} must not inline the Google Ads ID; edit googletag.js instead`);
     assert.equal(html.includes("googletagmanager.com"), false,
       `${file} must not inline the gtag loader URL`);
     assert.equal(/function\s+gtag\s*\(/.test(html), false,
       `${file} must not inline the gtag bootstrap function`);
+    assert.equal(/gtag\(\s*["']config["']/.test(html), false,
+      `${file} must not run a global gtag config; the base tag lives in googletag.js`);
+    const idCount = html.split(TAG_ID).length - 1;
+    const sendToCount = (html.match(/send_to:'/g) || []).length;
+    assert.equal(idCount, sendToCount,
+      `${file}: the Google Ads ID may only appear inside a conversion send_to, found ${idCount} occurrence(s) vs ${sendToCount} send_to(s)`);
   }
 });
 
