@@ -898,6 +898,10 @@
       .recordFacts dt { color: var(--muted); font-size: 11px; font-weight: 700; }
       .recordFacts dd { margin: 3px 0 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
       .accountState { display: inline-flex; margin: 0; padding: 7px 10px; border-radius: 8px; background: #f5f3ee; font-size: 12px; font-weight: 800; }
+      .attrDetail { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 4px 18px; margin-top: 10px; }
+      .attrRow { display: flex; gap: 8px; justify-content: space-between; font-size: 12px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+      .attrRow span { color: var(--muted); }
+      .attrRow b { font-weight: 800; text-align: right; overflow-wrap: anywhere; }
       .activityTimeline { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
       .activityTimeline li { display: grid; grid-template-columns: minmax(105px, auto) 1fr; gap: 10px; font-size: 12px; }
       .activityTimeline time { color: var(--muted); }
@@ -1001,6 +1005,7 @@
       </section>
     </div>
     <div id="toast" class="toast"></div>
+    <script src="/attribution.js"></script>
     <script>
       const LOGIN =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
@@ -1024,6 +1029,7 @@
         b2b = [],
         accounts = [],
         acquisitionLinks = [],
+        acquisitionVisits = [],
         studentProgress = [],
         tab = "applicants";
       // Every application card keeps its own expand state so reviewing one
@@ -1166,7 +1172,8 @@
         // Keep the full application record visible through the end of its
         // lifecycle; completed and declined records are not reviewable, but
         // remain useful records and have their actions guarded separately.
-        return apps;
+        // Defense-in-depth: also filter out fully enrolled students on the frontend.
+        return apps.filter((x) => !(x.status === "onboarded" && x.payment_status === "paid" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at));
       }
       function actionablePending() {
         return activeApps().filter(
@@ -1429,19 +1436,32 @@
           }
         }
       };
+      // Attribution is resolved by the one shared resolver (attribution.js):
+      // a real acquisition-link visit always wins, UTMs are only a fallback, and
+      // Untracked is shown only when nothing reliable exists anywhere.
       function applicationSource(x) {
-        const linkedSignup = web.find((w) => String(w.application_id || "") === String(x.id || "")) || web.find((w) => String(w.email || "").trim().toLowerCase() === String(x.email || "").trim().toLowerCase() && w.tracking_token);
-        const token = String(x.tracking_token || linkedSignup?.tracking_token || "").trim();
-        if (!token) return { label: "Direct / untracked", token: "" };
-        const link = acquisitionLinks.find((l) =>
-          String(l.token || "").trim() === token ||
-          String(l.id || "").trim() === token
-        );
-        if (!link) return { label: "Unknown tracking source", token };
-        return {
-          label: [link.channel, link.placement, link.label].filter(Boolean).join(" → "),
-          token,
-        };
+        const r = window.AssistaraAttribution.resolve(x, {
+          kind: "application",
+          links: acquisitionLinks,
+          visits: acquisitionVisits,
+          signups: web,
+        });
+        return { label: r.display, token: r.token, detail: r };
+      }
+      function attributionDetailHTML(d) {
+        if (!d) return "";
+        const rows = [];
+        if (d.tracked) {
+          if (d.channel) rows.push(["Channel", d.channel]);
+          if (d.placement) rows.push(["Placement", d.placement]);
+          if (d.campaign) rows.push(["Campaign", d.campaign]);
+          if (d.destination) rows.push(["Landing destination", d.destination]);
+          if (d.utm) rows.push(["UTM", [d.utm.source, d.utm.medium, d.utm.campaign].filter(Boolean).join(" / ")]);
+          rows.push(["Status", "Tracked"]);
+        } else {
+          rows.push(["Status", "Untracked"]);
+        }
+        return `<div class="attrDetail">${rows.map(([k, v]) => `<div class="attrRow"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>`;
       }
       function appCard(x) {
         const key = x.id === null || x.id === undefined ? "" : String(x.id);
@@ -1466,6 +1486,7 @@
             <section class="recordSection">
               <h3>ACQUISITION SOURCE</h3>
               <p class="accountState"><b>${esc(source.label)}</b></p>
+              ${attributionDetailHTML(source.detail)}
             </section>
             <section class="recordSection">
               <h3>APPLICATION ANSWERS</h3>
@@ -1734,11 +1755,11 @@
             ],
             [
               a.filter((x) => String(x.payment_status || "").toLowerCase() === "paid" && !(String(x.status || "").toLowerCase() === "onboarded" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at)).length,
-              "Paid",
+              "Paid — Onboarding Pending",
             ],
             [
-              a.filter((x) => String(x.status || "").toLowerCase() === "onboarded" && String(x.payment_status || "").toLowerCase() === "paid" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at).length,
-              "Active accounts",
+              a.filter((x) => x.suspended_at).length,
+              "Suspended",
             ],
           ]);
           $("cards").innerHTML = a.length
@@ -1793,7 +1814,7 @@
             [visibleWeb.filter((x) => x.purchased).length, "Purchased"],
           ]);
           const w = visibleWeb.filter(match);
-          const sourceFor=x=>{if(!x.tracking_token)return "Unknown / untracked";const t=String(x.tracking_token).trim();const link=acquisitionLinks.find(l=>String(l.token||"").trim()===t||String(l.id||"").trim()===t);return link?(link.channel+" → "+link.placement+(link.label?" · "+link.label:"")):"Unknown / untracked"};
+          const sourceFor=x=>window.AssistaraAttribution.resolve(x,{kind:"signup",links:acquisitionLinks,visits:acquisitionVisits,signups:web}).display;
           $("cards").innerHTML = w.length
             ? w.map((x,i) => {const source=sourceFor(x);return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div><div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
@@ -1821,6 +1842,7 @@
         students = d.students || [];
         web = d.signups || [];
         b2b = d.b2b || [];
+        acquisitionVisits = d.visits || [];
         try { const a=await fetch("https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"list"})}); const aj=await a.json(); acquisitionLinks=a.ok?(aj.links||[]):[] } catch { acquisitionLinks=[] }
         try {
           accounts = (await req("list", {}, ACC)).accounts || [];

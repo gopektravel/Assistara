@@ -761,6 +761,7 @@
       <div id="content"></div>
     </div>
     <div id="toast" class="toast"></div>
+    <script src="/attribution.js"></script>
     <script>
       /* ---------------------------------------------------------------- *
        * Assistara Finance
@@ -881,6 +882,7 @@
       let apps = [],
         signups = [],
         links = [],
+        attributionVisits = [],
         expenses = [],
         expensesError = "";
       let tab = "overview",
@@ -1094,17 +1096,19 @@
         );
       }
       function sourceOf(x) {
-        const l = linkFor(x.tracking_token);
-        if (!l) {
-          return String(x.tracking_token || "").trim()
-            ? { id: "__unknown__", label: "Unknown tracking source", link: null }
-            : { id: "", label: "Direct / untracked", link: null };
-        }
-        return {
-          id: String(l.id),
-          label: [l.channel, l.placement, l.label].filter(Boolean).join(" → "),
-          link: l,
-        };
+        // One shared resolver decides the source (attribution.js); a real
+        // acquisition-link visit is tracked even when every UTM field is null.
+        const r = window.AssistaraAttribution.resolve(x, {
+          kind: "application",
+          links,
+          visits: attributionVisits,
+          signups,
+        });
+        if (!r.tracked) return { id: "", label: "Direct / untracked", link: null };
+        const l = linkFor(r.token);
+        return l
+          ? { id: String(l.id), label: r.display, link: l }
+          : { id: "__unknown__", label: r.display, link: null };
       }
       function sourceLabelOfLink(l) {
         if (!l) return "Direct / untracked";
@@ -1872,6 +1876,7 @@
           if (core.status === "fulfilled") {
             apps = core.value.applications || [];
             signups = core.value.signups || [];
+            attributionVisits = core.value.visits || [];
           } else {
             if (!silent) throw core.reason;
           }

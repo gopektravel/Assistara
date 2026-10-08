@@ -189,6 +189,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "attribution.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "oaiq-pixel.js",
       "use": "@vercel/static"
     },
@@ -439,6 +443,10 @@
     {
       "src": "/app.js",
       "dest": "/app.js"
+    },
+    {
+      "src": "/attribution.js",
+      "dest": "/attribution.js"
     },
     {
       "src": "/oaiq-pixel.js",
