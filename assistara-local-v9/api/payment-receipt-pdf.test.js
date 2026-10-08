@@ -150,10 +150,10 @@ test("payment-complete email invariants are unchanged", () => {
   const guard = indexOf(src, "if(!app.payment_confirmation_sent_at)");
   const call = indexOf(src, "buildReceiptPdf({receipt:receiptNumber");
   assert.ok(guard < call, "pdf build must happen inside the send-once guard");
-  assert.ok(src.includes("const {data:updatedApp,error:updateError}=await db.from('academy_applications').update"),
-    "persistence verification must be captured");
-  assert.ok(src.includes(".select('id,payment_status').single()"),
-    "update result must be re-selected");
+  assert.ok(src.includes("db.rpc('finalize_academy_payment'"),
+    "payment must be finalized via the serialized service-role RPC");
+  assert.ok(src.includes("if(!finalized?.ok)"),
+    "the RPC persistence result must be checked before sending");
 });
 
 test("pdf build failures stay non-fatal (try/catch around renderer)", () => {

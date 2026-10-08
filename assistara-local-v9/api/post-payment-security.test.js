@@ -75,48 +75,52 @@ test("onboarding-api completed guard precedes application mutation", () => {
 
 /* ------------------------------------------------------------------ *
  * 2. payment-complete: payment persistence verification              *
+ *    Payment persistence goes through the serialized, service-role-  *
+ *    only finalize_academy_payment() RPC, which is the single mark-  *
+ *    paid gate (capacity-checked, idempotent). The RPC result is the *
+ *    persistence proof, checked before any email/success.            *
  * ------------------------------------------------------------------ */
 
-test("payment-complete captures the academy_applications update result", () => {
+test("payment-complete finalizes payment through the serialized capacity RPC", () => {
   const src = source("payment-complete");
-  assert.match(src, /const\s+\{data:updatedApp,error:updateError\}\s*=\s*await\s+db\.from\('academy_applications'\)\.update/);
+  assert.match(src, /db\.rpc\('finalize_academy_payment'/);
+  assert.match(src, /finalize_academy_payment',\{p_application_id:id,p_amount:amount,p_currency:currency,p_payment_method:'card',p_provider:'stripe'/);
 });
 
-test("payment-complete selects the persisted payment_status", () => {
+test("payment-complete captures the RPC result and checks it", () => {
   const src = source("payment-complete");
-  assert.match(src, /\.select\('id,payment_status'\)\.single\(\)/);
+  assert.match(src, /\{data:finalized,error:finalizeError\}=await db\.rpc\('finalize_academy_payment'/);
+  assert.match(src, /if\(finalizeError\)return out\(\{ok:false/);
+  assert.match(src, /if\(!finalized\?\.ok\)/);
 });
 
 test("payment-complete persistence check precedes masterclass update", () => {
   const src = source("payment-complete");
-  const persistenceCheck = indexOf(src, "updatedApp.payment_status!=='paid'");
+  const persistenceCheck = indexOf(src, "if(!finalized?.ok)");
   const masterclass = indexOf(src, "masterclass_signups");
   assert.ok(persistenceCheck < masterclass, "persistence check must precede masterclass update");
 });
 
 test("payment-complete persistence check precedes onboarding email", () => {
   const src = source("payment-complete");
-  const persistenceCheck = indexOf(src, "updatedApp.payment_status!=='paid'");
+  const persistenceCheck = indexOf(src, "if(!finalized?.ok)");
   const emailSend = indexOf(src, "send(app.email");
   assert.ok(persistenceCheck < emailSend, "persistence check must precede email send");
 });
 
 test("payment-complete persistence failure returns controlled error without ok:true", () => {
   const src = source("payment-complete");
-  const persistenceFailure = src.slice(
-    indexOf(src, "updatedApp.payment_status!=='paid'"),
-    indexOf(src, "await db.from('masterclass_signups')")
-  );
-  assert.match(persistenceFailure, /return out\(\{ok:false/);
-  assert.match(persistenceFailure, /Do not pay again/);
-  assert.doesNotMatch(persistenceFailure, /ok:true/);
+  const failure = src.slice(indexOf(src, "if(finalizeError)"), indexOf(src, "const paidAt="));
+  assert.match(failure, /return out\(\{ok:false/);
+  assert.match(failure, /ok:false,exception:true/);
+  assert.doesNotMatch(failure, /ok:true/);
 });
 
 test("payment-complete keeps Stripe verification before persistence", () => {
   const src = source("payment-complete");
   const stripeVerify = indexOf(src, "s.payment_status!=='paid'");
   const sourceCheck = indexOf(src, "s.metadata?.source!=='assistara_academy'");
-  const persistence = indexOf(src, "updatedApp.payment_status!=='paid'");
+  const persistence = indexOf(src, "if(!finalized?.ok)");
   assert.ok(stripeVerify < persistence, "Stripe payment_status check must precede DB persistence check");
   assert.ok(sourceCheck < persistence, "Stripe source check must precede DB persistence check");
 });
