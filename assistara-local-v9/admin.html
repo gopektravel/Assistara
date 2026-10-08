@@ -995,8 +995,7 @@
           ><button type="button" onclick="location.href='/admin/acquisition'">Acquisition Tracker</button
           ><button type="button" onclick="location.href='/admin/finance'">Finance</button
           ><button type="button" onclick="location.href='/admin/masterclass-event'">Masterclass Event</button
-          ><button data-tab="b2b">B2B</button
-          ><button data-tab="capacity">Capacity</button>
+          ><button data-tab="b2b">B2B</button>
         </div>
         <div id="pendingBox"></div>
         <input id="search" class="search" placeholder="Search..." />
@@ -1020,7 +1019,8 @@
         <div id="signupGoal"></div><div id="stats" class="stats"></div>
         <div id="capacityPanel" style="display:none">
           <div class="capacity-section">
-            <h3>Cohort Capacity Overview</h3>
+            <h3>Cohort Capacity</h3>
+            <div class="sub" style="margin:-6px 0 10px">15-seat founding cohort — seat enforcement, waitlist and payment exceptions for applicants.</div>
             <div class="capacity-grid" id="capacityGrid"></div>
           </div>
           <div class="capacity-section">
@@ -1091,6 +1091,9 @@
         acquisitionVisits = [],
         studentProgress = [],
         tab = "applicants";
+      // Cohort capacity now lives inside the Applicants view; it is (re)loaded
+      // when the Applicants tab is entered, not on every render/keystroke.
+      let capacityDirty = true;
       // Every application card keeps its own expand state so reviewing one
       // applicant never opens or closes another.
       const openApps = new Set(),
@@ -1826,6 +1829,10 @@
             : '<div class="empty">No applications found.</div>';
           hydrateOpenApps();
           hydrateOpenNotes();
+          // Capacity overview, waitlist and payment exceptions live here, inside
+          // the Applicants workflow.
+          $("capacityPanel").style.display = "block";
+          if (capacityDirty) { capacityDirty = false; renderCapacity(); }
           return;
         }
         if (tab === "students") {
@@ -1880,14 +1887,6 @@
           $("cards").innerHTML = w.length
             ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
-          return;
-        }
-        if (tab === "capacity") {
-          $("signupGoal").innerHTML = "";
-          $("cards").innerHTML = "";
-          $("studentFilters").style.display = "none";
-          $("capacityPanel").style.display = "block";
-          await renderCapacity();
           return;
         }
         $("capacityPanel").style.display = "none";
@@ -2273,6 +2272,8 @@
             // Show/hide student filters
             const filters = $("studentFilters");
             if (filters) filters.style.display = tab === "students" ? "flex" : "none";
+            // Refresh the integrated capacity block each time Applicants is opened.
+            if (tab === "applicants") capacityDirty = true;
             render();
           }),
       );
