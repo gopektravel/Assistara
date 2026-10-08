@@ -201,6 +201,18 @@
       "use": "@vercel/static"
     },
     {
+      "src": "reddit-pixel.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "consent.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "privacy.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "assistara-logo.svg",
       "use": "@vercel/static"
     },
@@ -459,6 +471,18 @@
     {
       "src": "/googletag.js",
       "dest": "/googletag.js"
+    },
+    {
+      "src": "/reddit-pixel.js",
+      "dest": "/reddit-pixel.js"
+    },
+    {
+      "src": "/consent.js",
+      "dest": "/consent.js"
+    },
+    {
+      "src": "/privacy.html",
+      "dest": "/privacy.html"
     },
     {
       "src": "/assistara-logo.svg",
