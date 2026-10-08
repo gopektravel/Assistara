@@ -26,7 +26,7 @@
 create table if not exists public.finance_expenses (
   id uuid primary key default gen_random_uuid(),
   amount numeric(12, 2) not null check (amount >= 0),
-  currency text not null default 'PHP' check (currency in ('PHP', 'USD')),
+  currency text not null default 'PHP' check (currency in ('PHP', 'USD', 'EUR')),
   fx_rate_php numeric(12, 6) not null default 1 check (fx_rate_php > 0),
   amount_php numeric(14, 2) not null check (amount_php >= 0),
   expense_date date not null,

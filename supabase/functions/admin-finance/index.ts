@@ -1,5 +1,5 @@
-// Admin Finance — expense CRUD behind the same Admin token gate as every
-// other admin endpoint.
+// Admin Finance — expense CRUD + payment processing fee tracking behind the
+// same Admin token gate as every other admin endpoint.
 //
 // Actions
 //   { action: "list" }                                -> all expenses
@@ -7,6 +7,10 @@
 //   { action: "update", id, expense: {...} }          -> update, return row
 //   { action: "delete", id }                          -> delete
 //   { action: "fx", currency, date }                  -> fetch PHP rate for currency on date
+//   { action: "fee_list" }                            -> all payment processing fees
+//   { action: "fee_update", id, fee: {...} }          -> update fee (reconciliation)
+//   { action: "fee_reconcile_stripe" }                -> batch re-fetch Stripe fees
+//   { action: "fee_reconcile_paymongo" }              -> batch re-fetch PayMongo fees
 //
 // The expense object mirrors public.finance_expenses. The server always
 // recomputes the normalised `amount_php` from `amount`, `currency` and
@@ -102,7 +106,7 @@ function clean(value: unknown, max: number): string {
   return String(value ?? "").trim().slice(0, max);
 }
 
-async function validateExpense(raw: any): Promise<{ ok: true; value: Record<string, unknown> } | { ok: false; error: string }> {
+async function validateExpense(raw: any, current?: any): Promise<{ ok: true; value: Record<string, unknown> } | { ok: false; error: string }> {
   const amount = Number(raw?.amount);
   if (!Number.isFinite(amount) || amount < 0 || amount > 1e9) {
     return { ok: false, error: "Enter a valid amount." };
@@ -115,7 +119,13 @@ async function validateExpense(raw: any): Promise<{ ok: true; value: Record<stri
   // fx_rate_php: server-authoritative. If client provides a manual override, validate it.
   // Otherwise, we will fetch the rate server-side (for create/update without manual override).
   let fxRate = Number(raw?.fx_rate_php ?? 0);
-  const hasManualOverride = Number.isFinite(fxRate) && fxRate > 0;
+  let hasManualOverride = Number.isFinite(fxRate) && fxRate > 0;
+  // Metadata-only edits must not fetch a new rate or re-normalize history.
+  if (current && currency === current.currency && raw?.fx_rate_php == null) {
+    fxRate = Number(current.fx_rate_php);
+    hasManualOverride = true;
+  }
+  if (currency === "PHP" && (!current || current.currency !== "PHP")) { fxRate = 1; hasManualOverride = true; }
 
   const dateRaw = clean(raw?.expense_date, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateRaw) || Number.isNaN(Date.parse(dateRaw + "T00:00:00Z"))) {
@@ -156,7 +166,8 @@ async function validateExpense(raw: any): Promise<{ ok: true; value: Record<stri
     }
   }
 
-  const amountPhp = Math.round(amount * fxRate * 100) / 100;
+  const unchangedFinancials = current && amount === Number(current.amount) && currency === current.currency && fxRate === Number(current.fx_rate_php);
+  const amountPhp = unchangedFinancials ? current.amount_php : Math.round(amount * fxRate * 100) / 100;
 
   return {
     ok: true,
@@ -207,7 +218,7 @@ Deno.serve(async (req: Request) => {
     // Body: { currency: "USD" | "EUR", date: "2026-09-15" }
     const currency = String(body.currency || "").toUpperCase();
     const date = String(body.date || "");
-    if (!["USD", "EUR"].includes(currency)) {
+    if (!CURRENCIES.includes(currency)) {
       return out({ ok: false, error: "Currency must be USD or EUR." }, 400, origin);
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date + "T00:00:00Z"))) {
@@ -235,7 +246,9 @@ Deno.serve(async (req: Request) => {
   if (action === "update") {
     const id = clean(body.id, 64);
     if (!/^[A-Za-z0-9-]{1,64}$/.test(id)) return out({ ok: false, error: "Invalid expense id." }, 400, origin);
-    const check = await validateExpense(body.expense);
+    const { data: current, error: readError } = await db.from("finance_expenses").select("amount,currency,fx_rate_php,amount_php").eq("id", id).single();
+    if (readError || !current) return out({ ok: false, error: "Could not load the expense for editing." }, 400, origin);
+    const check = await validateExpense(body.expense, current);
     if (!check.ok) return out({ ok: false, error: check.error }, 400, origin);
     const { data, error } = await db
       .from("finance_expenses")
@@ -253,6 +266,121 @@ Deno.serve(async (req: Request) => {
     const { error } = await db.from("finance_expenses").delete().eq("id", id);
     if (error) return out({ ok: false, error: "Could not delete the expense." }, 500, origin);
     return out({ ok: true }, 200, origin);
+  }
+
+  // --- Payment processing fees ---
+
+  if (action === "fee_list") {
+    const { data, error } = await db
+      .from("payment_processing_fees")
+      .select("*, academy_applications(name, email, payment_method, paid_at)")
+      .order("created_at", { ascending: false });
+    if (error) return out({ ok: false, error: "Could not load fees." }, 500, origin);
+    return out({ ok: true, fees: data || [] }, 200, origin);
+  }
+
+  if (action === "fee_update") {
+    const id = clean(body.id, 64);
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(id)) return out({ ok: false, error: "Invalid fee id." }, 400, origin);
+    // Audit: fetch current status first; never silently overwrite confirmed fee history
+    const { data: current } = await db.from("payment_processing_fees").select("reconciliation_status, fee_amount_php").eq("id", id).single();
+    if (!current) return out({ ok: false, error: "Fee record not found." }, 404, origin);
+    const feeAmount = Number(body.fee?.fee_amount_php);
+    if (!Number.isFinite(feeAmount) || feeAmount < 0 || feeAmount > 1e9) {
+      return out({ ok: false, error: "Enter a valid fee amount." }, 400, origin);
+    }
+    const status = clean(body.fee?.reconciliation_status, 20);
+    if (!["confirmed", "pending", "failed"].includes(status)) {
+      return out({ ok: false, error: "Invalid reconciliation status." }, 400, origin);
+    }
+    // Prevent silent overwrite of confirmed fee history (audit requirement)
+    if (current.reconciliation_status === "confirmed" && (status !== "confirmed" || feeAmount !== Number(current.fee_amount_php))) {
+      return out({ ok: false, error: "Confirmed fee records cannot be altered without audit review. Create a correction entry instead." }, 403, origin);
+    }
+    const { data, error } = await db
+      .from("payment_processing_fees")
+      .update({
+        fee_amount_php: feeAmount,
+        reconciliation_status: status,
+        reconciled_at: status === "confirmed" ? new Date().toISOString() : null,
+      })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) return out({ ok: false, error: "Could not update fee." }, 500, origin);
+    return out({ ok: true, fee: data }, 200, origin);
+  }
+
+  if (action === "fee_reconcile_stripe") {
+    const STRIPE = Deno.env.get("STRIPE_SECRET_KEY") || "";
+    if (!STRIPE) return out({ ok: false, error: "Stripe not configured" }, 500, origin);
+    const { data: pending, error: fetchErr } = await db
+      .from("payment_processing_fees")
+      .select("id, provider_payment_id")
+      .eq("provider", "stripe")
+      .eq("reconciliation_status", "pending");
+    if (fetchErr) return out({ ok: false, error: "Could not fetch pending fees." }, 500, origin);
+    let updated = 0;
+    for (const row of pending || []) {
+      try {
+        const ch = await (await fetch(`https://api.stripe.com/v1/charges/${encodeURIComponent(row.provider_payment_id)}`, {
+          headers: { Authorization: `Bearer ${STRIPE}` },
+        })).json();
+        if (ch.balance_transaction) {
+          const bt = await (await fetch(`https://api.stripe.com/v1/balance_transactions/${encodeURIComponent(ch.balance_transaction)}`, {
+            headers: { Authorization: `Bearer ${STRIPE}` },
+          })).json();
+          if (bt && typeof bt.fee === "number") {
+            await db.from("payment_processing_fees").update({
+              fee_amount_php: bt.fee / 100,
+              provider_fee_id: bt.id,
+              fee_details: bt.fee_details || null,
+              reconciliation_status: "confirmed",
+              reconciled_at: new Date().toISOString(),
+            }).eq("id", row.id);
+            updated++;
+          }
+        }
+      } catch (e) {
+        console.error("stripe_reconcile_failed", row.id, e);
+      }
+    }
+    return out({ ok: true, updated }, 200, origin);
+  }
+
+  if (action === "fee_reconcile_paymongo") {
+    const PAYMONGO = Deno.env.get("PAYMONGO_SECRET_KEY") || "";
+    if (!PAYMONGO) return out({ ok: false, error: "PayMongo not configured" }, 500, origin);
+    const { data: pending, error: fetchErr } = await db
+      .from("payment_processing_fees")
+      .select("id, provider_payment_id, application_id")
+      .eq("provider", "paymongo")
+      .eq("reconciliation_status", "pending");
+    if (fetchErr) return out({ ok: false, error: "Could not fetch pending fees." }, 500, origin);
+    let updated = 0;
+    for (const row of pending || []) {
+      try {
+        const appRow = await db.from("academy_applications").select("paymongo_payment_intent_id").eq("id", row.application_id).maybeSingle();
+        if (!appRow.data?.paymongo_payment_intent_id) continue;
+        const pi = await (await fetch(`https://api.paymongo.com/v1/payment_intents/${encodeURIComponent(appRow.data.paymongo_payment_intent_id)}`, {
+          headers: { Authorization: "Basic " + btoa(PAYMONGO + ":") },
+        })).json();
+        const fees = pi?.data?.attributes?.fees;
+        if (Array.isArray(fees) && fees.length > 0) {
+          const totalFee = fees.reduce((sum: number, f: any) => sum + (Number(f.amount) || 0), 0) / 100;
+          await db.from("payment_processing_fees").update({
+            fee_amount_php: totalFee,
+            fee_details: fees,
+            reconciliation_status: "confirmed",
+            reconciled_at: new Date().toISOString(),
+          }).eq("id", row.id);
+          updated++;
+        }
+      } catch (e) {
+        console.error("paymongo_reconcile_failed", row.id, e);
+      }
+    }
+    return out({ ok: true, updated }, 200, origin);
   }
 
   return out({ ok: false, error: "Unknown action" }, 400, origin);

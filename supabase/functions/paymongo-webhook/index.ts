@@ -108,7 +108,51 @@ Deno.serve(async req=>{
     const finished=await db.from("academy_applications").update({paymongo_payment_id:paymentId,receipt_number:receipt,receipt_generated_at:new Date().toISOString(),payment_method_brand:"QR Ph"}).eq("id",app.id).select("id");
     if(finished.error)throw new Error("application_update_failed");
     await db.from("masterclass_signups").update({purchased:true,purchased_at:paidAt,purchase_amount:amount,purchase_currency:"PHP",status:"purchased"}).eq("application_id",app.id);
-    await db.from("admin_activity_log").insert({entity_type:"application",entity_id:app.id,action:"paymongo_payment_paid",details:{event_id:eventId,payment_id:paymentId,payment_intent_id:piId,amount_php:amount}});
+
+      // Fetch PayMongo fees for fee recording (idempotent via unique constraint)
+      try {
+        const pi = await paymongo("payment_intents/" + encodeURIComponent(piId));
+        const pia = pi.data?.data?.attributes;
+        // Note: PayMongo Payment Intent fees (pia.fees) are retrieved from webhook payload.
+        // The authoritative settlement fee requires verification against PayMongo settlement records.
+        // Per documentation verification blocker (official docs unavailable at time of audit),
+        // we treat webhook fee data as tentative: store fee amount but mark 'pending' until
+        // admin reconciliation confirms settlement records match. Never invent fees.
+        if (pi.ok && Array.isArray(pia?.fees) && pia.fees.length > 0) {
+          const totalFee = pia.fees.reduce((sum: number, f: any) => sum + (Number(f.amount) || 0), 0) / 100;
+          await db.from('payment_processing_fees').upsert({
+            application_id: app.id,
+            provider: 'paymongo',
+            provider_payment_id: paymentId,
+            provider_fee_id: pi.data.data.id,
+            gross_amount_php: amount,
+            fee_amount_php: totalFee,
+            fee_currency: 'PHP',
+            fee_fx_rate_php: 1,
+            fee_details: { paymongo_payment_intent_fees: pia.fees, note: 'Tentative fee from webhook payload; verify against settlement before confirming.' },
+            reconciliation_status: 'pending',
+            reconciled_at: null
+          }, { onConflict: 'provider,provider_payment_id' });
+        } else {
+          // No fee data available in webhook payload
+          await db.from('payment_processing_fees').upsert({
+            application_id: app.id,
+            provider: 'paymongo',
+            provider_payment_id: paymentId,
+            gross_amount_php: amount,
+            fee_amount_php: 0,
+            fee_currency: 'PHP',
+            fee_fx_rate_php: 1,
+            fee_details: { note: 'No fee data in webhook payload; reconciliation required against settlement records.' },
+            reconciliation_status: 'pending',
+            reconciled_at: null
+          }, { onConflict: 'provider,provider_payment_id' });
+        }
+      } catch (e) {
+        console.error('paymongo_fee_fetch_failed', e);
+      }
+
+      await db.from("admin_activity_log").insert({entity_type:"application",entity_id:app.id,action:"paymongo_payment_paid",details:{event_id:eventId,payment_id:paymentId,payment_intent_id:piId,amount_php:amount}});
     await db.from("paymongo_webhook_events").update({processed_at:new Date().toISOString()}).eq("event_id",eventId);
     if(!app.payment_confirmation_sent_at)EdgeRuntime.waitUntil(sendConfirmation(app,receipt,amount,paymentId,paidAt));
     console.log("paymongo-payment-fulfilled",JSON.stringify({event_id:eventId,application_id:app.id,payment_intent_id:piId,payment_id:paymentId}));
