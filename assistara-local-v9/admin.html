@@ -950,16 +950,16 @@
           <button id="logout" style="display: none">Log out</button>
         </div>
       </div>
-      <section id="login" class="login">
+      <form id="login" class="login">
         <h1>Admin login</h1>
         <p>Manage Assistara operations.</p>
         <label class="field"
           ><span>Username</span><input id="username" value="admin" /></label
         ><label class="field"
           ><span>Password</span><input id="password" type="password" /></label
-        ><button id="loginBtn" class="main">Log in</button>
-        <div id="loginError" class="error"></div>
-      </section>
+        ><button id="loginBtn" class="main" type="submit">Log in</button>
+        <div id="loginError" class="error" role="alert" aria-live="polite"></div>
+      </form>
       <section id="dash" class="dash">
         <div class="adminHead">
           <div>
@@ -1772,7 +1772,7 @@
         const examSummary = `${prog.examsPassed} Passed · ${prog.examsFailed} Failed · ${prog.examsPending} Pending`;
         return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">⌄</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
       }
-      function render() {
+      async function render() {
         drawPending();
         if (tab === "applicants") {
           const a = activeApps().filter(match);
@@ -2252,7 +2252,8 @@
       if (studentFilter) studentFilter.onchange = render;
       const studentSort = $("studentSort");
       if (studentSort) studentSort.onchange = render;
-      $("loginBtn").onclick = async () => {
+      $("login").onsubmit = async (event) => {
+        event.preventDefault();
         const btn = $("loginBtn");
         const errorEl = $("loginError");
         errorEl.textContent = "";
@@ -2266,8 +2267,8 @@
           );
           token = d.token;
           sessionStorage.setItem("assistara_admin_token", token);
-          show();
           await load();
+          show();
         } catch (e) {
           errorEl.textContent = e.message;
           btn.disabled = false;
@@ -2294,8 +2295,14 @@
         $("testPortal").style.display = "block";
       }
       if (token) {
-        show();
-        load().catch((e) => alert(e.message));
+        req("session-check", {}, LOGIN)
+          .then(() => load())
+          .then(show)
+          .catch(() => {
+            token = "";
+            sessionStorage.removeItem("assistara_admin_token");
+            $("loginError").textContent = "Your session expired. Please log in again.";
+          });
       }
       (() => {
         const B =
