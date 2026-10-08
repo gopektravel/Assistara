@@ -513,7 +513,35 @@
         font-size: 12px;
       }
       .barBlock details.barRow { display: block; }
-      .barBlock summary { cursor: pointer; padding: 8px 0; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+      .barBlock summary { cursor: pointer; padding: 8px 0; display: block; }
+      .barTop {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .catSwatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 8px;
+      }
+      .barRow .barTrack {
+        margin-top: 7px;
+      }
+      .barTotal {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 2px solid var(--line);
+      }
+      .barTotal .barLabel {
+        font-weight: 800;
+        font-size: 14px;
+      }
+      .barTotal .barTrack {
+        margin-top: 8px;
+      }
       .barBlock summary .barVal { float: right; }
       .barBlock details .expenseList { margin: 10px 0 18px; }
       .barTrack {
@@ -1530,24 +1558,29 @@
           return chosen.get(c);
         });
       }
-      function donutBlock(list) {
+      function donutBlock(list, colorOf) {
         const items = list.filter((x) => x.total != null && x.total > 0);
         const total = items.reduce((s, x) => s + x.total, 0);
         if (!items.length || !(total > 0)) return '<p class="note">No expenses to chart in this range yet.</p>';
-        const colors = categoryColors(items.map((x) => x.category));
+        const color = (c) => (colorOf && colorOf.get(c)) || "#171717";
         const CX = 80, CY = 80, R = 58, C = 2 * Math.PI * R;
         let offset = 0;
-        const segs = items.map((x, i) => {
+        const segs = items.map((x) => {
           const frac = x.total / total;
           const len = frac * C;
-          const seg = `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[i]}" stroke-width="24" stroke-dasharray="${len.toFixed(3)} ${(C - len).toFixed(3)}" stroke-dashoffset="${(-offset).toFixed(3)}"><title>${esc(x.category)}: ${formatMoney(x.total)} (${(frac * 100).toFixed(1)}%)</title></circle>`;
+          const seg = `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${color(x.category)}" stroke-width="24" stroke-dasharray="${len.toFixed(3)} ${(C - len).toFixed(3)}" stroke-dashoffset="${(-offset).toFixed(3)}"><title>${esc(x.category)}: ${formatMoney(x.total)} (${(frac * 100).toFixed(1)}%)</title></circle>`;
           offset += len;
           return seg;
         }).join("");
-        const legend = items.map((x, i) => `<li><span class="donutDot" style="background:${colors[i]}"></span><span class="donutName">${esc(x.category)}</span><span class="donutPct">${(x.total / total * 100).toFixed(1)}%</span><span class="donutAmt">${formatMoney(x.total)}</span></li>`).join("");
+        const legend = items.map((x) => `<li><span class="donutDot" style="background:${color(x.category)}"></span><span class="donutName">${esc(x.category)}</span><span class="donutPct">${(x.total / total * 100).toFixed(1)}%</span><span class="donutAmt">${formatMoney(x.total)}</span></li>`).join("");
         const aria = items.map((x) => `${x.category} ${(x.total / total * 100).toFixed(1)} percent`).join(", ");
         return `<div class="donutWrap"><svg class="donut" viewBox="0 0 160 160" role="img" aria-label="Expense distribution by category: ${esc(aria)}"><g transform="rotate(-90 ${CX} ${CY})">${segs}</g><text class="donutTotal" x="${CX}" y="${CY - 3}" text-anchor="middle">TOTAL</text><text class="donutTotalVal" x="${CX}" y="${CY + 14}" text-anchor="middle">${esc(formatMoney(total))}</text></svg><ul class="donutLegend">${legend}</ul></div>`;
       }
+      // Expenses by category: name + converted amount + percentage + a
+      // proportional bar, then the matching donut, then Total Expenses (100%).
+      // Every value shares one calculation: `grand` = expenseTotal(allMat),
+      // which already includes processing fees exactly once. Bars and donut use
+      // the same per-category colour map.
       function categoryBlock(mat) {
         const groups = new Map();
         mat.forEach((x) => {
@@ -1558,13 +1591,20 @@
         const list = [...groups.entries()].map(([category, entries]) => ({category, entries, total: expenseTotal(entries)})).sort((a, b) => (b.total || 0) - (a.total || 0));
         if (!list.length) return '<p class="note">No expenses recorded in this range yet.</p>';
         const grand = expenseTotal(mat);
-        const pctText = (v) => {
-          if (grand == null || !(grand > 0) || v == null) return "—";
-          const p = (v / grand) * 100;
-          return p > 0 && p < 0.1 ? "<0.1%" : p.toFixed(1) + "%";
-        };
-        const rows = list.map(({category, entries, total}) => `<details class="barRow" data-category="${esc(category)}"><summary><span class="barLabel">${esc(category)}</span><span class="barRight"><span class="barVal" data-category-total>${formatMoney(total)}</span><span class="barPct" data-category-pct>${pctText(total)}</span></span></summary><div class="expenseList">${entries.map(({e, dates}) => `<div class="expenseRow" data-expense-id="${esc(e.id)}"><div>${esc(e.vendor || e.description || "Expense")}<small> · ${dates.length} occurrence(s) · Original ${formatMoney(Number(e.amount), e.currency)}</small></div><span class="expAmount" data-expense-value>${formatMoney(expenseTotal([{e, dates}]))}</span></div>`).join("")}</div></details>`).join("");
-        return `<div class="barBlock" data-finance-currency-version="original-v2">${rows}</div>` + donutBlock(list);
+        const colors = categoryColors(list.map((x) => x.category));
+        const colorOf = new Map(list.map((x, i) => [x.category, colors[i]]));
+        const pctOf = (v) => (grand == null || !(grand > 0) || v == null ? null : (v / grand) * 100);
+        const pctText = (p) => (p == null ? "—" : p > 0 && p < 0.1 ? "<0.1%" : p.toFixed(1) + "%");
+        const barWidth = (p) => (p == null || p <= 0 ? 0 : Math.max(1.5, Math.min(100, p))).toFixed(2);
+        const rows = list.map(({ category, entries, total }) => {
+          const p = pctOf(total);
+          const color = colorOf.get(category);
+          return `<details class="barRow" data-category="${esc(category)}"><summary><div class="barTop"><span class="barLabel"><span class="catSwatch" style="background:${color}"></span>${esc(category)}</span><span class="barRight"><span class="barVal" data-category-total>${formatMoney(total)}</span><span class="barPct" data-category-pct>${pctText(p)}</span></span></div><div class="barTrack" role="img" aria-label="${esc(category)}: ${pctText(p)} of total expenses"><div class="barFill" data-category-bar style="width:${barWidth(p)}%;background:${color}"></div></div></summary><div class="expenseList">${entries.map(({e, dates}) => `<div class="expenseRow" data-expense-id="${esc(e.id)}"><div>${esc(e.vendor || e.description || "Expense")}<small> · ${dates.length} occurrence(s) · Original ${formatMoney(Number(e.amount), e.currency)}</small></div><span class="expAmount" data-expense-value>${formatMoney(expenseTotal([{e, dates}]))}</span></div>`).join("")}</div></details>`;
+        }).join("");
+        const totalRow = grand != null && grand > 0
+          ? `<div class="barTotal"><div class="barTop"><span class="barLabel">Total Expenses</span><span class="barRight"><span class="barVal" data-expense-grand>${formatMoney(grand)}</span><span class="barPct">100%</span></span></div><div class="barTrack"><div class="barFill" style="width:100%"></div></div></div>`
+          : `<div class="barTotal"><div class="barTop"><span class="barLabel">Total Expenses</span><span class="barRight"><span class="barVal" data-expense-grand>${formatMoney(grand)}</span><span class="barPct">—</span></span></div></div>`;
+        return `<div class="barBlock" data-finance-currency-version="original-v2">${rows}${totalRow}</div>` + donutBlock(list, colorOf);
       }
       function marketingMiniTable() {
         // marketingRows values are already in the selected currency.

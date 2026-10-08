@@ -36,15 +36,24 @@ test("Total Expenses includes fees and Net Profit never deducts them twice", () 
   assert.doesNotMatch(overview, /netRevenue - totalExpenses/);
 });
 
-test("Expenses by category shows amount and percentage", () => {
+test("Expenses by category shows amount, percentage, progress bar and a 100% total", () => {
   const block = financeHtml.slice(financeHtml.indexOf("function categoryBlock(mat)"), financeHtml.indexOf("function marketingMiniTable()"));
-  assert.match(block, /data-category-pct/);
-  assert.match(block, /\(v \/ grand\) \* 100/);
   assert.match(block, /data-category-total/);
+  assert.match(block, /data-category-pct/);
+  assert.match(block, /data-category-bar/);
+  assert.match(block, /class="barTrack"/);
+  assert.match(block, /\(v \/ grand\) \* 100/);
+  assert.match(block, /barWidth\(p\)/);
+  assert.match(block, /class="barTotal"/);
+  assert.match(block, /data-expense-grand/);
+  assert.match(block, /Total Expenses/);
+  assert.match(block, /100%/);
+  // bars and donut share one dataset and one colour map
+  assert.match(block, /donutBlock\(list, colorOf\)/);
 });
 
 test("a donut chart renders distribution with a legend and no demo data", () => {
-  assert.match(financeHtml, /function donutBlock\(list\)/);
+  assert.match(financeHtml, /function donutBlock\(list, colorOf\)/);
   assert.match(financeHtml, /class="donut"/);
   assert.match(financeHtml, /donutLegend/);
   assert.match(financeHtml, /function categoryColors\(cats\)/);
