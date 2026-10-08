@@ -93,8 +93,20 @@ Deno.serve(async req=>{
     let receipt=app.receipt_number||"";
     if(!receipt){const rr=await db.rpc("next_assistara_receipt_number");receipt=String(rr.data||"");if(!receipt)throw new Error("receipt_generation_failed")}
     const paidAt=app.paid_at||new Date().toISOString(),amount=expectedAmount/100;
-    const update=await db.from("academy_applications").update({payment_status:"paid",paid_at:paidAt,purchase_amount:amount,purchase_currency:"PHP",payment_method:"paymongo_qrph",paymongo_payment_id:paymentId,receipt_number:receipt,receipt_generated_at:new Date().toISOString(),payment_method_brand:"QR Ph"}).eq("id",app.id).eq("paymongo_payment_intent_id",piId).neq("payment_status","paid").select("id");
-    if(update.error)throw new Error("application_update_failed");
+    const {data:finalized,error:finalizeError}=await db.rpc("finalize_academy_payment",{p_application_id:app.id,p_amount:amount,p_currency:"PHP",p_payment_method:"paymongo_qrph",p_provider:"paymongo",p_provider_reference:paymentId,p_payment_intent_id:piId});
+    if(finalizeError)throw new Error("finalize_failed");
+    if(!finalized?.ok){
+      // Over-capacity: the payment was captured at the provider but must not
+      // enroll a 16th learner. academy_payment_exceptions + admin activity
+      // were recorded; the webhook is ACKed (no retry) and the safe refund
+      // path is handled from the admin capacity panel.
+      await db.from("admin_activity_log").insert({entity_type:"application",entity_id:app.id,action:"paymongo_payment_capacity_exception",details:{event_id:eventId,payment_id:paymentId,payment_intent_id:piId,amount_php:amount,code:finalized.code||"capacity_exceeded"}});
+      await db.from("paymongo_webhook_events").update({processed_at:new Date().toISOString(),processing_error:"capacity_exception"}).eq("event_id",eventId);
+      console.log("paymongo-payment-capacity-exception",JSON.stringify({event_id:eventId,application_id:app.id,payment_intent_id:piId}));
+      return json({ok:true,exception:true});
+    }
+    const finished=await db.from("academy_applications").update({paymongo_payment_id:paymentId,receipt_number:receipt,receipt_generated_at:new Date().toISOString(),payment_method_brand:"QR Ph"}).eq("id",app.id).select("id");
+    if(finished.error)throw new Error("application_update_failed");
     await db.from("masterclass_signups").update({purchased:true,purchased_at:paidAt,purchase_amount:amount,purchase_currency:"PHP",status:"purchased"}).eq("application_id",app.id);
     await db.from("admin_activity_log").insert({entity_type:"application",entity_id:app.id,action:"paymongo_payment_paid",details:{event_id:eventId,payment_id:paymentId,payment_intent_id:piId,amount_php:amount}});
     await db.from("paymongo_webhook_events").update({processed_at:new Date().toISOString()}).eq("event_id",eventId);

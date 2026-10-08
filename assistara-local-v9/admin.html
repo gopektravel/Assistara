@@ -922,6 +922,18 @@
         .recordFacts { grid-template-columns: 1fr; }
         .activityTimeline li { grid-template-columns: 92px minmax(0, 1fr); gap: 7px; }
       }
+      .capacity-section { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px; margin-top:14px; }
+      .capacity-section h3 { margin:0 0 12px; font-size:14px; font-weight:800; }
+      .capacity-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+      .capacityCard { background:#faf9f5; border-radius:10px; padding:12px; }
+      .capacityLabel { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px; }
+      .capacityValue { font-size:18px; font-weight:800; line-height:1.2; }
+      .waitlistHeader, .exceptionHeader { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+      .waitlistRow, .exceptionRow { display:grid; grid-template-columns:2fr 1fr 1fr 0.8fr 1.2fr 1fr; gap:8px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; }
+      .waitlistRow:last-child, .exceptionRow:last-child { border-bottom:0; }
+      @media (max-width: 900px) {
+        .waitlistRow, .exceptionRow { grid-template-columns:1fr 1fr; }
+      }
     </style>
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
 </head>
@@ -980,7 +992,8 @@
           ><button data-tab="webinar">Webinar Signups</button
           ><button type="button" onclick="location.href='/admin/acquisition'">Acquisition Tracker</button
           ><button type="button" onclick="location.href='/admin/finance'">Finance</button
-          ><button data-tab="b2b">B2B</button>
+          ><button data-tab="b2b">B2B</button
+          ><button data-tab="capacity">Capacity</button>
         </div>
         <div id="pendingBox"></div>
         <input id="search" class="search" placeholder="Search..." />
@@ -1002,6 +1015,21 @@
           </select>
         </div>
         <div id="signupGoal"></div><div id="stats" class="stats"></div>
+        <div id="capacityPanel" style="display:none">
+          <div class="capacity-section">
+            <h3>Cohort Capacity Overview</h3>
+            <div class="capacity-grid" id="capacityGrid"></div>
+          </div>
+          <div class="capacity-section">
+            <h3>Priority Waitlist</h3>
+            <div id="waitlistTable"></div>
+            <button id="inviteNextBtn" class="btn" disabled>Invite Next Eligible</button>
+          </div>
+          <div class="capacity-section">
+            <h3>Payment Exceptions (Overflow / Blocked)</h3>
+            <div id="exceptionsTable"></div>
+          </div>
+        </div>
         <div id="cards" class="cards"></div>
       </section>
     </div>
@@ -1824,7 +1852,16 @@
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
-        $("signupGoal").innerHTML="";
+        if (tab === "capacity") {
+          $("signupGoal").innerHTML = "";
+          $("cards").innerHTML = "";
+          $("studentFilters").style.display = "none";
+          $("capacityPanel").style.display = "block";
+          await renderCapacity();
+          return;
+        }
+        $("capacityPanel").style.display = "none";
+        $("signupGoal").innerHTML = "";
         stat([
           [b2b.length, "Leads"],
           [b2b.filter((x) => x.status === "responded").length, "Responded"],
@@ -2115,6 +2152,87 @@
           await load();
         } catch (e) { alert(e.message); }
       };
+      async function renderCapacity() {
+        try {
+          const CAP = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-academy-capacity";
+          const ov = await req("overview", { cohort_code: "founding-2026" }, CAP);
+          if (!ov.ok) { $("capacityGrid").innerHTML = '<div class="error">Failed to load capacity overview.</div>'; return; }
+          const { capacity, paid, reservations, stale_pending, available, waitlist_waiting, waitlist_invited, exceptions_open, cohort_name, is_open } = ov;
+          const money = n => 'â‚±' + Number(n).toLocaleString('en-PH');
+          const badge = (txt, cls) => '<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:'+cls+'">'+txt+'</span>';
+          const grid = `
+            <div class="capacityCard"><div class="capacityLabel">Cohort</div><div class="capacityValue">${esc(cohort_name||'Founding Cohort')}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Status</div><div class="capacityValue">${is_open?badge('Open','var(--green)'):badge('Closed','#982b2b')}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Capacity</div><div class="capacityValue">${capacity||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Paid Enrollments</div><div class="capacityValue" style="color:var(--green);font-size:28px">${paid||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Active Reservations (30 min)</div><div class="capacityValue" style="color:#0878f9;font-size:28px">${reservations||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Stale Pending (>31 min)</div><div class="capacityValue" style="color:#982b2b;font-size:28px">${stale_pending||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Available Seats</div><div class="capacityValue" style="font-size:28px;font-weight:800">${available||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Waitlisted (waiting)</div><div class="capacityValue" style="color:#5d3a9b;font-size:28px">${waitlist_waiting||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Waitlisted (invited)</div><div class="capacityValue" style="color:#0878f9;font-size:28px">${waitlist_invited||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Payment Exceptions (open)</div><div class="capacityValue" style="color:#982b2b;font-size:28px">${exceptions_open||0}</div></div>
+          `;
+          $("capacityGrid").innerHTML = grid;
+        } catch (e) { $("capacityGrid").innerHTML = '<div class="error">Error: '+esc(e.message)+'</div>'; }
+        try {
+          const CAP = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-academy-capacity";
+          const wl = await req("waitlist", { cohort_code: "founding-2026" }, CAP);
+          if (!wl.ok || !wl.rows?.length) { $("waitlistTable").innerHTML = '<div class="empty">No waitlisted applicants.</div>'; }
+          else {
+            const rows = wl.rows.map(r => {
+              const app = r.applicant;
+              const statusBadge = r.status==='waiting'?'<span style="background:#f0e9ff;color:#5d3a9b">Waiting</span>':
+                r.status==='invited'?'<span style="background:#d7eaff;color:#0878f9">Invited</span>':
+                r.status==='enrolled'?'<span style="background:#e8f7ed;color:#176638">Enrolled</span>':
+                r.status==='declined'?'<span style="background:#fff4c5;color:#765700">Declined</span>':
+                '<span style="background:#f5f5f5;color:#999">Removed</span>';
+              const prio = r.priority===1?'<b>Priority (CTA)</b>':r.priority===2?'Auto-captured':r.priority===3?'Admin-added':'';
+              return `<div class="waitlistRow"><div><b>${esc(r.name||'')}</b><br><small>${esc(r.email||'')}</small></div><div>${statusBadge}</div><div>${prio}</div><div>Pos: ${r.position}</div><div>${new Date(r.created_at).toLocaleString()}</div></div>`;
+            }).join('');
+            $("waitlistTable").innerHTML = '<div class="waitlistHeader">Applicant | Status | Source | Pos | Joined</div>' + rows;
+          }
+          const inviteBtn = $("inviteNextBtn");
+          if (inviteBtn) {
+            inviteBtn.onclick = async () => {
+              inviteBtn.disabled = true; inviteBtn.textContent = 'Inviting...';
+              try {
+                const d = await req("invite_next", { cohort_code: "founding-2026" }, CAP);
+                if (!d.ok) { toast(d.error || 'Cannot invite: ' + (d.error || 'cohort full')); return; }
+                toast(`Invited ${d.name} (${d.email}) - enrollment link sent`);
+                await renderCapacity();
+              } catch (e) { alert(e.message); }
+              finally { inviteBtn.disabled = false; inviteBtn.textContent = 'Invite Next Eligible'; }
+            };
+            const ov2 = await req("overview", { cohort_code: "founding-2026" }, CAP);
+            inviteBtn.disabled = !(ov2?.available > 0 && wl?.rows?.some(r => r.status==='waiting'));
+          }
+        } catch (e) { $("waitlistTable").innerHTML = '<div class="error">Error loading waitlist: '+esc(e.message)+'</div>'; }
+        try {
+          const CAP = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-academy-capacity";
+          const ex = await req("exceptions", {}, CAP);
+          if (!ex.ok || !ex.rows?.length) { $("exceptionsTable").innerHTML = '<div class="empty">No payment exceptions.</div>'; }
+          else {
+            const rows = ex.rows.map(r => {
+              const app = r.applicant;
+              const resBadge = r.resolved?'<span style="background:#e8f7ed;color:#176638">Resolved: '+esc(r.resolution)+'</span>':'<span style="background:#fff4c5;color:#765700">Open</span>';
+              return `<div class="exceptionRow"><div><b>${esc(app?.name||'Unknown')}</b> (${esc(app?.email||'unknown')})<br><small>${esc(r.provider||'unknown')} - ${esc(r.provider_reference||'')}</small></div><div>${r.reason}</div><div>${resBadge}</div><div>${money(r.amount_php||0)}</div><div>${new Date(r.created_at).toLocaleString()}</div><div>${r.resolved?'':'<button class="btn" onclick="resolveException(\''+r.id+'\')">Resolve</button>'}</div></div>`;
+            }).join('');
+            $("exceptionsTable").innerHTML = '<div class="exceptionHeader">Applicant | Reason | Status | Amount | Date | Action</div>' + rows;
+          }
+        } catch (e) { $("exceptionsTable").innerHTML = '<div class="error">Error loading exceptions: '+esc(e.message)+'</div>'; }
+        window.resolveException = async (id) => {
+          if (!confirm("Mark this payment exception as resolved?")) return;
+          const resolution = prompt("Resolution type: refunded / voided / manual_enrollment / ignored")?.toLowerCase();
+          if (!['refunded','voided','manual_enrollment','ignored'].includes(resolution)) { alert('Invalid resolution'); return; }
+          const notes = prompt("Notes (optional):") || "";
+          try {
+            const CAP = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-academy-capacity";
+            await req("exception_resolve", { id, resolution, notes }, CAP);
+            toast('Exception marked ' + resolution);
+            await renderCapacity();
+          } catch (e) { alert(e.message); }
+        };
+      }
       document.querySelectorAll(".nav button[data-tab]").forEach(
         (b) =>
           (b.onclick = () => {
