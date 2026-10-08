@@ -29,7 +29,7 @@ async function auth(t: string) {
     if (!p || !s || await sign(p) !== s) return false;
     const raw = atob(p.replaceAll("-", "+").replaceAll("_", "/") + "=".repeat((4 - p.length % 4) % 4));
     const d = JSON.parse(new TextDecoder().decode(Uint8Array.from(raw, c => c.charCodeAt(0))));
-    return d.u === USER && Date.now() < d.exp;
+    return !!d.v && d.v === (Deno.env.get("ADMIN_TOKEN_VERSION") || "") && d.u === USER && Date.now() < d.exp;
   } catch { return false }
 }
 async function mail(to: string, subject: string, html: string) {

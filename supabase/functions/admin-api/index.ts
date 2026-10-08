@@ -4,19 +4,22 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL=Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SITE_URL="https://www.getassistara.com";
-const USERNAME="admin";
-const PASSWORD_SALT="feb789e407214ef9de506a6f11051332";
-const PASSWORD_HASH="b07473c45b983ec7144df50a59c34e00671550687c09f40e582a46ac189eba0c";
+const USERNAME=Deno.env.get("ADMIN_USERNAME")||"admin";
+const PASSWORD_SALT=Deno.env.get("ADMIN_PASSWORD_SALT")||"";
+const PASSWORD_HASH=Deno.env.get("ADMIN_PASSWORD_HASH")||"";
+const TOKEN_VERSION=Deno.env.get("ADMIN_TOKEN_VERSION")||"";
+const PASSWORD_ITERATIONS=310_000;
 const allowed=new Set(["https://getassistara.com","https://www.getassistara.com","http://localhost:3000","http://localhost:3001","http://127.0.0.1:3000","http://127.0.0.1:3001"]);
 const good=(o:string|null)=>!!o&&(allowed.has(o)||o.endsWith(".vercel.app"));
 const cors=(o:string|null)=>({"Content-Type":"application/json","Access-Control-Allow-Origin":good(o)?o!:SITE_URL,"Access-Control-Allow-Headers":"content-type,authorization","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"});
 const enc=new TextEncoder();
 const b64url=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
 const fromB64url=(s:string)=>Uint8Array.from(atob(s.replaceAll("-","+").replaceAll("_","/")+"=".repeat((4-s.length%4)%4)),c=>c.charCodeAt(0));
-async function sha256Hex(s:string){const d=new Uint8Array(await crypto.subtle.digest("SHA-256",enc.encode(s)));return [...d].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function passwordHash(password:string){const material=await crypto.subtle.importKey("raw",enc.encode(password),"PBKDF2",false,["deriveBits"]);const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:enc.encode(PASSWORD_SALT),iterations:PASSWORD_ITERATIONS},material,256);return [...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function safeEqual(a:string,b:string){if(a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0}
 async function sign(payload:string){const key=await crypto.subtle.importKey("raw",enc.encode(SERVICE_KEY),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return b64url(new Uint8Array(await crypto.subtle.sign("HMAC",key,enc.encode(payload))))}
-async function issueToken(){const payload=b64url(enc.encode(JSON.stringify({u:USERNAME,exp:Date.now()+12*60*60*1000})));return `${payload}.${await sign(payload)}`}
-async function verifyToken(token:string){try{const [p,s]=token.split(".");if(!p||!s||await sign(p)!==s)return false;const data=JSON.parse(new TextDecoder().decode(fromB64url(p)));return data.u===USERNAME&&Date.now()<data.exp}catch{return false}}
+async function issueToken(){const now=Date.now();const payload=b64url(enc.encode(JSON.stringify({u:USERNAME,v:TOKEN_VERSION,iat:now,exp:now+2*60*60*1000})));return `${payload}.${await sign(payload)}`}
+async function verifyToken(token:string){try{if(!TOKEN_VERSION)return false;const [p,s]=token.split(".");if(!p||!s||!safeEqual(await sign(p),s))return false;const data=JSON.parse(new TextDecoder().decode(fromB64url(p)));return data.u===USERNAME&&data.v===TOKEN_VERSION&&Date.now()<data.exp}catch{return false}}
 const ANSWER_FIELDS=["current_situation","why_remote_work","what_tried","biggest_obstacle","remote_work_interest","weekly_commitment","payment_readiness"];
 const ANSWER_FIELD_SCHEMA=[
   {field:"current_situation",label:"What best describes your current situation?"},
@@ -38,8 +41,9 @@ Deno.serve(async(req:Request)=>{
   const action=String(body.action||"");
   if(action==="login"){
     const u=String(body.username||"").trim();const p=String(body.password||"");
-    const hash=await sha256Hex(PASSWORD_SALT+p);
-    if(u!==USERNAME||hash!==PASSWORD_HASH) return new Response(JSON.stringify({ok:false,error:"Invalid username or password"}),{status:401,headers:h});
+    if(!PASSWORD_SALT||!PASSWORD_HASH||!TOKEN_VERSION) return new Response(JSON.stringify({ok:false,error:"Admin login is temporarily unavailable"}),{status:503,headers:h});
+    const hash=await passwordHash(p);
+    if(u!==USERNAME||!safeEqual(hash,PASSWORD_HASH)) return new Response(JSON.stringify({ok:false,error:"Invalid username or password"}),{status:401,headers:h});
     return new Response(JSON.stringify({ok:true,token:await issueToken()}),{status:200,headers:h});
   }
   const auth=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");
