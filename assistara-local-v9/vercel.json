@@ -197,6 +197,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "googletag.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "assistara-logo.svg",
       "use": "@vercel/static"
     },
@@ -451,6 +455,10 @@
     {
       "src": "/oaiq-pixel.js",
       "dest": "/oaiq-pixel.js"
+    },
+    {
+      "src": "/googletag.js",
+      "dest": "/googletag.js"
     },
     {
       "src": "/assistara-logo.svg",
