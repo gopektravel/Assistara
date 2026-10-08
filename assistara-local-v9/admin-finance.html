@@ -826,7 +826,17 @@
         }
       })();
 
-      const token = sessionStorage.getItem("assistara_admin_token") || "";
+      const token = (() => {
+        try {
+          return (
+            localStorage.getItem("assistara_admin_token") ||
+            sessionStorage.getItem("assistara_admin_token") ||
+            ""
+          );
+        } catch {
+          return "";
+        }
+      })();
       if (!token) location.href = "/admin";
       const $ = (id) => document.getElementById(id);
       const esc = (s) =>

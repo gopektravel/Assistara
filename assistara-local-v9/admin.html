@@ -950,13 +950,15 @@
           <button id="logout" style="display: none">Log out</button>
         </div>
       </div>
-      <form id="login" class="login">
+      <form id="login" class="login" autocomplete="on">
         <h1>Admin login</h1>
         <p>Manage Assistara operations.</p>
         <label class="field"
-          ><span>Username</span><input id="username" value="admin" /></label
+          ><span>Username</span
+          ><input id="username" name="username" autocomplete="username" value="admin" /></label
         ><label class="field"
-          ><span>Password</span><input id="password" type="password" /></label
+          ><span>Password</span
+          ><input id="password" name="password" type="password" autocomplete="current-password" /></label
         ><button id="loginBtn" class="main" type="submit">Log in</button>
         <div id="loginError" class="error" role="alert" aria-live="polite"></div>
       </form>
@@ -1051,7 +1053,34 @@
         ANSWERS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
         NOTES = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
         PROGRESS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api";
-      let token = sessionStorage.getItem("assistara_admin_token") || "",
+      // One shared Admin session for every Admin page. The token is short-lived
+      // (2h, server-signed) and server-revocable; this store only keeps the
+      // browser copy so a new tab, Back/Forward and refresh keep the session.
+      const ADMIN_TOKEN_KEY = "assistara_admin_token";
+      const adminSession = {
+        read() {
+          try {
+            return (
+              localStorage.getItem(ADMIN_TOKEN_KEY) ||
+              sessionStorage.getItem(ADMIN_TOKEN_KEY) ||
+              ""
+            );
+          } catch {
+            return "";
+          }
+        },
+        write(value) {
+          try { localStorage.setItem(ADMIN_TOKEN_KEY, value); } catch {}
+          // Mirror for same-tab readers (e.g. the Masterclass panel) that still
+          // look in sessionStorage; the shared store above is the source of truth.
+          try { sessionStorage.setItem(ADMIN_TOKEN_KEY, value); } catch {}
+        },
+        clear() {
+          try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+          try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+        },
+      };
+      let token = adminSession.read(),
         apps = [],
         students = [],
         web = [],
@@ -2256,6 +2285,7 @@
         event.preventDefault();
         const btn = $("loginBtn");
         const errorEl = $("loginError");
+        if (btn.disabled) return;
         errorEl.textContent = "";
         btn.disabled = true;
         btn.textContent = "Signing in…";
@@ -2266,8 +2296,10 @@
             LOGIN,
           );
           token = d.token;
-          sessionStorage.setItem("assistara_admin_token", token);
+          adminSession.write(token);
           await load();
+          btn.disabled = false;
+          btn.textContent = "Log in";
           show();
         } catch (e) {
           errorEl.textContent = e.message;
@@ -2276,7 +2308,7 @@
         }
       };
       $("logout").onclick = async () => {
-        sessionStorage.removeItem("assistara_admin_token");
+        adminSession.clear();
         try { await syncTestPortalCookie("logout"); } catch {}
         location.reload();
       };
@@ -2294,16 +2326,25 @@
         $("logout").style.display = "block";
         $("testPortal").style.display = "block";
       }
-      if (token) {
-        req("session-check", {}, LOGIN)
-          .then(() => load())
-          .then(show)
-          .catch(() => {
-            token = "";
-            sessionStorage.removeItem("assistara_admin_token");
-            $("loginError").textContent = "Your session expired. Please log in again.";
-          });
+      // Restore an existing session. Only a real authentication failure logs
+      // the Admin out; a data-loading hiccup must never destroy a valid session.
+      async function restoreSession() {
+        try {
+          await req("session-check", {}, LOGIN);
+        } catch {
+          token = "";
+          adminSession.clear();
+          $("loginError").textContent = "Your session expired. Please log in again.";
+          return;
+        }
+        show();
+        try {
+          await load();
+        } catch (e) {
+          toast("Signed in. Some data could not be loaded: " + e.message);
+        }
       }
+      if (token) restoreSession();
       (() => {
         const B =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-b2b-calls";

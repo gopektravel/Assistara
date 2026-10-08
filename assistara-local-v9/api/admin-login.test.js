@@ -12,11 +12,34 @@ test("admin page JavaScript parses and the login form is wired", () => {
   const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
   assert.ok(scripts.length, "expected an inline admin script");
   for (const source of scripts) assert.doesNotThrow(() => new Function(source));
-  assert.match(html, /<form id="login" class="login">/);
+  assert.match(html, /<form id="login" class="login" autocomplete="on">/);
   assert.match(html, /<button id="loginBtn" class="main" type="submit">/);
+  assert.match(html, /id="username" name="username" autocomplete="username"/);
+  assert.match(html, /id="password" name="password" type="password" autocomplete="current-password"/);
   assert.match(html, /\$\("login"\)\.onsubmit = async \(event\)/);
+  assert.match(html, /if \(btn\.disabled\) return;/);
   assert.match(html, /btn\.disabled = true/);
   assert.match(html, /errorEl\.textContent = e\.message/);
+});
+
+test("admin session is shared across pages and survives data errors", () => {
+  const admin = fs.readFileSync(adminPath, "utf8");
+  // One shared store, read by every Admin page.
+  assert.match(admin, /const ADMIN_TOKEN_KEY = "assistara_admin_token";/);
+  assert.match(admin, /const adminSession = \{/);
+  assert.match(admin, /localStorage\.getItem\(ADMIN_TOKEN_KEY\)/);
+  assert.match(admin, /adminSession\.write\(token\)/);
+  assert.match(admin, /adminSession\.clear\(\)/);
+  // A data-loading failure must not clear a valid session.
+  const restore = admin.slice(admin.indexOf("async function restoreSession()"), admin.indexOf("if (token) restoreSession();"));
+  assert.match(restore, /await req\("session-check", \{\}, LOGIN\)/);
+  assert.match(restore, /catch \{\s*token = "";\s*adminSession\.clear\(\);/);
+  assert.match(restore, /show\(\);\s*try \{\s*await load\(\);\s*\} catch/);
+
+  for (const page of ["admin-finance.html", "admin-acquisition.html"]) {
+    const source = fs.readFileSync(path.join(root, "assistara-local-v9", page), "utf8");
+    assert.match(source, /localStorage\.getItem\("assistara_admin_token"\)/, `${page} must read the shared session`);
+  }
 });
 
 test("admin credentials are secret-backed and recovery is not exposed", () => {
