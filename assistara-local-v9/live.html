@@ -19,5 +19,43 @@
 <main><section class="hero"><div class="shell"><h1>How to Land Your <span>First Remote Client</span></h1></div></section>
 <section class="stage"><div class="shell"><div class="live-grid"><div class="video-shell"><div class="video prelive-video" id="preliveVideo"><div class="prelive-wrap"><div class="prelive-kicker">WE GO LIVE IN</div><div class="prelive-countdown" aria-live="polite"><div><strong id="liveDays">05</strong><small>DAYS</small></div><span>:</span><div><strong id="liveHours">10</strong><small>HOURS</small></div><span>:</span><div><strong id="liveMinutes">45</strong><small>MIN</small></div><span>:</span><div><strong id="liveSeconds">00</strong><small>SEC</small></div></div><div class="prelive-date">SUNDAY, OCTOBER 11 · 6:00 PM PHT</div><div class="prelive-note">Your masterclass will play here when we go live.</div></div></div><div class="youtube-note"><span>Streamed through YouTube Live · Stay on Assistara</span><a href="#" onclick="return false">Watch on YouTube ↗</a></div></div><aside class="chat"><div class="chat-head"><span>LIVE CHAT</span><span>COMING SOON</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">Live chat opens with the masterclass.</strong><span>Join the conversation here when we go live.</span></div></div></aside></div>
 <div class="bottom"><div class="info"><div class="info-row"><div class="info-copy"><div class="label">TODAY'S SESSION</div><h2>Build your path into remote work.</h2><p><span class="promise">Turn the skills you already have into something valuable and take the first step toward landing a real client.</span> Learn what clients pay for, how to position your skills, and the simplest path from beginner to getting paid.</p></div><div class="meta"><span>≈ 60 min</span><span>Live</span><span>Beginner friendly</span><span>Free</span></div></div></div><aside class="cta"><div class="label">FOUNDING COHORT</div><h3>Ready to get your first client?</h3><div class="scarcity"><span class="scarcity-dot"></span>Only 15 spots available</div><a class="btn" href="/academy/apply" target="_blank" rel="noopener noreferrer">Apply for Assistara Academy →</a></aside></div></div></section></main>
-<script id="prelive-countdown-js">(()=>{const target=new Date('2026-10-11T18:00:00+08:00').getTime(),d=document.getElementById('liveDays'),h=document.getElementById('liveHours'),m=document.getElementById('liveMinutes'),s=document.getElementById('liveSeconds'),box=document.getElementById('preliveVideo'),pad=n=>String(n).padStart(2,'0');if(!d||!h||!m||!s)return;function tick(){const diff=target-Date.now();if(diff<=0){box.querySelector('.prelive-wrap').innerHTML='<div class="prelive-kicker">WE\'RE LIVE</div><div style="font-size:clamp(32px,5vw,68px);font-weight:800;letter-spacing:-.05em;color:#fff">The masterclass is starting.</div>';return}const sec=Math.floor(diff/1000);d.textContent=pad(Math.floor(sec/86400));h.textContent=pad(Math.floor(sec%86400/3600));m.textContent=pad(Math.floor(sec%3600/60));s.textContent=pad(sec%60)}tick();setInterval(tick,1000)})();</script>
+<script id="prelive-countdown-js">(()=>{
+  const ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status';
+  const KEY='founding-masterclass-2026';
+  const box=document.getElementById('preliveVideo');
+  const wrap=box?box.querySelector('.prelive-wrap'):null;
+  const dateEl=document.querySelector('.prelive-date');
+  const pad=n=>String(n).padStart(2,'0');
+  let target=new Date('2026-10-11T18:00:00+08:00').getTime();
+  let timer=null;
+  function clearTimer(){ if(timer){clearInterval(timer);timer=null;} }
+  function fmtDate(iso){ try{return new Date(iso).toLocaleString('en-PH',{timeZone:'Asia/Manila',weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'}).toUpperCase()+' PHT'}catch(e){return ''} }
+  function showLive(){ clearTimer(); if(!wrap)return; wrap.innerHTML='<div class="prelive-kicker">WE\'RE LIVE</div><div style="font-size:clamp(32px,5vw,68px);font-weight:800;letter-spacing:-.05em;color:#fff">The masterclass is starting.</div>'; }
+  function showEnded(){ clearTimer(); if(!wrap)return; wrap.innerHTML='<div class="prelive-kicker">MASTERCLASS ENDED</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">This masterclass has ended.</div>'; }
+  function tick(){
+    const d=document.getElementById('liveDays'),h=document.getElementById('liveHours'),m=document.getElementById('liveMinutes'),s=document.getElementById('liveSeconds');
+    if(!d||!h||!m||!s)return;
+    const diff=target-Date.now();
+    if(diff<=0){ showLive(); return; }
+    const sec=Math.floor(diff/1000);
+    d.textContent=pad(Math.floor(sec/86400));h.textContent=pad(Math.floor(sec%86400/3600));m.textContent=pad(Math.floor(sec%3600/60));s.textContent=pad(sec%60);
+  }
+  function startCountdown(){ clearTimer(); tick(); timer=setInterval(tick,1000); }
+  async function poll(){
+    try{
+      const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'read',event_key:KEY})});
+      const d=await r.json();
+      if(!d||!d.ok||!d.event)return;
+      if(d.event.scheduled_at){const t=new Date(d.event.scheduled_at).getTime();if(Number.isFinite(t))target=t;}
+      if(dateEl){const label=fmtDate(d.event.scheduled_at);if(label)dateEl.textContent=label;}
+      if(d.event.status==='live'){ showLive(); return; }
+      if(d.event.status==='ended'){ showEnded(); return; }
+      startCountdown();
+    }catch(e){}
+  }
+  poll();
+  setInterval(poll,30000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) poll(); });
+  window.addEventListener('focus',()=>poll());
+})();</script>
 <script id="masterclass-attendance-tracking">(()=>{const endpoint='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-attendance',params=new URLSearchParams(location.search);let token=(params.get('t')||'').trim();try{if(token)localStorage.setItem('assistara_masterclass_attendee_token',token);else token=localStorage.getItem('assistara_masterclass_attendee_token')||''}catch{}if(!token)return;const send=(kind,seconds)=>fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,kind,seconds})}).catch(()=>{});send('join');let visibleAt=Date.now();document.addEventListener('visibilitychange',()=>{if(document.hidden){const s=Math.floor((Date.now()-visibleAt)/1000);if(s>0)send('heartbeat',Math.min(s,120))}else visibleAt=Date.now()});setInterval(()=>{if(!document.hidden){send('heartbeat',30);visibleAt=Date.now()}},30000)})();</script></body></html>

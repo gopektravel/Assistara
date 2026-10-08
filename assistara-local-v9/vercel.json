@@ -26,6 +26,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-masterclass-event.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "academy-apply.html",
       "use": "@vercel/static"
     },
@@ -515,6 +519,14 @@
     {
       "src": "/admin/finance/",
       "dest": "/admin-finance.html"
+    },
+    {
+      "src": "/admin/masterclass-event",
+      "dest": "/admin-masterclass-event.html"
+    },
+    {
+      "src": "/admin/masterclass-event/",
+      "dest": "/admin-masterclass-event.html"
     },
     {
       "src": "/academy/beta-account",

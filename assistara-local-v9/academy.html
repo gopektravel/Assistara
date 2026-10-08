@@ -267,7 +267,7 @@ html body .header .nav .brand .mark{width:36px!important;height:36px!important;f
 </nav>
 </header>
 <main>
-<section class="masterclass" id="free-masterclass"><div class="shell masterclass-card"><div class="masterclass-copy"><div class="masterclass-eyebrow">FREE LIVE MASTERCLASS <span>·</span> OCT 11</div><h2>How to Land Your First Remote Client</h2><p>A practical, beginner-friendly masterclass on finding, approaching and landing international clients.</p><div class="masterclass-countdown" id="masterclassCountdown" aria-live="polite"><div class="countdown-time"><strong id="countdownDays">05 DAYS</strong><span>·</span><strong id="countdownHours">10 HRS</strong><span>·</span><strong id="countdownMinutes">45 MIN</strong></div><div class="countdown-meta">SUN, OCT 11 · 6:00 PM PHT</div></div></div><form class="masterclass-form" id="masterclassForm"><h3>Save your free seat</h3><p>Join the free live masterclass.</p><label>Your name<input name="name" autocomplete="name" placeholder="Your name" required></label><label>Email address<input type="email" name="email" autocomplete="email" placeholder="you@email.com" required></label><button class="btn btn-yellow full" type="submit">Save my free seat →</button><div class="masterclass-success" id="masterclassSuccess" role="status" aria-live="polite">You’re on the list. Check your inbox for the next steps.</div><p class="masterclass-note">Free access. No spam.</p></form></div></section>
+<section class="masterclass" id="free-masterclass"><div id="masterclassLiveBanner" style="display:none;background:#171717;color:#fff;border-radius:18px;padding:16px 22px;text-align:center;font-family:Manrope,sans-serif;margin-bottom:14px;box-shadow:0 8px 30px rgba(23,23,23,.22);font-weight:800;font-size:15px;letter-spacing:-.01em;"><span style="color:#ffd51f;">● LIVE</span> We're live! Join the masterclass now. <a href="/live.html" style="color:#ffd51f;text-decoration:underline;font-weight:700;">Join the Live Masterclass →</a></div><div class="masterclass-copy"><div class="masterclass-eyebrow">FREE LIVE MASTERCLASS <span>·</span> OCT 11</div><h2>How to Land Your First Remote Client</h2><p>A practical, beginner-friendly masterclass on finding, approaching and landing international clients.</p><div class="masterclass-countdown" id="masterclassCountdown" aria-live="polite"><div class="countdown-time"><strong id="countdownDays">05 DAYS</strong><span>·</span><strong id="countdownHours">10 HRS</strong><span>·</span><strong id="countdownMinutes">45 MIN</strong></div><div class="countdown-meta">SUN, OCT 11 · 6:00 PM PHT</div></div></div><form class="masterclass-form" id="masterclassForm"><h3>Save your free seat</h3><p>Join the free live masterclass.</p><label>Your name<input name="name" autocomplete="name" placeholder="Your name" required></label><label>Email address<input type="email" name="email" autocomplete="email" placeholder="you@email.com" required></label><button class="btn btn-yellow full" type="submit">Save my free seat →</button><div class="masterclass-success" id="masterclassSuccess" role="status" aria-live="polite">You’re on the list. Check your inbox for the next steps.</div><p class="masterclass-note">Free access. No spam.</p></form></div></section>
 <section class="hero shell">
 <div>
 <div class="eyebrow">ASSISTARA ACADEMY</div>
@@ -596,6 +596,46 @@ Applying is free and does not charge you.
 })();
 </script>
 <script id="masterclass-countdown-js">
-(()=>{const box=document.getElementById('masterclassCountdown');if(!box)return;const target=new Date('2026-10-11T18:00:00+08:00').getTime(),d=document.getElementById('countdownDays'),h=document.getElementById('countdownHours'),m=document.getElementById('countdownMinutes'),pad=n=>String(n).padStart(2,'0');function tick(){const diff=target-Date.now();if(diff<=0){box.classList.add('is-live');box.querySelector('.countdown-meta').textContent="WE'RE LIVE NOW";return}const mins=Math.ceil(diff/60000);d.textContent=pad(Math.floor(mins/1440))+' DAYS';h.textContent=pad(Math.floor(mins%1440/60))+' HRS';m.textContent=pad(mins%60)+' MIN'}tick();setInterval(tick,30000)})();
-</script></body>
+(()=>{const box=document.getElementById('masterclassCountdown');if(!box)return;let target=new Date('2026-10-11T18:00:00+08:00').getTime(),d=document.getElementById('countdownDays'),h=document.getElementById('countdownHours'),m=document.getElementById('countdownMinutes'),pad=n=>String(n).padStart(2,'0');function tick(){const diff=target-Date.now();if(diff<=0){box.classList.add('is-live');box.querySelector('.countdown-meta').textContent="WE'RE LIVE NOW";return}const mins=Math.ceil(diff/60000);d.textContent=pad(Math.floor(mins/1440))+' DAYS';h.textContent=pad(Math.floor(mins%1440/60))+' HRS';m.textContent=pad(mins%60)+' MIN'}tick();setInterval(tick,30000);(async()=>{try{const r=await fetch('https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'read',event_key:'founding-masterclass-2026'})});const j=await r.json();if(j&&j.ok&&j.event&&j.event.scheduled_at){const t=new Date(j.event.scheduled_at).getTime();if(Number.isFinite(t))target=t;tick()}}catch(e){}})()})();
+</script><script id="masterclass-status-poll">
+(async function poll() {
+  let lastStatus = null;
+  const banner = document.getElementById('masterclassLiveBanner');
+  const form = document.getElementById('masterclassForm');
+  const countdown = document.getElementById('masterclassCountdown');
+  const sticky = document.getElementById('masterclassStickyCta');
+  function apply(s) {
+    if (s === 'live') {
+      if (banner) banner.style.display = 'block';
+      if (countdown) { countdown.style.display = 'none'; }
+      if (form) { form.style.display = 'none'; }
+      if (sticky) sticky.innerHTML = 'Join the Live Masterclass →';
+    } else if (s === 'ended') {
+      if (banner) banner.style.display = 'none';
+      if (countdown) { countdown.style.display = 'block'; countdown.querySelector('.countdown-meta').textContent = 'MASTERCLASS ENDED'; }
+      if (form) { form.style.display = 'none'; }
+    } else {
+      if (banner) banner.style.display = 'none';
+      if (countdown) countdown.style.display = 'block';
+      if (form) form.style.display = 'block';
+      if (sticky) sticky.innerHTML = 'Free Masterclass →';
+    }
+  }
+  async function fetchStatus() {
+    try {
+      const r = await fetch('https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'read',event_key:'founding-masterclass-2026'})
+      });
+      const d = await r.json();
+      if (d && d.ok && d.event) {
+        const s = d.event.status;
+        if (s !== lastStatus) { lastStatus = s; apply(s); }
+      }
+    } catch (e) { console.error('Masterclass poll error', e); }
+  }
+  fetchStatus();
+  setInterval(fetchStatus, 30000);
+})();
+</script>
+</body>
 </html>

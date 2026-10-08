@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Masterclass Event | Assistara Admin</title>
+    <link rel="icon" href="/assistara-logo.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #171717;
+        --cream: #f7f5ef;
+        --line: #e2ded4;
+        --muted: #746e65;
+        --yellow: #ffd51f;
+        --green: #e8f7ed;
+        --greenInk: #1d6a3b;
+        --red: #fde9e7;
+        --redInk: #8b2825;
+        --orange: #fff0db;
+        --orangeInk: #8a4b00;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+      }
+      .shell { width: min(820px, calc(100% - 28px)); margin: auto; }
+      .top {
+        margin-top: 16px;
+        background: #171717;
+        color: #fff;
+        border-radius: 18px;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+      .brand img { width: 34px; }
+      .back {
+        color: #fff;
+        text-decoration: none;
+        border: 1px solid #3c3c3c;
+        background: #2a2a2a;
+        border-radius: 999px;
+        padding: 10px 15px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .head { margin: 28px 0 14px; }
+      .head h1 { margin: 0; font-size: 34px; letter-spacing: -0.02em; }
+      .head .sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px;
+        margin: 14px 0;
+      }
+      .statusRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 8px 13px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #f1efe9;
+      }
+      .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+      .badge.scheduled { background: #f1efe9; color: var(--muted); }
+      .badge.live { background: var(--green); color: var(--greenInk); border-color: #b9e4c8; }
+      .badge.live .dot { background: var(--greenInk); box-shadow: 0 0 0 4px rgba(29,106,59,.14); }
+      .badge.ended { background: var(--orange); color: var(--orangeInk); border-color: #f1c889; }
+      .title { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+      .facts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 18px; }
+      .fact { background: #faf9f5; border-radius: 12px; padding: 13px 15px; }
+      .fact .label {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 5px;
+      }
+      .fact .value { font-size: 15px; font-weight: 700; line-height: 1.4; }
+      .countdown { display: flex; gap: 10px; margin-top: 16px; }
+      .cd { flex: 1; background: #171717; color: #fff; border-radius: 12px; padding: 12px; text-align: center; }
+      .cd b { display: block; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+      .cd span { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: #b9b4ac; text-transform: uppercase; }
+      .countdownNote { margin-top: 10px; font-size: 12px; color: var(--muted); }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+      button {
+        font-family: "DM Sans", sans-serif;
+        border: 0;
+        border-radius: 10px;
+        padding: 13px 20px;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.55; cursor: default; }
+      .end { background: var(--redInk); color: #fff; }
+      .refresh { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+      .feedback { margin-top: 14px; font-weight: 700; font-size: 14px; min-height: 20px; }
+      .feedback.ok { color: var(--greenInk); }
+      .feedback.err { color: var(--redInk); }
+      .muted { color: var(--muted); font-size: 12px; margin-top: 8px; }
+      .hidden { display: none !important; }
+      @media (max-width: 640px) { .facts { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="top">
+        <div class="brand"><img src="/assistara-logo.svg" alt="Assistara" /><span>Assistara Admin</span></div>
+        <a class="back" href="/admin">&larr; Admin</a>
+      </div>
+
+      <div class="head">
+        <h1>Masterclass Event</h1>
+        <div class="sub">The event goes live automatically at its scheduled start. You only need to end it.</div>
+      </div>
+
+      <div class="card">
+        <div class="statusRow">
+          <div>
+            <div class="title" id="mcTitle">How to Land Your First Remote Client</div>
+            <div class="sub" id="mcKey">founding-masterclass-2026</div>
+          </div>
+          <span class="badge scheduled" id="mcBadge"><span class="dot"></span><span id="mcStatusText">Loading…</span></span>
+        </div>
+
+        <div class="facts">
+          <div class="fact"><div class="label">Scheduled start</div><div class="value" id="mcScheduled">—</div></div>
+          <div class="fact"><div class="label">Timezone</div><div class="value">Asia/Manila (PHT)</div></div>
+          <div class="fact"><div class="label">Actual start</div><div class="value" id="mcStarted">Not started yet</div></div>
+          <div class="fact"><div class="label">Ended</div><div class="value" id="mcEnded">Not ended</div></div>
+        </div>
+
+        <div id="mcCountdownWrap">
+          <div class="countdown" aria-live="polite">
+            <div class="cd"><b id="cdDays">00</b><span>Days</span></div>
+            <div class="cd"><b id="cdHours">00</b><span>Hours</span></div>
+            <div class="cd"><b id="cdMins">00</b><span>Min</span></div>
+            <div class="cd"><b id="cdSecs">00</b><span>Sec</span></div>
+          </div>
+          <div class="countdownNote" id="mcCountdownNote">Countdown to the scheduled start (server schedule).</div>
+        </div>
+
+        <div class="actions">
+          <button class="end hidden" id="mcEnd">End Masterclass</button>
+          <button class="refresh" id="mcRefresh">Refresh</button>
+        </div>
+        <div class="feedback" id="mcFeedback"></div>
+        <div class="muted" id="mcMeta"></div>
+      </div>
+    </div>
+
+    <script>
+      const MC_ENDPOINT =
+        "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status";
+      // Defaults to the live event; an explicit event_key is used only for QA.
+      const MC_EVENT_KEY = (
+        new URLSearchParams(location.search).get("event_key") || "founding-masterclass-2026"
+      ).slice(0, 120);
+      const MC_TZ = "Asia/Manila";
+
+      const ADMIN_TOKEN_KEY = "assistara_admin_token";
+      const adminSession = {
+        read() {
+          try {
+            return (
+              localStorage.getItem(ADMIN_TOKEN_KEY) ||
+              sessionStorage.getItem(ADMIN_TOKEN_KEY) ||
+              ""
+            );
+          } catch {
+            return "";
+          }
+        },
+        clear() {
+          try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+          try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+        },
+      };
+
+      const token = adminSession.read();
+      if (!token) location.href = "/admin";
+
+      const $ = (id) => document.getElementById(id);
+      let event = null;
+      let countdownTimer = null;
+
+      function fmt(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return "—";
+        return d.toLocaleString("en-PH", {
+          timeZone: MC_TZ,
+          dateStyle: "full",
+          timeStyle: "short",
+        }) + " PHT";
+      }
+
+      function setBadge(status) {
+        const badge = $("mcBadge");
+        badge.className = "badge " + status;
+        $("mcStatusText").textContent =
+          status === "live" ? "Live" : status === "ended" ? "Ended" : "Scheduled";
+      }
+
+      function renderCountdown() {
+        if (!event || event.status !== "scheduled") {
+          $("mcCountdownWrap").classList.add("hidden");
+          return;
+        }
+        const target = event.scheduled_at ? new Date(event.scheduled_at).getTime() : NaN;
+        if (!Number.isFinite(target)) {
+          $("mcCountdownWrap").classList.add("hidden");
+          return;
+        }
+        const diff = target - Date.now();
+        if (diff <= 0) {
+          $("mcCountdownWrap").classList.add("hidden");
+          return;
+        }
+        $("mcCountdownWrap").classList.remove("hidden");
+        const sec = Math.floor(diff / 1000);
+        $("cdDays").textContent = String(Math.floor(sec / 86400)).padStart(2, "0");
+        $("cdHours").textContent = String(Math.floor((sec % 86400) / 3600)).padStart(2, "0");
+        $("cdMins").textContent = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+        $("cdSecs").textContent = String(sec % 60).padStart(2, "0");
+      }
+
+      function render() {
+        if (!event) {
+          setBadge("scheduled");
+          $("mcStatusText").textContent = "Unavailable";
+          return;
+        }
+        $("mcTitle").textContent = event.title || "Masterclass";
+        $("mcKey").textContent = event.event_key || MC_EVENT_KEY;
+        setBadge(event.status);
+        $("mcScheduled").textContent = fmt(event.scheduled_at);
+        $("mcStarted").textContent = event.started_at ? fmt(event.started_at) : "Not started yet";
+        $("mcEnded").textContent = event.ended_at
+          ? fmt(event.ended_at) + (event.ended_by ? " · by " + event.ended_by : "")
+          : "Not ended";
+        $("mcEnd").classList.toggle("hidden", event.status !== "live");
+        $("mcMeta").textContent = event.updated_at ? "Last updated " + fmt(event.updated_at) : "";
+        renderCountdown();
+        if (countdownTimer) clearInterval(countdownTimer);
+        if (event.status === "scheduled") countdownTimer = setInterval(renderCountdown, 1000);
+      }
+
+      async function load() {
+        try {
+          const r = await fetch(MC_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "read", event_key: MC_EVENT_KEY }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not load event");
+          event = d.event;
+          render();
+        } catch (e) {
+          $("mcFeedback").textContent = "Could not load event status. " + e.message;
+          $("mcFeedback").className = "feedback err";
+        }
+      }
+
+      $("mcRefresh").onclick = () => { $("mcFeedback").textContent = ""; load(); };
+
+      $("mcEnd").onclick = async () => {
+        if (!confirm("End the masterclass now? This stops the live event and cannot be undone.")) return;
+        const btn = $("mcEnd");
+        const fb = $("mcFeedback");
+        btn.disabled = true;
+        fb.textContent = "Ending the masterclass…";
+        fb.className = "feedback";
+        try {
+          const r = await fetch(MC_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "end", event_key: MC_EVENT_KEY }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.textContent = "Your admin session expired. Please log in again.";
+            fb.className = "feedback err";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not end the masterclass");
+          fb.textContent = d.changed
+            ? "Masterclass ended."
+            : "The masterclass was already ended.";
+          fb.className = "feedback ok";
+          await load();
+        } catch (e) {
+          fb.textContent = "Could not end the masterclass. " + e.message;
+          fb.className = "feedback err";
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      load();
+      setInterval(load, 20000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+      window.addEventListener("focus", () => load());
+    </script>
+  </body>
+</html>
