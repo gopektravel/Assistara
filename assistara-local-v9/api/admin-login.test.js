@@ -25,6 +25,8 @@ test("admin credentials are secret-backed and recovery is not exposed", () => {
   assert.match(source, /Deno\.env\.get\("ADMIN_PASSWORD_HASH"\)/);
   assert.match(source, /PBKDF2/);
   assert.match(source, /310_000/);
+  assert.match(source, /Deno\.env\.get\("ADMIN_PASSWORD_SCHEME"\)/);
+  assert.match(source, /PASSWORD_SCHEME==="legacy-sha256"/);
   assert.doesNotMatch(source, /reset-password|recoveryPassword|temporary password/i);
   assert.doesNotMatch(source, /const PASSWORD_(?:SALT|HASH)="[a-f0-9]+"/i);
 });

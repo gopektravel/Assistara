@@ -7,6 +7,7 @@ const SITE_URL="https://www.getassistara.com";
 const USERNAME=Deno.env.get("ADMIN_USERNAME")||"admin";
 const PASSWORD_SALT=Deno.env.get("ADMIN_PASSWORD_SALT")||"";
 const PASSWORD_HASH=Deno.env.get("ADMIN_PASSWORD_HASH")||"";
+const PASSWORD_SCHEME=Deno.env.get("ADMIN_PASSWORD_SCHEME")||"pbkdf2-sha256";
 const TOKEN_VERSION=Deno.env.get("ADMIN_TOKEN_VERSION")||"";
 const PASSWORD_ITERATIONS=310_000;
 const allowed=new Set(["https://getassistara.com","https://www.getassistara.com","http://localhost:3000","http://localhost:3001","http://127.0.0.1:3000","http://127.0.0.1:3001"]);
@@ -16,6 +17,7 @@ const enc=new TextEncoder();
 const b64url=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
 const fromB64url=(s:string)=>Uint8Array.from(atob(s.replaceAll("-","+").replaceAll("_","/")+"=".repeat((4-s.length%4)%4)),c=>c.charCodeAt(0));
 async function passwordHash(password:string){const material=await crypto.subtle.importKey("raw",enc.encode(password),"PBKDF2",false,["deriveBits"]);const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:enc.encode(PASSWORD_SALT),iterations:PASSWORD_ITERATIONS},material,256);return [...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function legacyPasswordHash(password:string){const bits=await crypto.subtle.digest("SHA-256",enc.encode(PASSWORD_SALT+password));return [...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,"0")).join("")}
 function safeEqual(a:string,b:string){if(a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0}
 async function sign(payload:string){const key=await crypto.subtle.importKey("raw",enc.encode(SERVICE_KEY),{name:"HMAC",hash:"SHA-256"},false,["sign"]);return b64url(new Uint8Array(await crypto.subtle.sign("HMAC",key,enc.encode(payload))))}
 async function issueToken(){const now=Date.now();const payload=b64url(enc.encode(JSON.stringify({u:USERNAME,v:TOKEN_VERSION,iat:now,exp:now+2*60*60*1000})));return `${payload}.${await sign(payload)}`}
@@ -42,7 +44,7 @@ Deno.serve(async(req:Request)=>{
   if(action==="login"){
     const u=String(body.username||"").trim();const p=String(body.password||"");
     if(!PASSWORD_SALT||!PASSWORD_HASH||!TOKEN_VERSION) return new Response(JSON.stringify({ok:false,error:"Admin login is temporarily unavailable"}),{status:503,headers:h});
-    const hash=await passwordHash(p);
+    const hash=PASSWORD_SCHEME==="legacy-sha256"?await legacyPasswordHash(p):await passwordHash(p);
     if(u!==USERNAME||!safeEqual(hash,PASSWORD_HASH)) return new Response(JSON.stringify({ok:false,error:"Invalid username or password"}),{status:401,headers:h});
     return new Response(JSON.stringify({ok:true,token:await issueToken()}),{status:200,headers:h});
   }
