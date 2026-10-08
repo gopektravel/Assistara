@@ -134,6 +134,24 @@
       }
     },
     {
+      "src": "api/academy-check-capacity.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
+      "src": "api/academy-preview.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "api/admin-application-answers.js",
       "use": "@vercel/node",
       "config": {
@@ -423,6 +441,14 @@
     {
       "src": "/api/test-portal-session",
       "dest": "/api/test-portal-session.js"
+    },
+    {
+      "src": "/academy-check-capacity",
+      "dest": "/api/academy-check-capacity.js"
+    },
+    {
+      "src": "/academy/preview",
+      "dest": "/api/academy-preview.js"
     },
     {
       "src": "/api/admin-application-answers",
