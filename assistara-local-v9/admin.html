@@ -110,6 +110,23 @@
         border-radius: 24px;
         padding: 30px;
       }
+      /* Returning visitors (a shared Admin token already exists) never see the
+         login form flash while the session is confirmed: a quiet placeholder
+         shows instead until the dashboard is ready. */
+      #booting {
+        max-width: 460px;
+        margin: 70px auto;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 700;
+        display: none;
+      }
+      html[data-admin-session="1"] #login {
+        display: none;
+      }
+      html[data-admin-session="1"] #booting {
+        display: block;
+      }
       .field {
         display: grid;
         gap: 6px;
@@ -938,6 +955,8 @@
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
 </head>
   <body>
+    <script>try{if(localStorage.getItem("assistara_admin_token")||sessionStorage.getItem("assistara_admin_token"))document.documentElement.setAttribute("data-admin-session","1");}catch(e){}</script>
+    <div id="booting">Loading your admin session…</div>
     <div class="shell">
       <div class="top">
         <div class="brand">
@@ -1094,6 +1113,58 @@
       // Cohort capacity now lives inside the Applicants view; it is (re)loaded
       // when the Applicants tab is entered, not on every render/keystroke.
       let capacityDirty = true;
+      /* ---------------------------------------------------------------- *
+       * Admin UI state — persisted per browser tab so moving to a tool
+       * (Finance / Acquisition / Masterclass Event) and returning via Back
+       * or the in-app link restores the exact screen: selected tab, search,
+       * student filters, expanded cards and scroll position.
+       * ---------------------------------------------------------------- */
+      const UI_KEY = "assistara_admin_ui";
+      const openStudents = new Set();
+      let uiDisabled = false;
+      function readUiState() {
+        try { return JSON.parse(sessionStorage.getItem(UI_KEY) || "null"); } catch { return null; }
+      }
+      function saveUiState() {
+        if (uiDisabled) return;
+        try {
+          sessionStorage.setItem(UI_KEY, JSON.stringify({
+            tab,
+            q: $("search") ? $("search").value : "",
+            studentFilter: $("studentFilter") ? $("studentFilter").value : "",
+            studentSort: $("studentSort") ? $("studentSort").value : "",
+            openApps: [...openApps],
+            openStudents: [...openStudents],
+            scroll: window.scrollY || 0,
+          }));
+        } catch {}
+      }
+      function clearUiState() {
+        try { sessionStorage.removeItem(UI_KEY); } catch {}
+      }
+      function applyUiState(s) {
+        if (!s) return;
+        if (["applicants", "students", "webinar", "b2b"].includes(s.tab)) tab = s.tab;
+        if ($("search") && typeof s.q === "string") $("search").value = s.q;
+        if ($("studentFilter") && typeof s.studentFilter === "string") $("studentFilter").value = s.studentFilter;
+        if ($("studentSort") && typeof s.studentSort === "string") $("studentSort").value = s.studentSort;
+        if (Array.isArray(s.openApps)) s.openApps.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openApps.add(String(id)); });
+        if (Array.isArray(s.openStudents)) s.openStudents.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openStudents.add(String(id)); });
+        document.querySelectorAll(".nav button[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+        if (tab === "applicants") capacityDirty = true;
+      }
+      // Applied after the first render so expanded student cards and scroll work.
+      function applyRestoredView(s) {
+        if (!s) return;
+        openStudents.forEach((id) => {
+          const card = $("student-" + id);
+          if (card) card.classList.add("open");
+          const student = students.find((x) => String(x.id) === String(id));
+          const detail = $("student-detail-" + id);
+          if (student && detail) detail.innerHTML = renderStudentDetail(student);
+        });
+        if (typeof s.scroll === "number" && s.scroll > 0) window.scrollTo(0, s.scroll);
+      }
       // Every application card keeps its own expand state so reviewing one
       // applicant never opens or closes another.
       const openApps = new Set(),
@@ -1391,6 +1462,7 @@
         } else {
           openApps.delete(key);
         }
+        saveUiState();
       };
       /* ---------------------------------------------------------------- *
        * Internal reviewer notes (admin_notes).
@@ -1878,6 +1950,16 @@
           $("cards").innerHTML = sorted.length
             ? sorted.map(studentCard).join("")
             : '<div class="empty">No students found.</div>';
+          // Re-apply expanded student cards so a re-render (search, filter, or
+          // returning from a tool) never collapses the record being reviewed.
+          openStudents.forEach((id) => {
+            const card = $("student-" + id);
+            if (!card) return;
+            card.classList.add("open");
+            const student = students.find((x) => String(x.id) === String(id));
+            const detail = $("student-detail-" + id);
+            if (student && detail) detail.innerHTML = renderStudentDetail(student);
+          });
           return;
         }
         if (tab === "webinar") {
@@ -1952,14 +2034,18 @@
         render();
       }
       window.toggleStudent = (id) => {
-        const e = $("student-" + id);
+        const key = String(id);
+        const e = $("student-" + key);
         if (e) e.classList.toggle("open");
+        const isOpen = !!e && e.classList.contains("open");
+        if (isOpen) openStudents.add(key); else openStudents.delete(key);
         // Render detail view when opened
-        const detail = $("student-detail-" + id);
-        if (detail && e.classList.contains("open")) {
-          const student = students.find(s => String(s.id) === String(id));
+        const detail = $("student-detail-" + key);
+        if (detail && isOpen) {
+          const student = students.find(s => String(s.id) === key);
           if (student) detail.innerHTML = renderStudentDetail(student);
         }
+        saveUiState();
       };
       function renderStudentDetail(student) {
         const prog = student._progress;
@@ -2288,14 +2374,17 @@
             // Refresh the integrated capacity block each time Applicants is opened.
             if (tab === "applicants") capacityDirty = true;
             render();
+            saveUiState();
           }),
       );
-      $("search").oninput = render;
+      $("search").oninput = () => { render(); saveUiState(); };
       // Student filter/sort listeners
       const studentFilter = $("studentFilter");
-      if (studentFilter) studentFilter.onchange = render;
+      if (studentFilter) studentFilter.onchange = () => { render(); saveUiState(); };
       const studentSort = $("studentSort");
-      if (studentSort) studentSort.onchange = render;
+      if (studentSort) studentSort.onchange = () => { render(); saveUiState(); };
+      // Capture scroll position (and any last change) as the tab leaves for a tool.
+      window.addEventListener("pagehide", saveUiState);
       $("login").onsubmit = async (event) => {
         event.preventDefault();
         const btn = $("loginBtn");
@@ -2324,6 +2413,8 @@
       };
       $("logout").onclick = async () => {
         adminSession.clear();
+        uiDisabled = true;
+        clearUiState();
         try { await syncTestPortalCookie("logout"); } catch {}
         location.reload();
       };
@@ -2336,6 +2427,9 @@
         }
       };
       function show() {
+        document.documentElement.removeAttribute("data-admin-session");
+        const boot = $("booting");
+        if (boot) boot.style.display = "none";
         $("login").style.display = "none";
         $("dash").style.display = "block";
         $("logout").style.display = "block";
@@ -2349,15 +2443,19 @@
         } catch {
           token = "";
           adminSession.clear();
+          document.documentElement.removeAttribute("data-admin-session");
           $("loginError").textContent = "Your session expired. Please log in again.";
           return;
         }
         show();
+        const ui = readUiState();
+        applyUiState(ui);
         try {
           await load();
         } catch (e) {
           toast("Signed in. Some data could not be loaded: " + e.message);
         }
+        applyRestoredView(ui);
       }
       if (token) restoreSession();
       (() => {

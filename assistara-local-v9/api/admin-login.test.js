@@ -34,7 +34,7 @@ test("admin session is shared across pages and survives data errors", () => {
   const restore = admin.slice(admin.indexOf("async function restoreSession()"), admin.indexOf("if (token) restoreSession();"));
   assert.match(restore, /await req\("session-check", \{\}, LOGIN\)/);
   assert.match(restore, /catch \{\s*token = "";\s*adminSession\.clear\(\);/);
-  assert.match(restore, /show\(\);\s*try \{\s*await load\(\);\s*\} catch/);
+  assert.match(restore, /show\(\);[\s\S]*try \{\s*await load\(\);\s*\} catch/);
 
   for (const page of ["admin-finance.html", "admin-acquisition.html"]) {
     const source = fs.readFileSync(path.join(root, "assistara-local-v9", page), "utf8");

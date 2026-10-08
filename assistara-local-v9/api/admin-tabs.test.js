@@ -51,6 +51,6 @@ test("each tab only enables its own tab-scoped containers", () => {
 
 test("no scattered per-branch filter toggling remains", () => {
   // the nav handler must not toggle the filters directly anymore
-  const nav = between("document.querySelectorAll(\".nav button[data-tab]\")", "$(\"search\").oninput");
+  const nav = between("b.onclick = () => {", "$(\"search\").oninput");
   assert.doesNotMatch(nav, /studentFilters"\)\.style\.display/);
 });
