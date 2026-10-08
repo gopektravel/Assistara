@@ -11,11 +11,24 @@
  *   3. linked masterclass signup:
  *        signup.acquisition_visit_id -> acquisition_visits -> acquisition_links
  *        signup.tracking_token       -> acquisition_links
- *   4. valid UTM attribution on the linked signup (or the record)
- *   5. a reliable referrer on the record's own visit
- *   6. otherwise: Untracked
+ *   4. visitor-history recovery: the record's (or its signup's)
+ *      acquisition_visitor_id had an earlier acquisition-linked visit within
+ *      the attribution window that maps to exactly one campaign.
+ *   5. valid UTM attribution on the linked signup (or the record)
+ *   6. a reliable referrer on the record's own visit
+ *   7. otherwise: Untracked
  *
- * NULL UTMs must never turn a real acquisition-link visit into Untracked.
+ * Classification (`status`): Tracked (direct visit/link) | Recovered (visitor
+ * history) | UTM (campaign without a link) | Direct (referrer, no campaign) |
+ * Untracked (insufficient evidence).
+ *
+ * Rules:
+ *   - NULL UTMs must never turn a real acquisition-link visit into Untracked.
+ *   - Only visits at or before the record's timestamp count, within
+ *     ATTRIBUTION_WINDOW_DAYS.
+ *   - When prior visits point at competing campaigns the match is ambiguous and
+ *     is NOT assigned arbitrarily.
+ *   - Existing reliable direct attribution is never replaced.
  */
 (function (root, factory) {
   const api = factory();
@@ -23,6 +36,11 @@
   if (root) root.AssistaraAttribution = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
+
+  // A campaign visit may attribute a later signup/application only while it is
+  // inside this window. 90 days is the documented Assistara attribution window.
+  const ATTRIBUTION_WINDOW_DAYS = 90;
+  const ATTRIBUTION_WINDOW_MS = ATTRIBUTION_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
   const norm = (v) => String(v == null ? "" : v).trim();
   const upper = (v) => norm(v).toUpperCase();
@@ -42,10 +60,17 @@
 
   function indexVisits(visits) {
     const byId = new Map();
+    const byVisitor = new Map();
     for (const v of visits || []) {
-      if (v && v.id) byId.set(norm(v.id), v);
+      if (!v) continue;
+      if (v.id) byId.set(norm(v.id), v);
+      const visitor = norm(v.visitor_id);
+      if (visitor) {
+        if (!byVisitor.has(visitor)) byVisitor.set(visitor, []);
+        byVisitor.get(visitor).push(v);
+      }
     }
-    return { byId };
+    return { byId, byVisitor };
   }
 
   function linkForToken(token, links) {
@@ -112,9 +137,11 @@
     return null;
   }
 
-  function fromLink(link, visit, path, token) {
+  function fromLink(link, visit, path, token, status) {
     return {
       tracked: true,
+      status: status || "Tracked",
+      recovered: path === "visitor_recovered",
       path,
       channel: norm(link.channel),
       placement: norm(link.placement),
@@ -131,10 +158,33 @@
 
   function untracked() {
     return {
-      tracked: false, path: "untracked", channel: "", placement: "", campaign: "",
-      destination: "", token: "", label: "Untracked", short: "Untracked",
-      display: "Untracked", visit_id: "", utm: null,
+      tracked: false, status: "Untracked", recovered: false, path: "untracked",
+      channel: "", placement: "", campaign: "", destination: "", token: "",
+      label: "Untracked", short: "Untracked", display: "Untracked", visit_id: "", utm: null,
     };
+  }
+
+  // Visitor-history recovery: does the same visitor have an acquisition-linked
+  // visit at or before `atMs` (within the window)? Only a single distinct
+  // campaign qualifies; competing campaigns are ambiguous and are left alone.
+  function recoverFromVisitor(visitorId, atMs, links, visits) {
+    const visitor = norm(visitorId);
+    if (!visitor || !Number.isFinite(atMs)) return null;
+    const pool = visits.byVisitor.get(visitor) || [];
+    const from = atMs - ATTRIBUTION_WINDOW_MS;
+    const eligible = pool.filter((v) => {
+      if (!v || !v.acquisition_link_id) return false;
+      const t = Date.parse(v.created_at);
+      return Number.isFinite(t) && t <= atMs && t >= from;
+    });
+    if (!eligible.length) return null;
+    if (new Set(eligible.map((v) => norm(v.acquisition_link_id))).size !== 1) return null;
+    // Most recent eligible visit, with a stable id tie-breaker.
+    eligible.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at) || String(b.id).localeCompare(String(a.id)));
+    const visit = eligible[0];
+    const link = linkForVisit(visit.id, links, visits).link;
+    if (!link) return null;
+    return fromLink(link, visit, "visitor_recovered", visit.tracking_token, "Recovered");
   }
 
   function resolve(record, context) {
@@ -147,33 +197,41 @@
     if (record) {
       // 1. The record's own acquisition visit.
       const own = linkForVisit(record.acquisition_visit_id, links, visits);
-      if (own.link) return fromLink(own.link, own.visit, "record_visit", record.tracking_token);
+      if (own.link) return fromLink(own.link, own.visit, "record_visit", record.tracking_token, "Tracked");
       // 2. The record's own tracking token.
       const ownToken = linkForToken(record.tracking_token, links);
-      if (ownToken) return fromLink(ownToken, null, "record_token", record.tracking_token);
+      if (ownToken) return fromLink(ownToken, null, "record_token", record.tracking_token, "Tracked");
     }
 
     // 3. The linked masterclass signup's visit, then its token.
     if (signup && signup !== record) {
       const viaSignup = linkForVisit(signup.acquisition_visit_id, links, visits);
-      if (viaSignup.link) return fromLink(viaSignup.link, viaSignup.visit, "signup_visit", signup.tracking_token);
+      if (viaSignup.link) return fromLink(viaSignup.link, viaSignup.visit, "signup_visit", signup.tracking_token, "Tracked");
       const signupToken = linkForToken(signup.tracking_token, links);
-      if (signupToken) return fromLink(signupToken, null, "signup_token", signup.tracking_token);
+      if (signupToken) return fromLink(signupToken, null, "signup_token", signup.tracking_token, "Tracked");
     }
 
-    // 4. Valid UTM attribution from the linked signup (or the record itself).
+    // 4. Prior visitor-history recovery (never overwrites anything above).
+    const recordAt = Date.parse((record && record.created_at) || "");
+    const recovered = recoverFromVisitor(record && record.acquisition_visitor_id, recordAt, links, visits)
+      || (signup && signup !== record
+        ? recoverFromVisitor(signup.acquisition_visitor_id, Date.parse(signup.created_at), links, visits)
+        : null);
+    if (recovered) return recovered;
+
+    // 5. Valid UTM attribution from the linked signup (or the record itself).
     const utm = utmOf(signup) || utmOf(record);
     if (utm) {
       const label = utmLabel(utm);
       return {
-        tracked: true, path: "utm", channel: utm.source, placement: utm.medium,
-        campaign: utm.campaign, destination: "", token: "", label,
-        short: utm.source || label, display: label || utm.source || "Campaign",
-        visit_id: "", utm,
+        tracked: true, status: "UTM", recovered: false, path: "utm",
+        channel: utm.source, placement: utm.medium, campaign: utm.campaign,
+        destination: "", token: "", label, short: utm.source || label,
+        display: label || utm.source || "Campaign", visit_id: "", utm,
       };
     }
 
-    // 5. A reliable referrer on the record's own visit.
+    // 6. A reliable referrer on the record's own visit.
     if (record) {
       const v = visits.byId.get(norm(record.acquisition_visit_id));
       const ref = v ? norm(v.referrer) : "";
@@ -182,17 +240,17 @@
         try { host = new URL(ref).hostname.replace(/^www\./, ""); } catch { host = ref.slice(0, 80); }
         if (host) {
           return {
-            tracked: true, path: "referrer", channel: host, placement: "", campaign: "",
-            destination: "", token: "", label: host, short: host, display: host,
-            visit_id: norm(v.id), utm: null,
+            tracked: true, status: "Direct", recovered: false, path: "referrer",
+            channel: host, placement: "", campaign: "", destination: "", token: "",
+            label: host, short: host, display: host, visit_id: norm(v.id), utm: null,
           };
         }
       }
     }
 
-    // 6. Nothing reliable anywhere in the chain.
+    // 7. Nothing reliable anywhere in the chain.
     return untracked();
   }
 
-  return { resolve, findSignup, linkLabel, linkShort, utmOf, utmLabel };
+  return { resolve, findSignup, linkLabel, linkShort, utmOf, utmLabel, recoverFromVisitor, ATTRIBUTION_WINDOW_DAYS };
 });

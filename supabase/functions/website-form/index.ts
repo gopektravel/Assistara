@@ -3,6 +3,20 @@ const U=Deno.env.get("SUPABASE_URL")!,K=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"
 const FROM=Deno.env.get("EMAIL_FROM")||"Assistara <forms@getassistara.com>",NOTIFY=Deno.env.get("NOTIFICATION_EMAIL")||"notifications@getassistara.com",ACADEMY=Deno.env.get("ACADEMY_REPLY_TO")||"academy@getassistara.com",SITE="https://www.getassistara.com";
 const origins=new Set(["https://getassistara.com",SITE,"http://localhost:3000","http://localhost:3001","http://127.0.0.1:3000","http://127.0.0.1:3001"]);const allowed=(o:string|null)=>!!o&&(origins.has(o)||o.endsWith('.vercel.app'));const clean=(v:any,n=5000)=>typeof v==='string'?v.trim().slice(0,n):'';const valid=(e:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)&&e.length<=254;const esc=(s:string)=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 async function insert(table:string,row:any){const r=await fetch(`${U}/rest/v1/${table}?select=id`,{method:'POST',headers:{'Content-Type':'application/json',apikey:K,Authorization:`Bearer ${K}`,Prefer:'return=representation'},body:JSON.stringify(row)});const j=await r.json().catch(()=>null);if(!r.ok||!j?.[0]?.id){console.error('DB WRITE FAILED',{table,status:r.status,response:j});throw Error(`Database write failed: ${table} ${r.status} ${JSON.stringify(j)}`);}return String(j[0].id)}
+// Safe write-time recovery: when a form arrives with a visitor id but no direct
+// campaign visit, reuse the visitor's most recent UNCLAIMED acquisition-linked
+// visit inside the 90-day attribution window - but only when every eligible
+// visit points at one campaign. Never clobbers a visit already tied to a signup.
+async function recoveryVisit(visitor:string){
+  const v=clean(visitor,200);
+  if(!v)return null;
+  const since=new Date(Date.now()-90*24*60*60*1000).toISOString();
+  const r=await fetch(`${U}/rest/v1/acquisition_visits?visitor_id=eq.${encodeURIComponent(v)}&acquisition_link_id=not.is.null&signup_id=is.null&created_at=gte.${encodeURIComponent(since)}&select=id,tracking_token,acquisition_link_id&order=created_at.desc&limit=10`,{headers:{apikey:K,Authorization:`Bearer ${K}`}});
+  const rows=await r.json().catch(()=>[]);
+  if(!Array.isArray(rows)||!rows.length)return null;
+  if(new Set(rows.map((x:any)=>String(x.acquisition_link_id||''))).size!==1)return null;
+  return {visit:String(rows[0].id||''),token:String(rows[0].tracking_token||'')};
+}
 async function acquisition(b:any){
   let visit=clean(b.acquisition_visit_id,100);
   let token=clean(b.tracking_token,100).toUpperCase();
@@ -28,6 +42,7 @@ async function acquisition(b:any){
       visit=String(vj?.[0]?.id||'');
     }
   }
+  if(!visit&&visitor){const rec=await recoveryVisit(visitor);if(rec?.visit){visit=rec.visit;token=token||rec.token;}}
   return {visit,visitor,token};
 }
 async function contactFor(email:string,name:string,aq:any){const eh=encodeURIComponent(email);let r=await fetch(`${U}/rest/v1/contacts?email=eq.${eh}&select=id,first_acquisition_visit_id,first_tracking_token,first_visitor_id&limit=1`,{headers:{apikey:K,Authorization:`Bearer ${K}`}});let j=await r.json().catch(()=>[]),c=j?.[0];if(!c){r=await fetch(`${U}/rest/v1/contacts?select=id,first_acquisition_visit_id,first_tracking_token,first_visitor_id`,{method:'POST',headers:{'Content-Type':'application/json',apikey:K,Authorization:`Bearer ${K}`,Prefer:'return=representation'},body:JSON.stringify({email,name:name||null,first_acquisition_visit_id:aq.visit||null,first_tracking_token:aq.token||null,first_visitor_id:aq.visitor||null})});j=await r.json().catch(()=>[]);c=j?.[0]}if(!c?.id)throw Error('Contact identity write failed');const patch:any={updated_at:new Date().toISOString()};if(name)patch.name=name;if(!c.first_acquisition_visit_id&&aq.visit)patch.first_acquisition_visit_id=aq.visit;if(!c.first_tracking_token&&aq.token)patch.first_tracking_token=aq.token;if(!c.first_visitor_id&&aq.visitor)patch.first_visitor_id=aq.visitor;await fetch(`${U}/rest/v1/contacts?id=eq.${c.id}`,{method:'PATCH',headers:{'Content-Type':'application/json',apikey:K,Authorization:`Bearer ${K}`},body:JSON.stringify(patch)});if(aq.visit)await fetch(`${U}/rest/v1/acquisition_visits?id=eq.${encodeURIComponent(aq.visit)}`,{method:'PATCH',headers:{'Content-Type':'application/json',apikey:K,Authorization:`Bearer ${K}`},body:JSON.stringify({contact_id:c.id})});return {id:String(c.id),visit:aq.visit||String(c.first_acquisition_visit_id||''),token:aq.token||String(c.first_tracking_token||''),visitor:aq.visitor||String(c.first_visitor_id||'')}}

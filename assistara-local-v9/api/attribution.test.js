@@ -37,6 +37,12 @@ const VISIT = {
 };
 const ctx = { links: [LINK], visits: [VISIT], signups: [] };
 
+// Visitor-history fixtures.
+const LINK2 = { id: "link-2", token: "AAAA1111", channel: "Facebook", placement: "Xyra Story", label: null, destination: "academy", is_active: true };
+const T0 = Date.parse("2026-10-01T10:00:00Z");
+const at = (ms) => new Date(ms).toISOString();
+const mkVisit = (id, visitorId, linkId, atMs, token) => ({ id, visitor_id: visitorId, acquisition_link_id: linkId, tracking_token: token, created_at: at(atMs) });
+
 // A. Direct acquisition visit + link, UTMs all NULL.
 test("A. application with a direct acquisition visit is TRACKED even with NULL UTMs", () => {
   const app = {
@@ -103,6 +109,114 @@ test("F. attribution survives the masterclass signup -> Academy application hand
   assert.equal(resolvedForApp.tracked, true);
   assert.equal(resolvedForSignup.display, resolvedForApp.display);
   assert.equal(resolvedForApp.display, "Other \u2192 GPT add");
+});
+
+// P. Direct visit and tracking-token attribution both resolve (existing paths).
+test("P. direct visit and tracking-token attribution both resolve", () => {
+  const byVisit = resolver.resolve({ id: "x", acquisition_visit_id: VISIT.id }, { ...ctx, kind: "signup" });
+  assert.equal(byVisit.path, "record_visit");
+  assert.equal(byVisit.status, "Tracked");
+  const byToken = resolver.resolve({ id: "x", tracking_token: LINK.token }, { ...ctx, kind: "signup" });
+  assert.equal(byToken.path, "record_token");
+  assert.equal(byToken.status, "Tracked");
+});
+
+// G. Prior visitor-history attribution.
+test("G. a prior visitor-history visit attributes a signup with no direct visit", () => {
+  const visitor = "vis-1";
+  const prior = mkVisit("v1", visitor, LINK.id, T0 - 3600000, LINK.token);
+  const signup = { id: "s-7", email: "g@example.com", acquisition_visitor_id: visitor, created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK], visits: [prior], signups: [signup], kind: "signup" });
+  assert.equal(r.tracked, true);
+  assert.equal(r.status, "Recovered");
+  assert.equal(r.path, "visitor_recovered");
+  assert.equal(r.display, "Other \u2192 GPT add");
+  assert.equal(r.visit_id, "v1");
+});
+
+// H. Multiple same-campaign visits -> the latest eligible one wins.
+test("H. multiple same-campaign visits resolve to the latest eligible visit", () => {
+  const visitor = "vis-2";
+  const older = mkVisit("vA", visitor, LINK.id, T0 - 7200000, LINK.token);
+  const newer = mkVisit("vB", visitor, LINK.id, T0 - 60000, LINK.token);
+  const signup = { id: "s-8", email: "h@example.com", acquisition_visitor_id: visitor, created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK], visits: [older, newer], signups: [signup], kind: "signup" });
+  assert.equal(r.status, "Recovered");
+  assert.equal(r.visit_id, "vB");
+});
+
+// I. Visits after the signup are excluded.
+test("I. a visit that happened AFTER the signup cannot attribute it", () => {
+  const visitor = "vis-3";
+  const after = mkVisit("vC", visitor, LINK.id, T0 + 3600000, LINK.token);
+  const signup = { id: "s-9", email: "i@example.com", acquisition_visitor_id: visitor, created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK], visits: [after], signups: [signup], kind: "signup" });
+  assert.equal(r.tracked, false);
+  assert.equal(r.status, "Untracked");
+});
+
+// J. Visits older than the attribution window are stale and excluded.
+test("J. a visit older than the attribution window is stale and excluded", () => {
+  const visitor = "vis-4";
+  const staleAt = T0 - (resolver.ATTRIBUTION_WINDOW_DAYS + 1) * 86400000;
+  const stale = mkVisit("vD", visitor, LINK.id, staleAt, LINK.token);
+  const signup = { id: "s-10", email: "j@example.com", acquisition_visitor_id: visitor, created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK], visits: [stale], signups: [signup], kind: "signup" });
+  assert.equal(r.tracked, false);
+  assert.equal(r.status, "Untracked");
+});
+
+// K. Competing campaigns are ambiguous and never guessed.
+test("K. competing campaigns for one visitor are ambiguous and never assigned arbitrarily", () => {
+  const visitor = "vis-5";
+  const a = mkVisit("vE", visitor, LINK.id, T0 - 3600000, LINK.token);
+  const b = mkVisit("vF", visitor, LINK2.id, T0 - 1800000, LINK2.token);
+  const signup = { id: "s-11", email: "k@example.com", acquisition_visitor_id: visitor, created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK, LINK2], visits: [a, b], signups: [signup], kind: "signup" });
+  assert.equal(r.tracked, false);
+  assert.equal(r.status, "Untracked");
+});
+
+// L. A visitor with no prior campaign visit stays direct; no campaign invented.
+test("L. a visitor with no prior campaign visit is not given an invented campaign", () => {
+  const visitor = "vis-6";
+  const unlinked = { id: "vG", visitor_id: visitor, acquisition_link_id: null, created_at: at(T0 - 3600000) };
+  const signup = { id: "s-12", email: "l@example.com", acquisition_visitor_id: visitor, created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK], visits: [unlinked], signups: [signup], kind: "signup" });
+  assert.equal(r.tracked, false);
+  assert.equal(r.status, "Untracked");
+});
+
+// M. Missing visitor id cannot be recovered.
+test("M. a signup with no visitor id cannot be recovered", () => {
+  const signup = { id: "s-13", email: "m@example.com", acquisition_visitor_id: null, created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK], visits: [VISIT], signups: [signup], kind: "signup" });
+  assert.equal(r.tracked, false);
+});
+
+// N. Existing reliable direct attribution is never overwritten.
+test("N. an existing direct attribution is never replaced by visitor history", () => {
+  const visitor = "vis-7";
+  const other = mkVisit("vH", visitor, LINK2.id, T0 - 60000, LINK2.token);
+  const own = mkVisit("vI", visitor, LINK.id, T0 - 3600000, LINK.token);
+  const signup = { id: "s-14", email: "n@example.com", acquisition_visitor_id: visitor, acquisition_visit_id: "vI", created_at: at(T0) };
+  const r = resolver.resolve(signup, { links: [LINK, LINK2], visits: [own, other], signups: [signup], kind: "signup" });
+  assert.equal(r.path, "record_visit");
+  assert.equal(r.display, "Other \u2192 GPT add");
+});
+
+// O. Every path carries its documented classification.
+test("O. each attribution path carries its documented classification", () => {
+  const direct = resolver.resolve({ id: "x", acquisition_visit_id: VISIT.id }, { ...ctx, kind: "signup" });
+  assert.equal(direct.status, "Tracked");
+  const token = resolver.resolve({ id: "x", tracking_token: LINK.token }, { ...ctx, kind: "signup" });
+  assert.equal(token.status, "Tracked");
+  const utm = resolver.resolve({ id: "x", utm_source: "google" }, { links: [], visits: [], kind: "signup" });
+  assert.equal(utm.status, "UTM");
+  const ref = resolver.resolve({ id: "x", acquisition_visit_id: "vRef" }, { links: [LINK], visits: [{ id: "vRef", referrer: "https://news.ycombinator.com/x" }], kind: "signup" });
+  assert.equal(ref.status, "Direct");
+  const none = resolver.resolve({ id: "x" }, { links: [], visits: [], kind: "signup" });
+  assert.equal(none.status, "Untracked");
 });
 
 // Architectural guard: the admin pages consume the one shared resolver.

@@ -902,6 +902,7 @@
       .attrRow { display: flex; gap: 8px; justify-content: space-between; font-size: 12px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
       .attrRow span { color: var(--muted); }
       .attrRow b { font-weight: 800; text-align: right; overflow-wrap: anywhere; }
+      .attrSummary { margin: 0 0 14px; font-size: 12px; font-weight: 700; color: var(--muted); }
       .activityTimeline { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
       .activityTimeline li { display: grid; grid-template-columns: minmax(105px, auto) 1fr; gap: 10px; font-size: 12px; }
       .activityTimeline time { color: var(--muted); }
@@ -1457,7 +1458,7 @@
           if (d.campaign) rows.push(["Campaign", d.campaign]);
           if (d.destination) rows.push(["Landing destination", d.destination]);
           if (d.utm) rows.push(["UTM", [d.utm.source, d.utm.medium, d.utm.campaign].filter(Boolean).join(" / ")]);
-          rows.push(["Status", "Tracked"]);
+          rows.push(["Status", d.status || "Tracked"]);
         } else {
           rows.push(["Status", "Untracked"]);
         }
@@ -1807,16 +1808,19 @@
           const acquisitionPoints=visibleWeb.reduce((sum,x)=>sum+acquisitionWeight(x),0),goal=400,pct=Math.min(100,Math.round((acquisitionPoints/goal)*100));
           const paymentPlanCount=visibleWeb.filter(x=>acquisitionWeight(x)===8).length,fullPayCount=visibleWeb.filter(x=>acquisitionWeight(x)===15).length;
           $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${acquisitionPoints} / ${goal} points</b><div><span>Acquisition goal · ${visibleWeb.length} webinar signups · ${paymentPlanCount} payment plan ×8 · ${fullPayCount} full pay ×15</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
+          const sourceFor=x=>window.AssistaraAttribution.resolve(x,{kind:"signup",links:acquisitionLinks,visits:acquisitionVisits,signups:web});
+          const attrCounts={Tracked:0,Recovered:0,UTM:0,Direct:0,Untracked:0};
+          visibleWeb.forEach((x)=>{const s=sourceFor(x);attrCounts[s.status]=(attrCounts[s.status]||0)+1});
           stat([
             [visibleWeb.length, "Registered"],
             [visibleWeb.filter((x) => x.attended).length, "Attended"],
             [visibleWeb.filter((x) => x.application_id).length, "Applied"],
             [visibleWeb.filter((x) => x.purchased).length, "Purchased"],
           ]);
+          $("signupGoal").innerHTML += `<div class="attrSummary">Attribution · Tracked ${attrCounts.Tracked} · Recovered ${attrCounts.Recovered}${attrCounts.UTM?" · UTM "+attrCounts.UTM:""}${attrCounts.Direct?" · Direct "+attrCounts.Direct:""} · Untracked ${attrCounts.Untracked}</div>`;
           const w = visibleWeb.filter(match);
-          const sourceFor=x=>window.AssistaraAttribution.resolve(x,{kind:"signup",links:acquisitionLinks,visits:acquisitionVisits,signups:web}).display;
           $("cards").innerHTML = w.length
-            ? w.map((x,i) => {const source=sourceFor(x);return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div><div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
+            ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
