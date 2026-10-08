@@ -2253,6 +2253,11 @@
       const studentSort = $("studentSort");
       if (studentSort) studentSort.onchange = render;
       $("loginBtn").onclick = async () => {
+        const btn = $("loginBtn");
+        const errorEl = $("loginError");
+        errorEl.textContent = "";
+        btn.disabled = true;
+        btn.textContent = "Signing in…";
         try {
           const d = await req(
             "login",
@@ -2264,7 +2269,9 @@
           show();
           await load();
         } catch (e) {
-          $("loginError").textContent = e.message;
+          errorEl.textContent = e.message;
+          btn.disabled = false;
+          btn.textContent = "Log in";
         }
       };
       $("logout").onclick = async () => {
