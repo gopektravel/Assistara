@@ -34,7 +34,14 @@ test("admin session is shared across pages and survives data errors", () => {
   const restore = admin.slice(admin.indexOf("async function restoreSession()"), admin.indexOf("if (token) restoreSession();"));
   assert.match(restore, /await req\("session-check", \{\}, LOGIN\)/);
   assert.match(restore, /catch \{\s*token = "";\s*adminSession\.clear\(\);/);
-  assert.match(restore, /show\(\);[\s\S]*try \{\s*await load\(\);\s*\} catch/);
+  // The shell is shown first, then the session is validated in place, then the
+  // app (dashboard + any routed tool) is entered without a document reload.
+  assert.match(restore, /show\(\);[\s\S]*await enterApp\(\)/);
+  const enter = admin.slice(
+    admin.indexOf("async function enterApp()"),
+    admin.indexOf("</script>", admin.indexOf("async function enterApp()")),
+  );
+  assert.match(enter, /await load\(\)/);
 
   for (const page of ["admin-finance.html", "admin-acquisition.html"]) {
     const source = fs.readFileSync(path.join(root, "assistara-local-v9", page), "utf8");

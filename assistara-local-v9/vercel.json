@@ -532,26 +532,38 @@
     },
     {
       "src": "/admin/acquisition",
-      "dest": "/admin-acquisition.html"
+      "dest": "/admin.html"
     },
     {
       "src": "/admin/acquisition/",
-      "dest": "/admin-acquisition.html"
+      "dest": "/admin.html"
     },
     {
       "src": "/admin/finance",
-      "dest": "/admin-finance.html"
+      "dest": "/admin.html"
     },
     {
       "src": "/admin/finance/",
-      "dest": "/admin-finance.html"
+      "dest": "/admin.html"
     },
     {
       "src": "/admin/masterclass-event",
-      "dest": "/admin-masterclass-event.html"
+      "dest": "/admin.html"
     },
     {
       "src": "/admin/masterclass-event/",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/admin-finance.html",
+      "dest": "/admin-finance.html"
+    },
+    {
+      "src": "/admin-acquisition.html",
+      "dest": "/admin-acquisition.html"
+    },
+    {
+      "src": "/admin-masterclass-event.html",
       "dest": "/admin-masterclass-event.html"
     },
     {
@@ -652,6 +664,18 @@
     },
     {
       "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/academy-apply.html",
+      "dest": "/academy-apply.html"
+    },
+    {
+      "src": "/admin.html",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/index.html",
       "dest": "/index.html"
     },
     {

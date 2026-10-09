@@ -110,22 +110,28 @@
         border-radius: 24px;
         padding: 30px;
       }
-      /* Returning visitors (a shared Admin token already exists) never see the
-         login form flash while the session is confirmed: a quiet placeholder
-         shows instead until the dashboard is ready. */
-      #booting {
-        max-width: 460px;
-        margin: 70px auto;
-        text-align: center;
-        color: var(--muted);
-        font-weight: 700;
-        display: none;
-      }
+      /* A returning visitor (shared Admin token already present) sees the app
+         shell straight away instead of the login form or a loading screen. */
       html[data-admin-session="1"] #login {
         display: none;
       }
-      html[data-admin-session="1"] #booting {
+      html[data-admin-session="1"] #dash {
         display: block;
+      }
+      /* Finance / Acquisition Tracker / Masterclass Event are mounted here as
+         client-side Admin views so moving between tools never reloads the
+         document and never re-runs the login/session boot. */
+      #toolView {
+        padding: 4px 0 40px;
+      }
+      #toolView[hidden] {
+        display: none;
+      }
+      .toolError {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
       }
       .field {
         display: grid;
@@ -956,7 +962,6 @@
 </head>
   <body>
     <script>try{if(localStorage.getItem("assistara_admin_token")||sessionStorage.getItem("assistara_admin_token"))document.documentElement.setAttribute("data-admin-session","1");}catch(e){}</script>
-    <div id="booting">Loading your admin session…</div>
     <div class="shell">
       <div class="top">
         <div class="brand">
@@ -1011,11 +1016,12 @@
             Applications <span id="payCount"></span></button
           ><button data-tab="students">Students</button
           ><button data-tab="webinar">Webinar Signups</button
-          ><button type="button" onclick="location.href='/admin/acquisition'">Acquisition Tracker</button
-          ><button type="button" onclick="location.href='/admin/finance'">Finance</button
-          ><button type="button" onclick="location.href='/admin/masterclass-event'">Masterclass Event</button
+          ><button type="button" data-tool="acquisition">Acquisition Tracker</button
+          ><button type="button" data-tool="finance">Finance</button
+          ><button type="button" data-tool="masterclass">Masterclass Event</button
           ><button data-tab="b2b">B2B</button>
         </div>
+        <div id="dashBody">
         <div id="pendingBox"></div>
         <input id="search" class="search" placeholder="Search..." />
         <div class="studentFilters" id="studentFilters" style="display:none">
@@ -1053,7 +1059,9 @@
           </div>
         </div>
         <div id="cards" class="cards"></div>
+        </div>
       </section>
+      <div id="toolView" hidden></div>
     </div>
     <div id="toast" class="toast"></div>
     <script src="/attribution.js"></script>
@@ -1122,6 +1130,10 @@
       const UI_KEY = "assistara_admin_ui";
       const openStudents = new Set();
       let uiDisabled = false;
+      // Which Admin view is showing: "dashboard" or a tool name. Declared here,
+      // before the shell router below, so saveUiState can always read it.
+      let agentView = "dashboard";
+      const viewScroll = { dashboard: 0 };
       function readUiState() {
         try { return JSON.parse(sessionStorage.getItem(UI_KEY) || "null"); } catch { return null; }
       }
@@ -1135,7 +1147,9 @@
             studentSort: $("studentSort") ? $("studentSort").value : "",
             openApps: [...openApps],
             openStudents: [...openStudents],
-            scroll: window.scrollY || 0,
+            // Only the dashboard's own scroll is meaningful when a tool view is
+            // mounted, so a tool's scroll is never restored onto the dashboard.
+            scroll: agentView === "dashboard" ? (window.scrollY || 0) : (viewScroll.dashboard || 0),
           }));
         } catch {}
       }
@@ -2366,6 +2380,9 @@
         (b) =>
           (b.onclick = () => {
             tab = b.dataset.tab;
+            // Choosing a dashboard tab always leaves any mounted tool and
+            // returns to the dashboard, pushing history so Back goes to the tool.
+            showDashboard({ push: true });
             document
               .querySelectorAll(".nav button")
               .forEach((x) => x.classList.toggle("active", x === b));
@@ -2377,6 +2394,11 @@
             saveUiState();
           }),
       );
+      // Finance / Acquisition Tracker / Masterclass Event are mounted inside the
+      // shell (client-side) instead of navigating away to a separate document.
+      document
+        .querySelectorAll(".nav button[data-tool]")
+        .forEach((b) => (b.onclick = () => openTool(b.dataset.tool)));
       $("search").oninput = () => { render(); saveUiState(); };
       // Student filter/sort listeners
       const studentFilter = $("studentFilter");
@@ -2401,10 +2423,11 @@
           );
           token = d.token;
           adminSession.write(token);
-          await load();
+          clearUiState();
+          show();
+          await enterApp();
           btn.disabled = false;
           btn.textContent = "Log in";
-          show();
         } catch (e) {
           errorEl.textContent = e.message;
           btn.disabled = false;
@@ -2428,8 +2451,6 @@
       };
       function show() {
         document.documentElement.removeAttribute("data-admin-session");
-        const boot = $("booting");
-        if (boot) boot.style.display = "none";
         $("login").style.display = "none";
         $("dash").style.display = "block";
         $("logout").style.display = "block";
@@ -2438,24 +2459,28 @@
       // Restore an existing session. Only a real authentication failure logs
       // the Admin out; a data-loading hiccup must never destroy a valid session.
       async function restoreSession() {
+        // The shell is already visible (html[data-admin-session="1"]); validate
+        // the session in place so a returning visitor never sees the login form
+        // or a separate loading screen.
+        show();
         try {
           await req("session-check", {}, LOGIN);
         } catch {
           token = "";
           adminSession.clear();
           document.documentElement.removeAttribute("data-admin-session");
+          $("dash").style.display = "none";
+          $("logout").style.display = "none";
+          $("testPortal").style.display = "none";
+          $("login").style.display = "block";
           $("loginError").textContent = "Your session expired. Please log in again.";
           return;
         }
-        show();
-        const ui = readUiState();
-        applyUiState(ui);
         try {
-          await load();
+          await enterApp();
         } catch (e) {
           toast("Signed in. Some data could not be loaded: " + e.message);
         }
-        applyRestoredView(ui);
       }
       if (token) restoreSession();
       (() => {
@@ -2606,6 +2631,302 @@
           }
         };
       })();
+      /* ================================================================
+       * Admin application shell — client-side tool navigation.
+       *
+       * Finance, Acquisition Tracker and Masterclass Event already exist as
+       * standalone pages. Instead of navigating to them (a full document load
+       * that re-ran the dashboard boot and flashed an intermediate screen),
+       * the shell fetches each page once and mounts it in an isolated shadow
+       * root. The dashboard stays mounted underneath, so its tab, search,
+       * filters, expanded records and scroll are never lost, and Back/Forward
+       * are handled by the History API with no document reload.
+       *
+       * Authorisation is unchanged: the tools still call the same protected
+       * APIs with the same shared Admin token, and every request is verified
+       * server-side. Internal navigation never re-authenticates.
+       * ================================================================ */
+      const TOOLS = {
+        acquisition: { path: "/admin/acquisition", src: "/admin-acquisition.html" },
+        finance: { path: "/admin/finance", src: "/admin-finance.html" },
+        masterclass: { path: "/admin/masterclass-event", src: "/admin-masterclass-event.html" },
+      };
+      const toolSource = {};
+      let mountedTool = null;
+      let toolCleanup = null;
+
+      function pathTool(path) {
+        const p = String(path || "").replace(/\/+$/, "") || "/";
+        for (const name of Object.keys(TOOLS)) if (TOOLS[name].path === p) return name;
+        return null;
+      }
+      function markNav(selector) {
+        document
+          .querySelectorAll(".nav button")
+          .forEach((x) => x.classList.toggle("active", x.matches(selector)));
+      }
+      function captureScroll() {
+        viewScroll[agentView] = window.scrollY || 0;
+      }
+      function restoreScroll(name) {
+        const y = viewScroll[name] || 0;
+        requestAnimationFrame(() => window.scrollTo(0, y));
+      }
+
+      // Show the dashboard and leave any mounted tool. `push` adds a history
+      // entry so Back returns to the tool that was open.
+      function showDashboard(opts = {}) {
+        const switching = agentView !== "dashboard";
+        if (switching) captureScroll();
+        agentView = "dashboard";
+        if (mountedTool) disposeTool();
+        $("toolView").hidden = true;
+        $("toolView").replaceChildren();
+        $("dashBody").style.display = "";
+        if (switching && opts.push !== false)
+          history.pushState({ view: "dashboard" }, "", "/admin");
+        markNav('.nav button[data-tab="' + tab + '"]');
+        if (switching) restoreScroll("dashboard");
+      }
+
+      // Open a tool view. Resolves once it is mounted (its source may be fetched).
+      function openTool(name, opts = {}) {
+        const t = TOOLS[name];
+        if (!t) return Promise.resolve();
+        const switching = agentView !== name;
+        if (switching) captureScroll();
+        agentView = name;
+        if (switching && opts.push !== false) history.pushState({ view: name }, "", t.path);
+        $("dashBody").style.display = "none";
+        $("toolView").hidden = false;
+        markNav('.nav button[data-tool="' + name + '"]');
+        return mountTool(name);
+      }
+
+      async function loadToolSource(name) {
+        if (toolSource[name]) return toolSource[name];
+        const res = await fetch(TOOLS[name].src, { credentials: "same-origin" });
+        if (!res.ok) throw new Error("Could not load the " + name + " view (" + res.status + ").");
+        const html = await res.text();
+        // DOMParser keeps <head>/<body> intact (a <template> flattens them).
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const css = [...doc.querySelectorAll("style")]
+          .map((s) => s.textContent)
+          .join("\n");
+        const scripts = [...doc.querySelectorAll("script")];
+        const inline = scripts
+          .filter((s) => !s.getAttribute("src"))
+          .map((s) => s.textContent)
+          .join("\n;\n");
+        scripts.forEach((s) => s.remove());
+        const markup = (doc.body || doc.documentElement).innerHTML;
+        toolSource[name] = { css, markup, script: inline };
+        return toolSource[name];
+      }
+
+      // Every standalone tool styles its own <body>/:root. Inside a shadow root
+      // those selectors no longer match, so map them onto the shadow host.
+      function scopeToolCss(css) {
+        return String(css || "")
+          .replace(/:root\b/g, ":host")
+          .replace(/(^|[}{,])\s*(?:html|body)\s*(?=[,{])/g, "$1 :host ");
+      }
+
+      async function mountTool(name) {
+        if (mountedTool === name) return;
+        let src;
+        try {
+          src = await loadToolSource(name);
+        } catch (e) {
+          if (agentView === name) mountToolError(name, e);
+          return;
+        }
+        if (agentView !== name) return; // navigated away while fetching
+        disposeTool();
+        const host = document.createElement("div");
+        host.className = "toolHost";
+        const shadow = host.attachShadow({ mode: "open" });
+        const style = document.createElement("style");
+        // Hide the tool's own brand/back bar — the shell provides that chrome.
+        style.textContent = scopeToolCss(src.css) + "\n.top{display:none !important}\n";
+        shadow.appendChild(style);
+        const root = document.createElement("div");
+        root.className = "toolRoot";
+        root.innerHTML = src.markup;
+        shadow.appendChild(root);
+        $("toolView").replaceChildren(host);
+        shadow.addEventListener("click", interceptAdminLink);
+        toolCleanup = runToolScript(name, src.script, shadow);
+        mountedTool = name;
+        restoreScroll(name);
+      }
+
+      function mountToolError(name, err) {
+        disposeTool();
+        const box = document.createElement("div");
+        box.className = "toolError";
+        box.innerHTML =
+          "<p>This view could not be opened: " +
+          esc(err && err.message ? err.message : String(err)) +
+          '.</p><p><a href="' +
+          (TOOLS[name] ? TOOLS[name].src : "/admin") +
+          '">Open it directly</a>.</p>';
+        $("toolView").replaceChildren(box);
+      }
+
+      // The tools are classic scripts that expect their markup already in the
+      // document. They run once, in an isolated function scope, with `document`
+      // scoped to the shadow root so getElementById/querySelector* find the
+      // mounted markup. Inline handlers keep working because the tools expose
+      // their handlers on window themselves.
+      function runToolScript(name, script, shadow) {
+        const reg = { timers: new Map(), listeners: [] };
+        const track = (target, type, fn, opts) => {
+          target.addEventListener(type, fn, opts);
+          reg.listeners.push([target, type, fn, opts]);
+        };
+        const scopedDoc = new Proxy(document, {
+          get(t, p) {
+            if (p === "getElementById") return (id) => shadow.getElementById(id);
+            if (p === "querySelector") return (sel) => shadow.querySelector(sel);
+            if (p === "querySelectorAll") return (sel) => shadow.querySelectorAll(sel);
+            if (p === "addEventListener") return (type, fn, opts) => track(t, type, fn, opts);
+            const v = Reflect.get(t, p, t);
+            return typeof v === "function" ? v.bind(t) : v;
+          },
+        });
+        const scopedWin = new Proxy(window, {
+          get(t, p) {
+            if (p === "addEventListener") return (type, fn, opts) => track(t, type, fn, opts);
+            const v = Reflect.get(t, p, t);
+            return typeof v === "function" ? v.bind(t) : v;
+          },
+        });
+        const setI = (fn, ms, ...a) => {
+          const id = window.setInterval(fn, ms, ...a);
+          reg.timers.set(id, "i");
+          return id;
+        };
+        const setT = (fn, ms, ...a) => {
+          const id = window.setTimeout(fn, ms, ...a);
+          reg.timers.set(id, "t");
+          return id;
+        };
+        const clrI = (id) => {
+          reg.timers.delete(id);
+          window.clearInterval(id);
+        };
+        const clrT = (id) => {
+          reg.timers.delete(id);
+          window.clearTimeout(id);
+        };
+        let fn;
+        try {
+          fn = new Function(
+            "document",
+            "window",
+            "setInterval",
+            "clearInterval",
+            "setTimeout",
+            "clearTimeout",
+            "requestAnimationFrame",
+            "cancelAnimationFrame",
+            script,
+          );
+        } catch (e) {
+          console.error("[admin-shell] " + name + " script could not be compiled:", e);
+          return reg;
+        }
+        try {
+          fn(
+            scopedDoc,
+            scopedWin,
+            setI,
+            clrI,
+            setT,
+            clrT,
+            window.requestAnimationFrame.bind(window),
+            window.cancelAnimationFrame.bind(window),
+          );
+        } catch (e) {
+          console.error("[admin-shell] " + name + " failed to start:", e);
+        }
+        return reg;
+      }
+
+      function disposeTool() {
+        if (!toolCleanup) {
+          mountedTool = null;
+          return;
+        }
+        toolCleanup.timers.forEach((kind, id) => {
+          try {
+            kind === "i" ? clearInterval(id) : clearTimeout(id);
+          } catch {}
+        });
+        toolCleanup.listeners.forEach(([target, type, fn, opts]) => {
+          try {
+            target.removeEventListener(type, fn, opts);
+          } catch {}
+        });
+        toolCleanup = null;
+        mountedTool = null;
+      }
+
+      // Keep in-shell internal links (e.g. a tool's own "Admin" link) client
+      // side; external links and modified clicks are left to the browser.
+      function interceptAdminLink(e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+          return;
+        const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+        if (!a || a.target === "_blank") return;
+        let url;
+        try {
+          url = new URL(a.href, location.origin);
+        } catch {
+          return;
+        }
+        if (url.origin !== location.origin) return;
+        const name = pathTool(url.pathname);
+        if (name) {
+          e.preventDefault();
+          openTool(name);
+        } else if (url.pathname === "/admin" || url.pathname === "/admin/") {
+          e.preventDefault();
+          showDashboard({ push: true });
+        }
+      }
+      document.addEventListener("click", interceptAdminLink);
+
+      window.addEventListener("popstate", () => {
+        const name = pathTool(location.pathname);
+        if (name) openTool(name, { push: false });
+        else showDashboard({ push: false });
+      });
+
+      // Runs after a successful login or session restore: honour the current
+      // URL, then let the dashboard data load underneath whichever view shows.
+      async function enterApp() {
+        const ui = readUiState();
+        applyUiState(ui);
+        const routeTool = pathTool(location.pathname);
+        if (routeTool) {
+          await openTool(routeTool, { push: false });
+        } else {
+          showDashboard({ push: false });
+        }
+        try {
+          await load();
+        } catch (e) {
+          toast("Signed in. Some data could not be loaded: " + e.message);
+        }
+        if (!routeTool) applyRestoredView(ui);
+        // Warm the tool sources so the first click is instant (idle only).
+        const warm = () =>
+          Object.keys(TOOLS).forEach((n) => loadToolSource(n).catch(() => {}));
+        if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 2000 });
+        else setTimeout(warm, 1200);
+      }
     </script>
   </body>
 </html>

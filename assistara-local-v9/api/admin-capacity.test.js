@@ -33,11 +33,16 @@ test("capacity management actions and the enforcement API are preserved", () => 
   assert.match(adminHtml, /req\("overview", \{ cohort_code: "founding-2026" \}/);
 });
 
-test("admin navigation keeps the other sections and the standalone event page", () => {
+test("admin navigation keeps the other sections and the tool routes", () => {
   for (const tab of ["applicants", "students", "webinar", "b2b"]) {
     assert.match(adminHtml, new RegExp(`data-tab="${tab}"`), `expected the ${tab} tab`);
   }
-  assert.match(adminHtml, /location\.href='\/admin\/masterclass-event'/);
-  assert.match(adminHtml, /location\.href='\/admin\/acquisition'/);
-  assert.match(adminHtml, /location\.href='\/admin\/finance'/);
+  // Finance / Acquisition / Masterclass Event are reached client-side through
+  // the shell router (data-tool + TOOLS map), not by full-page links.
+  assert.match(adminHtml, /data-tool="masterclass"/);
+  assert.match(adminHtml, /data-tool="acquisition"/);
+  assert.match(adminHtml, /data-tool="finance"/);
+  assert.match(adminHtml, /masterclass: \{ path: "\/admin\/masterclass-event"/);
+  assert.match(adminHtml, /acquisition: \{ path: "\/admin\/acquisition"/);
+  assert.match(adminHtml, /finance: \{ path: "\/admin\/finance"/);
 });

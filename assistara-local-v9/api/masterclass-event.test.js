@@ -17,8 +17,9 @@ test("login screen has no masterclass controls", () => {
   assert.doesNotMatch(adminHtml, /masterclassAdmin/);
   assert.doesNotMatch(adminHtml, /mcSet|mcStatus|Masterclass Event Control/);
   assert.doesNotMatch(adminHtml, /masterclass-status/);
-  // and the dashboard links to the standalone page
-  assert.match(adminHtml, /location\.href='\/admin\/masterclass-event'/);
+  // and the dashboard opens it client-side via the shell router
+  assert.match(adminHtml, /data-tool="masterclass"/);
+  assert.match(adminHtml, /masterclass: \{ path: "\/admin\/masterclass-event"/);
 });
 
 test("event management is server-authorized, not client-hidden", () => {
@@ -63,10 +64,12 @@ test("public event page reflects the authoritative server status", () => {
   assert.match(liveHtml, /status==='ended'/);
 });
 
-test("vercel routes the standalone event page", () => {
+test("vercel serves the shell for the event route and keeps the standalone page routable", () => {
   const routes = vercel.routes || [];
-  const hasRoute = routes.some((r) => r.src === "/admin/masterclass-event" && r.dest === "/admin-masterclass-event.html");
-  assert.ok(hasRoute, "expected a /admin/masterclass-event route");
+  const shell = routes.some((r) => r.src === "/admin/masterclass-event" && r.dest === "/admin.html");
+  assert.ok(shell, "expected /admin/masterclass-event to render the shared admin shell");
+  const raw = routes.some((r) => r.src === "/admin-masterclass-event.html");
+  assert.ok(raw, "the standalone event page must stay routable for the shell to fetch");
   const builds = vercel.builds || [];
   assert.ok(builds.some((b) => b.src === "admin-masterclass-event.html"), "expected a build entry");
 });
