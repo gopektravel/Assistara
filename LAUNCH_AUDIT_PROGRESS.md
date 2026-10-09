@@ -12,6 +12,7 @@ Legend: [x] done, [~] in progress, [ ] not started, [!] blocked (needs owner app
 - [x] Repo/remote characterisation (remote `assistara-masterclass`; website tracked in `assistara-local-v9/`)
 
 ## Fixes (all tested; NONE deployed — deploy requires owner approval)
+- [x] Local commit `378b71f` created with the audit changes + report + progress.
 - [x] P1: Admin Test Student Portal bounced to `/admin` when the Admin token was
       restored from localStorage. Fixed in `assistara-local-v9/academy-dashboard.html`;
       regression `api/test-portal-preview.test.js` (proven to fail before the fix).

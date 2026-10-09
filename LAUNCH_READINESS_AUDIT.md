@@ -27,7 +27,7 @@ owner must make.
 |---|---|
 | Overall launch readiness | Conditional — safe only after the blockers in §6 are closed |
 | Current production version | Production `admin.html` is byte-identical to the local `assistara-local-v9/admin.html` (only CRLF differs), so production is on (or very near) the tested tree. Vercel commit SHA was not present in the pulled env file, so an exact SHA cannot be asserted. |
-| Tested code revision | Local working tree, `HEAD = 8420424` (branch `main`). |
+| Tested code revision | Local working tree; audit commit `378b71f` on `main` (session baseline `8420424`). A separate process was committing in the same working tree during this audit (HEAD advanced to `cd66848`), so the tree was not frozen; the final full-suite run on the current tree is green. |
 | Offline test result | **876 pass / 0 fail** (`node --test` in `assistara-local-v9/api`). |
 | Confidence | High for code/static/mocked behaviour; **medium** for live payment, email delivery and DB state, which were not executable here. |
 | Remaining unknowns | Live Stripe/PayMongo account state, live email inbox delivery, `academy_cohorts.capacity` value, the exact production `finalize_academy_payment` signature, and the source of three unversioned production Edge Functions. |
@@ -240,6 +240,21 @@ integration works; that is stated where relevant.
 - `LAUNCH_READINESS_AUDIT.md`, `LAUNCH_AUDIT_PROGRESS.md`.
 
 **Removed code:** none.
+
+**Commit:** `378b71f` — "audit(academy): fix broken admin account actions, add Stripe webhook
+safety net, launch audit" (8 files, +708/−3).
+
+**Concurrency observation:** while this audit ran, a second process was committing
+to the same working tree (HEAD moved `8420424 → cd66848 → 378b71f`, and stray
+helper scripts such as `recover_light.py` / `check_git_community*.py` appeared).
+It also left an **uncommitted** change to `assistara-local-v9/api/_academy-security.js`
+that relaxes the keyless admin-token username pre-check from `u === "admin"` to
+"any non-empty `u`". The authoritative check still happens in the `admin-api` Edge
+Function (`verifyToken` enforces `u === ADMIN_USERNAME`), and the committed
+`security.test.js` already expects the relaxed local behaviour, so this is
+plausibly intentional — but it was not part of this audit and should be committed
+or reverted deliberately, not left in a dirty tree.
+
 
 **Test suite:** 865 → **876 passing, 0 failing**.
 
