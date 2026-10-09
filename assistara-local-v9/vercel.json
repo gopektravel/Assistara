@@ -152,6 +152,15 @@
       }
     },
     {
+      "src": "api/masterclass-youtube.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "beta-account.html",
       "use": "@vercel/static"
     },
@@ -434,6 +443,10 @@
     {
       "src": "/api/academy-content",
       "dest": "/api/academy-content.js"
+    },
+    {
+      "src": "/api/masterclass-youtube",
+      "dest": "/api/masterclass-youtube.js"
     },
     {
       "src": "/styles.css",

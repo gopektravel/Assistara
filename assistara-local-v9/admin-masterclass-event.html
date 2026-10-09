@@ -115,6 +115,28 @@
       .feedback.ok { color: var(--greenInk); }
       .feedback.err { color: var(--redInk); }
       .muted { color: var(--muted); font-size: 12px; margin-top: 8px; }
+      .field .label {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .check input {
+        width: 17px;
+        height: 17px;
+        accent-color: #171717;
+        cursor: pointer;
+      }
       .hidden { display: none !important; }
       @media (max-width: 640px) { .facts { grid-template-columns: 1fr; } }
     </style>
@@ -163,6 +185,30 @@
         </div>
         <div class="feedback" id="mcFeedback"></div>
         <div class="muted" id="mcMeta"></div>
+      </div>
+
+      <div class="card" id="mcYtCard">
+        <div class="statusRow">
+          <div>
+            <div class="title">YouTube Live stream</div>
+            <div class="sub">Paste the YouTube livestream link once — the public page uses it immediately. No redeploy, no code change.</div>
+          </div>
+          <span class="badge scheduled" id="mcYtBadge"><span class="dot"></span><span id="mcYtBadgeText">Not set</span></span>
+        </div>
+
+        <div class="field">
+          <span class="label">YouTube stream URL or video ID</span>
+          <input id="mcYtUrl" type="text" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" spellcheck="false">
+        </div>
+
+        <label class="check"><input type="checkbox" id="mcYtChat" checked> Show live chat on the public page</label>
+        <label class="check"><input type="checkbox" id="mcYtReplay" checked> Show the replay after the masterclass ends</label>
+
+        <div class="actions">
+          <button class="refresh" id="mcYtSave">Save YouTube stream</button>
+        </div>
+        <div class="feedback" id="mcYtFeedback"></div>
+        <div class="muted">Leave the URL empty and save to remove the stream. Playback starts muted when the browser blocks autoplay; viewers unmute with one tap.</div>
       </div>
     </div>
 
@@ -316,7 +362,69 @@
         }
       };
 
+      // YouTube Live stream configuration. The public page reads the same
+      // endpoint, so a save here is live within seconds — nothing to rebuild.
+      const YT_ENDPOINT = "/api/masterclass-youtube";
+
+      async function loadYoutube() {
+        try {
+          const r = await fetch(YT_ENDPOINT, { cache: "no-store" });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not load the YouTube stream");
+          $("mcYtUrl").value = d.youtube_url || "";
+          $("mcYtChat").checked = d.chat_enabled !== false;
+          $("mcYtReplay").checked = d.replay_enabled !== false;
+          const badge = $("mcYtBadge");
+          badge.className = "badge " + (d.video_id ? "live" : "scheduled");
+          $("mcYtBadgeText").textContent = d.video_id ? "Set" : "Not set";
+        } catch (e) {
+          const fb = $("mcYtFeedback");
+          fb.className = "feedback err";
+          fb.textContent = e.message;
+        }
+      }
+
+      $("mcYtSave").onclick = async () => {
+        const btn = $("mcYtSave");
+        const fb = $("mcYtFeedback");
+        btn.disabled = true;
+        fb.className = "feedback";
+        fb.textContent = "Saving…";
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({
+              action: "configure",
+              event_key: MC_EVENT_KEY,
+              youtube_url: $("mcYtUrl").value.trim(),
+              chat_enabled: $("mcYtChat").checked,
+              replay_enabled: $("mcYtReplay").checked,
+            }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.className = "feedback err";
+            fb.textContent = "Your admin session expired. Please log in again.";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not save the YouTube stream");
+          fb.className = "feedback ok";
+          fb.textContent = d.video_id
+            ? "Saved — the public page now uses " + d.youtube_url
+            : "Saved — the stream was removed.";
+          await loadYoutube();
+        } catch (e) {
+          fb.className = "feedback err";
+          fb.textContent = "Could not save the YouTube stream. " + e.message;
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
       load();
+      loadYoutube();
       setInterval(load, 20000);
       document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
       window.addEventListener("focus", () => load());
