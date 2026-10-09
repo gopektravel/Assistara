@@ -20,7 +20,7 @@ remains server-verified.
 | Overall readiness | Ready to deploy; live payment/email must be smoke-tested first |
 | Production project | Vercel project **`assistara`** (`prj_IvuoCJ8hpqSgWz0pbnP9NHeR6Dox`), domain `www.getassistara.com`, root `assistara-local-v9`, repo **`gopektravel/Assistara`**, branch **`main`** |
 | Local revision | `main` ahead of `origin/main` (gopektravel/Assistara `83f60f1`); audit changes committed locally |
-| Offline test result | **897 pass / 0 fail** (`node --test` in `assistara-local-v9/api`) |
+| Offline test result | **893 pass / 0 fail** (`node --test` in `assistara-local-v9/api`) |
 | Production build | `vercel build --yes` from the repo root → **Build completed successfully** |
 | Confidence | High for code/static/mocked behaviour; live payment, email delivery and DB config still need owner verification |
 
@@ -193,7 +193,7 @@ browser before the success page, or the redirect failed):
 
 ## 8. Test coverage summary
 
-Offline suite: **897 pass / 0 fail**. Evidence tiers: U = unit/static, M = mocked
+Offline suite: **893 pass / 0 fail**. Evidence tiers: U = unit/static, M = mocked
 integration, L = live read-only. Live payment/email = **BLOCKED (owner sandbox)**.
 
 | Workflow | Result | Method |

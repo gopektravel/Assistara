@@ -8,7 +8,7 @@ Legend: [x] done, [~] in progress, [ ] not started, [!] owner action / blocked.
 
 ## Baseline
 - [x] Discovery (routes, functions, migrations, tests, deployment config)
-- [x] Baseline suite 865 → now **897 pass / 0 fail**
+- [x] Baseline suite 865 → now **893 pass / 0 fail**
 - [x] Production read-only checks + drift detection
 - [x] Identified production repo/branch via Vercel API
 
@@ -24,7 +24,7 @@ Legend: [x] done, [~] in progress, [ ] not started, [!] owner action / blocked.
 - [x] Journey wiring contract test (9 links of the student journey)
 
 ## Verification evidence
-- [x] `node --test` in `assistara-local-v9/api` → 897 pass / 0 fail
+- [x] `node --test` in `assistara-local-v9/api` → 893 pass / 0 fail
 - [x] `vercel build --yes` (repo root) → Build completed successfully
 - [x] Targeted tests: test-portal-preview, admin-accounts-actions, migration-signatures,
       vercel-build-sanity, application-dedupe, edge-function-drift, journey-wiring
