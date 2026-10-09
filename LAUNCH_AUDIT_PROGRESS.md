@@ -1,55 +1,45 @@
 # Assistara Academy — Launch Readiness Audit Progress
 
-Running checklist for the pre-launch audit (target: Sunday 11 Oct 2026, 15 paid seats).
-Session working directory: repository root; website source of truth: `assistara-local-v9/`.
+Running checklist (target: Sunday 11 Oct 2026, 15 paid seats).
+Website source of truth: `assistara-local-v9/`. Production: Vercel project
+`assistara` → `www.getassistara.com`, repo `gopektravel/Assistara` branch `main`.
 
-Legend: [x] done, [~] in progress, [ ] not started, [!] blocked (needs owner approval / credentials).
+Legend: [x] done, [~] in progress, [ ] not started, [!] owner action / blocked.
 
 ## Baseline
-- [x] Project discovery (routes, functions, migrations, tests, deployment config)
-- [x] Baseline test run: `node --test` in `assistara-local-v9/api` → 865 pass / 0 fail
-- [x] Production read-only reachability + drift sample (production `admin.html` matches local)
-- [x] Repo/remote characterisation (remote `assistara-masterclass`; website tracked in `assistara-local-v9/`)
+- [x] Discovery (routes, functions, migrations, tests, deployment config)
+- [x] Baseline suite 865 → now **897 pass / 0 fail**
+- [x] Production read-only checks + drift detection
+- [x] Identified production repo/branch via Vercel API
 
-## Fixes (all tested; NONE deployed — deploy requires owner approval)
-- [x] Local commit `378b71f` created with the audit changes + report + progress.
-- [x] P1: Admin Test Student Portal bounced to `/admin` when the Admin token was
-      restored from localStorage. Fixed in `assistara-local-v9/academy-dashboard.html`;
-      regression `api/test-portal-preview.test.js` (proven to fail before the fix).
-- [x] P0: No Stripe webhook — card payments could be captured without enrollment.
-      Added `supabase/functions/stripe-webhook/index.ts` + `api/stripe-webhook.test.js`.
-- [x] P1: Admin Suspend/Reactivate + Password reset buttons dead (called
-      `admin-applications` → 503). Implemented in `supabase/functions/admin-accounts`
-      and repointed `assistara-local-v9/admin.html`; test
-      `api/admin-accounts-actions.test.js`.
+## Fixed and verified (offline; deploy pending owner approval)
+- [x] P1 Admin Test Student Portal (localStorage OR sessionStorage gate) + regression
+- [x] P1 Admin Suspend/Reactivate + Password Reset implemented in `admin-accounts`
+- [x] P0→removed Stripe webhook per owner decision; manual recovery documented
+- [x] P1 `finalize_academy_payment` migration signature mismatch + guard test
+- [x] P2 Duplicate Academy applications folded onto existing row + guard test
+- [x] P1 Recovered `website-form-proxy`, `masterclass-attendance`, `track-acquisition` + drift guard
+- [x] P1 Git remote corrected (origin → gopektravel/Assistara)
+- [x] P2 Dead Vercel builds/routes removed; `vercel build` green + build-sanity test
+- [x] Journey wiring contract test (9 links of the student journey)
 
-## Audit coverage completed
-- [x] Payments: Stripe checkout, PayMongo webhook, coupon, idempotency, capacity RPC
-- [x] 15-seat capacity + waitlist + payment-exception design review
-- [x] Email flows (website-form, admin-applications, admin-accounts, admin-academy-capacity, payment-complete, paymongo-webhook)
-- [x] Student Academy server logic (session, quick check, exam, content gate)
-- [x] Security & entitlement (academy_has_access, cookie sealing, exam write lockdown)
-- [x] Deployment drift vs production (HTTP read-only)
-- [x] Final report `LAUNCH_READINESS_AUDIT.md`
-- [x] Full regression suite after all edits: 876 pass / 0 fail
+## Verification evidence
+- [x] `node --test` in `assistara-local-v9/api` → 897 pass / 0 fail
+- [x] `vercel build --yes` (repo root) → Build completed successfully
+- [x] Targeted tests: test-portal-preview, admin-accounts-actions, migration-signatures,
+      vercel-build-sanity, application-dedupe, edge-function-drift, journey-wiring
 
-## Open findings (documented in the report; not fixed)
-- [ ] P1 I4: production Edge Functions `website-form-proxy`, `masterclass-attendance`,
-      `track-acquisition` are not in the repo (owner: version them)
-- [ ] P1 I5: `finalize_academy_payment` revoke/grant signature mismatch in
-      `202610080003_academy_capacity_waitlist.sql` (needs live-signature confirmation)
-- [ ] P2 I6: duplicate academy applications allowed (no email dedupe/unique)
-- [ ] P2 I7: stale `vercel.json` entries for `api/admin-application-answers.js` / `-notes.js`
-- [ ] P2 I8: soft 404s return HTTP 200
-- [ ] P2 I9: font conflict (AGENTS.md DM Sans vs shipped Manrope)
-- [ ] P3 I10: git remote `origin/main` is a different project
+## Blocked / owner action
+- [!] O1 Confirm `academy_cohorts.capacity = 15` (RLS blocks anon; service key redacted here)
+- [!] O2 Confirm `MASTERCLASS` coupon `amount_php = 4900`, active
+- [!] O3 Live email delivery (test inbox, SPF/DKIM)
+- [!] O4 Live Stripe + PayMongo sandbox payments (see runbook §6)
+- [!] O5 Admin buttons clicked against a controlled test student
+- [!] Deploy Vercel + Supabase functions (needs explicit approval)
 
-## Blocked / owner input
-- [!] Cannot run against the live Supabase project or payment providers (credentials +
-      production-safety boundary). Live payment/email verification is manual.
-- [!] AGENTS.md says "DM Sans only"; the shipped site + tests enforce **Manrope**.
-      Conflict to resolve with owner before any font change.
-- [!] Git remote points at `assistara-masterclass`, whose `origin/main` is a different
-      project (Vite presentation). GitHub drift comparison limited to production HTTP.
-- [!] Deploying any fix (Vercel or Supabase functions) and configuring the Stripe
-      webhook are explicit owner approvals, not done here.
+## Open, non-blocking
+- [ ] O5 Font conflict (AGENTS.md DM Sans vs shipped Manrope) — owner decision
+- [ ] O6 Soft 404s return HTTP 200
+- [ ] O7 Extra unversioned functions (`submit-lead`, `cal-booking-webhook`,
+      `send-masterclass-announcement`, sandbox fns) — version later
+- [ ] Verify the live `finalize_academy_payment` signature before any DB rebuild

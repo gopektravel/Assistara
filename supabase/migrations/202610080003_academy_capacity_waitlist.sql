@@ -546,8 +546,17 @@ grant select, insert, update, delete on public.academy_waitlist to service_role;
 grant select, insert, update, delete on public.academy_waitlist_notifications to service_role;
 grant select, insert, update, delete on public.academy_payment_exceptions to service_role;
 
-revoke execute on function public.finalize_academy_payment(uuid,numeric,text,text,text,text,text,boolean,text) from public, anon, authenticated;
-grant execute on function public.finalize_academy_payment(uuid,numeric,text,text,text,text,text,boolean,text) to service_role;
+-- Privileges for the exact 7-argument function this migration defines above
+-- (p_application_id uuid, p_amount numeric, p_currency text, p_payment_method
+-- text, p_provider text, p_provider_reference text, p_payment_intent_id text).
+-- A previous revision of this file referenced a 9-argument overload
+-- (uuid,numeric,text,text,text,text,text,boolean,text); that signature is not
+-- created here, so referencing it aborts a clean apply with
+-- "function public.finalize_academy_payment(...) does not exist". If a legacy
+-- 9-argument overload exists in a live database, reconcile it separately before
+-- provisioning a fresh environment.
+revoke execute on function public.finalize_academy_payment(uuid,numeric,text,text,text,text,text) from public, anon, authenticated;
+grant execute on function public.finalize_academy_payment(uuid,numeric,text,text,text,text,text) to service_role;
 
 revoke execute on function public.join_academy_waitlist(uuid,text) from public, anon, authenticated;
 grant execute on function public.join_academy_waitlist(uuid,text) to service_role;

@@ -152,25 +152,6 @@
       }
     },
     {
-      "src": "api/admin-application-answers.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "api/_academy-security.js",
-          "api/_academy-application-fields.js"
-        ]
-      }
-    },
-    {
-      "src": "api/admin-application-notes.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "api/_academy-security.js"
-        ]
-      }
-    },
-    {
       "src": "beta-account.html",
       "use": "@vercel/static"
     },
@@ -449,14 +430,6 @@
     {
       "src": "/academy/preview",
       "dest": "/api/academy-preview.js"
-    },
-    {
-      "src": "/api/admin-application-answers",
-      "dest": "/api/admin-application-answers.js"
-    },
-    {
-      "src": "/api/admin-application-notes",
-      "dest": "/api/admin-application-notes.js"
     },
     {
       "src": "/api/academy-content",
