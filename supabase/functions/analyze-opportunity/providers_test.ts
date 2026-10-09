@@ -5,7 +5,9 @@
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
+  buildProviderOrder,
   classifyFailure,
+  parseRetryAfter,
   runProviderChain,
   type ProviderDeps,
 } from "./providers.ts";
@@ -133,4 +135,81 @@ Deno.test("failure categories", () => {
   assertEquals(classifyFailure(500, ""), "provider_server");
   assertEquals(classifyFailure(0, "network down"), "network");
   assertEquals(classifyFailure(400, ""), "bad_request");
+});
+
+Deno.test("Retry-After is propagated on provider failures", async () => {
+  const fetchImpl = ((url: string) => {
+    if (String(url).includes("groq.com")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ error: { message: "rate limited" } }), {
+          status: 429,
+          headers: { "retry-after": "42" },
+        }),
+      );
+    }
+    return Promise.resolve(okGemini());
+  }) as unknown as typeof fetch;
+  const { result, failures } = await runProviderChain("u", ORDER, deps(fetchImpl));
+  assertEquals(result?.provider, "gemini");
+  assertEquals(failures[0].retryAfterSeconds, 42);
+});
+
+Deno.test("parseRetryAfter handles seconds, HTTP-date and junk", () => {
+  assertEquals(parseRetryAfter("30"), 30);
+  assertEquals(parseRetryAfter(null), null);
+  assertEquals(parseRetryAfter("not-a-date"), null);
+  const now = Date.parse("2026-10-09T12:00:00Z");
+  assertEquals(parseRetryAfter("Fri, 09 Oct 2026 12:01:00 GMT", now), 60);
+});
+
+Deno.test("buildProviderOrder uses persisted priority for eligible providers", () => {
+  const now = Date.parse("2026-10-09T12:00:00Z");
+  const rows = [
+    { provider: "groq", priority: 3, cooldown_until: null },
+    { provider: "gemini", priority: 1, cooldown_until: null },
+    { provider: "openrouter", priority: 2, cooldown_until: null },
+  ];
+  assertEquals(buildProviderOrder(rows, now), ["gemini", "openrouter", "groq"]);
+});
+
+Deno.test("buildProviderOrder skips providers still in cooldown", () => {
+  const now = Date.parse("2026-10-09T12:00:00Z");
+  const rows = [
+    { provider: "groq", priority: 1, cooldown_until: "2026-10-09T12:05:00Z" }, // cooling
+    { provider: "gemini", priority: 2, cooldown_until: null },
+    { provider: "openrouter", priority: 3, cooldown_until: "2026-10-09T11:59:00Z" }, // elapsed
+  ];
+  assertEquals(buildProviderOrder(rows, now), ["gemini", "openrouter"]);
+});
+
+Deno.test("buildProviderOrder re-includes a provider after cooldown (recovery probe)", () => {
+  const now = Date.parse("2026-10-09T12:00:00Z");
+  const rows = [
+    { provider: "groq", priority: 3, cooldown_until: "2026-10-09T11:59:59Z" }, // elapsed
+    { provider: "gemini", priority: 1, cooldown_until: null },
+    { provider: "openrouter", priority: 2, cooldown_until: null },
+  ];
+  assertEquals(buildProviderOrder(rows, now), ["gemini", "openrouter", "groq"]);
+});
+
+Deno.test("buildProviderOrder falls back to default when all are cooling down", () => {
+  const now = Date.parse("2026-10-09T12:00:00Z");
+  const rows = [
+    { provider: "groq", priority: 1, cooldown_until: "2026-10-09T12:10:00Z" },
+    { provider: "gemini", priority: 2, cooldown_until: "2026-10-09T12:10:00Z" },
+    { provider: "openrouter", priority: 3, cooldown_until: "2026-10-09T12:10:00Z" },
+  ];
+  assertEquals(buildProviderOrder(rows, now), ["groq", "gemini", "openrouter"]);
+});
+
+Deno.test("buildProviderOrder tolerates empty/unavailable health data", () => {
+  const now = Date.now();
+  assertEquals(buildProviderOrder(null, now), ["groq", "gemini", "openrouter"]);
+  assertEquals(buildProviderOrder([], now), ["groq", "gemini", "openrouter"]);
+});
+
+Deno.test("buildProviderOrder includes providers missing from the health table", () => {
+  const now = Date.now();
+  const rows = [{ provider: "gemini", priority: 1, cooldown_until: null }];
+  assertEquals(buildProviderOrder(rows, now), ["gemini", "groq", "openrouter"]);
 });

@@ -39,29 +39,63 @@ provider-side failures (401/403/429/5xx/timeout/network).
 ## Fallback behaviour
 
 - Per-provider timeout: 20s. Order is iterated once (deduplicated) — no infinite loops.
-- On provider failure the function tries the next provider and logs
-  `tara_provider_fallback` with provider/status/category (no secrets, no chat text).
+- On provider failure the function tries the next eligible provider within the same
+  request and logs `tara_provider_fallback` (no secrets, no chat text).
 - If every provider fails: `503` with a generic message. Raw provider errors are
   never returned to the browser.
+
+## Self-healing provider prioritization
+
+Order is persisted in `public.tara_provider_health` and updated after each request
+(after the response is sent, via `EdgeRuntime.waitUntil`, best-effort):
+
+- **Failure → bottom.** `tara_provider_failure(provider, category, retry_after)`
+  increments `consecutive_failures`, sets `last_failed_at`, sets a persisted
+  `cooldown_until`, and moves the provider to the bottom (`priority = max + 1`,
+  then re-normalized to a dense 1..N).
+- **Success → one step up.** `tara_provider_success(provider)` resets failures,
+  clears the cooldown, sets `last_succeeded_at`, and swaps the provider with the
+  one directly above it (gradual recovery).
+- **Cooldown.** Temporary failures use exponential backoff (30s, 60s, 120s, … capped
+  at 900s); a `Retry-After` header raises the cooldown when larger. Credential
+  failures (`provider_auth`, HTTP 401/403) get a fixed 6h cooldown and are handled
+  separately from temporary outages.
+- **Eligibility.** Providers whose `cooldown_until` has not elapsed are skipped;
+  once it elapses they are probed again. If every provider is cooling down (or the
+  health table is unavailable/empty), the built-in default order is used so Tara
+  still answers.
+- **Concurrency.** Both RPCs take `pg_advisory_xact_lock(hashtext('tara_provider_health'))`
+  so simultaneous requests cannot corrupt ordering.
+- **Never for app auth.** Application/session authentication failures (401 from the
+  auth gate) return before provider logic, so they never rotate providers.
 
 ## Deployment
 
 ```bash
 cd "C:\Users\jesse\OneDrive\Documenten\Assistara Academy"
-npx supabase functions deploy analyze-opportunity --project-ref jhmmwleejgidrxavzdlq
+npx supabase functions deploy analyze-opportunity --project-ref jhmmwleejgidrxavzdlq --no-verify-jwt
 ```
 
-Apply the grant migration once (required for the configurable chain to work):
+Migrations applied directly (the repo has duplicate migration versions, so
+`supabase db push` is not used):
+
+- `202610090004_tara_provider_health_grants.sql` — service_role table grants.
+- `202610090005_tara_provider_health_selfhealing.sql` — cooldown columns + RPCs.
+
+Validate a migration before applying it by running the migration DDL plus
+assertions inside a rolled-back transaction:
 
 ```bash
-npx supabase db push   # applies 202610090004_tara_provider_health_grants.sql
+# combined = "begin;" + migration.sql + assertions.sql + "rollback;"
+npx supabase db query --linked -f combined.sql
 ```
 
 ## Tests
 
 ```bash
 deno test supabase/functions/analyze-opportunity/auth_test.ts \
-          supabase/functions/analyze-opportunity/providers_test.ts
+          supabase/functions/analyze-opportunity/providers_test.ts \
+          supabase/functions/analyze-opportunity/health_test.ts
 ```
 
 ## Diagnostics (server logs)
@@ -72,4 +106,5 @@ deno test supabase/functions/analyze-opportunity/auth_test.ts \
 | `tara_provider_fallback` | A provider failed and the next one answered. |
 | `tara_providers_exhausted` | All providers failed (includes status/category per provider). |
 | `tara_invalid_json` | Provider answered but not with parseable JSON. |
+| `tara_health_persist_failed` | Health RPC write failed (Tara still answered). |
 | `tara_unhandled_error` | Unexpected error. |

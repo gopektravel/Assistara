@@ -1,7 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+  buildProviderOrder,
   DEFAULT_ORDER,
+  type HealthRow,
   type ProviderFailure,
   type ProviderResult,
   runProviderChain,
@@ -60,6 +62,24 @@ function failureSummary(failures: ProviderFailure[]) {
   return failures.map((f) => ({ provider: f.provider, status: f.status, category: f.category }));
 }
 
+/**
+ * Run a best-effort task after the response is sent. Uses the Edge Runtime's
+ * waitUntil when available, otherwise awaits so the work is not lost.
+ */
+function scheduleBackground(task: Promise<unknown>): void {
+  const edge = (globalThis as any).EdgeRuntime;
+  if (edge && typeof edge.waitUntil === "function") {
+    try {
+      edge.waitUntil(task);
+      return;
+    } catch {
+      /* fall through to awaiting */
+    }
+  }
+  // No waitUntil: attach a catch so a rejection can never surface.
+  task.catch(() => {});
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
@@ -106,41 +126,52 @@ Deno.serve(async (req) => {
       },
     });
 
-    // Provider order is configurable; fall back to the built-in default.
+    // Provider order comes from persisted health (best-effort); on any DB
+    // problem we fall back to the default order and still answer.
     const db = createClient(U, K);
-    let order: string[] = [...DEFAULT_ORDER];
+    let rows: HealthRow[] = [];
+    let healthAvailable = false;
     try {
-      const { data } = await db
+      const { data, error } = await db
         .from("tara_provider_health")
-        .select("provider,priority")
+        .select("provider,priority,consecutive_failures,cooldown_until,last_failed_at,last_succeeded_at")
         .order("priority", { ascending: true });
-      if (data?.length) order = data.map((x: any) => String(x.provider));
+      if (!error && Array.isArray(data)) {
+        rows = data as HealthRow[];
+        healthAvailable = true;
+      }
     } catch {
       /* health table is optional */
     }
 
+    const order = buildProviderOrder(rows, Date.now(), DEFAULT_ORDER);
     const { result, failures } = await runProviderChain(user, order);
 
-    if (!result) {
-      logEvent("tara_providers_exhausted", { failures: failureSummary(failures) });
-      // Best-effort: record which provider failed and rotate it down the chain.
-      try {
-        for (const f of failures) {
-          const rotated = order.filter((x) => x !== f.provider).concat(f.provider);
-          for (let i = 0; i < rotated.length; i++) {
-            await db
-              .from("tara_provider_health")
-              .update({
-                priority: i + 1,
-                updated_at: new Date().toISOString(),
-                ...(rotated[i] === f.provider ? { last_failed_at: new Date().toISOString() } : {}),
-              })
-              .eq("provider", rotated[i]);
+    // Persist health changes after responding. A failure moves the provider to
+    // the bottom and starts a cooldown; a success restores it one step. This is
+    // best-effort and can never affect the answer or the user's session.
+    if (healthAvailable && (failures.length > 0 || result)) {
+      const persist = async () => {
+        try {
+          for (const f of failures) {
+            await db.rpc("tara_provider_failure", {
+              p_provider: f.provider,
+              p_category: f.category,
+              p_retry_after_seconds: f.retryAfterSeconds ?? null,
+            });
           }
+          if (result) {
+            await db.rpc("tara_provider_success", { p_provider: result.provider });
+          }
+        } catch (error) {
+          logEvent("tara_health_persist_failed", { message: (error as any)?.message || String(error) });
         }
-      } catch {
-        /* rotation is best-effort */
-      }
+      };
+      scheduleBackground(persist());
+    }
+
+    if (!result) {
+      logEvent("tara_providers_exhausted", { failures: failureSummary(failures), order });
       return json({ error: "Tara couldn't answer right now. Please try again in a moment." }, 503);
     }
 

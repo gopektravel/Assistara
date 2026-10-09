@@ -17,6 +17,17 @@ export interface ProviderFailure {
   status: number;
   category: string;
   message: string;
+  retryAfterSeconds?: number | null;
+}
+
+/** A row from public.tara_provider_health. */
+export interface HealthRow {
+  provider: string;
+  priority: number;
+  consecutive_failures?: number | null;
+  cooldown_until?: string | null;
+  last_failed_at?: string | null;
+  last_succeeded_at?: string | null;
 }
 
 export interface ProviderDeps {
@@ -36,11 +47,23 @@ export const SYSTEM_PROMPT =
 
 export class ProviderError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  retryAfterSeconds: number | null;
+  constructor(message: string, status: number, retryAfterSeconds: number | null = null) {
     super(message);
     this.name = "ProviderError";
     this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
+}
+
+/** Parse a Retry-After header (seconds or HTTP-date) into seconds, else null. */
+export function parseRetryAfter(value: string | null, nowMs: number = Date.now()): number | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  const at = Date.parse(trimmed);
+  if (!Number.isNaN(at)) return Math.max(0, Math.round((at - nowMs) / 1000));
+  return null;
 }
 
 /** Classify a provider failure for server-side diagnostics. Never returned to users. */
@@ -81,7 +104,7 @@ async function postJSON(
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       const message = data?.error?.message || data?.message || "request failed";
-      throw new ProviderError(String(message), response.status);
+      throw new ProviderError(String(message), response.status, parseRetryAfter(response.headers.get("retry-after")));
     }
     return data;
   } catch (error) {
@@ -193,8 +216,53 @@ export async function runProviderChain(
     } catch (error) {
       const status = error instanceof ProviderError ? error.status : 0;
       const message = (error as any)?.message || String(error);
-      failures.push({ provider, status, category: classifyFailure(status, message), message });
+      const retryAfterSeconds = error instanceof ProviderError ? error.retryAfterSeconds : null;
+      failures.push({ provider, status, category: classifyFailure(status, message), message, retryAfterSeconds });
     }
   }
   return { result: null, failures };
+}
+
+/**
+ * Build the provider order for one request from persisted health rows.
+ *
+ * - Eligible providers (cooldown elapsed or never failed) are tried, ordered by
+ *   persisted priority.
+ * - Providers still in cooldown are skipped.
+ * - If nothing is eligible (everything cooling down) or the health table is
+ *   unavailable/empty, fall back to the configured default order so Tara still
+ *   answers.
+ */
+export function buildProviderOrder(
+  rows: readonly HealthRow[] | null | undefined,
+  nowMs: number,
+  defaultOrder: readonly string[] = DEFAULT_ORDER,
+): string[] {
+  const byName = new Map<string, HealthRow>();
+  for (const row of rows || []) {
+    if (row && typeof row.provider === "string") byName.set(row.provider, row);
+  }
+
+  const eligible: string[] = [];
+  for (const provider of defaultOrder) {
+    const row = byName.get(provider);
+    if (!row) {
+      // No health row yet: treat as healthy.
+      eligible.push(provider);
+      continue;
+    }
+    const until = row.cooldown_until ? Date.parse(row.cooldown_until) : 0;
+    if (!until || Number.isNaN(until) || until <= nowMs) eligible.push(provider);
+  }
+
+  eligible.sort((a, b) => {
+    const ra = byName.get(a);
+    const rb = byName.get(b);
+    // Providers without a health row keep their configured default position.
+    const pa = ra ? ra.priority : 1_000_000 + defaultOrder.indexOf(a);
+    const pb = rb ? rb.priority : 1_000_000 + defaultOrder.indexOf(b);
+    return pa - pb || a.localeCompare(b);
+  });
+
+  return eligible.length ? eligible : [...defaultOrder];
 }
