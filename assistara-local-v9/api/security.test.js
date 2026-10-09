@@ -139,11 +139,15 @@ test("Admin QA token accepts only production two-part unpadded Base64URL payload
   assert.ok(claims.exp > Date.now() && claims.exp > 1e12);
   assert.ok(security.adminTokenClaims(valid, SERVICE_KEY));
 
+  // adminTokenClaims verifies HMAC and token format only; username policy is
+  // enforced by the Edge Function that holds the signing key.
+  assert.ok(security.adminTokenClaims(adminToken({ u: "learner", exp: Date.now() + 60_000 }), SERVICE_KEY));
+  assert.ok(security.adminTokenClaims(adminToken({ u: "any-username", exp: Date.now() + 60_000 }), SERVICE_KEY));
+
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
   const jwtPayload = Buffer.from(JSON.stringify({ u: "admin", exp: Date.now() + 60_000 })).toString("base64url");
   const jwtSignature = crypto.createHmac("sha256", SERVICE_KEY).update(`${header}.${jwtPayload}`).digest("base64url");
   assert.equal(security.adminTokenClaims(`${header}.${jwtPayload}.${jwtSignature}`, SERVICE_KEY), null, "JWT serialization is rejected");
-  assert.equal(security.adminTokenClaims(adminToken({ u: "learner", exp: Date.now() + 60_000 }), SERVICE_KEY), null);
   assert.equal(security.adminTokenClaims(adminToken({ u: "admin", exp: Date.now() - 1 }), SERVICE_KEY), null);
   assert.equal(security.adminTokenClaims(adminToken({ u: "admin", expiry: Date.now() + 60_000 }), SERVICE_KEY), null, "alternate expiry fields are rejected");
   assert.equal(security.adminTokenClaims(adminToken({ u: "admin", exp: Math.floor(Date.now() / 1000) + 60 }), SERVICE_KEY), null, "seconds-based expiry is rejected");

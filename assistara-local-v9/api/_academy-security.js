@@ -171,9 +171,11 @@ async function validatedLearnerSession(tokens, cfg = config()) {
 
 // One definition of the deployed Admin token's serialization: exactly two
 // unpadded Base64URL segments, the second an HMAC-SHA256 signature over the
-// literal encoded first segment, carrying u === "admin" and a millisecond
-// expiry. Everything here is keyless, so it can reject a JWT, a learner token
-// or an expired token before any signature work or network call happens.
+// literal encoded first segment, carrying a username (u) and a millisecond
+// expiry (exp). Everything here is keyless, so it can reject a JWT, a learner
+// token or an expired token before any signature work or network call happens.
+// The actual username validation (against ADMIN_USERNAME) is done by the
+// Edge Function that holds the signing key.
 function adminTokenParts(token) {
   if (!token) return null;
   const parts = String(token).split(".");
@@ -191,7 +193,7 @@ function adminTokenParts(token) {
 
   let payload;
   try { payload = JSON.parse(payloadBytes.toString("utf8")); } catch { return null; }
-  if (!payload || payload.u !== "admin") return null;
+  if (!payload || typeof payload.u !== "string" || !payload.u.length) return null;
   if (typeof payload.exp !== "number" || !Number.isFinite(payload.exp) || payload.exp < 1e12 || payload.exp <= Date.now()) return null;
 
   return { payload, payloadPart, signature: signatureBytes };
