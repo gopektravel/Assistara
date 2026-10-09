@@ -74,6 +74,8 @@ const EXPORTS = [
   "progressionSnapshot", "restoreProgression", "curriculum", "countsPhase",
   "countsModule", "progressState", "isModuleComplete", "firstIncompleteInModule",
   "renderCourseView", "renderHomeView", "openPageView", "nextAction",
+  // Community checkbox for test portal.
+  "wireCommunity", "updateCommunityUI",
 ];
 
 function instrument(source) {
@@ -348,7 +350,7 @@ function buildFetch(store, network, options, stubErrors) {
 // The page chrome the renderers and progress code write into. Everything else
 // the script touches resolves through StubDocument's detached-stub fallback.
 function seedDom(document) {
-  for (const id of ["app", "courseView", "loading", "coursePct", "mobileNav"]) {
+  for (const id of ["app", "courseView", "loading", "coursePct", "mobileNav", "previewControls"]) {
     const el = document.createElement(id === "courseView" ? "main" : "div");
     el.setAttribute("id", id);
     document.body.appendChild(el);
