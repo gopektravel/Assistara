@@ -404,6 +404,16 @@ test("the public player uses the official embed with proper permissions", () => 
   assert.match(src, /embed_domain=/);
 });
 
+test("the public page keeps a responsive layout for mobile", () => {
+  // the mobile breakpoint stacks the grid and gives the chat a fixed height
+  assert.match(liveHtml, /@media\(max-width:899px\)/);
+  assert.match(liveHtml, /\.live-grid\{grid-template-columns:1fr/);
+  assert.match(liveHtml, /\.chat-frame,\.chat-placeholder\{height:240px;min-height:240px\}/);
+  // the player iframe fills its 16:9 container on every screen
+  assert.match(liveHtml, /\.yt-frame\{position:absolute;inset:0;width:100%;height:100%/);
+  assert.match(liveHtml, /\.video\{aspect-ratio:16\/9/);
+});
+
 test("the public page keeps its original waiting state and countdown", () => {
   assert.match(liveHtml, /id="preliveVideo"/);
   assert.match(liveHtml, /prelive-countdown/);
