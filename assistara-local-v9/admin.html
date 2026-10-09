@@ -2246,7 +2246,7 @@
       };
       window.resetPw = async (id) => {
         try {
-          await req("send_password_reset", { id });
+          await req("send_password_reset", { id }, ACC);
           toast("Password reset sent");
         } catch (e) {
           alert(e.message);
@@ -2254,7 +2254,7 @@
       };
       window.suspend = async (id, suspended) => {
         try {
-          await req("suspend_account", { id, suspended });
+          await req("suspend_account", { id, suspended }, ACC);
           toast(suspended ? "Account suspended" : "Account reactivated");
           await load();
         } catch (e) {
