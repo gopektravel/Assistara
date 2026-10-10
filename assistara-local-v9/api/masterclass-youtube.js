@@ -118,6 +118,10 @@ function parseConfig(raw) {
     if (typeof cfg.chat_provider === "string" && CHAT_PROVIDERS.includes(cfg.chat_provider)) {
       out.chat_provider = cfg.chat_provider;
     }
+    // Derive chat_enabled from chat_provider only if chat not explicitly set
+    if (typeof cfg.chat !== "boolean") {
+      out.chat_enabled = cfg.chat_provider !== 'off';
+    }
     return out;
   }
   const id = extractVideoId(raw); // legacy: plain URL or bare ID

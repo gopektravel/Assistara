@@ -222,18 +222,17 @@
           <div class="radio-group" style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;">
             <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
               <input type="radio" name="mcYtChatProvider" value="assistara" checked style="accent-color: #171717;">
-              <span style="font-weight: 600;">Assistara Chat (Recommended)</span>
+              <span style="font-weight: 600;">Assistara Chat</span>
             </label>
             <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
               <input type="radio" name="mcYtChatProvider" value="youtube" style="accent-color: #171717;">
-              <span style="font-weight: 600;">YouTube Chat (Fallback)</span>
+              <span style="font-weight: 600;">YouTube Chat</span>
             </label>
             <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
               <input type="radio" name="mcYtChatProvider" value="off" style="accent-color: #171717;">
               <span style="font-weight: 600;">Chat Off</span>
             </label>
           </div>
-          <div class="muted" style="margin-top: 8px;">Assistara Chat uses our branded interface. YouTube Chat shows YouTube's native embed. Chat Off hides the chat panel entirely.</div>
         </div>
 
         <div id="mcYtConfiguredUrl" class="configured-url hidden"></div>
@@ -543,6 +542,58 @@
         streamAction("end_stream", "End the livestream? Viewers will see the thank-you message.", "mcYtEnd", "Stream ended");
       $("mcYtReset").onclick = () =>
         streamAction("reset_stream", "Reset to waiting? The countdown and waiting screen will reappear for viewers.", "mcYtReset", "Reset to waiting");
+
+      $("mcYtReset").onclick = () =>
+        streamAction("reset_stream", "Reset to waiting? The countdown and waiting screen will reappear for viewers.", "mcYtReset", "Reset to waiting");
+
+      // Auto-save chat provider selection
+      const providerRadios = document.querySelectorAll('input[name="mcYtChatProvider"]');
+      let previousProvider = null;
+      providerRadios.forEach(radio => {
+        radio.addEventListener('change', async function() {
+          if(this.value === previousProvider) return;
+          previousProvider = this.value;
+          const fb = $("mcYtFeedback");
+          fb.className = "feedback";
+          fb.textContent = "Saving chat provider...";
+          try {
+            const r = await fetch(YT_ENDPOINT, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+              body: JSON.stringify({
+                action: "configure",
+                event_key: MC_EVENT_KEY,
+                youtube_url: $("mcYtUrl").value.trim(),
+                chat_enabled: $("mcYtChat").checked,
+                replay_enabled: false,
+                chat_provider: this.value,
+              }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if(r.status === 401){
+              adminSession.clear();
+              fb.className = "feedback err";
+              fb.textContent = "Your admin session expired. Please log in again.";
+              this.checked = false;
+              if(previousProvider){
+                document.querySelector('input[name="mcYtChatProvider"][value="'+previousProvider+'"]').checked = true;
+              }
+              return;
+            }
+            if(!r.ok || !d.ok) throw new Error(d.error || "Could not save chat provider");
+            fb.className = "feedback ok";
+            fb.textContent = "Chat provider saved: " + this.value;
+            await loadYoutube();
+          } catch (e) {
+            fb.className = "feedback err";
+            fb.textContent = "Could not save chat provider. " + e.message;
+            this.checked = false;
+            if(previousProvider){
+              document.querySelector('input[name="mcYtChatProvider"][value="'+previousProvider+'"]').checked = true;
+            }
+          }
+        });
+      });
 
       // Presentation embed controls
       $("mcPresentationReload").onclick = () => {

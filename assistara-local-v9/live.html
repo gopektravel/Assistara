@@ -92,6 +92,9 @@
   const noteEl=document.querySelector('.youtube-note');
   const chatOriginal=chatEl?chatEl.innerHTML:'';
   let cfg=null;
+  let currentChatProvider=null;
+  let currentDisplayState=null;
+  let chatInitialized=false;
 
   function setPill(displayState){
     if(!pillLabel)return;
@@ -101,14 +104,25 @@
     else{pillLabel.textContent='FREE LIVE MASTERCLASS';if(pill)pill.classList.remove('is-live');}
   }
 
-  function renderNote(hasStream){
+  function renderNote(hasStream, displayState){
     if(!noteEl||!cfg)return;
     const span=noteEl.querySelector('span');
     const a=noteEl.querySelector('a');
-    if(span)span.textContent=hasStream?'Stream link saved · the player appears here when we go live':'Streamed through YouTube Live · Stay on Assistara';
-    if(a){
-      if(hasStream&&cfg.youtube_url){a.href=cfg.youtube_url;a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');}
-      else{a.removeAttribute('href');a.removeAttribute('target');a.removeAttribute('rel');}
+    if(displayState==='live' && hasStream){
+      if(span)span.textContent='';
+      if(a){
+        if(cfg.youtube_url){a.href=cfg.youtube_url;a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');a.textContent='Watch on YouTube ↗';}
+        else{a.removeAttribute('href');a.removeAttribute('target');a.removeAttribute('rel');a.textContent='';}
+      }
+    } else if(hasStream){
+      if(span)span.textContent='Stream link saved · the player appears here when we go live';
+      if(a){
+        if(cfg.youtube_url){a.href=cfg.youtube_url;a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');a.textContent='Watch on YouTube ↗';}
+        else{a.removeAttribute('href');a.removeAttribute('target');a.removeAttribute('rel');a.textContent='';}
+      }
+    } else {
+      if(span)span.textContent='Streamed through YouTube Live · Stay on Assistara';
+      if(a){a.removeAttribute('href');a.removeAttribute('target');a.removeAttribute('rel');a.textContent='Watch on YouTube ↗';}
     }
   }
 
@@ -117,19 +131,19 @@
     const hasStream=!!(cfg&&cfg.video_id);
     if(hasStream&&displayState==='live'){
       videoEl.innerHTML='<iframe class="yt-frame" src="'+cfg.embed_url+'" title="Assistara masterclass — YouTube live stream" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-crossorigin"></iframe>';
-      renderNote(true);
+      renderNote(true, displayState);
       return;
     }
     if(displayState==='ended'){
       videoEl.innerHTML='<div class="prelive-wrap"><div class="prelive-kicker">THANK YOU</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">Thanks for attending the masterclass!</div></div>';
-      renderNote(false);
+      renderNote(false, displayState);
       return;
     }
     // WAITING (or scheduled but not live yet)
     if(hasStream&&displayState==='waiting'){
-      renderNote(true);
+      renderNote(true, displayState);
     }
-    if(!hasStream)renderNote(false);
+    if(!hasStream)renderNote(false, displayState);
   }
 
   function renderChat(displayState){
@@ -137,6 +151,23 @@
     const hasStream=!!(cfg&&cfg.video_id);
     const chatProvider = cfg?.chat_provider || 'assistara';
     const showChat=hasStream&&cfg.chat_enabled&&displayState==='live' && chatProvider !== 'off';
+
+    // Skip re-render if provider and display state haven't changed
+    if(chatInitialized && currentChatProvider===chatProvider && currentDisplayState===displayState){
+      return;
+    }
+
+    // Clean up previous chat instance if provider changed
+    if(chatInitialized && currentChatProvider!==chatProvider){
+      if(window.assistaraChat && typeof window.assistaraChat.disconnect==='function'){
+        window.assistaraChat.disconnect();
+      }
+      chatInitialized=false;
+    }
+
+    currentChatProvider=chatProvider;
+    currentDisplayState=displayState;
+
     if(showChat && chatProvider === 'assistara'){
       // Use Assistara Live Chat instead of YouTube Live Chat
       chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>LIVE NOW</span></div><div id="assistara-live-chat" class="chat-frame-wrapper"></div>';
@@ -144,15 +175,19 @@
       const chatContainer = document.getElementById('assistara-live-chat');
       if(chatContainer && window.initAssistaraChat){
         window.initAssistaraChat(chatContainer);
+        chatInitialized=true;
       }
     } else if(showChat && chatProvider === 'youtube'){
       // Use YouTube Live Chat (fallback)
       const mobileFallback = '<div class="chat-mobile-fallback"><a href="'+cfg.youtube_url+'" target="_blank" rel="noopener noreferrer">Open Chat on YouTube ↗</a></div>';
       chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>LIVE NOW</span></div><iframe class="chat-frame" src="'+cfg.chat_url+'" title="YouTube live chat" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-crossorigin"></iframe>'+mobileFallback;
+      chatInitialized=false;
     } else if(displayState==='ended'){
       chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>ENDED</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">This masterclass has ended.</strong><span>Chat closes when the live stream ends.</span></div></div>';
+      chatInitialized=false;
     } else {
       chatEl.innerHTML=chatOriginal;
+      chatInitialized=false;
     }
   }
 
@@ -168,14 +203,14 @@
       .then(r=>r.json())
       .then(d=>{
         if(d&&d.ok){
-          cfg={youtube_url:d.youtube_url,video_id:d.video_id,embed_url:d.embed_url,chat_enabled:d.chat_enabled,replay_enabled:d.replay_enabled,chat_url:d.chat_url,display_state:d.display_state||'waiting'};
+          cfg={youtube_url:d.youtube_url,video_id:d.video_id,embed_url:d.embed_url,chat_enabled:d.chat_enabled,replay_enabled:d.replay_enabled,chat_url:d.chat_url,display_state:d.display_state||'waiting',chat_provider:d.chat_provider||'assistara'};
         }
         renderAll(cfg?.display_state || 'waiting');
       })
       .catch(()=>{});
   }
   loadConfig();
-  setInterval(loadConfig,30000);
+  setInterval(loadConfig,5000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadConfig();});
   window.addEventListener('focus',()=>loadConfig());
 })();</script>
