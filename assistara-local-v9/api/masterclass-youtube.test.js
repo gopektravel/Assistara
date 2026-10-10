@@ -735,6 +735,15 @@ test("the admin event page shows the live attendance cards", () => {
   assert.match(eventPage, /stat-watching/); // Watching Now is the prominent card
 });
 
+test("the admin Masterclass tab has an Open Host Chat shortcut to the existing page", () => {
+  assert.match(eventPage, /id="mcOpenHostChat"/);
+  assert.match(eventPage, /\$\("mcOpenHostChat"\)\.onclick/);
+  // Opens the EXISTING Host Chat page; the presenter secret is fetched, not embedded.
+  assert.match(eventPage, /action: "presenter_key"/);
+  assert.match(eventPage, /\/live\/chat\?presenter=/);
+  assert.doesNotMatch(eventPage, /presenter=[0-9a-f]{32,}/); // no hardcoded secret
+});
+
 test("the public page wires host tokens and the presenter page is routed", () => {
   assert.match(liveHtml, /initAssistaraChat\(chatContainer,\{identity:registeredIdentity,hostToken:hostToken\}\)/);
   assert.match(liveHtml, /resolveHostToken/);
