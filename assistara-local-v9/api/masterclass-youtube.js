@@ -368,6 +368,51 @@ async function resetStreamAction(cfg, claims, body) {
   };
 }
 
+async function updateChatProviderAction(cfg, claims, body) {
+  const key = eventKey(body.event_key);
+  const provider = String(body.chat_provider || "").trim();
+  if (!CHAT_PROVIDERS.includes(provider)) {
+    return { status: 400, body: { ok: false, error: "Unknown chat provider" } };
+  }
+  const row = await readEventRow(cfg, key);
+  const current = parseConfig(row ? row.live_destination_url : null);
+  // Change ONLY the provider. Preserve the stream URL, video id and the
+  // current display_state so switching chat never resets the livestream.
+  const next = {
+    youtube_url: current.youtube_url,
+    chat: provider !== "off",
+    replay: current.replay_enabled,
+    display_state: current.display_state,
+    chat_provider: provider,
+  };
+  const { response } = await requestJSON(
+    cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
+    {
+      method: "POST",
+      headers: serviceHeaders(cfg, { Prefer: "resolution=merge-duplicates" }),
+      body: JSON.stringify({
+        event_key: key,
+        live_destination_url: JSON.stringify(next),
+        updated_at: new Date().toISOString(),
+        updated_by: claims.u,
+      }),
+    }
+  );
+  if (!response.ok) return { status: 500, body: { ok: false, error: "Could not save the chat provider" } };
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      event_key: key,
+      chat_provider: provider,
+      chat_enabled: provider !== "off",
+      display_state: current.display_state,
+      video_id: current.video_id,
+      youtube_url: current.youtube_url,
+    },
+  };
+}
+
 module.exports = async function masterclassYoutube(req, res) {
   noStore(res);
   const origin = req.headers && req.headers.origin ? String(req.headers.origin) : "";
@@ -407,7 +452,7 @@ module.exports = async function masterclassYoutube(req, res) {
     if (parsed.error) return send(res, 400, { ok: false, error: parsed.error });
     const { body } = parsed;
     const action = String(body.action || "configure").trim().toLowerCase();
-    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream") {
+    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream" && action !== "update_chat_provider") {
       return send(res, 400, { ok: false, error: "Unknown action" });
     }
     const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -447,6 +492,15 @@ module.exports = async function masterclassYoutube(req, res) {
       } catch (error) {
         console.error("masterclass-youtube", error && error.message ? error.message : "reset_stream failed");
         return send(res, 503, { ok: false, error: "Could not reset the stream" });
+      }
+    }
+    if (action === "update_chat_provider") {
+      try {
+        const result = await updateChatProviderAction(cfg, claims, body);
+        return send(res, result.status, result.body);
+      } catch (error) {
+        console.error("masterclass-youtube", error && error.message ? error.message : "update_chat_provider failed");
+        return send(res, 503, { ok: false, error: "Could not save the chat provider" });
       }
     }
     try {

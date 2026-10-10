@@ -215,8 +215,6 @@
           <input id="mcYtUrl" type="text" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" spellcheck="false">
         </div>
 
-        <label class="check"><input type="checkbox" id="mcYtChat" checked> Show live chat on the public page</label>
-
         <div class="field">
           <span class="label">Chat Provider</span>
           <div class="radio-group" style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;">
@@ -418,13 +416,17 @@
       // YouTube Live stream configuration. The public page reads the same
       // endpoint, so a save here is live within seconds — nothing to rebuild.
       const YT_ENDPOINT = "/api/masterclass-youtube";
+      // The provider currently stored on the server. Auto-saving a new
+      // provider uses a dedicated API action that changes ONLY the
+      // provider, so the stream state and YouTube URL are preserved.
+      let savedProvider = "assistara";
 
       function updateYoutubeUI(d) {
         const hasUrl = !!d.video_id;
         $("mcYtUrl").value = d.youtube_url || "";
-        $("mcYtChat").checked = d.chat_enabled !== false;
         // Update chat provider radio buttons
         const provider = d.chat_provider || "assistara";
+        savedProvider = provider;
         const providerRadios = document.querySelectorAll('input[name="mcYtChatProvider"]');
         providerRadios.forEach(radio => {
           radio.checked = radio.value === provider;
@@ -510,7 +512,6 @@
               action: "configure",
               event_key: MC_EVENT_KEY,
               youtube_url: $("mcYtUrl").value.trim(),
-              chat_enabled: $("mcYtChat").checked,
               replay_enabled: false,
               chat_provider: document.querySelector('input[name="mcYtChatProvider"]:checked')?.value || "assistara",
             }),
@@ -543,54 +544,46 @@
       $("mcYtReset").onclick = () =>
         streamAction("reset_stream", "Reset to waiting? The countdown and waiting screen will reappear for viewers.", "mcYtReset", "Reset to waiting");
 
-      $("mcYtReset").onclick = () =>
-        streamAction("reset_stream", "Reset to waiting? The countdown and waiting screen will reappear for viewers.", "mcYtReset", "Reset to waiting");
-
-      // Auto-save chat provider selection
+      // Auto-save chat provider selection. Uses a dedicated API action
+      // that changes ONLY the provider, so the stream state (LIVE/WAITING/
+      // ENDED) and the YouTube URL are never reset by a provider switch.
       const providerRadios = document.querySelectorAll('input[name="mcYtChatProvider"]');
-      let previousProvider = null;
       providerRadios.forEach(radio => {
         radio.addEventListener('change', async function() {
-          if(this.value === previousProvider) return;
-          previousProvider = this.value;
+          const selected = this.value;
+          if (selected === savedProvider) return;
           const fb = $("mcYtFeedback");
           fb.className = "feedback";
-          fb.textContent = "Saving chat provider...";
+          fb.textContent = "Saving...";
           try {
             const r = await fetch(YT_ENDPOINT, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
               body: JSON.stringify({
-                action: "configure",
+                action: "update_chat_provider",
                 event_key: MC_EVENT_KEY,
-                youtube_url: $("mcYtUrl").value.trim(),
-                chat_enabled: $("mcYtChat").checked,
-                replay_enabled: false,
-                chat_provider: this.value,
+                chat_provider: selected,
               }),
             });
             const d = await r.json().catch(() => ({}));
-            if(r.status === 401){
+            if (r.status === 401) {
               adminSession.clear();
               fb.className = "feedback err";
               fb.textContent = "Your admin session expired. Please log in again.";
               this.checked = false;
-              if(previousProvider){
-                document.querySelector('input[name="mcYtChatProvider"][value="'+previousProvider+'"]').checked = true;
-              }
+              document.querySelector('input[name="mcYtChatProvider"][value="' + savedProvider + '"]').checked = true;
               return;
             }
-            if(!r.ok || !d.ok) throw new Error(d.error || "Could not save chat provider");
+            if (!r.ok || !d.ok) throw new Error(d.error || "Could not save chat provider");
+            savedProvider = selected;
             fb.className = "feedback ok";
-            fb.textContent = "Chat provider saved: " + this.value;
+            fb.textContent = "Saved";
             await loadYoutube();
           } catch (e) {
             fb.className = "feedback err";
             fb.textContent = "Could not save chat provider. " + e.message;
             this.checked = false;
-            if(previousProvider){
-              document.querySelector('input[name="mcYtChatProvider"][value="'+previousProvider+'"]').checked = true;
-            }
+            document.querySelector('input[name="mcYtChatProvider"][value="' + savedProvider + '"]').checked = true;
           }
         });
       });

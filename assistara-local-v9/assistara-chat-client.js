@@ -1,36 +1,66 @@
-// src/client/chat.ts
-var MASTERCLASS_ROOM_ID = "founding-masterclass-2026";
-var CHAT_WORKER_URL = "https://assistara-live-chat-production.up.railway.app";
-var AssistaraLiveChat = class {
-  container;
-  ws = null;
-  messages = [];
-  userIdentity = null;
-  sendEnabled = true;
-  reconnectAttempts = 0;
-  maxReconnectAttempts = 5;
-  reconnectDelay = 1e3;
-  isConnecting = false;
-  connectionStatus = "disconnected";
-  elements = {
-    messagesContainer: null,
-    input: null,
-    form: null,
-    statusIndicator: null,
-    sendButton: null
+"use strict";
+var AssistaraChatClient = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
   };
-  constructor(container) {
-    this.container = container;
-    this.init();
-  }
-  async init() {
-    this.render();
-    this.bindElements();
-    this.loadIdentity();
-    this.connect();
-  }
-  render() {
-    this.container.innerHTML = `
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/client/chat.ts
+  var chat_exports = {};
+  __export(chat_exports, {
+    AssistaraLiveChat: () => AssistaraLiveChat,
+    initAssistaraChat: () => initAssistaraChat
+  });
+  var MASTERCLASS_ROOM_ID = "founding-masterclass-2026";
+  var CHAT_WORKER_URL = "https://assistara-live-chat-production.up.railway.app";
+  var AssistaraLiveChat = class {
+    container;
+    ws = null;
+    messages = [];
+    userIdentity = null;
+    sendEnabled = true;
+    reconnectAttempts = 0;
+    maxReconnectAttempts = 5;
+    reconnectDelay = 1e3;
+    reconnectTimer = null;
+    disposed = false;
+    isConnecting = false;
+    connectionStatus = "disconnected";
+    elements = {
+      messagesContainer: null,
+      input: null,
+      form: null,
+      statusIndicator: null,
+      sendButton: null,
+      nameForm: null,
+      nameInput: null
+    };
+    constructor(container) {
+      this.container = container;
+      this.init();
+    }
+    async init() {
+      this.render();
+      this.bindElements();
+      this.loadIdentity();
+      this.updateIdentityUI();
+      this.connect();
+    }
+    render() {
+      this.container.innerHTML = `
       <div class="assistara-chat" style="
         display: flex;
         flex-direction: column;
@@ -41,7 +71,7 @@ var AssistaraLiveChat = class {
         border: 1px solid var(--line, #e2ded4);
         border-radius: 16px;
         overflow: hidden;
-        font-family: 'Manrope', 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       ">
         <!-- Header -->
         <div class="chat-header" style="
@@ -88,6 +118,45 @@ var AssistaraLiveChat = class {
           gap: 12px;
           background: var(--cream, #fbfaf6);
         "></div>
+
+        <!-- Inline identity form: visible immediately, even while the
+             WebSocket is connecting or temporarily unavailable. -->
+        <form class="chat-name-form" style="
+          display: flex;
+          gap: 10px;
+          padding: 14px 18px;
+          border-top: 1px solid var(--line, #e2ded4);
+          background: #fff;
+        ">
+          <input
+            type="text"
+            name="name"
+            class="chat-name-input"
+            placeholder="Your name"
+            maxlength="30"
+            autocomplete="name"
+            style="
+              flex: 1;
+              min-width: 0;
+              padding: 12px 16px;
+              border: 1px solid var(--line, #e2ded4);
+              border-radius: 10px;
+              font-size: 14px;
+              font-family: inherit;
+              color: var(--ink, #151515);
+              background: #fff;
+            "
+          />
+          <button type="submit" style="
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 10px;
+            font: 700 14px inherit;
+            color: #151515;
+            background: var(--yellow, #ffd51f);
+            cursor: pointer;
+          ">Join chat</button>
+        </form>
 
         <!-- Input Area -->
         <form class="chat-form" style="
@@ -140,14 +209,20 @@ var AssistaraLiveChat = class {
         </form>
       </div>
     `;
-    this.injectStyles();
-  }
-  injectStyles() {
-    if (document.getElementById("assistara-chat-styles")) return;
-    const style = document.createElement("style");
-    style.id = "assistara-chat-styles";
-    style.textContent = `
+      this.injectStyles();
+    }
+    injectStyles() {
+      if (document.getElementById("assistara-chat-styles")) return;
+      const style = document.createElement("style");
+      style.id = "assistara-chat-styles";
+      style.textContent = `
       .assistara-chat .chat-input:focus {
+        outline: none;
+        border-color: var(--yellow, #ffd51f) !important;
+        box-shadow: 0 0 0 3px rgba(255, 213, 31, 0.2) !important;
+      }
+
+      .assistara-chat .chat-name-input:focus {
         outline: none;
         border-color: var(--yellow, #ffd51f) !important;
         box-shadow: 0 0 0 3px rgba(255, 213, 31, 0.2) !important;
@@ -362,300 +437,311 @@ var AssistaraLiveChat = class {
         }
       }
     `;
-    document.head.appendChild(style);
-  }
-  bindElements() {
-    this.elements.messagesContainer = this.container.querySelector(".messages-container");
-    this.elements.input = this.container.querySelector(".chat-input");
-    this.elements.form = this.container.querySelector(".chat-form");
-    this.elements.sendButton = this.container.querySelector(".send-button");
-    this.elements.statusIndicator = this.container.querySelector(".connection-status");
-    this.elements.form?.addEventListener("submit", (e) => this.handleSubmit(e));
-    this.elements.input?.addEventListener("keydown", (e) => this.handleKeydown(e));
-  }
-  loadIdentity() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get("t");
-    if (token) {
-      try {
-        localStorage.setItem("assistara_masterclass_attendee_token", token);
-      } catch {
-      }
+      document.head.appendChild(style);
     }
-    const storedToken = localStorage.getItem("assistara_masterclass_attendee_token");
-    if (storedToken) {
-      try {
-        const decoded = atob(storedToken);
-        const data = JSON.parse(decoded);
-        if (data.name) {
+    bindElements() {
+      this.elements.messagesContainer = this.container.querySelector(".messages-container");
+      this.elements.input = this.container.querySelector(".chat-input");
+      this.elements.form = this.container.querySelector(".chat-form");
+      this.elements.sendButton = this.container.querySelector(".send-button");
+      this.elements.statusIndicator = this.container.querySelector(".connection-status");
+      this.elements.nameForm = this.container.querySelector(".chat-name-form");
+      this.elements.nameInput = this.container.querySelector(".chat-name-input");
+      this.elements.form?.addEventListener("submit", (e) => this.handleSubmit(e));
+      this.elements.input?.addEventListener("keydown", (e) => this.handleKeydown(e));
+      this.elements.nameForm?.addEventListener("submit", (e) => this.handleNameSubmit(e));
+    }
+    loadIdentity() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("t");
+      if (token) {
+        try {
+          localStorage.setItem("assistara_masterclass_attendee_token", token);
+        } catch {
+        }
+      }
+      const storedToken = localStorage.getItem("assistara_masterclass_attendee_token");
+      if (storedToken) {
+        try {
+          const decoded = atob(storedToken);
+          const data = JSON.parse(decoded);
+          if (data.name) {
+            this.userIdentity = {
+              name: data.name,
+              userId: data.id || crypto.randomUUID(),
+              isHost: data.isHost === true
+            };
+            return;
+          }
+        } catch {
           this.userIdentity = {
-            name: data.name,
-            userId: data.id || crypto.randomUUID(),
-            isHost: data.isHost === true
+            name: "Attendee",
+            userId: storedToken.slice(0, 8),
+            isHost: false
+          };
+          return;
+        }
+      }
+      const adminToken = localStorage.getItem("assistara_admin_token") || sessionStorage.getItem("assistara_admin_token");
+      if (adminToken) {
+        this.userIdentity = {
+          name: "Host",
+          userId: "host-" + crypto.randomUUID().slice(0, 8),
+          isHost: true
+        };
+        return;
+      }
+      try {
+        const storedName = localStorage.getItem("assistara_chat_name");
+        const storedUserId = localStorage.getItem("assistara_chat_user_id");
+        if (storedName && storedUserId) {
+          this.userIdentity = {
+            name: storedName,
+            userId: storedUserId,
+            isHost: false
           };
           return;
         }
       } catch {
-        this.userIdentity = {
-          name: "Attendee",
-          userId: storedToken.slice(0, 8),
-          isHost: false
-        };
-        return;
+      }
+      this.userIdentity = null;
+    }
+    updateIdentityUI() {
+      if (this.elements.nameForm) {
+        this.elements.nameForm.style.display = this.userIdentity ? "none" : "flex";
       }
     }
-    const adminToken = localStorage.getItem("assistara_admin_token") || sessionStorage.getItem("assistara_admin_token");
-    if (adminToken) {
-      this.userIdentity = {
-        name: "Host",
-        userId: "host-" + crypto.randomUUID().slice(0, 8),
-        isHost: true
-      };
-      return;
-    }
-    try {
-      const storedName = localStorage.getItem("assistara_chat_name");
-      const storedUserId = localStorage.getItem("assistara_chat_user_id");
-      if (storedName && storedUserId) {
-        this.userIdentity = {
-          name: storedName,
-          userId: storedUserId,
-          isHost: false
-        };
+    handleNameSubmit(e) {
+      e.preventDefault();
+      const name = this.elements.nameInput?.value.trim().slice(0, 30) || "";
+      if (!name) {
+        this.elements.nameInput?.focus();
         return;
       }
-    } catch {
-    }
-    this.userIdentity = null;
-  }
-  connect() {
-    if (this.isConnecting || this.connectionStatus === "connected") return;
-    this.isConnecting = true;
-    this.updateConnectionStatus("connecting");
-    const wsUrl = CHAT_WORKER_URL.replace("https://", "wss://") + `/chat?room=${MASTERCLASS_ROOM_ID}`;
-    try {
-      this.ws = new WebSocket(wsUrl);
-      this.ws.onopen = () => {
-        this.isConnecting = false;
-        this.connectionStatus = "connected";
-        this.reconnectAttempts = 0;
-        this.updateConnectionStatus("connected");
-        if (this.userIdentity) {
-          this.send({
-            type: "join",
-            userId: this.userIdentity.userId,
-            name: this.userIdentity.name,
-            role: this.userIdentity.isHost ? "host" : "attendee"
-          });
-          this.enableInput();
-        } else {
-          this.promptForName();
-        }
-      };
-      this.ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          this.handleServerMessage(msg);
-        } catch (err) {
-          console.error("Failed to parse server message:", err);
-        }
-      };
-      this.ws.onclose = () => {
-        this.connectionStatus = "disconnected";
-        this.updateConnectionStatus("disconnected");
-        this.disableInput();
-        this.scheduleReconnect();
-      };
-      this.ws.onerror = (err) => {
-        console.error("WebSocket error:", err);
-      };
-    } catch (err) {
-      console.error("Failed to create WebSocket:", err);
-      this.isConnecting = false;
-      this.scheduleReconnect();
-    }
-  }
-  promptForName() {
-    const name = prompt("Welcome! What should we call you?");
-    if (name && name.trim()) {
-      this.userIdentity = {
-        name: name.trim().slice(0, 30),
-        userId: crypto.randomUUID(),
-        isHost: false
-      };
+      this.userIdentity = { name, userId: crypto.randomUUID(), isHost: false };
       try {
-        localStorage.setItem("assistara_chat_name", this.userIdentity.name);
+        localStorage.setItem("assistara_chat_name", name);
         localStorage.setItem("assistara_chat_user_id", this.userIdentity.userId);
       } catch {
       }
-      this.send({
-        type: "join",
-        userId: this.userIdentity.userId,
-        name: this.userIdentity.name,
-        role: "attendee"
-      });
-      this.enableInput();
-    } else {
-      setTimeout(() => this.promptForName(), 1e3);
+      this.updateIdentityUI();
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.send({ type: "join", userId: this.userIdentity.userId, name, role: "attendee" });
+        this.enableInput();
+      }
     }
-  }
-  enableInput() {
-    this.elements.input?.removeAttribute("disabled");
-    this.elements.sendButton?.removeAttribute("disabled");
-    this.elements.input?.focus();
-  }
-  disableInput() {
-    this.elements.input?.setAttribute("disabled", "true");
-    this.elements.sendButton?.setAttribute("disabled", "true");
-  }
-  updateConnectionStatus(status) {
-    const indicator = this.elements.statusIndicator;
-    if (!indicator) return;
-    indicator.className = `connection-status ${status}`;
-    const dot = indicator.querySelector(".status-dot");
-    const text = indicator.querySelector(".status-text");
-    if (text) {
-      switch (status) {
-        case "connected":
-          text.textContent = "Live";
+    connect() {
+      if (this.disposed || this.isConnecting || this.connectionStatus === "connected") return;
+      this.isConnecting = true;
+      this.updateConnectionStatus("connecting");
+      const wsUrl = CHAT_WORKER_URL.replace("https://", "wss://") + `/chat?room=${MASTERCLASS_ROOM_ID}`;
+      try {
+        const socket = new WebSocket(wsUrl);
+        this.ws = socket;
+        socket.onopen = () => {
+          if (this.disposed || this.ws !== socket) {
+            socket.close();
+            return;
+          }
+          this.isConnecting = false;
+          this.connectionStatus = "connected";
+          this.reconnectAttempts = 0;
+          this.updateConnectionStatus("connected");
+          if (this.userIdentity) {
+            this.send({
+              type: "join",
+              userId: this.userIdentity.userId,
+              name: this.userIdentity.name,
+              role: this.userIdentity.isHost ? "host" : "attendee"
+            });
+            this.enableInput();
+          } else this.updateIdentityUI();
+        };
+        socket.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            this.handleServerMessage(msg);
+          } catch (err) {
+            console.error("Failed to parse server message:", err);
+          }
+        };
+        socket.onclose = () => {
+          if (this.ws !== socket) return;
+          this.ws = null;
+          this.isConnecting = false;
+          this.connectionStatus = "disconnected";
+          this.updateConnectionStatus("disconnected");
+          this.disableInput();
+          if (!this.disposed) this.scheduleReconnect();
+        };
+        socket.onerror = (err) => {
+          console.error("WebSocket error:", err);
+        };
+      } catch (err) {
+        console.error("Failed to create WebSocket:", err);
+        this.isConnecting = false;
+        this.scheduleReconnect();
+      }
+    }
+    enableInput() {
+      this.elements.input?.removeAttribute("disabled");
+      this.elements.sendButton?.removeAttribute("disabled");
+      this.elements.input?.focus();
+    }
+    disableInput() {
+      this.elements.input?.setAttribute("disabled", "true");
+      this.elements.sendButton?.setAttribute("disabled", "true");
+    }
+    updateConnectionStatus(status) {
+      const indicator = this.elements.statusIndicator;
+      if (!indicator) return;
+      indicator.className = `connection-status ${status}`;
+      const dot = indicator.querySelector(".status-dot");
+      const text = indicator.querySelector(".status-text");
+      if (text) {
+        switch (status) {
+          case "connected":
+            text.textContent = "Live";
+            break;
+          case "connecting":
+            text.textContent = "Connecting\u2026";
+            break;
+          case "disconnected":
+            text.textContent = "Disconnected";
+            break;
+        }
+      }
+    }
+    scheduleReconnect() {
+      if (this.disposed) return;
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        this.showError("Connection lost. Please refresh the page to reconnect.");
+        return;
+      }
+      this.reconnectAttempts++;
+      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+      console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+      if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        this.connect();
+      }, delay);
+    }
+    handleServerMessage(msg) {
+      switch (msg.type) {
+        case "welcome":
+          this.messages = msg.messages;
+          this.sendEnabled = msg.sendEnabled;
+          this.renderMessages();
+          if (!this.userIdentity) this.updateIdentityUI();
+          else this.enableInput();
           break;
-        case "connecting":
-          text.textContent = "Connecting\u2026";
+        case "message":
+          this.addMessage(msg.message);
           break;
-        case "disconnected":
-          text.textContent = "Disconnected";
+        case "history":
+          this.messages = msg.messages;
+          this.renderMessages();
+          break;
+        case "user_joined":
+          this.addSystemMessage(`${msg.name} joined the chat`);
+          break;
+        case "user_left":
+          this.addSystemMessage("Someone left the chat");
+          break;
+        case "message_deleted":
+          this.removeMessage(msg.messageId);
+          break;
+        case "send_toggled":
+          this.sendEnabled = msg.enabled;
+          this.updateInputState();
+          break;
+        case "error":
+          this.showError(msg.message);
+          break;
+        case "ack":
           break;
       }
     }
-  }
-  scheduleReconnect() {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      this.showError("Connection lost. Please refresh the page to reconnect.");
-      return;
-    }
-    this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    setTimeout(() => this.connect(), delay);
-  }
-  handleServerMessage(msg) {
-    switch (msg.type) {
-      case "welcome":
-        this.messages = msg.messages;
-        this.sendEnabled = msg.sendEnabled;
-        this.renderMessages();
-        if (!this.userIdentity) {
-          this.promptForName();
-        } else {
-          this.enableInput();
-        }
-        break;
-      case "message":
-        this.addMessage(msg.message);
-        break;
-      case "history":
-        this.messages = msg.messages;
-        this.renderMessages();
-        break;
-      case "user_joined":
-        this.addSystemMessage(`${msg.name} joined the chat`);
-        break;
-      case "user_left":
-        this.addSystemMessage("Someone left the chat");
-        break;
-      case "message_deleted":
-        this.removeMessage(msg.messageId);
-        break;
-      case "send_toggled":
-        this.sendEnabled = msg.enabled;
-        this.updateInputState();
-        break;
-      case "error":
-        this.showError(msg.message);
-        break;
-      case "ack":
-        break;
-    }
-  }
-  handleSubmit(e) {
-    e.preventDefault();
-    const input = this.elements.input;
-    if (!input || !this.sendEnabled) return;
-    const content = input.value.trim();
-    if (!content) return;
-    const tempId = crypto.randomUUID();
-    this.send({ type: "send", content, tempId });
-    input.value = "";
-  }
-  handleKeydown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    handleSubmit(e) {
       e.preventDefault();
-      this.handleSubmit(e);
+      const input = this.elements.input;
+      if (!input || !this.sendEnabled) return;
+      const content = input.value.trim();
+      if (!content) return;
+      const tempId = crypto.randomUUID();
+      this.send({ type: "send", content, tempId });
+      input.value = "";
     }
-  }
-  send(msg) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(msg));
+    handleKeydown(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        this.handleSubmit(e);
+      }
     }
-  }
-  addMessage(message) {
-    const existingIndex = this.messages.findIndex((m) => m.id === message.id);
-    if (existingIndex >= 0) {
-      this.messages[existingIndex] = message;
-    } else {
-      this.messages.push(message);
+    send(msg) {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify(msg));
+      }
     }
-    if (this.messages.length > 200) {
-      this.messages = this.messages.slice(-200);
+    addMessage(message) {
+      const existingIndex = this.messages.findIndex((m) => m.id === message.id);
+      if (existingIndex >= 0) {
+        this.messages[existingIndex] = message;
+      } else {
+        this.messages.push(message);
+      }
+      if (this.messages.length > 200) {
+        this.messages = this.messages.slice(-200);
+      }
+      this.renderMessages();
+      this.autoScroll();
     }
-    this.renderMessages();
-    this.autoScroll();
-  }
-  removeMessage(messageId) {
-    const msgEl = this.elements.messagesContainer?.querySelector(`[data-message-id="${messageId}"]`);
-    if (msgEl) {
-      msgEl.style.animation = "fadeInUp 0.15s ease-in reverse";
-      setTimeout(() => msgEl.remove(), 150);
+    removeMessage(messageId) {
+      const msgEl = this.elements.messagesContainer?.querySelector(`[data-message-id="${messageId}"]`);
+      if (msgEl) {
+        msgEl.style.animation = "fadeInUp 0.15s ease-in reverse";
+        setTimeout(() => msgEl.remove(), 150);
+      }
+      this.messages = this.messages.filter((m) => m.id !== messageId);
     }
-    this.messages = this.messages.filter((m) => m.id !== messageId);
-  }
-  addSystemMessage(text) {
-    const systemMsg = {
-      id: `system-${Date.now()}`,
-      user: "",
-      userId: "system",
-      role: "system",
-      content: text,
-      timestamp: Date.now()
-    };
-    this.addMessage(systemMsg);
-  }
-  renderMessages() {
-    if (!this.elements.messagesContainer) return;
-    this.elements.messagesContainer.innerHTML = this.messages.map((msg) => this.renderMessage(msg)).join("");
-  }
-  renderMessage(msg) {
-    const isOwn = this.userIdentity && msg.userId === this.userIdentity.userId;
-    const isHost = msg.role === "host";
-    const isSystem = msg.role === "system";
-    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const messageClass = [
-      "assistara-message",
-      isOwn ? "own" : "",
-      isHost ? "host" : "",
-      isSystem ? "system" : ""
-    ].filter(Boolean).join(" ");
-    if (isSystem) {
-      return `
+    addSystemMessage(text) {
+      const systemMsg = {
+        id: `system-${Date.now()}`,
+        user: "",
+        userId: "system",
+        role: "system",
+        content: text,
+        timestamp: Date.now()
+      };
+      this.addMessage(systemMsg);
+    }
+    renderMessages() {
+      if (!this.elements.messagesContainer) return;
+      this.elements.messagesContainer.innerHTML = this.messages.map((msg) => this.renderMessage(msg)).join("");
+    }
+    renderMessage(msg) {
+      const isOwn = this.userIdentity && msg.userId === this.userIdentity.userId;
+      const isHost = msg.role === "host";
+      const isSystem = msg.role === "system";
+      const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const messageClass = [
+        "assistara-message",
+        isOwn ? "own" : "",
+        isHost ? "host" : "",
+        isSystem ? "system" : ""
+      ].filter(Boolean).join(" ");
+      if (isSystem) {
+        return `
         <div class="${messageClass}" data-message-id="${msg.id}" style="align-self: center; text-align: center; padding: 4px 12px;">
           <div class="message-bubble" style="background: transparent; border: none; color: var(--muted); font-size: 12px; padding: 4px 12px;">
             ${this.escapeHtml(msg.content)}
           </div>
         </div>
       `;
-    }
-    const canDelete = this.userIdentity?.isHost && !isSystem;
-    return `
+      }
+      const canDelete = this.userIdentity?.isHost && !isSystem;
+      return `
       <div class="${messageClass}" data-message-id="${msg.id}">
         <div class="message-bubble">
           <div class="message-header">
@@ -668,58 +754,70 @@ var AssistaraLiveChat = class {
         </div>
       </div>
     `;
-  }
-  autoScroll() {
-    const container = this.elements.messagesContainer;
-    if (!container) return;
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-    if (isNearBottom) {
-      container.scrollTop = container.scrollHeight;
     }
-  }
-  updateInputState() {
-    if (this.sendEnabled && this.userIdentity) {
-      this.enableInput();
-    } else {
-      this.disableInput();
+    autoScroll() {
+      const container = this.elements.messagesContainer;
+      if (!container) return;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      if (isNearBottom) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
+    updateInputState() {
+      if (this.sendEnabled && this.userIdentity) {
+        this.enableInput();
+      } else {
+        this.disableInput();
+      }
+    }
+    showError(message) {
+      this.addSystemMessage(message);
+    }
+    escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    // Public API for admin controls
+    deleteMessage(messageId) {
+      this.send({ type: "delete", messageId });
+    }
+    toggleSend(enabled) {
+      if (!this.userIdentity?.isHost) return;
+      this.send({ type: "toggle_send", enabled });
+    }
+    disconnect() {
+      this.disposed = true;
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+      const socket = this.ws;
+      this.ws = null;
+      this.isConnecting = false;
+      this.connectionStatus = "disconnected";
+      if (socket) {
+        socket.onopen = null;
+        socket.onmessage = null;
+        socket.onclose = null;
+        socket.onerror = null;
+        socket.close();
+      }
+    }
+  };
+  var chatInstance = null;
+  function initAssistaraChatGlobal(container) {
+    if (chatInstance) {
+      chatInstance.disconnect();
+    }
+    chatInstance = new AssistaraLiveChat(container);
+    window.assistaraChat = chatInstance;
+    return chatInstance;
   }
-  showError(message) {
-    this.addSystemMessage(message);
+  window.initAssistaraChat = initAssistaraChatGlobal;
+  function initAssistaraChat(container) {
+    return initAssistaraChatGlobal(container);
   }
-  escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
-  // Public API for admin controls
-  deleteMessage(messageId) {
-    this.send({ type: "delete", messageId });
-  }
-  toggleSend(enabled) {
-    if (!this.userIdentity?.isHost) return;
-    this.send({ type: "toggle_send", enabled });
-  }
-  disconnect() {
-    this.ws?.close();
-    this.ws = null;
-  }
-};
-var chatInstance = null;
-function initAssistaraChatGlobal(container) {
-  if (chatInstance) {
-    chatInstance.disconnect();
-  }
-  chatInstance = new AssistaraLiveChat(container);
-  window.assistaraChat = chatInstance;
-  return chatInstance;
-}
-window.initAssistaraChat = initAssistaraChatGlobal;
-function initAssistaraChat(container) {
-  return initAssistaraChatGlobal(container);
-}
-export {
-  AssistaraLiveChat,
-  initAssistaraChat
-};
+  return __toCommonJS(chat_exports);
+})();
 //# sourceMappingURL=chat.js.map

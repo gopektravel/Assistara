@@ -475,6 +475,63 @@ test("POST reset_stream sets display_state to waiting", async () => {
   assert.equal(stored.display_state, "waiting");
 });
 
+test("POST update_chat_provider changes only the provider and preserves stream state", async () => {
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "live", chat_provider: "assistara" });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "update_chat_provider", event_key: "founding-masterclass-2026", chat_provider: "youtube" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.chat_provider, "youtube");
+  assert.equal(body.chat_enabled, true);
+  // Stream state and URL must be preserved — switching chat never resets the stream.
+  assert.equal(body.display_state, "live");
+  assert.equal(body.video_id, "aqz-KE-bpKQ");
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  assert.ok(write);
+  const sent = JSON.parse(write.options.body);
+  const stored = JSON.parse(sent.live_destination_url);
+  assert.equal(stored.chat_provider, "youtube");
+  assert.equal(stored.display_state, "live");
+  assert.equal(stored.youtube_url, "https://www.youtube.com/watch?v=aqz-KE-bpKQ");
+});
+
+test("POST update_chat_provider rejects an unknown provider", async () => {
+  const { fetchImpl } = mockFetch();
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "update_chat_provider", event_key: "founding-masterclass-2026", chat_provider: "twitch" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 400);
+  const body = res.json();
+  assert.equal(body.ok, false);
+});
+
 test("POST from a disallowed origin is forbidden", async () => {
   const { fetchImpl } = mockFetch();
   global.fetch = fetchImpl;
@@ -591,15 +648,20 @@ test("the public page countdown stops at zero and shows Starting Soon", () => {
 
 test("the public page uses display_state from config for rendering", () => {
   assert.match(liveHtml, /display_state/);
-  assert.match(liveHtml, /cfg\?\.display_state/);
-  assert.match(liveHtml, /renderAll\(cfg\?\.display_state/);
+  assert.match(liveHtml, /renderAll\(cfg\.display_state/);
+  assert.match(liveHtml, /renderedVideoKey/); // video change detection
+  assert.match(liveHtml, /renderedChatKey/); // chat change detection
 });
 
 // --- admin page contract ------------------------------------------------------
 
 test("the admin event page has the YouTube configuration card with stream controls", () => {
   assert.match(eventPage, /id="mcYtUrl"/);
-  assert.match(eventPage, /id="mcYtChat"/);
+  assert.doesNotMatch(eventPage, /id="mcYtChat"/); // redundant checkbox removed
+  assert.match(eventPage, /name="mcYtChatProvider"/); // three provider radios
+  assert.doesNotMatch(eventPage, /Show live chat on the public page/);
+  assert.doesNotMatch(eventPage, /\(Recommended\)/);
+  assert.doesNotMatch(eventPage, /\(Fallback\)/);
   assert.doesNotMatch(eventPage, /id="mcYtReplay"/); // replay toggle removed
   assert.match(eventPage, /id="mcYtSave"/);
   assert.match(eventPage, /id="mcYtStart"/);
@@ -607,6 +669,7 @@ test("the admin event page has the YouTube configuration card with stream contro
   assert.match(eventPage, /id="mcYtReset"/);
   assert.match(eventPage, /id="mcYtStateBadge"/);
   assert.match(eventPage, /action: "configure"/);
+  assert.match(eventPage, /action: "update_chat_provider"/); // provider auto-save
   assert.match(eventPage, /streamAction\("start_stream"/);
   assert.match(eventPage, /streamAction\("end_stream"/);
   assert.match(eventPage, /streamAction\("reset_stream"/);
