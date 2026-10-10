@@ -217,6 +217,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "assistara-chat-client.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "assistara-logo.svg",
       "use": "@vercel/static"
     },
@@ -492,6 +496,10 @@
     {
       "src": "/googletag.js",
       "dest": "/googletag.js"
+    },
+    {
+      "src": "/assistara-chat-client.js",
+      "dest": "/assistara-chat-client.js"
     },
     {
       "src": "/assistara-logo.svg",

@@ -551,8 +551,10 @@ test("the public player uses the official embed with proper permissions", () => 
   assert.match(liveHtml, /allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"/);
   assert.match(liveHtml, /allowfullscreen/);
   assert.match(liveHtml, /referrerpolicy="strict-origin-when-crossorigin"/);
-  // chat comes from the server-built live_chat URL (correct embed_domain)
-  assert.match(liveHtml, /class="chat-frame" src="'\+cfg\.chat_url\+'"/);
+  // chat is now Assistara Live Chat (not YouTube iframe)
+  assert.match(liveHtml, /id="assistara-live-chat"/);
+  assert.match(liveHtml, /class="chat-frame-wrapper"/);
+  // YouTube chat URL still built for fallback
   assert.match(src, /live_chat\?v="/);
   assert.match(src, /embed_domain=/);
 });
