@@ -20,6 +20,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createEmailDelivery, EmailDeliveryOptions } from "../_shared/email-delivery.ts";
+import { brandedEmail, brandedText, brandEsc } from "../_shared/email-brand.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!;
 const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -494,6 +495,148 @@ async function handleFollowupTest(body: any) {
 }
 
 // ----------------------------------------------------------------------------
+// 30-minute + 5-minute reminders (canonical branded template).
+//   Reminder30 target: 2026-10-11 17:30 PHT = 09:30 UTC
+//   Reminder5  target: 2026-10-11 18:05 PHT = 10:05 UTC
+// Separate idempotency keys; the 5-minute reminder only targets attendees who
+// have NOT visited their personal livestream link yet.
+// ----------------------------------------------------------------------------
+const REMINDER30_KEY = "reminder30-2026-10-11";
+const REMINDER30_SUBJECT = "We're going live in 30 minutes! 💛";
+const REMINDER5_KEY = "reminder5-2026-10-11";
+const REMINDER5_SUBJECT = "We're live! Come join us 💛";
+const TARGET_30_UTC = "2026-10-11T09:30:00Z";
+const TARGET_5_UTC = "2026-10-11T10:05:00Z";
+
+function reminder30Content(first: string, joinUrl: string, unsubUrl: string) {
+  const bodyHtml = `<p style="margin:0 0 16px">Hey ${brandEsc(first)}! 💛</p>`
+    + `<p style="margin:0 0 16px">It&#8217;s almost time!! 😍</p>`
+    + `<p style="margin:0 0 16px">We&#8217;re going live in <b>30 minutes</b>, and I can&#8217;t wait to see you there!</p>`
+    + `<p style="margin:0">Here&#8217;s your personal link:</p>`;
+  const afterHtml = `<p style="margin:0 0 16px">Grab a coffee, get comfy, and I&#8217;ll see you soon! ☕✨</p>`
+    + `<p style="margin:0">Xyra 💛</p>`;
+  const footerHtml = `You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${brandEsc(unsubUrl)}" style="color:#77716a;text-decoration:underline">Unsubscribe</a>`;
+  const html = brandedEmail({ bodyHtml, cta: { label: "JOIN THE MASTERCLASS", href: joinUrl }, afterHtml, footerHtml });
+  const text = brandedText({
+    lines: [`Hey ${first}! 💛`, "It's almost time!! 😍", "We're going live in 30 minutes, and I can't wait to see you there!", "Here's your personal link:"],
+    cta: { label: "JOIN THE MASTERCLASS", href: joinUrl },
+    afterLines: ["Grab a coffee, get comfy, and I'll see you soon! ☕✨", "Xyra 💛"],
+    footerLines: ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubUrl],
+  });
+  return { html, text };
+}
+
+function reminder5Content(first: string, joinUrl: string, unsubUrl: string) {
+  const bodyHtml = `<p style="margin:0 0 16px">Hey ${brandEsc(first)}! 💛</p>`
+    + `<p style="margin:0 0 16px">We&#8217;re LIVE! 🎉</p>`
+    + `<p style="margin:0">Just wanted to make sure you didn&#8217;t miss us!</p>`;
+  const afterHtml = `<p style="margin:0">We&#8217;re waiting for you! 💛</p><p style="margin:16px 0 0">Xyra</p>`;
+  const footerHtml = `You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${brandEsc(unsubUrl)}" style="color:#77716a;text-decoration:underline">Unsubscribe</a>`;
+  const html = brandedEmail({ bodyHtml, cta: { label: "JOIN US LIVE", href: joinUrl }, afterHtml, footerHtml });
+  const text = brandedText({
+    lines: [`Hey ${first}! 💛`, "We're LIVE! 🎉", "Just wanted to make sure you didn't miss us!"],
+    cta: { label: "JOIN US LIVE", href: joinUrl },
+    afterLines: ["We're waiting for you! 💛", "Xyra"],
+    footerLines: ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubUrl],
+  });
+  return { html, text };
+}
+
+// Attendees who have NOT visited/joined the livestream, using EVERY tracking
+// field (never infer absence from a single empty column).
+async function eligibleNotJoined() {
+  const r = await api(`rest/v1/masterclass_signups?status=in.(registered,purchased)&unsubscribed_at=is.null&source=neq.test_reminder&select=id,name,email,attendee_token,status,joined_at,last_joined_at,join_clicks,attendance_seconds`);
+  const j = await r.json().catch(() => []);
+  if (!Array.isArray(j)) return [];
+  return j.filter((x: any) =>
+    validEmail(String(x.email || "")) && TOKEN_RE.test(String(x.attendee_token || "")) &&
+    !x.joined_at && !x.last_joined_at && !(Number(x.join_clicks) > 0) && !(Number(x.attendance_seconds) > 0));
+}
+
+async function sendTimed(signup: { id: string; name: string; email: string; attendee_token: string }, which: "30" | "5", extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender"; delivery?: any; apps?: number | null }) {
+  const token = signup.attendee_token;
+  const joinUrl = `${SITE}/live?t=${encodeURIComponent(token)}`;
+  const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
+  const first = (signup.name || "there").split(/\s+/)[0];
+  const baseSubject = which === "30" ? REMINDER30_SUBJECT : REMINDER5_SUBJECT;
+  const finalSubject = extra?.prefixSubject ? `[TEST] ${baseSubject}` : baseSubject;
+  const { html, text } = which === "30" ? reminder30Content(first, joinUrl, unsubUrl) : reminder5Content(first, joinUrl, unsubUrl);
+  const key = which === "30" ? REMINDER30_KEY : REMINDER5_KEY;
+  const idem = extra?.uniqueIdem || `${key}:${signup.id}`;
+  const event = await eventRow();
+  const deadline = event?.scheduled_at ? new Date(new Date(event.scheduled_at).getTime() + 3 * 3600e3) : undefined; // +3h after start
+
+  const logRes = await api("rest/v1/email_delivery_log?select=id", {
+    method: "POST",
+    headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
+    body: JSON.stringify([{ idempotency_key: idem, email_type: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_5", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: key }, max_attempts: 3 }]),
+  });
+  if (!logRes.ok) console.error("timed reminder log insert failed", logRes.status, (await logRes.text().catch(() => "")).slice(0, 300));
+
+  const delivery = extra?.delivery ?? await createEmailDelivery(`mc-${which}-${Date.now()}`);
+  const result = await delivery.send({
+    idempotencyKey: idem,
+    emailType: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_5",
+    to: signup.email, toName: signup.name, subject: finalSubject, html, text,
+    replyTo: REPLY, deadline, maxAttempts: 3,
+    metadata: { signup_id: signup.id, campaign: key },
+    forceProvider: extra?.forceProvider,
+  });
+  return { subject: finalSubject, joinUrl, unsubscribeUrl: unsubUrl, result };
+}
+
+async function handleTimed(which: "30" | "5", body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const quotaSync = await syncQuotaInternal();
+  const eligible = which === "30" ? await eligibleAllSignups() : await eligibleNotJoined();
+  const sent: string[] = []; const failed: string[] = []; const unknown: string[] = [];
+  const delivery = await createEmailDelivery(`mc-${which}-batch-${Date.now()}`);
+  const concurrency = Math.max(1, Math.min(6, Number(body.concurrency) || 4));
+  let idx = 0;
+  const worker = async () => {
+    while (true) {
+      const my = idx++;
+      if (my >= eligible.length) return;
+      const s = eligible[my];
+      try {
+        const r = await sendTimed(s, which, { delivery });
+        if (r.result.success) sent.push(String(s.email));
+        else if (r.result.status === "unknown") unknown.push(String(s.email));
+        else failed.push(String(s.email));
+      } catch (e) {
+        failed.push(String(s.email));
+        console.error(`reminder${which} failed ${s.email}:`, String(e instanceof Error ? e.message : e));
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  return { ok: true, campaign: which === "30" ? REMINDER30_KEY : REMINDER5_KEY, target_utc: which === "30" ? TARGET_30_UTC : TARGET_5_UTC, concurrency, quotaSync, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
+}
+
+async function handleTimedTest(which: "30" | "5", body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const email = clean(body.email, 254).toLowerCase();
+  if (!validEmail(email)) return { ok: false, error: "Valid email required" };
+  const ex = await api(`rest/v1/masterclass_signups?email=eq.${encodeURIComponent(email)}&select=id,name,email,attendee_token&limit=1`);
+  const exj = await ex.json().catch(() => []);
+  let signup = Array.isArray(exj) ? exj[0] : null;
+  if (!signup || !TOKEN_RE.test(String(signup.attendee_token || ""))) {
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
+    const cr = await api("rest/v1/masterclass_signups?select=id", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ name: "Jesse", email, source: "test_reminder", status: "registered", attendee_token: token }) });
+    const crj = await cr.json().catch(() => []);
+    if (!cr.ok || !Array.isArray(crj) || !crj[0]?.id) return { ok: false, error: "Could not create test registration", status: cr.status };
+    signup = { id: crj[0].id, name: "Jesse", email, attendee_token: token };
+  }
+  let result;
+  try {
+    result = await sendTimed(signup, which, { prefixSubject: true, uniqueIdem: `test:${which === "30" ? REMINDER30_KEY : REMINDER5_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
+  } catch (e) {
+    return { ok: false, testEmail: email, forcedProvider: body.provider || null, error: String(e instanceof Error ? e.message : e) };
+  }
+  return { ok: true, testEmail: email, forcedProvider: body.provider || null, ...result };
+}
+
+// ----------------------------------------------------------------------------
 // Actions
 // ----------------------------------------------------------------------------
 async function handleRun(body: any) {
@@ -732,5 +875,9 @@ Deno.serve(async (req: Request) => {
   }
   if (act === "followup") return out(await handleFollowup(b));
   if (act === "followup_test") return out(await handleFollowupTest(b));
+  if (act === "reminder30") return out(await handleTimed("30", b));
+  if (act === "reminder30_test") return out(await handleTimedTest("30", b));
+  if (act === "reminder5") return out(await handleTimed("5", b));
+  if (act === "reminder5_test") return out(await handleTimedTest("5", b));
   return out({ ok: false, error: "Unknown action" }, 400);
 });
