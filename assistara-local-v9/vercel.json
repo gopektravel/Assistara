@@ -182,6 +182,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "live/chat.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "unsubscribe.html",
       "use": "@vercel/static"
     },
@@ -637,6 +641,14 @@
     {
       "src": "/masterclass-join.html",
       "dest": "/masterclass-join.html"
+    },
+    {
+      "src": "/live/chat",
+      "dest": "/live/chat.html"
+    },
+    {
+      "src": "/live/chat/",
+      "dest": "/live/chat.html"
     },
     {
       "src": "/live",

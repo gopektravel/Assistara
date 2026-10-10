@@ -24,16 +24,17 @@ interface ChatMessage {
 }
 
 type ClientMessage =
-  | { type: "join"; userId: string; name: string; role: "attendee" | "host" }
+  | { type: "join"; userId: string; name: string; role: "attendee" | "host"; hostToken?: string }
   | { type: "send"; content: string; tempId: string }
   | { type: "history_request" }
   | { type: "delete"; messageId: string }
   | { type: "toggle_send"; enabled: boolean };
 
 type ServerMessage =
-  | { type: "welcome"; userId: string; messages: ChatMessage[]; sendEnabled: boolean }
+  | { type: "welcome"; userId: string; sessionId: number; messages: ChatMessage[]; sendEnabled: boolean }
   | { type: "message"; message: ChatMessage }
-  | { type: "history"; messages: ChatMessage[] }
+  | { type: "history"; sessionId: number; messages: ChatMessage[] }
+  | { type: "chat_reset"; sessionId: number; reason: string }
   | { type: "user_joined"; userId: string; name: string; role: string }
   | { type: "user_left"; userId: string }
   | { type: "message_deleted"; messageId: string }
@@ -44,9 +45,13 @@ type ServerMessage =
 const MASTERCLASS_ROOM_ID = "founding-masterclass-2026";
 const CHAT_WORKER_URL = "https://assistara-live-chat-production.up.railway.app";
 
-// The masterclass host. Host status comes only from the admin session, never
+// The masterclass host. Host status comes only from the presenter secret, never
 // from a chat nickname; this is only the display label shown next to the badge.
 const HOST_NAME = "Xyra";
+// Warm dark-yellow for the host name (the special Assistara accent).
+const HOST_COLOR = "#8a6d00";
+// Stable, high-contrast participant colors on the cream/white background.
+const NAME_COLORS = ["#0f766e", "#1d4ed8", "#7c3aed", "#be123c", "#15803d", "#c2410c"];
 
 interface AttendeeIdentity {
   name: string;
@@ -57,6 +62,8 @@ interface AttendeeIdentity {
 interface ChatOptions {
   // Verified registered-attendee identity resolved by the page.
   identity?: { name: string; isHost?: boolean; registered?: boolean } | null;
+  // Presenter secret. Host is granted only when this matches the server secret.
+  hostToken?: string | null;
 }
 
 class AssistaraLiveChat {
@@ -73,15 +80,19 @@ class AssistaraLiveChat {
   private disposed = false;
   private isConnecting = false;
   private connectionStatus: "disconnected" | "connecting" | "connected" = "disconnected";
+  private sessionId = 0;              // current chat session (reset bumps this)
+  private atBottom = true;            // viewer is at the newest message
+  private unseen = 0;                 // new messages while scrolled up
 
   private elements = {
     messagesContainer: null as HTMLElement | null,
     input: null as HTMLTextAreaElement | null,
-    form: null as HTMLFormElement | null,
+    form: null as HTMLElement | null,
     sendButton: null as HTMLButtonElement | null,
     nameForm: null as HTMLFormElement | null,
     nameInput: null as HTMLInputElement | null,
     meLabel: null as HTMLElement | null,
+    newMsgBtn: null as HTMLButtonElement | null,
   };
 
   constructor(container: HTMLElement, options: ChatOptions = {}) {
@@ -101,6 +112,9 @@ class AssistaraLiveChat {
     this.container.innerHTML = `
       <div class="assistara-chat">
         <div class="chat-messages" role="log" aria-live="polite"></div>
+        <button class="chat-newmsg" type="button" aria-label="Jump to newest messages">
+          <span class="chat-newmsg-arrow">&#8595;</span> <span class="chat-newmsg-text">New messages</span>
+        </button>
 
         <div class="chat-composer">
           <div class="chat-me"></div>
@@ -162,7 +176,6 @@ class AssistaraLiveChat {
         display: flex;
         flex-direction: column;
         gap: 5px;
-        scroll-behavior: smooth;
       }
       .assistara-chat .chat-msg {
         font-size: 13.5px;
@@ -176,8 +189,6 @@ class AssistaraLiveChat {
         color: #151515;
         letter-spacing: -0.01em;
       }
-      .assistara-chat .chat-msg.own .chat-name { color: #8a6d00; }
-      .assistara-chat .chat-msg.host .chat-name { color: #8a6d00; }
       .assistara-chat .chat-text { font-weight: 400; }
       .assistara-chat .chat-host-badge {
         display: inline-block;
@@ -296,6 +307,30 @@ class AssistaraLiveChat {
         .assistara-chat .chat-msg { font-size: 13px; }
         .assistara-chat .chat-composer { padding: 7px 8px 8px; }
       }
+
+      /* "New messages" jump button (appears when the viewer scrolled up) */
+      .assistara-chat { position: relative; }
+      .assistara-chat .chat-newmsg {
+        position: absolute;
+        left: 50%;
+        bottom: 8px;
+        transform: translateX(-50%);
+        display: none;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        border-radius: 999px;
+        padding: 6px 14px;
+        font: 700 12px/1 inherit;
+        color: #151515;
+        background: var(--yellow, #ffd51f);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.16);
+        cursor: pointer;
+        z-index: 5;
+        transition: opacity 0.15s ease;
+      }
+      .assistara-chat .chat-newmsg.is-visible { display: inline-flex; }
+      .assistara-chat .chat-newmsg-arrow { font-weight: 800; }
     `;
     document.head.appendChild(style);
   }
@@ -303,11 +338,12 @@ class AssistaraLiveChat {
   private bindElements() {
     this.elements.messagesContainer = this.container.querySelector(".chat-messages");
     this.elements.input = this.container.querySelector(".chat-input") as HTMLTextAreaElement;
-    this.elements.form = this.container.querySelector(".chat-composer") as unknown as HTMLFormElement;
+    this.elements.form = this.container.querySelector(".chat-composer") as HTMLFormElement;
     this.elements.sendButton = this.container.querySelector(".chat-send") as HTMLButtonElement;
     this.elements.nameForm = this.container.querySelector(".chat-name-form") as HTMLFormElement;
     this.elements.nameInput = this.container.querySelector(".chat-name-input") as HTMLInputElement;
     this.elements.meLabel = this.container.querySelector(".chat-me");
+    this.elements.newMsgBtn = this.container.querySelector(".chat-newmsg") as HTMLButtonElement;
 
     // The composer is a div; listen for submit on the textarea's form-less row via
     // the send button click + Enter key. Wire the send button explicitly.
@@ -318,11 +354,26 @@ class AssistaraLiveChat {
     this.elements.input?.addEventListener("keydown", (e) => this.handleKeydown(e));
     this.elements.input?.addEventListener("input", () => this.autoResize());
     this.elements.nameForm?.addEventListener("submit", (e) => this.handleNameSubmit(e));
+    this.elements.messagesContainer?.addEventListener("scroll", () => this.handleScroll());
+    this.elements.newMsgBtn?.addEventListener("click", () => this.scrollToBottom(true));
   }
 
   private loadIdentity() {
-    // 1. Verified registered attendee (resolved by the page from the link token).
+    // Host requires the presenter secret (options.hostToken). The server is the
+    // final authority — it only grants host when the token matches — but we
+    // show host UI optimistically only when the page supplied it. A nickname
+    // alone never grants host.
+    const host = !!this.options.hostToken;
     const reg = this.options.identity;
+
+    if (host) {
+      const name = reg && reg.name ? this.firstName(reg.name) : HOST_NAME;
+      this.userIdentity = { name, userId: "host-" + Math.random().toString(36).slice(2, 10), isHost: true };
+      this.updateIdentityUI();
+      return;
+    }
+
+    // 1. Verified registered attendee (resolved by the page from the link token).
     if (reg && reg.name) {
       const first = this.firstName(reg.name);
       this.userIdentity = {
@@ -334,15 +385,7 @@ class AssistaraLiveChat {
       return;
     }
 
-    // 2. Host — an existing admin session. Never nickname-based.
-    const adminToken = localStorage.getItem("assistara_admin_token") || sessionStorage.getItem("assistara_admin_token");
-    if (adminToken) {
-      this.userIdentity = { name: HOST_NAME, userId: "host-" + Math.random().toString(36).slice(2, 10), isHost: true };
-      this.updateIdentityUI();
-      return;
-    }
-
-    // 3. Guest name persisted for this browser session. Only a first name is
+    // 2. Guest name persisted for this browser session. Only a first name is
     //    ever shown — "Maria Santos" is displayed as "Maria".
     let guest = null;
     try { guest = sessionStorage.getItem("assistara_chat_guest_name"); } catch {}
@@ -353,7 +396,7 @@ class AssistaraLiveChat {
       return;
     }
 
-    // 4. No identity — show the inline name form.
+    // 3. No identity — show the inline name form.
     this.userIdentity = null;
     this.updateIdentityUI();
   }
@@ -429,6 +472,7 @@ class AssistaraLiveChat {
             userId: this.userIdentity.userId,
             name: this.userIdentity.name,
             role: this.userIdentity.isHost ? "host" : "attendee",
+            hostToken: this.options.hostToken || undefined,
           });
           this.enableInput();
         } else {
@@ -517,9 +561,11 @@ class AssistaraLiveChat {
         // The server is authoritative for userId/name/role — adopt its userId
         // so own-message highlighting works.
         if (msg.userId && this.userIdentity) this.userIdentity.userId = msg.userId;
-        this.messages = msg.messages;
+        this.sessionId = msg.sessionId || 0;
+        this.messages = Array.isArray(msg.messages) ? msg.messages : [];
         this.sendEnabled = msg.sendEnabled;
         this.renderMessages();
+        this.scrollToBottom(false); // open at the newest message
         if (!this.userIdentity) this.updateIdentityUI();
         else this.enableInput();
         break;
@@ -529,8 +575,22 @@ class AssistaraLiveChat {
         break;
 
       case "history":
-        this.messages = msg.messages;
+        if (typeof msg.sessionId === "number") this.sessionId = msg.sessionId;
+        this.messages = Array.isArray(msg.messages) ? msg.messages : [];
         this.renderMessages();
+        this.scrollToBottom(false);
+        break;
+
+      case "chat_reset":
+        // A new livestream session started (Start/End/Reset): drop the previous
+        // messages. Do NOT reset on reconnect/refresh/join/provider-switch.
+        this.sessionId = msg.sessionId;
+        this.messages = [];
+        this.unseen = 0;
+        this.atBottom = true;
+        this.renderMessages();
+        this.hideNewMsgBtn();
+        this.scrollToBottom(false);
         break;
 
       case "user_joined":
@@ -596,7 +656,15 @@ class AssistaraLiveChat {
       this.messages = this.messages.slice(-200);
     }
     this.renderMessages();
-    this.autoScroll();
+    // Stick to the bottom only while the viewer is at the newest message;
+    // otherwise queue a count and reveal the "New messages" jump button.
+    // Instant stick (not smooth) keeps incoming messages responsive.
+    if (this.atBottom) {
+      this.scrollToBottom(false);
+    } else {
+      this.unseen++;
+      this.showNewMsgBtn();
+    }
   }
 
   private removeMessage(messageId: string) {
@@ -643,16 +711,60 @@ class AssistaraLiveChat {
     }
     const name = this.escapeHtml(this.firstName(msg.user));
     const badge = isHost ? '<span class="chat-host-badge">Host</span>' : "";
-    return `<div class="${cls}" data-message-id="${msg.id}"><span class="chat-name">${name}</span>${badge}<span class="chat-text">: ${this.escapeHtml(msg.content)}</span></div>`;
+    const color = this.nameColor(msg.user, msg.role);
+    return `<div class="${cls}" data-message-id="${msg.id}"><span class="chat-name" style="color:${color}">${name}</span>${badge}<span class="chat-text">: ${this.escapeHtml(msg.content)}</span></div>`;
   }
 
-  private autoScroll() {
-    const container = this.elements.messagesContainer;
-    if (!container) return;
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-    if (isNearBottom) {
-      container.scrollTop = container.scrollHeight;
+  // Stable, readable name color per participant (host uses the yellow accent).
+  // Keyed by the participant's (first) name so the color is stable across
+  // reconnects, not by the random per-connection userId.
+  private nameColor(key: string, role: string): string {
+    if (role === "system") return "#8a857e";
+    if (role === "host") return HOST_COLOR;
+    const s = String(key || "").toLowerCase();
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) >>> 0;
+    return NAME_COLORS[h % NAME_COLORS.length];
+  }
+
+  private isNearBottom() {
+    const c = this.elements.messagesContainer;
+    if (!c) return true;
+    return c.scrollHeight - c.scrollTop - c.clientHeight < 60;
+  }
+
+  private handleScroll() {
+    this.atBottom = this.isNearBottom();
+    if (this.atBottom) {
+      this.unseen = 0;
+      this.hideNewMsgBtn();
+    } else if (this.unseen > 0) {
+      this.showNewMsgBtn();
     }
+  }
+
+  private scrollToBottom(smooth: boolean) {
+    const c = this.elements.messagesContainer;
+    if (!c) return;
+    // Smooth only for short distances; large jumps (the "New messages" button
+    // after scrolling far) snap instantly so it stays responsive.
+    const dist = c.scrollHeight - c.scrollTop;
+    c.scrollTo({ top: c.scrollHeight, behavior: smooth && dist < 800 ? "smooth" : "auto" });
+    this.atBottom = true;
+    this.unseen = 0;
+    this.hideNewMsgBtn();
+  }
+
+  private showNewMsgBtn() {
+    const btn = this.elements.newMsgBtn;
+    if (!btn) return;
+    const text = btn.querySelector(".chat-newmsg-text");
+    if (text) text.textContent = this.unseen > 1 ? `${this.unseen} new messages` : "New message";
+    btn.classList.add("is-visible");
+  }
+
+  private hideNewMsgBtn() {
+    this.elements.newMsgBtn?.classList.remove("is-visible");
   }
 
   private updateInputState() {

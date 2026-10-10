@@ -31,6 +31,15 @@ const EVENT_KEY_RE = /^[A-Za-z0-9_-]{1,120}$/;
 const DOMAIN_RE = /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i;
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
+// Live-chat session (Railway WebSocket server). Admin Start/End/Reset clears the
+// active chat via a monotonic epoch (idempotent server-side). CHAT_SECRET also
+// gates HOST presenter access. Reset is best-effort so a chat hiccup never
+// blocks a stream-state change or the YouTube player.
+const CHAT_SECRET = process.env.CHAT_SECRET || "";
+const CHAT_RESET_URL =
+  process.env.CHAT_RESET_URL ||
+  "https://assistara-live-chat-production.up.railway.app/internal/reset";
+
 // Accepts watch URLs (any youtube.com host), youtu.be, /live/, /embed/,
 // /shorts/, /v/ URLs and bare 11-character video IDs. Returns the video ID or
 // null. The result always matches VIDEO_ID_RE, so it is safe to interpolate
@@ -312,6 +321,7 @@ async function startStreamAction(cfg, claims, body) {
     }
   );
   if (!response.ok) return { status: 500, body: { ok: false, error: "Could not start the stream" } };
+  await resetChatSession("start"); // fresh chat session for the new livestream
   return {
     status: 200,
     body: { ok: true, event_key: key, display_state: "live", message: "Stream is now LIVE" },
@@ -337,6 +347,7 @@ async function endStreamAction(cfg, claims, body) {
     }
   );
   if (!response.ok) return { status: 500, body: { ok: false, error: "Could not end the stream" } };
+  await resetChatSession("end"); // close + clear the chat session
   return {
     status: 200,
     body: { ok: true, event_key: key, display_state: "ended", message: "Stream ended" },
@@ -362,6 +373,7 @@ async function resetStreamAction(cfg, claims, body) {
     }
   );
   if (!response.ok) return { status: 500, body: { ok: false, error: "Could not reset the stream" } };
+  await resetChatSession("reset"); // leave no previous chat history
   return {
     status: 200,
     body: { ok: true, event_key: key, display_state: "waiting", message: "Reset to waiting" },
@@ -413,6 +425,32 @@ async function updateChatProviderAction(cfg, claims, body) {
   };
 }
 
+// Begin a fresh chat session for a new livestream (reason: start|end|reset).
+// Idempotent by epoch on the server, so a retry cannot erase a newer session.
+async function resetChatSession(reason) {
+  if (!CHAT_SECRET) {
+    console.error("masterclass-youtube: CHAT_SECRET not set; chat reset skipped");
+    return;
+  }
+  try {
+    const { response } = await requestJSON(CHAT_RESET_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-reset-token": CHAT_SECRET },
+      body: JSON.stringify({ reason, epoch: Date.now() }),
+    });
+    if (!response.ok) console.error("masterclass-youtube: chat reset status", response.status);
+  } catch (e) {
+    console.error("masterclass-youtube: chat reset failed", e && e.message ? e.message : e);
+  }
+}
+
+// Admin-authed: hand the presenter secret to a logged-in admin so they get the
+// HOST role on /live without a separate presenter link.
+async function presenterKeyAction() {
+  if (!CHAT_SECRET) return { status: 503, body: { ok: false, error: "Presenter access unavailable" } };
+  return { status: 200, body: { ok: true, hostToken: CHAT_SECRET } };
+}
+
 module.exports = async function masterclassYoutube(req, res) {
   noStore(res);
   const origin = req.headers && req.headers.origin ? String(req.headers.origin) : "";
@@ -452,7 +490,7 @@ module.exports = async function masterclassYoutube(req, res) {
     if (parsed.error) return send(res, 400, { ok: false, error: parsed.error });
     const { body } = parsed;
     const action = String(body.action || "configure").trim().toLowerCase();
-    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream" && action !== "update_chat_provider") {
+    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream" && action !== "update_chat_provider" && action !== "presenter_key") {
       return send(res, 400, { ok: false, error: "Unknown action" });
     }
     const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -501,6 +539,15 @@ module.exports = async function masterclassYoutube(req, res) {
       } catch (error) {
         console.error("masterclass-youtube", error && error.message ? error.message : "update_chat_provider failed");
         return send(res, 503, { ok: false, error: "Could not save the chat provider" });
+      }
+    }
+    if (action === "presenter_key") {
+      try {
+        const result = await presenterKeyAction();
+        return send(res, result.status, result.body);
+      } catch (error) {
+        console.error("masterclass-youtube", error && error.message ? error.message : "presenter_key failed");
+        return send(res, 503, { ok: false, error: "Could not load presenter access" });
       }
     }
     try {

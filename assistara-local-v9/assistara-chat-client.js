@@ -27,6 +27,8 @@ var AssistaraChatClient = (() => {
   var MASTERCLASS_ROOM_ID = "founding-masterclass-2026";
   var CHAT_WORKER_URL = "https://assistara-live-chat-production.up.railway.app";
   var HOST_NAME = "Xyra";
+  var HOST_COLOR = "#8a6d00";
+  var NAME_COLORS = ["#0f766e", "#1d4ed8", "#7c3aed", "#be123c", "#15803d", "#c2410c"];
   var AssistaraLiveChat = class {
     container;
     options;
@@ -41,6 +43,12 @@ var AssistaraChatClient = (() => {
     disposed = false;
     isConnecting = false;
     connectionStatus = "disconnected";
+    sessionId = 0;
+    // current chat session (reset bumps this)
+    atBottom = true;
+    // viewer is at the newest message
+    unseen = 0;
+    // new messages while scrolled up
     elements = {
       messagesContainer: null,
       input: null,
@@ -48,7 +56,8 @@ var AssistaraChatClient = (() => {
       sendButton: null,
       nameForm: null,
       nameInput: null,
-      meLabel: null
+      meLabel: null,
+      newMsgBtn: null
     };
     constructor(container, options = {}) {
       this.container = container;
@@ -65,6 +74,9 @@ var AssistaraChatClient = (() => {
       this.container.innerHTML = `
       <div class="assistara-chat">
         <div class="chat-messages" role="log" aria-live="polite"></div>
+        <button class="chat-newmsg" type="button" aria-label="Jump to newest messages">
+          <span class="chat-newmsg-arrow">&#8595;</span> <span class="chat-newmsg-text">New messages</span>
+        </button>
 
         <div class="chat-composer">
           <div class="chat-me"></div>
@@ -125,7 +137,6 @@ var AssistaraChatClient = (() => {
         display: flex;
         flex-direction: column;
         gap: 5px;
-        scroll-behavior: smooth;
       }
       .assistara-chat .chat-msg {
         font-size: 13.5px;
@@ -139,8 +150,6 @@ var AssistaraChatClient = (() => {
         color: #151515;
         letter-spacing: -0.01em;
       }
-      .assistara-chat .chat-msg.own .chat-name { color: #8a6d00; }
-      .assistara-chat .chat-msg.host .chat-name { color: #8a6d00; }
       .assistara-chat .chat-text { font-weight: 400; }
       .assistara-chat .chat-host-badge {
         display: inline-block;
@@ -259,6 +268,30 @@ var AssistaraChatClient = (() => {
         .assistara-chat .chat-msg { font-size: 13px; }
         .assistara-chat .chat-composer { padding: 7px 8px 8px; }
       }
+
+      /* "New messages" jump button (appears when the viewer scrolled up) */
+      .assistara-chat { position: relative; }
+      .assistara-chat .chat-newmsg {
+        position: absolute;
+        left: 50%;
+        bottom: 8px;
+        transform: translateX(-50%);
+        display: none;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        border-radius: 999px;
+        padding: 6px 14px;
+        font: 700 12px/1 inherit;
+        color: #151515;
+        background: var(--yellow, #ffd51f);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.16);
+        cursor: pointer;
+        z-index: 5;
+        transition: opacity 0.15s ease;
+      }
+      .assistara-chat .chat-newmsg.is-visible { display: inline-flex; }
+      .assistara-chat .chat-newmsg-arrow { font-weight: 800; }
     `;
       document.head.appendChild(style);
     }
@@ -270,6 +303,7 @@ var AssistaraChatClient = (() => {
       this.elements.nameForm = this.container.querySelector(".chat-name-form");
       this.elements.nameInput = this.container.querySelector(".chat-name-input");
       this.elements.meLabel = this.container.querySelector(".chat-me");
+      this.elements.newMsgBtn = this.container.querySelector(".chat-newmsg");
       this.elements.sendButton?.addEventListener("click", (e) => {
         e.preventDefault();
         this.handleSubmit(e);
@@ -277,9 +311,18 @@ var AssistaraChatClient = (() => {
       this.elements.input?.addEventListener("keydown", (e) => this.handleKeydown(e));
       this.elements.input?.addEventListener("input", () => this.autoResize());
       this.elements.nameForm?.addEventListener("submit", (e) => this.handleNameSubmit(e));
+      this.elements.messagesContainer?.addEventListener("scroll", () => this.handleScroll());
+      this.elements.newMsgBtn?.addEventListener("click", () => this.scrollToBottom(true));
     }
     loadIdentity() {
+      const host = !!this.options.hostToken;
       const reg = this.options.identity;
+      if (host) {
+        const name = reg && reg.name ? this.firstName(reg.name) : HOST_NAME;
+        this.userIdentity = { name, userId: "host-" + Math.random().toString(36).slice(2, 10), isHost: true };
+        this.updateIdentityUI();
+        return;
+      }
       if (reg && reg.name) {
         const first = this.firstName(reg.name);
         this.userIdentity = {
@@ -287,12 +330,6 @@ var AssistaraChatClient = (() => {
           userId: "reg-" + Math.random().toString(36).slice(2, 10),
           isHost: false
         };
-        this.updateIdentityUI();
-        return;
-      }
-      const adminToken = localStorage.getItem("assistara_admin_token") || sessionStorage.getItem("assistara_admin_token");
-      if (adminToken) {
-        this.userIdentity = { name: HOST_NAME, userId: "host-" + Math.random().toString(36).slice(2, 10), isHost: true };
         this.updateIdentityUI();
         return;
       }
@@ -372,7 +409,8 @@ var AssistaraChatClient = (() => {
               type: "join",
               userId: this.userIdentity.userId,
               name: this.userIdentity.name,
-              role: this.userIdentity.isHost ? "host" : "attendee"
+              role: this.userIdentity.isHost ? "host" : "attendee",
+              hostToken: this.options.hostToken || void 0
             });
             this.enableInput();
           } else {
@@ -449,9 +487,11 @@ var AssistaraChatClient = (() => {
       switch (msg.type) {
         case "welcome":
           if (msg.userId && this.userIdentity) this.userIdentity.userId = msg.userId;
-          this.messages = msg.messages;
+          this.sessionId = msg.sessionId || 0;
+          this.messages = Array.isArray(msg.messages) ? msg.messages : [];
           this.sendEnabled = msg.sendEnabled;
           this.renderMessages();
+          this.scrollToBottom(false);
           if (!this.userIdentity) this.updateIdentityUI();
           else this.enableInput();
           break;
@@ -459,8 +499,19 @@ var AssistaraChatClient = (() => {
           this.addMessage(msg.message);
           break;
         case "history":
-          this.messages = msg.messages;
+          if (typeof msg.sessionId === "number") this.sessionId = msg.sessionId;
+          this.messages = Array.isArray(msg.messages) ? msg.messages : [];
           this.renderMessages();
+          this.scrollToBottom(false);
+          break;
+        case "chat_reset":
+          this.sessionId = msg.sessionId;
+          this.messages = [];
+          this.unseen = 0;
+          this.atBottom = true;
+          this.renderMessages();
+          this.hideNewMsgBtn();
+          this.scrollToBottom(false);
           break;
         case "user_joined":
           this.addSystemMessage(`${msg.name} joined`);
@@ -515,7 +566,12 @@ var AssistaraChatClient = (() => {
         this.messages = this.messages.slice(-200);
       }
       this.renderMessages();
-      this.autoScroll();
+      if (this.atBottom) {
+        this.scrollToBottom(false);
+      } else {
+        this.unseen++;
+        this.showNewMsgBtn();
+      }
     }
     removeMessage(messageId) {
       const msgEl = this.elements.messagesContainer?.querySelector(`[data-message-id="${messageId}"]`);
@@ -555,15 +611,52 @@ var AssistaraChatClient = (() => {
       }
       const name = this.escapeHtml(this.firstName(msg.user));
       const badge = isHost ? '<span class="chat-host-badge">Host</span>' : "";
-      return `<div class="${cls}" data-message-id="${msg.id}"><span class="chat-name">${name}</span>${badge}<span class="chat-text">: ${this.escapeHtml(msg.content)}</span></div>`;
+      const color = this.nameColor(msg.user, msg.role);
+      return `<div class="${cls}" data-message-id="${msg.id}"><span class="chat-name" style="color:${color}">${name}</span>${badge}<span class="chat-text">: ${this.escapeHtml(msg.content)}</span></div>`;
     }
-    autoScroll() {
-      const container = this.elements.messagesContainer;
-      if (!container) return;
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-      if (isNearBottom) {
-        container.scrollTop = container.scrollHeight;
+    // Stable, readable name color per participant (host uses the yellow accent).
+    // Keyed by the participant's (first) name so the color is stable across
+    // reconnects, not by the random per-connection userId.
+    nameColor(key, role) {
+      if (role === "system") return "#8a857e";
+      if (role === "host") return HOST_COLOR;
+      const s = String(key || "").toLowerCase();
+      let h = 0;
+      for (let i = 0; i < s.length; i++) h = Math.imul(h, 31) + s.charCodeAt(i) >>> 0;
+      return NAME_COLORS[h % NAME_COLORS.length];
+    }
+    isNearBottom() {
+      const c = this.elements.messagesContainer;
+      if (!c) return true;
+      return c.scrollHeight - c.scrollTop - c.clientHeight < 60;
+    }
+    handleScroll() {
+      this.atBottom = this.isNearBottom();
+      if (this.atBottom) {
+        this.unseen = 0;
+        this.hideNewMsgBtn();
+      } else if (this.unseen > 0) {
+        this.showNewMsgBtn();
       }
+    }
+    scrollToBottom(smooth) {
+      const c = this.elements.messagesContainer;
+      if (!c) return;
+      const dist = c.scrollHeight - c.scrollTop;
+      c.scrollTo({ top: c.scrollHeight, behavior: smooth && dist < 800 ? "smooth" : "auto" });
+      this.atBottom = true;
+      this.unseen = 0;
+      this.hideNewMsgBtn();
+    }
+    showNewMsgBtn() {
+      const btn = this.elements.newMsgBtn;
+      if (!btn) return;
+      const text = btn.querySelector(".chat-newmsg-text");
+      if (text) text.textContent = this.unseen > 1 ? `${this.unseen} new messages` : "New message";
+      btn.classList.add("is-visible");
+    }
+    hideNewMsgBtn() {
+      this.elements.newMsgBtn?.classList.remove("is-visible");
     }
     updateInputState() {
       if (this.sendEnabled && this.userIdentity) {

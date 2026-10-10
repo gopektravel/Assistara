@@ -30,6 +30,7 @@ function loadHandler(env = {}) {
   process.env.SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "anon-key";
   process.env.SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || "service-key";
   process.env.ACADEMY_COOKIE_SECRET = env.ACADEMY_COOKIE_SECRET || "test-cookie-secret-with-32-plus-characters";
+  process.env.CHAT_SECRET = env.CHAT_SECRET || "";
   return require(fnPath);
 }
 
@@ -530,6 +531,143 @@ test("POST update_chat_provider rejects an unknown provider", async () => {
   assert.equal(res.statusCode, 400);
   const body = res.json();
   assert.equal(body.ok, false);
+});
+
+test("start_stream triggers idempotent chat reset (epoch + shared secret)", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting" });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "start_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const reset = calls.find((c) => String(c.url).includes("/internal/reset") && c.options.method === "POST");
+  assert.ok(reset, "start_stream must call the chat reset endpoint");
+  assert.equal(reset.options.headers["x-reset-token"], "chat-secret-123");
+  const sent = JSON.parse(reset.options.body);
+  assert.equal(sent.reason, "start");
+  assert.equal(typeof sent.epoch, "number");
+  assert.ok(sent.epoch > 0);
+});
+
+test("end_stream and reset_stream also clear the chat session", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "live" });
+  for (const action of ["end_stream", "reset_stream"]) {
+    const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+    global.fetch = fetchImpl;
+    const res = mockRes();
+    await H2(
+      mockReq({
+        method: "POST",
+        url: "/api/masterclass-youtube",
+        headers: {
+          origin: "https://www.getassistara.com",
+          "content-type": "application/json",
+          authorization: "Bearer " + adminToken(),
+        },
+        body: JSON.stringify({ action, event_key: "founding-masterclass-2026" }),
+      }),
+      res
+    );
+    assert.equal(res.statusCode, 200, action);
+    const reset = calls.find((c) => String(c.url).includes("/internal/reset") && c.options.method === "POST");
+    assert.ok(reset, action + " must reset chat");
+    assert.equal(JSON.parse(reset.options.body).reason, action === "end_stream" ? "end" : "reset");
+  }
+});
+
+test("start_stream does not reset chat when CHAT_SECRET is unset (no crash)", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "" });
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting" });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "start_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200); // stream still starts
+  assert.equal(calls.some((c) => String(c.url).includes("/internal/reset")), false); // no reset call
+});
+
+test("presenter_key returns the host secret to an authorized admin", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
+  const { fetchImpl } = mockFetch();
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "presenter_key", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.json().hostToken, "chat-secret-123");
+});
+
+test("presenter_key is rejected without an admin token (guest cannot claim host)", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
+  const { fetchImpl, calls } = mockFetch();
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json" },
+      body: JSON.stringify({ action: "presenter_key" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 401);
+  assert.equal(calls.length, 0);
+});
+
+test("the public page wires host tokens and the presenter page is routed", () => {
+  assert.match(liveHtml, /initAssistaraChat\(chatContainer,\{identity:registeredIdentity,hostToken:hostToken\}\)/);
+  assert.match(liveHtml, /resolveHostToken/);
+  assert.match(liveHtml, /presenter_key/);
+  const presenter = read(path.join("assistara-local-v9", "live", "chat.html"));
+  assert.match(presenter, /initAssistaraChat/);
+  assert.match(presenter, /id="assistara-live-chat"/);
+  assert.match(presenter, /chat-conn-dot/);
+  assert.match(presenter, /presenter=/);
+  assert.doesNotMatch(presenter, /yt-frame|youtube\.com\/embed/); // no video player
+  assert.doesNotMatch(presenter, /chat-conn-text">[\s\S]*?Live Now/i); // connection indicator present
+  assert.ok((vercel.builds || []).some((b) => b.src === "live/chat.html"), "presenter page must be a declared build");
+  assert.ok(
+    (vercel.routes || []).some((r) => r.src === "/live/chat" && r.dest === "/live/chat.html"),
+    "/live/chat must route to the presenter page"
+  );
 });
 
 test("POST from a disallowed origin is forbidden", async () => {
