@@ -10,19 +10,19 @@
 // Safety:
 //  - Production sends are gated behind MASTERCLASS_REMINDER_ENABLED=true AND the
 //    cron secret. The kill switch ships "false" so nothing sends until approved.
-//  - Exactly-once per attendee is enforced by masterclass_reminders(signup_id,
-//    event_key) unique + the Resend Idempotency-Key.
+//  - Exactly-once per attendee is enforced by email_delivery_log(idempotency_key)
+//    unique + provider Idempotency-Key.
 //  - The reminder only includes people registered BEFORE the 24h mark; late
 //    registrants keep the normal confirmation flow (no catch-up reminder).
 //  - Unsubscribing requires a deliberate POST from a confirm page, so email
 //    scanners that merely open the link do not opt anyone out.
+//  - Emails NEVER send after the event deadline.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createEmailDelivery, EmailDeliveryOptions } from "../_shared/email-delivery.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!;
 const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND = Deno.env.get("RESEND_API_KEY") || "";
-const BREVO = Deno.env.get("BREVO_API_KEY") || "";
 const CRON_SECRET = Deno.env.get("MASTERCLASS_CRON_SECRET") || "";
 const ENABLED = Deno.env.get("MASTERCLASS_REMINDER_ENABLED") === "true";
 
@@ -35,7 +35,7 @@ const REPLY = SENDER_EMAIL;
 const ACADEMY_URL = `${SITE}/academy/apply`;
 const INTAKE_LIMIT = 15;
 const REMIND_HOURS = 24;
-const GRACE_BEFORE_HOURS = 2; // the window opens 2h before the exact 24h mark
+const GRACE_BEFORE_HOURS = 2;
 
 const origins = new Set([
   "https://getassistara.com",
@@ -57,7 +57,7 @@ const cors = (o: string | null) => ({
 const clean = (v: unknown, n = 2000) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const validEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
 const esc = (s: string) =>
-  s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+  s.replaceAll("&", "&").replaceAll("<", "<").replaceAll(">", ">").replaceAll('"', "&").replaceAll("'", "&#039;");
 const escAttr = (s: string) => esc(s).replaceAll("`", "&#096;");
 const TOKEN_RE = /^[a-f0-9]{48}$/;
 
@@ -70,7 +70,7 @@ async function api(path: string, init?: RequestInit) {
 }
 
 // ----------------------------------------------------------------------------
-// Event + recipient data (same tables the live page and registration use)
+// Event + recipient data
 // ----------------------------------------------------------------------------
 async function eventRow() {
   const r = await api(`rest/v1/masterclass_events?event_key=eq.${encodeURIComponent(EVENT_KEY)}&select=event_key,title,scheduled_at,ended_at,status,live_destination_url&limit=1`);
@@ -79,8 +79,6 @@ async function eventRow() {
 }
 
 async function eligibleSignups(createdBeforeIso: string) {
-  // status: registered (the shape website-form writes) or purchased (paid the
-  // Academy) are valid registrations; anything else (canceled/invalid) is skipped.
   const r = await api(
     `rest/v1/masterclass_signups?status=in.(registered,purchased)&unsubscribed_at=is.null&created_at=lt.${encodeURIComponent(createdBeforeIso)}&select=id,name,email,attendee_token,status,created_at`
   );
@@ -91,37 +89,6 @@ async function eligibleSignups(createdBeforeIso: string) {
   );
 }
 
-async function claimReminder(signupId: string): Promise<"got" | "exists" | "error"> {
-  try {
-    const r = await api("rest/v1/masterclass_reminders?select=id", {
-      method: "POST",
-      headers: { Prefer: "return=representation" },
-      body: JSON.stringify({ signup_id: signupId, event_key: EVENT_KEY, status: "sending", trigger: "cron" }),
-    });
-    if (r.ok) {
-      const j = await r.json().catch(() => []);
-      return Array.isArray(j) && j[0]?.id ? "got" : "error";
-    }
-    if (r.status === 409) return "exists"; // already claimed (unique guard)
-    return "error";
-  } catch {
-    return "error";
-  }
-}
-
-async function finishReminder(signupId: string, patch: Record<string, unknown>) {
-  const r = await api(
-    `rest/v1/masterclass_reminders?signup_id=eq.${encodeURIComponent(signupId)}&event_key=eq.${encodeURIComponent(EVENT_KEY)}`,
-    { method: "PATCH", body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() }) }
-  );
-  const s = await api(
-    `rest/v1/masterclass_signups?id=eq.${encodeURIComponent(signupId)}`,
-    { method: "PATCH", body: JSON.stringify({ reminder_sent_at: new Date().toISOString() }) }
-  );
-  if (!r.ok) console.error("reminder log update failed", r.status);
-  if (!s.ok) console.error("signup reminder_sent_at update failed", s.status);
-}
-
 async function academyAppCount() {
   const r = await api("rest/v1/academy_applications?select=id");
   if (!r.ok) return null;
@@ -130,99 +97,9 @@ async function academyAppCount() {
 }
 
 // ----------------------------------------------------------------------------
-// Sender authorization self-check (Resend) — the domain must be verified
+// Calendar helpers
 // ----------------------------------------------------------------------------
-async function senderStatus() {
-  if (!RESEND) return { provider: "resend", ok: false, detail: "RESEND_API_KEY missing" };
-  try {
-    const r = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${RESEND}` } });
-    const j = await r.json().catch(() => ({}));
-    const domains = Array.isArray(j.data) ? j.data : [];
-    const hit = domains.find((d: any) => String(d.name || "").toLowerCase() === "getassistara.com");
-    return {
-      provider: "resend",
-      ok: r.ok && !!hit && hit.status === "verified",
-      status: hit?.status || "missing",
-      detail: hit ? `domain ${hit.name} ${hit.status}` : `getassistara.com not found among ${domains.length} domains`,
-    };
-  } catch (e) {
-    return { provider: "resend", ok: false, detail: String(e instanceof Error ? e.message : e) };
-  }
-}
-
-// ----------------------------------------------------------------------------
-// Email delivery: Resend primary, Brevo fallback on rate-limit (existing pattern)
-// ----------------------------------------------------------------------------
-async function mail(to: string, subject: string, html: string, text: string, idemKey: string, reply = REPLY) {
-  const brevo = async () => {
-    if (!BREVO) throw Error("BREVO_API_KEY missing");
-    const x = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "api-key": BREVO },
-      body: JSON.stringify({
-        sender: { name: SENDER_NAME, email: SENDER_EMAIL },
-        to: [{ email: to }],
-        replyTo: { email: reply },
-        subject,
-        htmlContent: html,
-        textContent: text,
-      }),
-    });
-    if (!x.ok) throw Error("Brevo email failed " + x.status);
-    return { provider: "brevo" as const, id: "" };
-  };
-  if (!RESEND) return brevo();
-  let r: Response;
-  try {
-    r = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND}`, "Idempotency-Key": idemKey },
-      body: JSON.stringify({ from: FROM, to: [to], reply_to: reply, subject, html, text }),
-    });
-  } catch (e) {
-    throw e;
-  }
-  if (r.ok) {
-    const j = await r.json().catch(() => ({}));
-    return { provider: "resend" as const, id: String(j.id || "") };
-  }
-  const body = await r.text().catch(() => "");
-  let name = "";
-  try { name = JSON.parse(body)?.name || ""; } catch {}
-  if (r.status !== 429) throw Error("Resend email failed " + r.status + (name ? " (" + name + ")" : ""));
-  return brevo();
-}
-
-// ----------------------------------------------------------------------------
-// Date helpers (Asia/Manila — the event's timezone, masterclass_events stores UTC)
-// ----------------------------------------------------------------------------
-const ph = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", ...opts });
-
-function eventDateLabel(iso: string) {
-  return ph({ weekday: "long", month: "long", day: "numeric" }).format(new Date(iso));
-}
-function eventTimeLabel(iso: string) {
-  return ph({ hour: "numeric", minute: "2-digit" }).format(new Date(iso));
-}
-function relativeDay(iso: string) {
-  const tz = "Asia/Manila";
-  const fmt = (d: Date) => {
-    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d);
-    const g = (t: string) => parts.find((p) => p.type === t)?.value || "";
-    return `${g("year")}-${g("month")}-${g("day")}`;
-  };
-  const ev = fmt(new Date(iso));
-  const today = fmt(new Date());
-  const next = fmt(new Date(Date.now() + 24 * 60 * 60 * 1000));
-  if (ev === today) return "today";
-  if (ev === next) return "tomorrow";
-  return ph({ weekday: "long", month: "long", day: "numeric" }).format(new Date(iso));
-}
-
-// ----------------------------------------------------------------------------
-// Calendar helpers (configured event details only — no hardcoded dates)
-// ----------------------------------------------------------------------------
-const EVENT_DURATION_MINUTES = 90; // masterclass run time (a duration, not a date)
+const EVENT_DURATION_MINUTES = 90;
 
 function utcBasic(iso: string) {
   return new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
@@ -270,10 +147,7 @@ function icsContent(title: string, startIso: string, joinUrl: string, uid: strin
 }
 
 // ----------------------------------------------------------------------------
-// Approved copy -> email HTML. Personal email, as if written in Gmail: white
-// background, left aligned, plain paragraphs, no logo, no buttons, no cards.
-// The only links are the recipient's private join URL, Add to Calendar, the
-// Academy application, and unsubscribe.
+// Approved copy -> email HTML
 // ----------------------------------------------------------------------------
 function renderHtml(opts: {
   first: string;
@@ -386,9 +260,38 @@ function renderText(opts: {
 }
 
 // ----------------------------------------------------------------------------
+// Date helpers
+// ----------------------------------------------------------------------------
+const ph = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", ...opts });
+
+function eventDateLabel(iso: string) {
+  return ph({ weekday: "long", month: "long", day: "numeric" }).format(new Date(iso));
+}
+function eventTimeLabel(iso: string) {
+  return ph({ hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+}
+function relativeDay(iso: string) {
+  const tz = "Asia/Manila";
+  const fmt = (d: Date) => {
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d);
+    const g = (t: string) => parts.find((p) => p.type === t)?.value || "";
+    return `${g("year")}-${g("month")}-${g("day")}`;
+  };
+  const ev = fmt(new Date(iso));
+  const today = fmt(new Date());
+  const next = fmt(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  if (ev === today) return "today";
+  if (ev === next) return "tomorrow";
+  return ph({ weekday: "long", month: "long", day: "numeric" }).format(new Date(iso));
+}
+
+// ----------------------------------------------------------------------------
 // The reminder send itself (shared by run + test)
 // ----------------------------------------------------------------------------
-async function sendReminder(signup: { id: string; name: string; email: string; attendee_token: string }, extra?: { prefixSubject?: boolean; uniqueIdem?: string }) {
+async function sendReminder(
+  signup: { id: string; name: string; email: string; attendee_token: string },
+  extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender" }
+) {
   const event = await eventRow();
   if (!event?.scheduled_at) throw Error("Event not scheduled");
   const apps = await academyAppCount();
@@ -396,8 +299,6 @@ async function sendReminder(signup: { id: string; name: string; email: string; a
   const joinUrl = `${SITE}/live?t=${encodeURIComponent(token)}`;
   const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
   const title = event.title || "Assistara Free Masterclass";
-  // Calendar links use the configured event date/time/title and carry the
-  // recipient's private join URL in the location + description.
   const calendarUrl = googleCalendarUrl(title, event.scheduled_at, joinUrl);
   const icsUrl = `${SITE}/masterclass.ics?action=calendar&t=${encodeURIComponent(token)}`;
   const first = (signup.name || "there").split(/\s+/)[0];
@@ -408,8 +309,49 @@ async function sendReminder(signup: { id: string; name: string; email: string; a
   const finalSubject = extra?.prefixSubject ? `[TEST] ${subject}` : subject;
   const html = renderHtml({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
   const text = renderText({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
+  
   const idem = extra?.uniqueIdem || `${EVENT_KEY}:${signup.id}`;
-  const result = await mail(signup.email, finalSubject, html, text, idem);
+  const deadline = new Date(event.scheduled_at); // Hard deadline: event start time
+
+  // Create delivery log entry
+  const deliveryLog = {
+    idempotency_key: idem,
+    email_type: "masterclass_reminder",
+    recipient_email: signup.email,
+    recipient_name: signup.name,
+    subject: finalSubject,
+    html,
+    text,
+    deadline: deadline.toISOString(),
+    metadata: { signup_id: signup.id, event_key: EVENT_KEY },
+    max_attempts: 3,
+  };
+
+  // Insert delivery log (idempotent via unique constraint)
+  await api("rest/v1/email_delivery_log?select=id", {
+    method: "POST",
+    headers: { Prefer: "return=representation", "On-Conflict": "idempotency_key" },
+    body: JSON.stringify([deliveryLog]),
+  });
+
+  // Send via centralized delivery
+  const delivery = await createEmailDelivery(`mc-reminder-${Date.now()}`);
+  
+  const result = await delivery.send({
+    idempotencyKey: idem,
+    emailType: "masterclass_reminder",
+    to: signup.email,
+    toName: signup.name,
+    subject: finalSubject,
+    html,
+    text,
+    replyTo: REPLY,
+    deadline,
+    maxAttempts: 3,
+    metadata: { signup_id: signup.id, event_key: EVENT_KEY },
+    forceProvider: extra?.forceProvider,
+  });
+
   return { event, apps, joinUrl, unsubUrl, calendarUrl, icsUrl, subject: finalSubject, result, defaults: { date: dateLabel, time: timeLabel, dayWord }, academyUrl: ACADEMY_URL };
 }
 
@@ -435,45 +377,28 @@ async function handleRun(body: any) {
   const sent: string[] = [];
   const skipped: string[] = [];
   const failed: string[] = [];
-  let resent = 0;
+  const unknown: string[] = [];
+
   for (const s of eligible) {
-    const claim = await claimReminder(String(s.id));
-    if (claim === "exists") { skipped.push(String(s.email)); continue; }
-    if (claim === "error") { failed.push(String(s.email)); continue; }
     try {
-      await sendReminder(s);
-      await finishReminder(String(s.id), { status: "sent", provider: "resend", updated_at: new Date().toISOString() });
-      sent.push(String(s.email));
+      const result = await sendReminder(s);
+      
+      if (result.result.success) {
+        sent.push(String(s.email));
+      } else if (result.result.status === 'unknown') {
+        unknown.push(String(s.email));
+        // Log for reconciliation - don't auto-retry
+      } else {
+        failed.push(String(s.email));
+      }
     } catch (e) {
       const msg = String(e instanceof Error ? e.message : e);
-      const retryable = /Resend email failed 5\d\d|Brevo email failed 5\d\d|fetch failed|network/i.test(msg);
-      await finishReminder(String(s.id), { status: retryable ? "retryable" : "failed", error: msg.slice(0, 500), attempts: retryable ? 2 : 1 });
       failed.push(String(s.email));
+      console.error(`Failed to send reminder to ${s.email}:`, msg);
     }
   }
-  // Safe retry: only rows that failed hard (5xx), never ambiguous results.
-  if (ENABLED) {
-    const rr = await api(
-      `rest/v1/masterclass_reminders?event_key=eq.${encodeURIComponent(EVENT_KEY)}&status=eq.retryable&select=signup_id,attempts`
-    );
-    const rows = await rr.json().catch(() => []);
-    for (const row of Array.isArray(rows) ? rows : []) {
-      if (resent >= 3) break; // cap retries per run
-      if (row?.attempts && row.attempts >= 3) continue;
-      const su = await api(
-        `rest/v1/masterclass_signups?id=eq.${encodeURIComponent(String(row.signup_id))}&select=id,name,email,attendee_token&limit=1`
-      );
-      const suj = await su.json().catch(() => []);
-      const s = Array.isArray(suj) ? suj[0] : null;
-      if (!s) continue;
-      try {
-        await sendReminder(s);
-        await finishReminder(String(row.signup_id), { status: "sent", provider: "resend", attempts: (row.attempts || 1) + 1, error: null });
-        resent++;
-      } catch { /* leave retryable for the next run */ }
-    }
-  }
-  return { ok: true, started: true, eligible: eligible.length, sent, skipped, failed, resent };
+
+  return { ok: true, started: true, eligible: eligible.length, sent, skipped, failed, unknown };
 }
 
 async function handleTest(body: any) {
@@ -483,8 +408,6 @@ async function handleTest(body: any) {
   const email = clean(body.email, 254).toLowerCase();
   if (!validEmail(email)) return { ok: false, error: "Valid email required" };
   const name = clean(body.name, 200) || "there";
-  // Reuse an existing registration token when present; otherwise create a safe
-  // test registration (no generic link, no exposure of other attendees).
   const ex = await api(`rest/v1/masterclass_signups?email=eq.${encodeURIComponent(email)}&select=id,name,email,attendee_token&limit=1`);
   const exj = await ex.json().catch(() => []);
   let signup = Array.isArray(exj) ? exj[0] : null;
@@ -499,9 +422,8 @@ async function handleTest(body: any) {
     if (!cr.ok || !Array.isArray(crj) || !crj[0]?.id) return { ok: false, error: "Could not create test registration", status: cr.status };
     signup = { id: crj[0].id, name, email, attendee_token: token };
   }
-  const sender = await senderStatus();
-  const result = await sendReminder(signup, { prefixSubject: true, uniqueIdem: `test:${EVENT_KEY}:${signup.id}:${Date.now()}` });
-  return { ok: true, testEmail: email, sender, ...result };
+  const result = await sendReminder(signup, { prefixSubject: true, uniqueIdem: `test:${EVENT_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
+  return { ok: true, testEmail: email, forcedProvider: body.provider || null, ...result };
 }
 
 async function handleStats() {
@@ -509,7 +431,7 @@ async function handleStats() {
   const apps = await academyAppCount();
   const sr = await api("rest/v1/masterclass_signups?select=id,status&status=in.(registered,purchased)&unsubscribed_at=is.null");
   const su = await sr.json().catch(() => []);
-  const rr = await api(`rest/v1/masterclass_reminders?event_key=eq.${encodeURIComponent(EVENT_KEY)}&select=status`);
+  const rr = await api(`rest/v1/email_delivery_log?email_type=eq.masterclass_reminder&select=status`);
   const rm = await rr.json().catch(() => []);
   return {
     ok: true,
@@ -519,7 +441,9 @@ async function handleStats() {
     intake_limit: INTAKE_LIMIT,
     registered_attendees: Array.isArray(su) ? su.length : null,
     reminders_sent: Array.isArray(rm) ? rm.filter((r: any) => r.status === "sent").length : null,
-    reminders_retryable: Array.isArray(rm) ? rm.filter((r: any) => r.status === "retryable").length : null,
+    reminders_failed: Array.isArray(rm) ? rm.filter((r: any) => r.status === "failed").length : null,
+    reminders_unknown: Array.isArray(rm) ? rm.filter((r: any) => r.status === "unknown").length : null,
+    reminders_expired: Array.isArray(rm) ? rm.filter((r: any) => r.status === "expired").length : null,
     production_sending_enabled: ENABLED,
   };
 }
@@ -536,21 +460,16 @@ async function handleUnsubscribePost(token: string) {
   return { ok: true, unsubscribed: true };
 }
 
-// ----------------------------------------------------------------------------
-// Read-only: confirm Resend's delivery state for a message id (no send involved).
 async function emailStatus(body: any) {
   if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
   const id = clean(body.id, 100);
   if (!/^[0-9a-fA-F-]{36}$/.test(id)) return { ok: false, error: "Valid message id required" };
-  if (!RESEND) return { ok: false, error: "RESEND_API_KEY missing" };
-  try {
-    const r = await fetch(`https://api.resend.com/emails/${id}`, { headers: { Authorization: `Bearer ${RESEND}` } });
-    const j = await r.json().catch(() => ({} as any));
-    const d = j?.data ?? j ?? {};
-    return { ok: r.ok, id, state: d?.state ?? d?.last_event ?? null, subject: d?.subject ?? null, from: d?.from ?? null, created_at: d?.created_at ?? null, provider_status: r.status };
-  } catch (e) {
-    return { ok: false, error: String(e instanceof Error ? e.message : e) };
-  }
+  // We can't check Resend directly anymore without API key - use our log
+  const r = await api(`rest/v1/email_delivery_log?provider_message_id=eq.${encodeURIComponent(id)}&select=*&limit=1`);
+  const j = await r.json().catch(() => []);
+  const d = j[0];
+  if (!d) return { ok: false, error: "Message not found in delivery log" };
+  return { ok: true, id, state: d.status, subject: d.subject, from: d.recipient_email, created_at: d.created_at, provider_status: 200 };
 }
 
 Deno.serve(async (req: Request) => {
@@ -564,8 +483,6 @@ Deno.serve(async (req: Request) => {
   const token = clean(params.get("t"), 64);
   const queryAction = clean(params.get("action"), 50);
 
-  // GET serves the calendar .ics download (?action=calendar&t=...) and the
-  // unsubscribe confirm-required contract; nothing auto-unsubscribes.
   if (req.method === "GET") {
     if (queryAction === "calendar") {
       const t = clean(params.get("t"), 64);
@@ -594,7 +511,6 @@ Deno.serve(async (req: Request) => {
 
   const ctype = (req.headers.get("content-type") || "").toLowerCase();
 
-  // Non-JSON POST = the static confirm page submitting the token (form-encoded).
   if (!ctype.includes("application/json")) {
     let t = token;
     if (!t) {
@@ -607,7 +523,6 @@ Deno.serve(async (req: Request) => {
     return out(await handleUnsubscribePost(t));
   }
 
-  // JSON API: cron/run, test, stats, and programmatic unsubscribe.
   let b: any = {};
   try { b = await req.json(); } catch {}
   const act = String(b.action || queryAction || "").trim().toLowerCase();

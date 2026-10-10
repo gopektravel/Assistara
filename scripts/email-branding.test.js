@@ -28,8 +28,12 @@ function functionSources() {
 }
 
 const SOURCES = functionSources();
-// Anything that talks to Resend is, by definition, constructing an outgoing email.
-const EMAIL_SOURCES = SOURCES.filter((fn) => fn.code.includes("api.resend.com"));
+// Anything that talks to a mail provider — directly (api.resend.com) or through
+// the shared delivery module (_shared/email-delivery) — is constructing an
+// outgoing email.
+const EMAIL_SOURCES = SOURCES.filter(
+  (fn) => fn.code.includes("api.resend.com") || fn.code.includes("_shared/email-delivery")
+);
 
 // The only senders allowed after the B2B-email and duplicate-decision cleanup.
 const EXPECTED_SENDERS = [
