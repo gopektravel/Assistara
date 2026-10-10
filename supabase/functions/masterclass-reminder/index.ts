@@ -341,6 +341,160 @@ async function sendReminder(
 }
 
 // ----------------------------------------------------------------------------
+// Academy follow-up campaign (SEPARATE from the 24h reminder — its own key,
+// template and eligibility). Promotes the Academy per the approved copy.
+// ----------------------------------------------------------------------------
+const FOLLOWUP_KEY = "academy-followup-2026-10-12";
+const FOLLOWUP_SUBJECT = "One important thing I forgot! 💛";
+
+function renderFollowupHtml(opts: { first: string; appsCount: number; seats: number; unsubscribeUrl: string }) {
+  const { first, appsCount, seats, unsubscribeUrl } = opts;
+  const unsubAttr = escAttr(unsubscribeUrl);
+  const P = "margin:0 0 18px;line-height:1.62;font-size:16px;color:#232323";
+  const A = "color:#1155cc;text-decoration:underline";
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>One important thing I forgot</title></head>
+<body style="margin:0;padding:0;background:#ffffff">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td align="left" style="padding:32px 20px 44px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+  <tr><td style="font-family:Arial,Helvetica,sans-serif;color:#232323;font-size:16px;line-height:1.62">
+    <p style="${P}">Hey ${esc(first)}! 💛</p>
+    <p style="${P}">Quick follow-up! A small formatting issue cut off the last part of my previous email. 😅</p>
+    <p style="${P}"><b>Assistara Academy starts this Monday, October 12!</b> ✨</p>
+    <p style="${P}">We&#8217;ve already received <b>${appsCount} applications for just ${seats} seats</b> in our Founding Cohort!</p>
+    <p style="${P}">Since we review applications <b>in the order they arrive</b>, I wanted to give you the chance to apply before tomorrow&#8217;s masterclass. 💛</p>
+    <p style="${P}">👉 <b>Apply here:</b> <a href="${ACADEMY_URL}" style="${A}">${ACADEMY_URL}</a></p>
+    <p style="${P}">I&#8217;ll share more tomorrow! Can&#8217;t wait to see you there! ☀️</p>
+    <p style="margin:26px 0 30px;line-height:1.55;font-size:16px;color:#232323"><b>Xyra Mendoza</b><br><span style="color:#6b6b6b">Co-founder, Assistara</span></p>
+    <p style="margin:0;line-height:1.6;font-size:12px;color:#8a8a8a">You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${unsubAttr}" style="color:#8a8a8a;text-decoration:underline">Unsubscribe</a></p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+}
+
+function renderFollowupText(opts: { first: string; appsCount: number; seats: number; unsubscribeUrl: string }) {
+  const { first, appsCount, seats, unsubscribeUrl } = opts;
+  return [
+    `Hey ${first}! 💛`,
+    "Quick follow-up! A small formatting issue cut off the last part of my previous email. 😅",
+    "Assistara Academy starts this Monday, October 12! ✨",
+    `We've already received ${appsCount} applications for just ${seats} seats in our Founding Cohort!`,
+    "Since we review applications in the order they arrive, I wanted to give you the chance to apply before tomorrow's masterclass. 💛",
+    "👉 Apply here: " + ACADEMY_URL,
+    "I'll share more tomorrow! Can't wait to see you there! ☀️",
+    ["Xyra Mendoza", "Co-founder, Assistara"].join("\n"),
+    ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubscribeUrl].join("\n"),
+  ].join("\n\n");
+}
+
+// Follow-up eligibility: every registered/purchased, not-unsubscribed attendee
+// with a valid email + token (no 24h cutoff).
+async function eligibleAllSignups() {
+  const r = await api(`rest/v1/masterclass_signups?status=in.(registered,purchased)&unsubscribed_at=is.null&select=id,name,email,attendee_token,status,created_at`);
+  const j = await r.json().catch(() => []);
+  if (!Array.isArray(j)) return [];
+  return j.filter((x: any) => validEmail(String(x.email || "")) && TOKEN_RE.test(String(x.attendee_token || "")));
+}
+
+async function sendFollowup(signup: { id: string; name: string; email: string; attendee_token: string }, extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender"; delivery?: any; event?: any; apps?: number | null }) {
+  const event = extra?.event ?? await eventRow();
+  const apps = extra?.apps !== undefined ? extra.apps : await academyAppCount();
+  const appsCount = typeof apps === "number" ? apps : 13;
+  const token = signup.attendee_token;
+  const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
+  const first = (signup.name || "there").split(/\s+/)[0];
+  const finalSubject = extra?.prefixSubject ? `[TEST] ${FOLLOWUP_SUBJECT}` : FOLLOWUP_SUBJECT;
+  const html = renderFollowupHtml({ first, appsCount, seats: INTAKE_LIMIT, unsubscribeUrl: unsubUrl });
+  const text = renderFollowupText({ first, appsCount, seats: INTAKE_LIMIT, unsubscribeUrl: unsubUrl });
+  const idem = extra?.uniqueIdem || `${FOLLOWUP_KEY}:${signup.id}`;
+  const deadline = event?.scheduled_at ? new Date(event.scheduled_at) : undefined;
+
+  const logRes = await api("rest/v1/email_delivery_log?select=id", {
+    method: "POST",
+    headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
+    body: JSON.stringify([{ idempotency_key: idem, email_type: "academy_followup", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: FOLLOWUP_KEY }, max_attempts: 3 }]),
+  });
+  if (!logRes.ok) {
+    const t = await logRes.text().catch(() => "");
+    console.error("followup log insert failed", logRes.status, t.slice(0, 300));
+  }
+
+  const delivery = extra?.delivery ?? await createEmailDelivery(`followup-${Date.now()}`);
+  const result = await delivery.send({
+    idempotencyKey: idem,
+    emailType: "academy_followup",
+    to: signup.email,
+    toName: signup.name,
+    subject: finalSubject,
+    html,
+    text,
+    replyTo: REPLY,
+    deadline,
+    maxAttempts: 3,
+    metadata: { signup_id: signup.id, campaign: FOLLOWUP_KEY },
+    forceProvider: extra?.forceProvider,
+  });
+  return { apps: appsCount, seats: INTAKE_LIMIT, subject: finalSubject, result, unsubscribeUrl: unsubUrl };
+}
+
+async function handleFollowup(body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const quotaSync = await syncQuotaInternal();
+  const event = await eventRow();
+  const eligible = await eligibleAllSignups();
+  const sent: string[] = []; const failed: string[] = []; const unknown: string[] = [];
+  const delivery = await createEmailDelivery(`followup-batch-${Date.now()}`);
+  const apps = await academyAppCount();
+  const concurrency = Math.max(1, Math.min(6, Number(body.concurrency) || 4));
+  let idx = 0;
+  const worker = async () => {
+    while (true) {
+      const my = idx++;
+      if (my >= eligible.length) return;
+      const s = eligible[my];
+      try {
+        const r = await sendFollowup(s, { delivery, event, apps });
+        if (r.result.success) sent.push(String(s.email));
+        else if (r.result.status === "unknown") unknown.push(String(s.email));
+        else failed.push(String(s.email));
+      } catch (e) {
+        failed.push(String(s.email));
+        console.error(`followup failed ${s.email}:`, String(e instanceof Error ? e.message : e));
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  return { ok: true, campaign: FOLLOWUP_KEY, concurrency, quotaSync, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
+}
+
+async function handleFollowupTest(body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const email = clean(body.email, 254).toLowerCase();
+  if (!validEmail(email)) return { ok: false, error: "Valid email required" };
+  const ex = await api(`rest/v1/masterclass_signups?email=eq.${encodeURIComponent(email)}&select=id,name,email,attendee_token&limit=1`);
+  const exj = await ex.json().catch(() => []);
+  let signup = Array.isArray(exj) ? exj[0] : null;
+  if (!signup || !TOKEN_RE.test(String(signup.attendee_token || ""))) {
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
+    const cr = await api("rest/v1/masterclass_signups?select=id", {
+      method: "POST",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ name: "Jesse", email, source: "test_reminder", status: "registered", attendee_token: token }),
+    });
+    const crj = await cr.json().catch(() => []);
+    if (!cr.ok || !Array.isArray(crj) || !crj[0]?.id) return { ok: false, error: "Could not create test registration", status: cr.status };
+    signup = { id: crj[0].id, name: "Jesse", email, attendee_token: token };
+  }
+  let result;
+  try {
+    result = await sendFollowup(signup, { prefixSubject: true, uniqueIdem: `test:${FOLLOWUP_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
+  } catch (e) {
+    return { ok: false, testEmail: email, forcedProvider: body.provider || null, error: String(e instanceof Error ? e.message : e) };
+  }
+  return { ok: true, testEmail: email, forcedProvider: body.provider || null, ...result };
+}
+
+// ----------------------------------------------------------------------------
 // Actions
 // ----------------------------------------------------------------------------
 async function handleRun(body: any) {
@@ -577,5 +731,7 @@ Deno.serve(async (req: Request) => {
     if (clean(b.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return out({ ok: false, error: "Unauthorized" }, 401);
     return out({ ok: true, ...(await syncQuotaInternal()) });
   }
+  if (act === "followup") return out(await handleFollowup(b));
+  if (act === "followup_test") return out(await handleFollowupTest(b));
   return out({ ok: false, error: "Unknown action" }, 400);
 });
