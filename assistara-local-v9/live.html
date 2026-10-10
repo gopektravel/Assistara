@@ -30,6 +30,18 @@
 @keyframes mcDigitIn{from{opacity:0;transform:translateY(-0.14em)}to{opacity:1;transform:none}}
 @keyframes mcFadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.prelive-quote,.prelive-kicker,.prelive-countdown strong,.prelive-countdown small,.digit-tick,.prelive-date{animation:none!important;transition:none!important}}
+/* Premium livestream ending screen */
+.mc-ending{max-width:720px;margin:0 auto;padding:clamp(16px,3vh,34px) clamp(6px,2vw,20px);text-align:center;color:#fff;animation:mcEndIn .7s cubic-bezier(.2,.7,.2,1) both}
+.mc-ending-headline{font-size:clamp(26px,4.6vw,54px);font-weight:800;line-height:1.03;letter-spacing:-.035em;margin:0;color:#fff;text-transform:uppercase;animation:mcEndIn .7s cubic-bezier(.2,.7,.2,1) .05s both}
+.mc-ending-accent{width:52px;height:3px;border-radius:3px;background:var(--yellow);margin:clamp(14px,2.4vh,20px) auto;box-shadow:0 0 24px rgba(255,213,31,.4);animation:mcEndGrow .7s cubic-bezier(.2,.7,.2,1) .18s both}
+.mc-ending-quote{font-size:clamp(15px,2vw,21px);font-weight:500;line-height:1.5;color:#d9d5cd;margin:0 auto;max-width:620px;letter-spacing:-.01em;animation:mcEndIn .7s cubic-bezier(.2,.7,.2,1) .26s both}
+.mc-ending-quote::before{content:"\201C"}.mc-ending-quote::after{content:"\201D"}
+.mc-ending-personal{margin:clamp(20px,3.2vh,30px) 0 0;font-size:clamp(15px,2vw,20px);font-weight:700;color:#fff;letter-spacing:-.01em;animation:mcEndIn .7s cubic-bezier(.2,.7,.2,1) .36s both}
+.mc-ending-name{color:var(--yellow)}
+.mc-ending-footer{margin-top:clamp(22px,3.6vh,34px);font-size:clamp(11px,1.2vw,13px);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7c7c7c;animation:mcEndIn .7s cubic-bezier(.2,.7,.2,1) .46s both}
+@keyframes mcEndIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes mcEndGrow{from{opacity:0;width:0}to{opacity:1;width:52px}}
+@media (prefers-reduced-motion: reduce){.mc-ending,.mc-ending-headline,.mc-ending-accent,.mc-ending-quote,.mc-ending-personal,.mc-ending-footer{animation:none!important;transition:none!important}}
 </style>
 <script src="/oaiq-pixel.js"></script>
 <script src="/googletag.js"></script></head>
@@ -62,6 +74,9 @@
   }
   function showEnded(){
     clearTimer();
+    // Use the premium ending renderer when available (same for End Stream and
+    // event-status end); only fall back to plain text in the rare early window.
+    if(window.__mcRenderEnding){ window.__mcRenderEnding(); return; }
     const box=document.getElementById('preliveVideo');
     const wrapNow=box?box.querySelector('.prelive-wrap'):null;
     if(!wrapNow)return;
@@ -198,8 +213,7 @@
       return;
     }
     if(displayState==='ended'){
-      videoEl.innerHTML='<div class="prelive-wrap"><div class="prelive-kicker">THANK YOU</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">Thanks for attending the masterclass!</div></div>';
-      videoShowingPrelive=false;
+      renderEnding();
       return;
     }
     if(!videoShowingPrelive){
@@ -332,6 +346,35 @@
   }
   function setQuoteVisible(v){const q=document.getElementById('mcQuote');if(q)q.hidden=!v;}
 
+  // --- Premium ending screen (livestream Ended) --------------------------------
+  function mcEndingHTML(){
+    return '<div class="mc-ending">'
+      +'<h2 class="mc-ending-headline">Your journey starts here</h2>'
+      +'<div class="mc-ending-accent" aria-hidden="true"></div>'
+      +'<blockquote class="mc-ending-quote">You came here to learn what&#8217;s possible. Now it&#8217;s time to discover what you&#8217;re capable of.</blockquote>'
+      +'<p class="mc-ending-personal"></p>'
+      +'<div class="mc-ending-footer">Thank you for joining us.</div>'
+    +'</div>';
+  }
+  // First name only, like the waiting-room quote.
+  function updateEndingName(){
+    const p=videoEl?videoEl.querySelector('.mc-ending-personal'):null;
+    if(!p)return;
+    const full=registeredIdentity&&registeredIdentity.name?String(registeredIdentity.name):'';
+    const name=full?full.trim().split(/\s+/)[0]:'';
+    p.innerHTML=name?('This is just the beginning, <span class="mc-ending-name">'+escQ(name)+'</span>. 💛'):'This is just the beginning. 💛';
+  }
+  function renderEnding(){
+    if(!videoEl)return;
+    videoEl.innerHTML=mcEndingHTML();
+    videoShowingPrelive=false;
+    renderedVideoKey='ended';
+    updateEndingName();
+  }
+  // The countdown controller reuses this so both "End Stream" (display_state) and
+  // the event-status path show the same premium ending (never the old text).
+  window.__mcRenderEnding=renderEnding;
+
   function renderAll(displayState){
     setPill(displayState);
     renderVideo(displayState);
@@ -374,6 +417,8 @@
   Promise.all([resolveRegisteredIdentity(),resolveHostToken()]).then(()=>{
     // Render the personalized quote as soon as the verified name is known.
     renderQuote();
+    // Fill the ending name too, if the stream already Ended before identity resolved.
+    updateEndingName();
     // If the chat already mounted (as a guest) before the registered identity /
     // host token resolved, re-mount so the verified name and host role apply.
     if(!assistaraMounted||!cfg)return;

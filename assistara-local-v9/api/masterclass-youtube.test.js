@@ -965,6 +965,27 @@ test("the public page shows a personalized waiting-room quote and an animated co
   assert.match(liveHtml, /2026-10-11T18:00:00\+08:00/);
 });
 
+test("the public page shows a premium ending when the stream Ends", () => {
+  assert.match(liveHtml, /class="mc-ending"/);
+  assert.match(liveHtml, /Your journey starts here/);
+  assert.match(liveHtml, /You came here to learn what&#8217;s possible\. Now it&#8217;s time to discover what you&#8217;re capable of\./);
+  assert.match(liveHtml, /Thank you for joining us/);
+  // Personalized closing line: first name only, plus an anonymous fallback.
+  assert.match(liveHtml, /This is just the beginning, <span class="mc-ending-name">'/);
+  assert.match(liveHtml, /This is just the beginning\. 💛/);
+  assert.match(liveHtml, /updateEndingName/);
+  // Shown on display_state Ended; the event-status end path reuses the same renderer.
+  assert.match(liveHtml, /renderEnding\(\);/);
+  assert.match(liveHtml, /window\.__mcRenderEnding=renderEnding/);
+  assert.match(liveHtml, /window\.__mcRenderEnding\)\{ window\.__mcRenderEnding\(\); return; \}/);
+  // Old generic ending is gone.
+  assert.doesNotMatch(liveHtml, /Thanks for attending the masterclass/);
+  // Golden accent + entrance animation, reduced-motion respected.
+  assert.match(liveHtml, /mc-ending-accent/);
+  assert.match(liveHtml, /var\(--yellow\)/);
+  assert.match(liveHtml, /prefers-reduced-motion: reduce\)\{\.mc-ending/);
+});
+
 test("the public page wires host tokens and the presenter page is routed", () => {
   assert.match(liveHtml, /initAssistaraChat\(chatContainer,\{identity:registeredIdentity,hostToken:hostToken\}\)/);
   assert.match(liveHtml, /resolveHostToken/);
