@@ -388,7 +388,7 @@ function renderFollowupText(opts: { first: string; appsCount: number; seats: num
 // Follow-up eligibility: every registered/purchased, not-unsubscribed attendee
 // with a valid email + token (no 24h cutoff).
 async function eligibleAllSignups() {
-  const r = await api(`rest/v1/masterclass_signups?status=in.(registered,purchased)&unsubscribed_at=is.null&select=id,name,email,attendee_token,status,created_at`);
+  const r = await api(`rest/v1/masterclass_signups?status=in.(registered,purchased)&unsubscribed_at=is.null&source=neq.test_reminder&select=id,name,email,attendee_token,status,created_at`);
   const j = await r.json().catch(() => []);
   if (!Array.isArray(j)) return [];
   return j.filter((x: any) => validEmail(String(x.email || "")) && TOKEN_RE.test(String(x.attendee_token || "")));
