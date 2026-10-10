@@ -20,7 +20,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createEmailDelivery, EmailDeliveryOptions } from "../_shared/email-delivery.ts";
-import { brandedEmail, brandedText, brandEsc, countdownBand } from "../_shared/email-brand.ts";
+import { brandedEmail, brandedText, brandEsc, countdownBand, LOGO_URL } from "../_shared/email-brand.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!;
 const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -659,7 +659,7 @@ async function handlePreview(body: any) {
   const { html, text } = which === "30" ? reminder30Content(first, joinUrl, unsubUrl) : reminder7Content(first, joinUrl, unsubUrl);
   return {
     ok: true, which, htmlLength: html.length, textLength: text.length,
-    hasLogo: html.includes("assistara-logo.png"), hasBlackHeader: html.includes("background:#171717"),
+    hasLogo: html.includes(LOGO_URL), hasBlackHeader: html.includes("background:#171717"),
     hasYellowCta: html.includes("background:#ffd51f"), hasJoinUsLive: html.includes("JOIN US LIVE"),
     html, text,
   };
@@ -678,7 +678,7 @@ async function handleFetchEmail(body: any) {
   return {
     ok: r.ok, provider_status: r.status, subject: j.subject ?? null, last_event: j.last_event ?? null,
     providerReceivedHtml: html.length > 0, htmlLength: html.length, textLength: text.length,
-    hasLogo: html.includes("assistara-logo.png"), hasBlackHeader: html.includes("background:#171717"),
+    hasLogo: html.includes(LOGO_URL), hasBlackHeader: html.includes("background:#171717"),
     hasYellowCta: html.includes("background:#ffd51f"), hasJoinUsLive: html.includes("JOIN US LIVE"),
   };
 }
