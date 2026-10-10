@@ -577,7 +577,7 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
   const logRes = await api("rest/v1/email_delivery_log?select=id", {
     method: "POST",
     headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
-    body: JSON.stringify([{ idempotency_key: idem, email_type: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: key }, max_attempts: 3 }]),
+    body: JSON.stringify([{ idempotency_key: idem, email_type: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: key, html_len: html.length, text_len: text.length }, max_attempts: 3 }]),
   });
   if (!logRes.ok) console.error("timed reminder log insert failed", logRes.status, (await logRes.text().catch(() => "")).slice(0, 300));
 
@@ -587,7 +587,7 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
     emailType: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7",
     to: signup.email, toName: signup.name, subject: finalSubject, html, text,
     replyTo: REPLY, deadline, maxAttempts: 3,
-    metadata: { signup_id: signup.id, campaign: key },
+    metadata: { signup_id: signup.id, campaign: key, html_len: html.length, text_len: text.length },
     forceProvider: extra?.forceProvider,
   });
   return { subject: finalSubject, joinUrl, unsubscribeUrl: unsubUrl, result };
@@ -645,6 +645,42 @@ async function handleTimedTest(which: "30" | "7", body: any) {
     return { ok: false, testEmail: email, forcedProvider: body.provider || null, error: String(e instanceof Error ? e.message : e) };
   }
   return { ok: true, testEmail: email, forcedProvider: body.provider || null, ...result };
+}
+
+// Gated diagnostics: return the EXACT html/text the deployed function would send,
+// and fetch the provider-received HTML for a sent message id.
+async function handlePreview(body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const which = String(body.which || "7") === "30" ? "30" : "7";
+  const first = clean(body.first, 100) || "Jesse";
+  const t = clean(body.t, 64) || "84c836607ea27e52e24804d569447e5092ec";
+  const joinUrl = `${SITE}/live?t=${t}`;
+  const unsubUrl = `${SITE}/unsubscribe?t=${t}`;
+  const { html, text } = which === "30" ? reminder30Content(first, joinUrl, unsubUrl) : reminder7Content(first, joinUrl, unsubUrl);
+  return {
+    ok: true, which, htmlLength: html.length, textLength: text.length,
+    hasLogo: html.includes("assistara-logo.png"), hasBlackHeader: html.includes("background:#171717"),
+    hasYellowCta: html.includes("background:#ffd51f"), hasJoinUsLive: html.includes("JOIN US LIVE"),
+    html, text,
+  };
+}
+
+async function handleFetchEmail(body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const id = clean(body.id, 100);
+  if (!/^[0-9a-fA-F-]{36}$/.test(id)) return { ok: false, error: "Valid Resend email id required" };
+  const RESEND = Deno.env.get("RESEND_API_KEY") || "";
+  if (!RESEND) return { ok: false, error: "RESEND_API_KEY missing" };
+  const r = await fetch(`https://api.resend.com/emails/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${RESEND}` } });
+  const j: any = await r.json().catch(() => ({}));
+  const html = typeof j.html === "string" ? j.html : "";
+  const text = typeof j.text === "string" ? j.text : "";
+  return {
+    ok: r.ok, provider_status: r.status, subject: j.subject ?? null, last_event: j.last_event ?? null,
+    providerReceivedHtml: html.length > 0, htmlLength: html.length, textLength: text.length,
+    hasLogo: html.includes("assistara-logo.png"), hasBlackHeader: html.includes("background:#171717"),
+    hasYellowCta: html.includes("background:#ffd51f"), hasJoinUsLive: html.includes("JOIN US LIVE"),
+  };
 }
 
 // ----------------------------------------------------------------------------
@@ -890,5 +926,7 @@ Deno.serve(async (req: Request) => {
   if (act === "reminder30_test") return out(await handleTimedTest("30", b));
   if (act === "reminder7") return out(await handleTimed("7", b));
   if (act === "reminder7_test") return out(await handleTimedTest("7", b));
+  if (act === "preview") return out(await handlePreview(b));
+  if (act === "fetch_email") return out(await handleFetchEmail(b));
   return out({ ok: false, error: "Unknown action" }, 400);
 });
