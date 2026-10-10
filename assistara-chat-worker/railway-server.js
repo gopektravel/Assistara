@@ -59,6 +59,44 @@ function readBody(req) {
   });
 }
 
+// ----------------------------------------------------------------------------
+// Live viewer presence (session-scoped, independent from chat).
+// Viewers heartbeat while the public page is LIVE; presence is bucketed by the
+// current viewer epoch. A viewer-session reset (admin -> Waiting) starts a fresh
+// epoch and clears presence, so counters read zero and count from zero on the
+// next Live. Everything is in-memory (like chat) and uses server timestamps, so
+// delayed/old heartbeats can't backfill a cleared session.
+// ----------------------------------------------------------------------------
+const VIEWER_WINDOW_MS = 60000;   // a viewer counts as "watching" for 60s
+const VIEWER_MIN_BEAT_MS = 8000;  // per-key rate limit
+let viewerEpoch = 0;
+const viewers = new Map(); // key -> lastSeenMs
+
+function viewerReset(epoch) {
+  const e = Number(epoch);
+  if (!Number.isFinite(e) || e <= viewerEpoch) return { applied: false, epoch: viewerEpoch };
+  viewerEpoch = e;
+  viewers.clear();
+  return { applied: true, epoch: viewerEpoch };
+}
+
+function viewerBeat(key) {
+  const k = String(key || '').slice(0, 100);
+  if (!k) return false;
+  const now = Date.now();
+  const last = viewers.get(k);
+  if (last && now - last < VIEWER_MIN_BEAT_MS) return false; // too soon for this viewer
+  viewers.set(k, now);
+  return true;
+}
+
+function viewerStats() {
+  const now = Date.now();
+  let watching = 0;
+  for (const t of viewers.values()) if (now - t <= VIEWER_WINDOW_MS) watching++;
+  return { epoch: viewerEpoch, watching, unique: viewers.size };
+}
+
 function broadcast(message, exclude) {
   const data = JSON.stringify(message);
   for (const [id, ws] of connections) {
@@ -174,9 +212,26 @@ function handleDisconnect(userId) {
   }
 }
 
-function json(res, status, body) {
-  res.writeHead(status, { 'Content-Type': 'application/json' });
+function json(res, status, body, extraHeaders) {
+  res.writeHead(status, { 'Content-Type': 'application/json', ...(extraHeaders || {}) });
   res.end(JSON.stringify(body));
+}
+
+// Browser heartbeat comes from the public page (cross-origin), so the viewer
+// endpoints answer CORS preflight and allow the Assistara origins.
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'content-type,x-reset-token',
+  Vary: 'Origin',
+};
+function corsPreflight(req, res) {
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, CORS);
+    res.end();
+    return true;
+  }
+  return false;
 }
 
 const server = createServer(async (req, res) => {
@@ -184,6 +239,8 @@ const server = createServer(async (req, res) => {
   if (req.url === '/health' || url === '/health') {
     return json(res, 200, { status: 'ok', room: MASTERCLASS_ROOM_ID, sessionId: currentEpoch, viewers: connections.size });
   }
+
+  if (url.startsWith('/internal/viewer') && corsPreflight(req, res)) return;
 
   // Session reset — admin lifecycle only. Protected by the shared secret.
   if (url === '/internal/reset') {
@@ -194,6 +251,33 @@ const server = createServer(async (req, res) => {
     const body = await readBody(req);
     const result = resetChat(body.reason, body.epoch);
     return json(res, 200, { ok: true, ...result });
+  }
+
+  // Viewer session reset — admin "back to Waiting" only, protected by the secret.
+  // Monotonic epoch so a retry cannot erase a newer session's viewers.
+  if (url === '/internal/viewer-session') {
+    if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Method not allowed' }, CORS);
+    if (SECRET && req.headers['x-reset-token'] !== SECRET) {
+      return json(res, 401, { ok: false, error: 'Unauthorized' }, CORS);
+    }
+    const body = await readBody(req);
+    const result = viewerReset(body.epoch);
+    return json(res, 200, { ok: true, ...result }, CORS);
+  }
+
+  // Viewer heartbeat — public page while LIVE. Rate-limited per viewer key.
+  if (url === '/internal/viewer-heartbeat') {
+    if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Method not allowed' }, CORS);
+    const body = await readBody(req);
+    viewerBeat(body.key);
+    return json(res, 200, { ok: true }, CORS);
+  }
+
+  // Viewer stats — admin dashboard only, protected by the secret.
+  if (url === '/internal/viewer-stats') {
+    const token = req.headers['x-reset-token'];
+    if (SECRET && token !== SECRET) return json(res, 401, { ok: false, error: 'Unauthorized' }, CORS);
+    return json(res, 200, { ok: true, ...viewerStats() }, CORS);
   }
 
   json(res, 404, { error: 'Not found' });

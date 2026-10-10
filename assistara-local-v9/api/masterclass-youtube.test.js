@@ -326,7 +326,7 @@ test("POST configure saves the normalized config with display_state and replay=f
   assert.equal(body.chat_enabled, false);
   assert.equal(body.replay_enabled, false); // replay is forced to false
   assert.equal(body.display_state, "waiting"); // display_state defaults to waiting
-  const write = calls.find((c) => String(c.url).includes("masterclass_events"));
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
   assert.ok(write, "expected an upsert call to masterclass_events");
   const sent = JSON.parse(write.options.body);
   const stored = JSON.parse(sent.live_destination_url);
@@ -358,7 +358,7 @@ test("POST configure with an empty URL clears the stream and resets display_stat
   assert.equal(res.statusCode, 200);
   assert.equal(res.json().video_id, null);
   assert.equal(res.json().display_state, "waiting");
-  const write = calls.find((c) => String(c.url).includes("masterclass_events"));
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
   const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
   assert.equal(stored.youtube_url, null);
   assert.equal(stored.display_state, "waiting");
@@ -475,6 +475,56 @@ test("POST reset_stream sets display_state to waiting", async () => {
   const sent = JSON.parse(write.options.body);
   const stored = JSON.parse(sent.live_destination_url);
   assert.equal(stored.display_state, "waiting");
+});
+
+test("POST reset_stream starts a fresh viewer session (epoch bumped, monotonic)", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "secret-1" });
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "ended", viewer_session: 100 });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "reset_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  // Stored epoch advanced past the previous session.
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
+  assert.ok(Number(stored.viewer_session) > 100, "viewer_session must advance");
+  // And it told the presence store to reset that new epoch (independent of chat reset).
+  const vreset = calls.find((c) => String(c.url).includes("/internal/viewer-session"));
+  assert.ok(vreset, "reset_stream must reset the live viewer session");
+  assert.equal(vreset.options.headers["x-reset-token"], "secret-1");
+  assert.equal(JSON.parse(vreset.options.body).epoch, stored.viewer_session);
+});
+
+test("configure + update_chat_provider preserve the live viewer session (never reset it)", async () => {
+  const cfgJson = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", viewer_session: 777 });
+  for (const action of ["configure", "update_chat_provider"]) {
+    const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: cfgJson } });
+    global.fetch = fetchImpl;
+    const res = mockRes();
+    await H(
+      mockReq({
+        method: "POST",
+        url: "/api/masterclass-youtube",
+        headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+        body: JSON.stringify(action === "configure" ? { action, youtube_url: "aqz-KE-bpKQ" } : { action, chat_provider: "youtube" }),
+      }),
+      res
+    );
+    assert.equal(res.statusCode, 200, action);
+    const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+    const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
+    assert.equal(stored.viewer_session, 777, action + " must keep viewer_session");
+    assert.equal(calls.some((c) => String(c.url).includes("/internal/viewer-session")), false, action + " must not reset viewers");
+  }
 });
 
 test("POST update_chat_provider changes only the provider and preserves stream state", async () => {
@@ -653,37 +703,45 @@ test("presenter_key is rejected without an admin token (guest cannot claim host)
   assert.equal(calls.length, 0);
 });
 
-test("computeAttendanceStats derives Watching Now / Unique / Not Yet Joined (matches reminder)", () => {
-  const now = Date.parse("2026-10-11T10:20:00Z");
+test("computeAttendanceStats derives cumulative Unique / Registrations / Not Yet Joined (matches reminder)", () => {
   const signups = [
-    { email: "a@x.com", attendee_token: "a".repeat(40), joined_at: "2026-10-11T10:00:00Z", last_joined_at: "2026-10-11T10:19:40Z", join_clicks: 1, attendance_seconds: 600 }, // active now
-    { email: "b@x.com", attendee_token: "b".repeat(40), joined_at: "2026-10-11T10:00:00Z", last_joined_at: "2026-10-11T10:10:00Z", join_clicks: 1, attendance_seconds: 600 }, // joined, left -> not watching
+    { email: "a@x.com", attendee_token: "a".repeat(40), joined_at: "2026-10-11T10:00:00Z", last_joined_at: "2026-10-11T10:19:40Z", join_clicks: 1, attendance_seconds: 600 }, // joined
+    { email: "b@x.com", attendee_token: "b".repeat(40), joined_at: "2026-10-11T10:00:00Z", last_joined_at: "2026-10-11T10:10:00Z", join_clicks: 1, attendance_seconds: 600 }, // joined, left
     { email: "c@x.com", attendee_token: "c".repeat(40), joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 }, // never joined
     { email: "not-an-email", attendee_token: "d".repeat(40), joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 }, // invalid email
     { email: "e@x.com", attendee_token: "short", joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 }, // invalid token
   ];
-  const s = computeAttendanceStats(signups, now);
+  const s = computeAttendanceStats(signups);
   assert.equal(s.registrations, 3);
   assert.equal(s.unique_attendees, 2);
   assert.equal(s.not_yet_joined, 1);
-  assert.equal(s.watching_now, 1); // only "a" heartbeat within the 60s window
   assert.equal(s.watching_timeout_ms, 60000);
+  // watching_now is now SESSION-scoped (external store), not derived from these cumulative fields.
+  assert.equal(s.watching_now, undefined);
 });
 
-test("POST stats returns the four attendance metrics (admin-only)", async () => {
+function statsFetch({ eventCfg = "{}", rows = [], viewerStats = null }) {
+  const calls = [];
+  const impl = async (url) => {
+    const u = String(url);
+    calls.push({ url: u });
+    if (u.includes("/functions/v1/admin-api")) return { ok: true, status: 200, json: async () => ({ ok: true }) };
+    if (u.includes("/rest/v1/masterclass_events")) return { ok: true, status: 200, json: async () => [{ event_key: "k", title: "T", live_destination_url: eventCfg }] };
+    if (u.includes("/rest/v1/masterclass_signups")) return { ok: true, status: 200, json: async () => rows };
+    if (u.includes("/internal/viewer-stats")) return { ok: true, status: 200, json: async () => viewerStats };
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+  return { impl, calls };
+}
+
+test("POST stats returns cumulative metrics and session viewer counters (admin-only)", async () => {
   const iso = new Date().toISOString();
   const rows = [
     { email: "a@x.com", attendee_token: "a".repeat(40), joined_at: iso, last_joined_at: iso, join_clicks: 1, attendance_seconds: 30 },
     { email: "b@x.com", attendee_token: "b".repeat(40), joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 },
   ];
-  const calls = [];
-  global.fetch = async (url, options = {}) => {
-    const u = String(url);
-    calls.push({ url: u, options });
-    if (u.includes("/functions/v1/admin-api")) return { ok: true, status: 200, json: async () => ({ ok: true }) };
-    if (u.includes("/rest/v1/masterclass_signups")) return { ok: true, status: 200, json: async () => rows };
-    return { ok: false, status: 404, json: async () => ({}) };
-  };
+  const { impl, calls } = statsFetch({ eventCfg: JSON.stringify({ youtube_url: "aqz-KE-bpKQ", viewer_session: 0 }), rows });
+  global.fetch = impl;
   const res = mockRes();
   await H(
     mockReq({
@@ -700,11 +758,61 @@ test("POST stats returns the four attendance metrics (admin-only)", async () => 
   assert.equal(body.registrations, 2);
   assert.equal(body.unique_attendees, 1);
   assert.equal(body.not_yet_joined, 1);
-  assert.equal(body.watching_now, 1);
+  // CHAT_SECRET unset in this harness -> no viewer store -> session counters are 0 (never fabricated).
+  assert.equal(body.watching_now, 0);
+  assert.equal(body.session_unique, 0);
+  assert.equal(body.viewer_session_id, 0);
   assert.equal(body.youtube_viewers_available, false); // no YouTube Data API credentials -> hidden
-  const q = calls.find((c) => c.url.includes("/rest/v1/masterclass_signups"));
-  assert.ok(q, "stats must query masterclass_signups");
-  assert.match(q.url, /source=neq\.test_reminder/); // same base filter as the reminder
+  assert.ok(calls.some((c) => c.url.includes("/rest/v1/masterclass_signups")), "stats must query masterclass_signups");
+});
+
+test("POST stats surfaces session viewer counts from the presence store when the epoch matches", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "secret-1" });
+  const { impl } = statsFetch({
+    eventCfg: JSON.stringify({ youtube_url: "aqz-KE-bpKQ", viewer_session: 100 }),
+    rows: [{ email: "a@x.com", attendee_token: "a".repeat(40), joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 }],
+    viewerStats: { ok: true, epoch: 100, watching: 5, unique: 8 },
+  });
+  global.fetch = impl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "stats", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.watching_now, 5);
+  assert.equal(body.session_unique, 8);
+  assert.equal(body.viewer_session_id, 100);
+});
+
+test("POST stats reports zero viewers on a session-epoch mismatch (no stale/old data)", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "secret-1" });
+  const { impl } = statsFetch({
+    eventCfg: JSON.stringify({ youtube_url: "aqz-KE-bpKQ", viewer_session: 100 }),
+    rows: [],
+    viewerStats: { ok: true, epoch: 999, watching: 5, unique: 8 }, // store is on a different/older epoch
+  });
+  global.fetch = impl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "stats", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.watching_now, 0);
+  assert.equal(body.session_unique, 0);
 });
 
 test("POST stats is rejected without an admin token (guests cannot read analytics)", async () => {
@@ -727,12 +835,24 @@ test("POST stats is rejected without an admin token (guests cannot read analytic
 test("the admin event page shows the live attendance cards", () => {
   assert.match(eventPage, /id="mcStatsCard"/);
   assert.match(eventPage, /id="mcStatWatching"/);
+  assert.match(eventPage, /id="mcStatSession"/); // This Session (session unique)
   assert.match(eventPage, /id="mcStatUnique"/);
   assert.match(eventPage, /id="mcStatReg"/);
   assert.match(eventPage, /id="mcStatNotJoined"/);
   assert.match(eventPage, /action: "stats"/);
   assert.match(eventPage, /setInterval\(loadStats, 12000\)/);
+  assert.match(eventPage, /d\.session_unique/); // renders the session counter
   assert.match(eventPage, /stat-watching/); // Watching Now is the prominent card
+});
+
+test("the public /live page heartbeats live viewer presence only while LIVE", () => {
+  assert.match(liveHtml, /\/internal\/viewer-heartbeat/);
+  assert.match(liveHtml, /startViewerHeartbeat/);
+  assert.match(liveHtml, /stopViewerHeartbeat/);
+  // Gated on LIVE + a configured stream, so Waiting/Ended never send beats.
+  assert.match(liveHtml, /displayState==='live' && cfg && cfg\.video_id\)\{ startViewerHeartbeat\(\); \} else \{ stopViewerHeartbeat\(\); \}/);
+  // One viewer key per browser session (no inflation across tabs/refreshes of the same browser).
+  assert.match(liveHtml, /assistara_masterclass_viewer_key/);
 });
 
 test("the admin Masterclass tab has an Open Host Chat shortcut to the existing page", () => {

@@ -255,8 +255,24 @@
     setPill(displayState);
     renderVideo(displayState);
     renderChat(displayState);
+    // Live viewer presence: heartbeat only while the stream is actually LIVE,
+    // so Waiting/Ended never repopulate the "Watching Now" counter.
+    if(displayState==='live' && cfg && cfg.video_id){ startViewerHeartbeat(); } else { stopViewerHeartbeat(); }
   }
   window.__mcRenderPlayer=function(){ renderAll(cfg?cfg.display_state||'waiting':'waiting'); };
+
+  // --- Live viewer presence (session-scoped, on the Railway chat server) -------
+  // One viewer key per browser tab session so a single viewer is counted once;
+  // heartbeats only while LIVE. The server buckets these by the current session
+  // epoch, which resets to zero when an admin returns the stream to Waiting.
+  const VIEWER_EP='https://assistara-live-chat-production.up.railway.app';
+  let viewerKey=null;
+  try{viewerKey=sessionStorage.getItem('assistara_masterclass_viewer_key');}catch(e){}
+  if(!viewerKey){try{viewerKey=(crypto.randomUUID?crypto.randomUUID():'v'+Date.now()+Math.random().toString(36).slice(2));sessionStorage.setItem('assistara_masterclass_viewer_key',viewerKey);}catch(e){viewerKey='v'+Date.now();}}
+  let viewerTimer=null;
+  function viewerBeat(){fetch(VIEWER_EP+'/internal/viewer-heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:viewerKey})}).catch(()=>{});}
+  function startViewerHeartbeat(){if(viewerTimer)return;viewerBeat();viewerTimer=setInterval(viewerBeat,20000);}
+  function stopViewerHeartbeat(){if(viewerTimer){clearInterval(viewerTimer);viewerTimer=null;}}
 
   function loadConfig(){
     if(pollInFlight)return;

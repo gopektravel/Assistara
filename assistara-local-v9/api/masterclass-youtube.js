@@ -39,21 +39,21 @@ const CHAT_SECRET = process.env.CHAT_SECRET || "";
 const CHAT_RESET_URL =
   process.env.CHAT_RESET_URL ||
   "https://assistara-live-chat-production.up.railway.app/internal/reset";
+// Session-scoped live viewer presence (independent from the chat reset and
+// untouched attendance fields). Lives in the Railway server I deploy.
+const RAILWAY_BASE = process.env.CHAT_BASE_URL || "https://assistara-live-chat-production.up.railway.app";
+const CHAT_VIEWER_SESSION_URL = `${RAILWAY_BASE}/internal/viewer-session`;
+const CHAT_VIEWER_STATS_URL = `${RAILWAY_BASE}/internal/viewer-stats`;
 
-// Live attendance metrics. "Not Yet Joined" must match the 6:07 PM reminder's
-// eligibleNotJoined() definition EXACTLY, so the dashboard and the reminder
-// email always agree on who has never joined.
+// "Not Yet Joined" must match the 6:07 PM reminder's eligibleNotJoined() EXACTLY,
+// so the dashboard and the reminder email always agree on who has never joined.
+// These are cumulative/historical and are NEVER reset when a session resets.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SIGNUP_TOKEN_RE = /^[a-f0-9]{32,64}$/;
-// A viewer counts as "Watching Now" while their last heartbeat is newer than
-// this. The public page heartbeats every 30s (while the tab is visible), so a
-// 60s window tolerates one missed beat and expires a departed viewer shortly
-// after they close the tab.
-const WATCHING_TIMEOUT_MS = 60000;
+const WATCHING_TIMEOUT_MS = 60000; // a live viewer counts for 60s (heartbeat window)
 
-// Pure metric computation over the signup rows the admin endpoint fetched.
-// Same filters as the reminder's eligibleNotJoined so counts never disagree.
-function computeAttendanceStats(signups, nowMs) {
+// Cumulative attendance metrics over the signup rows (preserved across resets).
+function computeAttendanceStats(signups) {
   const valid = (Array.isArray(signups) ? signups : []).filter(
     (x) => EMAIL_RE.test(String(x.email || "")) && SIGNUP_TOKEN_RE.test(String(x.attendee_token || ""))
   );
@@ -62,24 +62,53 @@ function computeAttendanceStats(signups, nowMs) {
     !!x.last_joined_at ||
     Number(x.join_clicks) > 0 ||
     Number(x.attendance_seconds) > 0;
-  const now = Number.isFinite(nowMs) ? nowMs : Date.now();
-  const cutoff = now - WATCHING_TIMEOUT_MS;
-
   const joined = valid.filter(hasJoined);
   const registrations = valid.length;
   const notYetJoined = registrations - joined.length;
-  const watchingNow = joined.filter((x) => {
-    const t = Date.parse(x.last_joined_at || x.joined_at || 0);
-    return Number.isFinite(t) && t >= cutoff;
-  }).length;
 
   return {
-    watching_now: watchingNow,
     unique_attendees: joined.length,
     registrations,
     not_yet_joined: notYetJoined,
     watching_timeout_ms: WATCHING_TIMEOUT_MS,
   };
+}
+
+// Reset the live viewer session (admin "back to Waiting"). Monotonic epoch; the
+// Railway side applies only if it advances, so a retry cannot erase a newer
+// session's viewers. Best-effort — never blocks the stream-state change.
+async function resetViewerSession(epoch) {
+  if (!CHAT_SECRET) {
+    console.error("masterclass-youtube: CHAT_SECRET not set; viewer session reset skipped");
+    return;
+  }
+  try {
+    await requestJSON(CHAT_VIEWER_SESSION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-reset-token": CHAT_SECRET },
+      body: JSON.stringify({ epoch }),
+    });
+  } catch (e) {
+    console.error("masterclass-youtube: viewer session reset failed", e && e.message ? e.message : e);
+  }
+}
+
+// Current-session viewer counts from the Railway presence store. Returns zeros
+// on any error or epoch mismatch (e.g. after a Railway restart) so stale data
+// never leaks and never blocks the admin dashboard.
+async function fetchViewerStats(epoch) {
+  const zero = { watching: 0, unique: 0 };
+  if (!CHAT_SECRET) return zero;
+  try {
+    const { response, body } = await requestJSON(CHAT_VIEWER_STATS_URL, {
+      headers: { "x-reset-token": CHAT_SECRET },
+    });
+    if (!response.ok || !body || body.ok !== true) return zero;
+    if (Number(body.epoch) !== Number(epoch)) return zero; // session mismatch -> nothing trustworthy
+    return { watching: Number(body.watching) || 0, unique: Number(body.unique) || 0 };
+  } catch {
+    return zero;
+  }
 }
 
 // Accepts watch URLs (any youtube.com host), youtu.be, /live/, /embed/,
@@ -147,6 +176,7 @@ function parseConfig(raw) {
     replay_enabled: false, // replay disabled per requirements
     display_state: DEFAULT_DISPLAY_STATE,
     chat_provider: DEFAULT_CHAT_PROVIDER,
+    viewer_session: 0, // session epoch; viewer counters reset when this advances
   };
   if (!raw || typeof raw !== "string") return out;
   let cfg = null;
@@ -168,6 +198,9 @@ function parseConfig(raw) {
     }
     if (typeof cfg.chat_provider === "string" && CHAT_PROVIDERS.includes(cfg.chat_provider)) {
       out.chat_provider = cfg.chat_provider;
+    }
+    if (Number.isFinite(Number(cfg.viewer_session)) && Number(cfg.viewer_session) > 0) {
+      out.viewer_session = Math.floor(Number(cfg.viewer_session));
     }
     // Derive chat_enabled from chat_provider only if chat not explicitly set
     if (typeof cfg.chat !== "boolean") {
@@ -261,6 +294,7 @@ function publicConfig(row, domain) {
     replay_enabled: cfg.replay_enabled,
     display_state: cfg.display_state,
     chat_provider: cfg.chat_provider,
+    viewer_session_id: cfg.viewer_session,
     chat_url: cfg.video_id ? buildChatUrl(cfg.video_id, domain) : null,
   };
 }
@@ -281,14 +315,9 @@ async function readEventRow(cfg, key) {
 
 async function configureAction(cfg, claims, body) {
   const key = eventKey(body.event_key);
-  const next = { 
-    youtube_url: null, 
-    chat: true, 
-    replay: false, 
-    display_state: DEFAULT_DISPLAY_STATE,
-    chat_provider: DEFAULT_CHAT_PROVIDER,
-  };
+  // Validate the URL BEFORE any DB work so an invalid paste costs nothing.
   const rawUrl = body.youtube_url === undefined || body.youtube_url === null ? "" : String(body.youtube_url).trim();
+  let url = null;
   if (rawUrl) {
     const id = extractVideoId(rawUrl);
     if (!id) {
@@ -297,8 +326,18 @@ async function configureAction(cfg, claims, body) {
         body: { ok: false, error: "That doesn't look like a YouTube livestream URL or video ID." },
       };
     }
-    next.youtube_url = canonicalWatchUrl(id);
+    url = canonicalWatchUrl(id);
   }
+  // Preserve the live viewer session: saving/clearing the URL must NOT reset it.
+  const cur = await readEventRow(cfg, key);
+  const next = {
+    youtube_url: url,
+    chat: true,
+    replay: false,
+    display_state: DEFAULT_DISPLAY_STATE,
+    chat_provider: DEFAULT_CHAT_PROVIDER,
+    viewer_session: parseConfig(cur ? cur.live_destination_url : null).viewer_session,
+  };
   if (typeof body.chat_enabled === "boolean") next.chat = body.chat_enabled;
   // replay is always disabled per requirements — ignore any replay_enabled in request
   next.replay = false;
@@ -400,7 +439,11 @@ async function resetStreamAction(cfg, claims, body) {
   const key = eventKey(body.event_key);
   const row = await readEventRow(cfg, key);
   const current = parseConfig(row ? row.live_destination_url : null);
-  const next = { ...current, display_state: "waiting" };
+  // Back to Waiting: start a fresh viewer session (monotonic epoch) so current
+  // viewers, session uniques and any session counters reset to zero. Distinct
+  // from the chat reset below. Retries can't lower the epoch (Math.max).
+  const viewerEpoch = Math.max(Date.now(), (current.viewer_session || 0) + 1);
+  const next = { ...current, display_state: "waiting", viewer_session: viewerEpoch };
   const { response } = await requestJSON(
     cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
     {
@@ -415,10 +458,11 @@ async function resetStreamAction(cfg, claims, body) {
     }
   );
   if (!response.ok) return { status: 500, body: { ok: false, error: "Could not reset the stream" } };
+  await resetViewerSession(viewerEpoch); // clear live viewer presence + session counters
   await resetChatSession("reset"); // leave no previous chat history
   return {
     status: 200,
-    body: { ok: true, event_key: key, display_state: "waiting", message: "Reset to waiting" },
+    body: { ok: true, event_key: key, display_state: "waiting", viewer_session: viewerEpoch, message: "Reset to waiting" },
   };
 }
 
@@ -430,14 +474,16 @@ async function updateChatProviderAction(cfg, claims, body) {
   }
   const row = await readEventRow(cfg, key);
   const current = parseConfig(row ? row.live_destination_url : null);
-  // Change ONLY the provider. Preserve the stream URL, video id and the
-  // current display_state so switching chat never resets the livestream.
+  // Change ONLY the provider. Preserve the stream URL, video id, display_state
+  // AND the viewer session so switching chat never resets the livestream or the
+  // live viewer counters.
   const next = {
     youtube_url: current.youtube_url,
     chat: provider !== "off",
     replay: current.replay_enabled,
     display_state: current.display_state,
     chat_provider: provider,
+    viewer_session: current.viewer_session,
   };
   const { response } = await requestJSON(
     cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
@@ -502,14 +548,24 @@ async function masterclassStatsAction(cfg, body) {
   const url =
     cfg.url +
     "/rest/v1/masterclass_signups?status=in.(registered,purchased)&unsubscribed_at=is.null&source=neq.test_reminder&select=email,attendee_token,joined_at,last_joined_at,join_clicks,attendance_seconds";
-  const { response, body: signups } = await requestJSON(url, { headers: serviceHeaders(cfg) });
-  if (!response.ok) return { status: 502, body: { ok: false, error: "Could not load attendance" } };
-  const stats = computeAttendanceStats(signups, Date.now());
+  const [rowRes, signupRes] = await Promise.all([
+    readEventRow(cfg, key),
+    requestJSON(url, { headers: serviceHeaders(cfg) }),
+  ]);
+  if (!signupRes.response.ok) return { status: 502, body: { ok: false, error: "Could not load attendance" } };
+  const epoch = parseConfig(rowRes ? rowRes.live_destination_url : null).viewer_session;
+  const viewers = await fetchViewerStats(epoch); // session-scoped, zeroed unless Railway agrees on the epoch
+  const stats = computeAttendanceStats(signupRes.body);
   return {
     status: 200,
     body: {
       ok: true,
       event_key: key,
+      // session viewer counters (reset to zero on Waiting; counted from zero on Live)
+      watching_now: viewers.watching,
+      session_unique: viewers.unique,
+      viewer_session_id: epoch,
+      // cumulative / historical (never reset)
       ...stats,
       youtube_viewers_available: false, // no YouTube Data API credentials configured
       generated_at: new Date().toISOString(),
