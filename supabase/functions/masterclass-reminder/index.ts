@@ -508,6 +508,14 @@ const REMINDER5_SUBJECT = "We're live! Come join us 💛";
 const TARGET_30_UTC = "2026-10-11T09:30:00Z";
 const TARGET_5_UTC = "2026-10-11T10:05:00Z";
 
+// Guard: the reminder can only send inside a narrow window around its target, so
+// the scheduler cannot run early (or a stray manual call cannot send early).
+function withinSendWindow(targetUtc: string, beforeMin = 5, afterMin = 20): { open: boolean; target: string; now: string } {
+  const t = Date.parse(targetUtc);
+  const now = Date.now();
+  return { open: Number.isFinite(t) && now >= t - beforeMin * 60000 && now <= t + afterMin * 60000, target: targetUtc, now: new Date().toISOString() };
+}
+
 function reminder30Content(first: string, joinUrl: string, unsubUrl: string) {
   const bodyHtml = `<p style="margin:0 0 16px">Hey ${brandEsc(first)}! 💛</p>`
     + `<p style="margin:0 0 16px">It&#8217;s almost time!! 😍</p>`
@@ -587,6 +595,9 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
 
 async function handleTimed(which: "30" | "5", body: any) {
   if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const target = which === "30" ? TARGET_30_UTC : TARGET_5_UTC;
+  const win = withinSendWindow(target);
+  if (!win.open) return { ok: true, skipped: "outside send window", target_utc: target, now_utc: win.now };
   const quotaSync = await syncQuotaInternal();
   const eligible = which === "30" ? await eligibleAllSignups() : await eligibleNotJoined();
   const sent: string[] = []; const failed: string[] = []; const unknown: string[] = [];
