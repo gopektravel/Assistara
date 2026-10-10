@@ -356,14 +356,8 @@ async function handleRun(body: any) {
   if (Number.isFinite(sched) && now >= sched) return { ok: true, skipped: "event started" };
   const target = sched - REMIND_HOURS * 36e5;
   const windowOpen = Number.isFinite(sched) && now >= target - GRACE_BEFORE_HOURS * 36e5;
-
-  // One-time manual override: `force: true` (with the cron secret) bypasses ONLY
-  // the enablement + reminder-window gates for an explicitly approved manual send.
-  // Every other protection (auth, unsubscribe, quota, idempotency, and the
-  // never-after-event-start deadline above) stays enforced.
-  const force = body.force === true;
-  if (!windowOpen && !force) return { ok: true, skipped: "window not yet open", started: false };
-  if (!ENABLED && !force) return { ok: true, disabled: "MASTERCLASS_REMINDER_ENABLED is false — production sending off", started: false };
+  if (!windowOpen) return { ok: true, skipped: "window not yet open", started: false };
+  if (!ENABLED) return { ok: true, disabled: "MASTERCLASS_REMINDER_ENABLED is false — production sending off", started: false };
 
   const eligible = await eligibleSignups(new Date(target).toISOString());
   const sent: string[] = [];
@@ -394,7 +388,7 @@ async function handleRun(body: any) {
   };
   await Promise.all(Array.from({ length: concurrency }, () => worker()));
 
-  return { ok: true, started: true, forced: force, concurrency, quotaSync, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
+  return { ok: true, started: true, concurrency, quotaSync, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
 }
 
 async function handleTest(body: any) {
@@ -516,68 +510,6 @@ async function syncQuotaInternal() {
   return out;
 }
 
-// ----------------------------------------------------------------------------
-// Read-only provider readiness probe (never sends). Gated by the cron secret.
-// ----------------------------------------------------------------------------
-async function providerCheck(body: any) {
-  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
-  const R = Deno.env.get("RESEND_API_KEY") || "";
-  const B = Deno.env.get("BREVO_API_KEY") || "";
-  const out: any = {};
-  if (R) {
-    const r = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${R}` } });
-    const j = await r.json().catch(() => ({}));
-    out.resend = { status: r.status, ok: r.ok, domains: (j.data || []).map((d: any) => ({ name: d.name, status: d.status })) };
-    out.resend.probes = {};
-    const probeTargets: Record<string, string> = {
-      emails: "https://api.resend.com/emails?limit=100",
-      emails_all: "https://api.resend.com/emails",
-      api_keys: "https://api.resend.com/api-keys",
-      usage: "https://api.resend.com/usage",
-      stats: "https://api.resend.com/stats",
-    };
-    for (const [name, url] of Object.entries(probeTargets)) {
-      try {
-        const pr = await fetch(url, { headers: { Authorization: `Bearer ${R}` } });
-        const text = await pr.text().catch(() => "");
-        let body: any = null; try { body = JSON.parse(text); } catch { body = text.slice(0, 200); }
-        out.resend.probes[name] = { status: pr.status, ok: pr.ok, count: Array.isArray(body?.data) ? body.data.length : undefined, sample: JSON.stringify(body).slice(0, 400) };
-      } catch (e) {
-        out.resend.probes[name] = { error: String(e instanceof Error ? e.message : e) };
-      }
-    }
-  } else out.resend = { ok: false, error: "RESEND_API_KEY missing" };
-  if (B) {
-    const a = await fetch("https://api.brevo.com/v3/account", { headers: { "api-key": B, Accept: "application/json" } });
-    const atext = await a.text().catch(() => "");
-    let aj: any = {}; try { aj = JSON.parse(atext); } catch {}
-    out.brevo = { status: a.status, ok: a.ok, key_format: /^xkeysib-/.test(B) ? "brevo_v3" : "other", key_length: B.length, account: { email: aj.email, companyName: aj.companyName, plan: aj.plan }, raw_error: a.ok ? undefined : atext.slice(0, 300) };
-    const s = await fetch("https://api.brevo.com/v3/senders", { headers: { "api-key": B, Accept: "application/json" } });
-    const sj = await s.json().catch(() => ({}));
-    out.brevo.senders = { status: s.status, ok: s.ok, list: (sj.senders || []).map((x: any) => ({ email: x.email, active: x.active })) };
-    const dom = await fetch("https://api.brevo.com/v3/senders/domains", { headers: { "api-key": B, Accept: "application/json" } });
-    const domj = await dom.json().catch(() => ({}));
-    out.brevo.domains = { status: dom.status, ok: dom.ok, list: (domj.domains || []).map((x: any) => ({ domain_name: x.domain_name, authenticated: x.authenticated, verified: x.verified })) };
-    out.brevo.probes = {};
-    const bprobe: Record<string, string> = {
-      agg_report: "https://api.brevo.com/v3/smtp/statistics/aggregatedReport?startDate=2026-10-10&endDate=2026-10-10",
-      emails: "https://api.brevo.com/v3/smtp/statistics/emails?startDate=2026-10-10&endDate=2026-10-10&limit=100",
-      account: "https://api.brevo.com/v3/account",
-    };
-    for (const [name, url] of Object.entries(bprobe)) {
-      try {
-        const pr = await fetch(url, { headers: { "api-key": B, Accept: "application/json" } });
-        const text = await pr.text().catch(() => "");
-        let body: any = null; try { body = JSON.parse(text); } catch { body = text.slice(0, 200); }
-        out.brevo.probes[name] = { status: pr.status, ok: pr.ok, sample: JSON.stringify(body).slice(0, 500) };
-      } catch (e) {
-        out.brevo.probes[name] = { error: String(e instanceof Error ? e.message : e) };
-      }
-    }
-  } else out.brevo = { ok: false, error: "BREVO_API_KEY missing" };
-  return { ok: true, ...out };
-}
-
 Deno.serve(async (req: Request) => {
   const o = req.headers.get("origin");
   const h = cors(o);
@@ -641,7 +573,6 @@ Deno.serve(async (req: Request) => {
     return out(await handleStats());
   }
   if (act === "email_status") return out(await emailStatus(b));
-  if (act === "provider_check") return out(await providerCheck(b));
   if (act === "sync_quota") {
     if (clean(b.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return out({ ok: false, error: "Unauthorized" }, 401);
     return out({ ok: true, ...(await syncQuotaInternal()) });
