@@ -47,6 +47,26 @@ ${opts.meta ? `<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px
 </td></tr></table>`;
 }
 
+// Warm neutral card for structured details (date/time/amount/reference). Optional.
+export function infoCard(rows: { label: string; value: string }[]): string {
+  const trs = rows.map((r) =>
+    `<tr><td style="padding:6px 0;color:#77716a;font-size:13px">${brandEsc(r.label)}</td><td align="right" style="padding:6px 0;color:#151515;font-size:14px;font-weight:700">${brandEsc(r.value)}</td></tr>`
+  ).join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f5;border:1px solid #ece9e2;border-radius:14px"><tr><td style="padding:14px 18px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${trs}</table></td></tr></table>`;
+}
+
+// Short announcement band (eyebrow). Optional. tone "yellow" (default) or "dark".
+export function banner(text: string, tone: "yellow" | "dark" = "yellow"): string {
+  const bg = tone === "dark" ? "#171717" : "#ffd51f";
+  const fg = tone === "dark" ? "#ffffff" : "#151515";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${bg};border-radius:14px"><tr><td align="center" style="padding:12px 18px;color:${fg};font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:800;letter-spacing:.08em">${brandEsc(text)}</td></tr></table>`;
+}
+
+// A simple branded paragraph (keeps body markup consistent across templates).
+export function para(html: string, opts?: { last?: boolean }): string {
+  return `<p style="margin:0 0 ${opts?.last ? "0" : "16px"}">${html}</p>`;
+}
+
 export function brandedEmail(opts: BrandEmailOptions): string {
   const { heading, bodyHtml, cta, afterHtml, footerHtml } = opts;
   const showFallback = opts.showFallbackUrl !== false;
