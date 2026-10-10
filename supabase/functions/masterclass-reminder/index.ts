@@ -345,26 +345,25 @@ async function sendReminder(
 // template and eligibility). Promotes the Academy per the approved copy.
 // ----------------------------------------------------------------------------
 const FOLLOWUP_KEY = "academy-followup-2026-10-12";
-const FOLLOWUP_SUBJECT = "One important thing I forgot! 💛";
+const FOLLOWUP_SUBJECT = "Oops, one more thing! 💛";
 
 function renderFollowupHtml(opts: { first: string; appsCount: number; seats: number; unsubscribeUrl: string }) {
   const { first, appsCount, seats, unsubscribeUrl } = opts;
   const unsubAttr = escAttr(unsubscribeUrl);
   const P = "margin:0 0 18px;line-height:1.62;font-size:16px;color:#232323";
   const A = "color:#1155cc;text-decoration:underline";
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>One important thing I forgot</title></head>
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Oops, one more thing</title></head>
 <body style="margin:0;padding:0;background:#ffffff">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td align="left" style="padding:32px 20px 44px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
   <tr><td style="font-family:Arial,Helvetica,sans-serif;color:#232323;font-size:16px;line-height:1.62">
     <p style="${P}">Hey ${esc(first)}! 💛</p>
-    <p style="${P}">Quick follow-up! A small formatting issue cut off the last part of my previous email. 😅</p>
-    <p style="${P}"><b>Assistara Academy starts this Monday, October 12!</b> ✨</p>
-    <p style="${P}">We&#8217;ve already received <b>${appsCount} applications for just ${seats} seats</b> in our Founding Cohort!</p>
-    <p style="${P}">Since we review applications <b>in the order they arrive</b>, I wanted to give you the chance to apply before tomorrow&#8217;s masterclass. 💛</p>
-    <p style="${P}">👉 <b>Apply here:</b> <a href="${ACADEMY_URL}" style="${A}">${ACADEMY_URL}</a></p>
-    <p style="${P}">I&#8217;ll share more tomorrow! Can&#8217;t wait to see you there! ☀️</p>
-    <p style="margin:26px 0 30px;line-height:1.55;font-size:16px;color:#232323"><b>Xyra Mendoza</b><br><span style="color:#6b6b6b">Co-founder, Assistara</span></p>
+    <p style="${P}">Oops! 😅 The P.S. from my last email got cut off, and I didn&#8217;t want you to miss it!</p>
+    <p style="${P}"><b>P.S.</b> We&#8217;ve already received <b>${appsCount} applications for our ${seats} Academy spots!</b> 💛</p>
+    <p style="${P}">We review applications in the order they come in, so I wanted to make sure you had the chance to apply before tomorrow&#8217;s masterclass!</p>
+    <p style="${P}">👉 <a href="${ACADEMY_URL}" style="${A}">${ACADEMY_URL}</a></p>
+    <p style="${P}">See you tomorrow!</p>
+    <p style="margin:26px 0 30px;line-height:1.55;font-size:16px;color:#232323">Xyra 💛</p>
     <p style="margin:0;line-height:1.6;font-size:12px;color:#8a8a8a">You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${unsubAttr}" style="color:#8a8a8a;text-decoration:underline">Unsubscribe</a></p>
   </td></tr>
 </table>
@@ -376,13 +375,12 @@ function renderFollowupText(opts: { first: string; appsCount: number; seats: num
   const { first, appsCount, seats, unsubscribeUrl } = opts;
   return [
     `Hey ${first}! 💛`,
-    "Quick follow-up! A small formatting issue cut off the last part of my previous email. 😅",
-    "Assistara Academy starts this Monday, October 12! ✨",
-    `We've already received ${appsCount} applications for just ${seats} seats in our Founding Cohort!`,
-    "Since we review applications in the order they arrive, I wanted to give you the chance to apply before tomorrow's masterclass. 💛",
-    "👉 Apply here: " + ACADEMY_URL,
-    "I'll share more tomorrow! Can't wait to see you there! ☀️",
-    ["Xyra Mendoza", "Co-founder, Assistara"].join("\n"),
+    "Oops! 😅 The P.S. from my last email got cut off, and I didn't want you to miss it!",
+    `P.S. We've already received ${appsCount} applications for our ${seats} Academy spots! 💛`,
+    "We review applications in the order they come in, so I wanted to make sure you had the chance to apply before tomorrow's masterclass!",
+    "👉 " + ACADEMY_URL,
+    "See you tomorrow!",
+    "Xyra 💛",
     ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubscribeUrl].join("\n"),
   ].join("\n\n");
 }
