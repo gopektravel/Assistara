@@ -485,7 +485,8 @@ async function handleFollowupTest(body: any) {
   }
   let result;
   try {
-    result = await sendFollowup(signup, { prefixSubject: true, uniqueIdem: `test:${FOLLOWUP_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
+    const exact = body.exact === true; // send the exact production subject (no [TEST] prefix)
+    result = await sendFollowup(signup, { prefixSubject: !exact, uniqueIdem: `test:${FOLLOWUP_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
   } catch (e) {
     return { ok: false, testEmail: email, forcedProvider: body.provider || null, error: String(e instanceof Error ? e.message : e) };
   }
