@@ -239,16 +239,23 @@ export class EmailDelivery {
             return { ...result, attempts: 1 };
           }
 
-          // Definitive failure - don't retry with same provider, don't fallback
-          if (result.errorCategory === 'provider_auth' || result.errorCategory === 'provider_quota') {
-            await this.recordProviderFailure(provider.provider, result.errorCategory);
+          // Definitive failure - don't retry with same provider
+          if (result.errorCategory === 'provider_auth') {
+            await this.recordProviderFailure(provider.provider, 'provider_auth');
             await this.releaseQuota(provider.provider, 1);
-            
-            // For quota, try next provider; for auth, stop entirely
-            if (result.errorCategory === 'provider_quota') {
-              continue; // Try next provider
-            }
-            throw result.error;
+            await this.updateDeliveryLog(idempotencyKey, {
+              status: 'failed',
+              provider: provider.provider,
+              attempts: 1,
+              last_error: result.error?.message,
+              last_error_category: 'provider_auth',
+            });
+            return { success: false, provider: provider.provider, providerMessageId: null, status: 'failed', error: result.error?.message, errorCategory: 'provider_auth', attempts: 1 };
+          }
+          if (result.errorCategory === 'provider_quota') {
+            await this.recordProviderFailure(provider.provider, 'provider_quota');
+            await this.releaseQuota(provider.provider, 1);
+            continue; // Try next provider
           }
 
           // Ambiguous failure (5xx, timeout, network) - mark UNKNOWN, reconcile later

@@ -290,7 +290,7 @@ function relativeDay(iso: string) {
 // ----------------------------------------------------------------------------
 async function sendReminder(
   signup: { id: string; name: string; email: string; attendee_token: string },
-  extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender" }
+  extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender"; subjectOverride?: string }
 ) {
   const event = await eventRow();
   if (!event?.scheduled_at) throw Error("Event not scheduled");
@@ -306,33 +306,35 @@ async function sendReminder(
   const timeLabel = eventTimeLabel(event.scheduled_at);
   const dayWord = relativeDay(event.scheduled_at);
   const subject = `${first}, your first online paycheck starts with a plan! 💛`;
-  const finalSubject = extra?.prefixSubject ? `[TEST] ${subject}` : subject;
+  const finalSubject = extra?.subjectOverride ? extra.subjectOverride : (extra?.prefixSubject ? `[TEST] ${subject}` : subject);
   const html = renderHtml({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
   const text = renderText({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
   
   const idem = extra?.uniqueIdem || `${EVENT_KEY}:${signup.id}`;
   const deadline = new Date(event.scheduled_at); // Hard deadline: event start time
 
-  // Create delivery log entry
+  // Create delivery log entry (note: html/text are NOT stored here — only metadata)
   const deliveryLog = {
     idempotency_key: idem,
     email_type: "masterclass_reminder",
     recipient_email: signup.email,
     recipient_name: signup.name,
     subject: finalSubject,
-    html,
-    text,
     deadline: deadline.toISOString(),
     metadata: { signup_id: signup.id, event_key: EVENT_KEY },
     max_attempts: 3,
   };
 
-  // Insert delivery log (idempotent via unique constraint)
-  await api("rest/v1/email_delivery_log?select=id", {
+  // Insert delivery log (idempotent: ignore a duplicate idempotency_key)
+  const logRes = await api("rest/v1/email_delivery_log?select=id", {
     method: "POST",
-    headers: { Prefer: "return=representation", "On-Conflict": "idempotency_key" },
+    headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
     body: JSON.stringify([deliveryLog]),
   });
+  if (!logRes.ok) {
+    const t = await logRes.text().catch(() => "");
+    console.error("email_delivery_log insert failed", logRes.status, t.slice(0, 300));
+  }
 
   // Send via centralized delivery
   const delivery = await createEmailDelivery(`mc-reminder-${Date.now()}`);
@@ -422,7 +424,12 @@ async function handleTest(body: any) {
     if (!cr.ok || !Array.isArray(crj) || !crj[0]?.id) return { ok: false, error: "Could not create test registration", status: cr.status };
     signup = { id: crj[0].id, name, email, attendee_token: token };
   }
-  const result = await sendReminder(signup, { prefixSubject: true, uniqueIdem: `test:${EVENT_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
+  let result;
+  try {
+    result = await sendReminder(signup, { prefixSubject: true, uniqueIdem: `test:${EVENT_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined, subjectOverride: clean(body.subject, 200) || undefined });
+  } catch (e) {
+    return { ok: false, testEmail: email, forcedProvider: body.provider || null, error: String(e instanceof Error ? e.message : e) };
+  }
   return { ok: true, testEmail: email, forcedProvider: body.provider || null, ...result };
 }
 
