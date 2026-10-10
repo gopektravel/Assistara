@@ -370,18 +370,6 @@ async function sendReminder(signup: { id: string; name: string; email: string; a
 // ----------------------------------------------------------------------------
 // Actions
 // ----------------------------------------------------------------------------
-function unsubscribePage(token: string) {
-  const action = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribe | Assistara</title></head>
-<body style="margin:0;background:#f7f8f5;color:#101311;font-family:Arial,Helvetica,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center">
-<div style="max-width:440px;padding:28px;text-align:center">
-  <img src="${LOGO_URL}" width="64" height="64" alt="Assistara" style="width:64px;height:64px;margin-bottom:16px">
-  <h1 style="font-size:22px;margin:0 0 8px">Stop masterclass reminder emails?</h1>
-  <p style="color:#69706b;line-height:1.5;margin:0 0 20px">You&#8217;ll stay on Assistara&#8217;s registration list, but we won&#8217;t send you masterclass reminder emails anymore.</p>
-  <form method="post" action="${action}"><button type="submit" style="background:#151515;color:#fff;border:0;border-radius:999px;font-size:15px;font-weight:700;padding:13px 24px;cursor:pointer">Yes, unsubscribe me</button></form>
-</div></body></html>`;
-}
-
 async function handleRun(body: any) {
   if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) {
     return { ok: false, error: "Unauthorized" };
@@ -490,22 +478,35 @@ async function handleStats() {
   };
 }
 
-async function handleUnsubscribeGet(token: string) {
-  if (!TOKEN_RE.test(token)) return new Response("Invalid unsubscription link.", { status: 400, headers: { "Content-Type": "text/plain; charset=utf-8" } });
-  return new Response(unsubscribePage(token), { status: 200, headers: { "Content-Type": "text/html; charset=utf-8", "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store" } });
-}
-
 async function handleUnsubscribePost(token: string) {
   if (!TOKEN_RE.test(token)) return { ok: false, error: "Invalid token" };
   const r = await api(
     `rest/v1/masterclass_signups?attendee_token=eq.${encodeURIComponent(token)}&unsubscribed_at=is.null`,
-    { method: "PATCH", body: JSON.stringify({ unsubscribed_at: new Date().toISOString() }) }
+    { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify({ unsubscribed_at: new Date().toISOString() }) }
   );
+  const j = await r.json().catch(() => []);
   if (!r.ok) return { ok: false, error: "Unsubscribe failed", status: r.status };
+  if (!Array.isArray(j) || j.length === 0) return { ok: false, error: "No active registration matches this link", status: 404 };
   return { ok: true, unsubscribed: true };
 }
 
 // ----------------------------------------------------------------------------
+// Read-only: confirm Resend's delivery state for a message id (no send involved).
+async function emailStatus(body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const id = clean(body.id, 100);
+  if (!/^[0-9a-fA-F-]{36}$/.test(id)) return { ok: false, error: "Valid message id required" };
+  if (!RESEND) return { ok: false, error: "RESEND_API_KEY missing" };
+  try {
+    const r = await fetch(`https://api.resend.com/emails/${id}`, { headers: { Authorization: `Bearer ${RESEND}` } });
+    const j = await r.json().catch(() => ({} as any));
+    const d = j?.data ?? j ?? {};
+    return { ok: r.ok, id, state: d?.state ?? d?.last_event ?? null, subject: d?.subject ?? null, from: d?.from ?? null, created_at: d?.created_at ?? null, provider_status: r.status };
+  } catch (e) {
+    return { ok: false, error: String(e instanceof Error ? e.message : e) };
+  }
+}
+
 Deno.serve(async (req: Request) => {
   const o = req.headers.get("origin");
   const h = cors(o);
@@ -514,35 +515,43 @@ Deno.serve(async (req: Request) => {
 
   const url = new URL(req.url);
   const params = url.searchParams;
-  const action = clean(params.get("action"), 50) || clean(url.pathname.split("/").pop() || "", 50);
+  const token = clean(params.get("t"), 64);
+  const queryAction = clean(params.get("action"), 50);
 
-  if (action === "unsubscribe" || url.pathname.endsWith("/unsubscribe") || url.pathname.endsWith("masterclass-reminder")) {
-    const token = clean(params.get("t"), 64);
-    if (req.method === "POST" && url.pathname.includes("masterclass-reminder") && !token) {
-      // POST arrives via the /unsubscribe proxy — read form body
+  // GET serves only the unsubscribe confirm page: /unsubscribe?t=...
+  if (req.method === "GET") {
+    if (queryAction === "unsubscribe" || token) return out({ ok: false, error: "Unsubscribe requires confirmation — open this link in a browser and click the confirm button.", status: "confirm_required" }, 400);
+    return out({ ok: false, error: "Not found" }, 404);
+  }
+  if (req.method !== "POST") return out({ ok: false, error: "Method not allowed" }, 405);
+
+  const ctype = (req.headers.get("content-type") || "").toLowerCase();
+
+  // Non-JSON POST = the static confirm page submitting the token (form-encoded).
+  if (!ctype.includes("application/json")) {
+    let t = token;
+    if (!t) {
       try {
         const fd = await req.formData();
-        const t2 = clean(String(fd.get("t") || ""), 64);
-        if (t2) return out(await handleUnsubscribePost(t2));
+        t = clean(String(fd.get("t") || ""), 64);
       } catch {}
     }
-    if (token) {
-      if (req.method === "POST") return out(await handleUnsubscribePost(token));
-      return await handleUnsubscribeGet(token);
-    }
-    return out({ ok: false, error: "Missing unsubscribe token" }, 400);
+    if (queryAction !== "unsubscribe" && !t) return out({ ok: false, error: "Missing unsubscribe token" }, 400);
+    return out(await handleUnsubscribePost(t));
   }
 
-  if (req.method !== "POST") return out({ ok: false, error: "Method not allowed" }, 405);
+  // JSON API: cron/run, test, stats, and programmatic unsubscribe.
   let b: any = {};
   try { b = await req.json(); } catch {}
-  const act = String(b.action || action || "").trim().toLowerCase();
+  const act = String(b.action || queryAction || "").trim().toLowerCase();
 
+  if (act === "unsubscribe") return out(await handleUnsubscribePost(clean(b.t, 64) || token));
   if (act === "run") return out(await handleRun(b));
   if (act === "test") return out(await handleTest(b));
   if (act === "stats") {
     if (clean(b.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return out({ ok: false, error: "Unauthorized" }, 401);
     return out(await handleStats());
   }
+  if (act === "email_status") return out(await emailStatus(b));
   return out({ ok: false, error: "Unknown action" }, 400);
 });

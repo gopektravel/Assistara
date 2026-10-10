@@ -173,6 +173,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "unsubscribe.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "404.html",
       "use": "@vercel/static"
     },
@@ -354,6 +358,15 @@
     },
     {
       "source": "/live",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/unsubscribe",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -642,11 +655,25 @@
     },
     {
       "src": "/unsubscribe",
+      "methods": ["POST"],
       "dest": "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-reminder"
     },
     {
       "src": "/unsubscribe/",
+      "methods": ["POST"],
       "dest": "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-reminder"
+    },
+    {
+      "src": "/unsubscribe",
+      "dest": "/unsubscribe.html"
+    },
+    {
+      "src": "/unsubscribe/",
+      "dest": "/unsubscribe.html"
+    },
+    {
+      "src": "/unsubscribe.html",
+      "dest": "/unsubscribe.html"
     },
     {
       "src": "/login",

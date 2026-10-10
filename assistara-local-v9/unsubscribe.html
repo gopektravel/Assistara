@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Unsubscribe | Assistara</title>
+<style>
+  :root{--ink:#151515;--muted:#6b6b6b;--line:#e7e5e0;--yellow:#ffd51f;--bg:#fbfaf6}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;-webkit-font-smoothing:antialiased}
+  .card{width:100%;max-width:460px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:40px 32px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.06)}
+  .logo{width:64px;height:64px;object-fit:contain;margin-bottom:20px}
+  h1{font-size:23px;line-height:1.25;margin:0 0 10px;letter-spacing:-.02em}
+  p{color:var(--muted);line-height:1.55;margin:0 0 22px;font-size:15px}
+  .btn{display:inline-block;background:var(--ink);color:#fff;border:0;border-radius:999px;font-size:16px;font-weight:700;padding:15px 28px;cursor:pointer;text-decoration:none;font-family:inherit}
+  .btn:disabled{opacity:.55;cursor:default}
+  .link{display:inline-block;margin-top:16px;color:var(--muted);text-decoration:none;font-size:14px;border-bottom:1px solid var(--line)}
+  .accent{width:44px;height:5px;border-radius:999px;background:var(--yellow);margin:0 auto 22px}
+  .note{font-size:12px;color:#9a9a9a;margin:22px 0 0;line-height:1.5}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+  <main class="card" id="card">
+    <img class="logo" src="/assistara-logo.png" alt="Assistara" width="64" height="64">
+    <div class="accent" aria-hidden="true"></div>
+    <h1 id="title">Stop masterclass reminder emails?</h1>
+    <p id="msg">You&rsquo;ll stay on Assistara&rsquo;s registration list, but we won&rsquo;t send you masterclass reminder emails anymore.</p>
+    <button class="btn" id="confirm" type="button">Yes, unsubscribe me</button>
+    <div><a class="link" id="cancel" href="/">No, keep them</a></div>
+    <p class="note">You can come back and change this any time using the link in your email.</p>
+  </main>
+  <script>
+    (function () {
+      var TOKEN_RE = /^[0-9a-f]{48}$/i;
+      var params = new URLSearchParams(location.search);
+      var token = params.get("t") || "";
+      var title = document.getElementById("title");
+      var msg = document.getElementById("msg");
+      var btn = document.getElementById("confirm");
+      var cancel = document.getElementById("cancel");
+
+      function setState(t, m, showButton) {
+        title.textContent = t;
+        msg.textContent = m;
+        btn.classList.toggle("hidden", !showButton);
+        cancel.classList.toggle("hidden", showButton);
+      }
+
+      if (!TOKEN_RE.test(token)) {
+        setState("This link isn\u2019t valid",
+          "Open the unsubscribe link from your email to manage your reminder preferences.",
+          false);
+        return;
+      }
+
+      btn.addEventListener("click", function () {
+        btn.disabled = true;
+        btn.textContent = "Unsubscribing\u2026";
+        fetch("/unsubscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "t=" + encodeURIComponent(token)
+        })
+          .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+          .then(function (j) {
+            if (j && j.ok) {
+              setState("You\u2019re unsubscribed",
+                "You won\u2019t get masterclass reminder emails anymore. You\u2019re still on the registration list for other Assistara messages.",
+                false);
+            } else {
+              throw new Error("failed");
+            }
+          })
+          .catch(function () {
+            btn.disabled = false;
+            btn.textContent = "Try again";
+            msg.textContent = "We couldn\u2019t update your preference just now. Please try once more.";
+          });
+      });
+    })();
+  </script>
+</body>
+</html>
