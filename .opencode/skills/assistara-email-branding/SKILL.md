@@ -15,7 +15,7 @@ official logo; never invent a new design.
 1. **Reuse, never duplicate.** Import the shared renderer; do not paste shell HTML.
 2. **ALWAYS use the official logo asset** (see §2). **NEVER** replace it with a
    letter, emoji, placeholder, or a recreated shape.
-3. Keep the **permanent identity** (§3) on every email: black header + real logo +
+3. Keep the **permanent identity** (§4) on every email: black header + real logo +
    white wordmark, white rounded card, yellow/black/white/warm-neutral palette,
    Arial, bold yellow rounded buttons, warm personal voice, minimal footer.
 4. Everything in §5 (countdowns, banners, dates, join buttons, signatures) is
@@ -23,7 +23,27 @@ official logo; never invent a new design.
 5. Route all sending through the shared delivery router; never call provider APIs
    directly. Respect quotas, idempotency and consent.
 
-## 2. Canonical renderer & official logo
+## 2. Sender identity & signatures (by purpose)
+
+| Email purpose | Sender display name | Signature |
+|---------------|---------------------|-----------|
+| General Assistara (registration confirmations, notifications, admin) | `Assistara` | The Assistara Team |
+| Academy / masterclass (reminders, enrollment, decisions) | `Assistara Academy` | The Assistara Team |
+| **Personal day-before masterclass reminder** (Xyra's own) | `Assistara Academy` | `Xyra 💛` |
+| 30-minute reminder | `Assistara Academy` | The Assistara Team |
+| 7-minute reminder | `Assistara Academy` | The Assistara Team |
+
+- **Signatures are chosen by email purpose**, not hardcoded into every template.
+- **Only the personal day-before masterclass reminder is signed by Xyra.** Never
+  auto-insert her name, and never sign other emails as Xyra.
+- **From address:** the verified `xyra@getassistara.com` on the verified
+  `getassistara.com` domain (Resend, Brevo and Sender.net all authenticate the
+  domain). Set the display name per-send with the `fromName` option on
+  `createEmailDelivery().send(...)` — do **not** hardcode "Xyra from Assistara".
+- Keep the tone warm, professional and friendly; use emojis sparingly (avoid too
+  many hearts/exclamation marks, artificial urgency, or overly promotional copy).
+
+## 3. Canonical renderer & official logo
 
 | Component | Location |
 |-----------|----------|
@@ -38,7 +58,7 @@ module (do not hardcode a copy). `assistara-logo.svg` is web-only — **Gmail do
 render SVG**, so use the PNG. It is the **only remote image allowed** in email HTML
 (enforced by `scripts/email-branding.test.js`).
 
-## 3. Permanent identity (keep on every email)
+## 4. Permanent identity (keep on every email)
 
 - **Header:** black `#171717`, padding `20px 32px`; **real logo** (42×42, original
   aspect) + white wordmark `Assistara` (`#fff`, 23px, bold). Do not add a second
@@ -60,7 +80,7 @@ render SVG**, so use the PNG. It is the **only remote image allowed** in email H
 - **Compatibility:** Gmail, Outlook, Apple Mail, mobile — inline CSS only, no remote
   images except the logo, no background images, web-safe fonts.
 
-## 4. Reusable components (from `_shared/email-brand.ts`)
+## 5. Reusable components (from `_shared/email-brand.ts`)
 
 - `brandedEmail({ heading?, bodyHtml, cta?, afterHtml?, footerHtml?, showFallbackUrl?, countdownHtml? })`
   — the full document: header + logo + (heading) + (optional band) + body + button
@@ -74,7 +94,7 @@ render SVG**, so use the PNG. It is the **only remote image allowed** in email H
 - `banner(text, tone?)` — short announcement/eyebrow band (`yellow` or `dark`).
 - `countdownBand({ big, label, meta? })` — **static** branded countdown band.
 
-## 5. Flexible content (OPTIONAL — not part of the identity)
+## 6. Flexible content (OPTIONAL — not part of the identity)
 
 Use these only when appropriate; they are **not** required:
 
@@ -91,7 +111,7 @@ proxies and caches images, so it would be stale or show wrong/negative time. Use
 page only** (the livestream page runs `setInterval(tick, 1000)`). Never claim an
 email countdown is "live" unless it genuinely updates reliably.
 
-## 6. Transactional vs promotional
+## 7. Transactional vs promotional
 
 - **Transactional** (reminders, confirmations, receipts, onboarding): relates only
   to what the recipient registered for/bought. Allowed without marketing consent.
@@ -100,7 +120,7 @@ email countdown is "live" unless it genuinely updates reliably.
   `masterclass_signups`/`contacts` for a consent field/table; if none exists, treat
   as **no consent** and do not send. Keep promotional campaigns separate.
 
-## 7. Personalization & unsubscribe
+## 8. Personalization & unsubscribe
 
 - First name: `(signup.name || "there").split(/\s+/)[0]` → fallback `"there"`.
 - Escape all dynamic values with `brandEsc`. Every link must be the recipient's own
@@ -108,14 +128,14 @@ email countdown is "live" unless it genuinely updates reliably.
 - Footer must include a working unsubscribe link: `${SITE}/unsubscribe?t=<token>`;
   eligibility always excludes `unsubscribed_at IS NOT NULL`.
 
-## 8. Compatibility & responsive
+## 9. Compatibility & responsive
 
 - Table layout (`role="presentation"`), inline CSS only, no `<style>` blocks.
 - `max-width:600px` card; mobile-safe outer padding `28px 12px`.
 - No remote images except the official logo; no background images; web-safe fonts.
 - Verify Gmail, Outlook, Apple Mail and mobile.
 
-## 9. Preview & test
+## 10. Preview & test
 
 - **Guard tests:** `node --test scripts/email-branding.test.js` — must pass before
   deploy (includes: official logo only, absolute HTTPS, no recreated "A", fallback
@@ -126,7 +146,7 @@ email countdown is "live" unless it genuinely updates reliably.
   prefix and a `test:` idempotency key. Never trigger a bulk send while testing.
 - **Deploy:** `npx supabase functions deploy <name> --no-verify-jwt`.
 
-## 10. Reuse rules
+## 11. Reuse rules
 
 1. Import `brandedEmail`/`brandedText` (+ optional components) — never paste HTML.
 2. Route sending through `createEmailDelivery()` (Resend → Brevo → Sender.net, with
@@ -136,7 +156,7 @@ email countdown is "live" unless it genuinely updates reliably.
 4. Log to `email_delivery_log` with an `email_type` naming the campaign.
 5. Reconcile quotas (`syncQuotaInternal`) before bulk sends; never exceed real limits.
 
-## 11. Worked examples (same identity, different content)
+## 12. Worked examples (same identity, different content)
 
 - **Masterclass reminder:** heading/body copy + `countdownBand` + yellow "JOIN"
   button + unsubscribe footer.
@@ -152,9 +172,9 @@ footer, but the copy, components and CTA are chosen per email.
 
 ## Campaign registry (current)
 
-| Campaign | Action | Key | Template |
-|----------|--------|-----|----------|
-| 24h reminder | `run` | `founding-masterclass-2026:<id>` | plain personal |
-| Academy follow-up | `followup` | `academy-followup-2026-10-12:<id>` | plain personal |
-| 30-min reminder | `reminder30` | `reminder30-2026-10-11:<id>` | branded (visual reference) |
-| 5-min reminder | `reminder5` | `reminder5-2026-10-11:<id>` | branded |
+| Campaign | Action | Key | Template | Sender | Signature |
+|----------|--------|-----|----------|--------|-----------|
+| 24h reminder | `run` | `founding-masterclass-2026:<id>` | plain personal | Assistara Academy | Xyra Mendoza |
+| Academy follow-up | `followup` | `academy-followup-2026-10-12:<id>` | plain personal | Xyra (approved) | Xyra 💛 |
+| 30-min reminder | `reminder30` | `reminder30-2026-10-11:<id>` | branded (visual reference) | Assistara Academy | The Assistara Team |
+| 7-min reminder | `reminder7` | `reminder7-2026-10-11:<id>` | branded | Assistara Academy | The Assistara Team |

@@ -31,6 +31,7 @@ export interface EmailDeliveryOptions {
   metadata?: Record<string, unknown>;
   maxAttempts?: number;
   forceProvider?: 'resend' | 'brevo' | 'sender'; // test-only: pin a single provider
+  fromName?: string; // sender display-name override (per email identity)
 }
 
 export interface EmailDeliveryResult {
@@ -324,9 +325,10 @@ export class EmailDelivery {
 
   private async sendViaProvider(provider: EmailProviderConfig, options: EmailDeliveryOptions): Promise<EmailDeliveryResult> {
     const { to, toName, subject, html, text, replyTo, idempotencyKey } = options;
+    const fromName = options.fromName || provider.fromName;
     
     const payload = {
-      from: `${provider.fromName} <${provider.fromEmail}>`,
+      from: `${fromName} <${provider.fromEmail}>`,
       to: [toName ? `${toName} <${to}>` : to],
       reply_to: replyTo || provider.replyToEmail,
       subject,
@@ -363,7 +365,7 @@ export class EmailDelivery {
               'api-key': provider.apiKey,
             },
             body: JSON.stringify({
-              sender: { name: provider.fromName, email: provider.fromEmail },
+              sender: { name: fromName, email: provider.fromEmail },
               to: [{ email: to, name: toName }],
               replyTo: { email: replyTo || provider.replyToEmail },
               subject,
@@ -385,7 +387,7 @@ export class EmailDelivery {
           // Content-Type: application/json
           // Required: from {email, name}, to {email, name?}, subject, html and/or text
           const senderPayload = {
-            from: { email: provider.fromEmail, name: provider.fromName },
+            from: { email: provider.fromEmail, name: fromName },
             to: { email: to, name: toName || '' },
             subject,
             html,

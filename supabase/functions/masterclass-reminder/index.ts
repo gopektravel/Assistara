@@ -522,13 +522,13 @@ function reminder30Content(first: string, joinUrl: string, unsubUrl: string) {
     + `<p style="margin:0 0 16px">We&#8217;re going live in <b>30 minutes</b>, and I can&#8217;t wait to see you there!</p>`
     + `<p style="margin:0">Here&#8217;s your personal link:</p>`;
   const afterHtml = `<p style="margin:0 0 16px">Grab a coffee, get comfy, and I&#8217;ll see you soon! ☕✨</p>`
-    + `<p style="margin:0">Xyra 💛</p>`;
+    + `<p style="margin:0">The Assistara Team</p>`;
   const footerHtml = `You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${brandEsc(unsubUrl)}" style="color:#77716a;text-decoration:underline">Unsubscribe</a>`;
   const html = brandedEmail({ bodyHtml, cta: { label: "JOIN THE MASTERCLASS", href: joinUrl }, afterHtml, footerHtml, countdownHtml: countdownBand({ big: "30", label: "MINUTES TO GO", meta: "Sunday, October 11 · 6:00 PM PHT" }) });
   const text = brandedText({
     lines: [`Hey ${first}! 💛`, "It's almost time!! 😍", "We're going live in 30 minutes, and I can't wait to see you there!", "Here's your personal link:"],
     cta: { label: "JOIN THE MASTERCLASS", href: joinUrl },
-    afterLines: ["Grab a coffee, get comfy, and I'll see you soon! ☕✨", "Xyra 💛"],
+    afterLines: ["Grab a coffee, get comfy, and I'll see you soon! ☕✨", "The Assistara Team"],
     footerLines: ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubUrl],
   });
   return { html, text };
@@ -538,13 +538,13 @@ function reminder7Content(first: string, joinUrl: string, unsubUrl: string) {
   const bodyHtml = `<p style="margin:0 0 16px">Hey ${brandEsc(first)}!</p>`
     + `<p style="margin:0 0 16px">We&#8217;re live! Where are youuu? 👀</p>`
     + `<p style="margin:0">Come join us, we&#8217;re waiting for you!</p>`;
-  const afterHtml = `<p style="margin:0">Xyra 💛</p>`;
+  const afterHtml = `<p style="margin:0">The Assistara Team</p>`;
   const footerHtml = `You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${brandEsc(unsubUrl)}" style="color:#77716a;text-decoration:underline">Unsubscribe</a>`;
   const html = brandedEmail({ bodyHtml, cta: { label: "JOIN US LIVE", href: joinUrl }, afterHtml, footerHtml });
   const text = brandedText({
     lines: [`Hey ${first}!`, "We're live! Where are youuu? 👀", "Come join us, we're waiting for you!"],
     cta: { label: "JOIN US LIVE", href: joinUrl },
-    afterLines: ["Xyra 💛"],
+    afterLines: ["The Assistara Team"],
     footerLines: ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubUrl],
   });
   return { html, text };
@@ -587,6 +587,7 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
     emailType: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7",
     to: signup.email, toName: signup.name, subject: finalSubject, html, text,
     replyTo: REPLY, deadline, maxAttempts: 3,
+    fromName: "Assistara Academy",
     metadata: { signup_id: signup.id, campaign: key, html_len: html.length, text_len: text.length },
     forceProvider: extra?.forceProvider,
   });
