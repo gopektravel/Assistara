@@ -497,16 +497,16 @@ async function handleFollowupTest(body: any) {
 // ----------------------------------------------------------------------------
 // 30-minute + 5-minute reminders (canonical branded template).
 //   Reminder30 target: 2026-10-11 17:30 PHT = 09:30 UTC
-//   Reminder5  target: 2026-10-11 18:05 PHT = 10:05 UTC
+//   Reminder7  target: 2026-10-11 18:07 PHT = 10:07 UTC
 // Separate idempotency keys; the 5-minute reminder only targets attendees who
 // have NOT visited their personal livestream link yet.
 // ----------------------------------------------------------------------------
 const REMINDER30_KEY = "reminder30-2026-10-11";
 const REMINDER30_SUBJECT = "We're going live in 30 minutes! 💛";
-const REMINDER5_KEY = "reminder5-2026-10-11";
-const REMINDER5_SUBJECT = "We're live! Come join us 💛";
+const REMINDER7_KEY = "reminder7-2026-10-11";
+const REMINDER7_SUBJECT = "We're live! Where are you? 👀";
 const TARGET_30_UTC = "2026-10-11T09:30:00Z";
-const TARGET_5_UTC = "2026-10-11T10:05:00Z";
+const TARGET_7_UTC = "2026-10-11T10:07:00Z";
 
 // Guard: the reminder can only send inside a narrow window around its target, so
 // the scheduler cannot run early (or a stray manual call cannot send early).
@@ -534,17 +534,17 @@ function reminder30Content(first: string, joinUrl: string, unsubUrl: string) {
   return { html, text };
 }
 
-function reminder5Content(first: string, joinUrl: string, unsubUrl: string) {
-  const bodyHtml = `<p style="margin:0 0 16px">Hey ${brandEsc(first)}! 💛</p>`
-    + `<p style="margin:0 0 16px">We&#8217;re LIVE! 🎉</p>`
-    + `<p style="margin:0">Just wanted to make sure you didn&#8217;t miss us!</p>`;
-  const afterHtml = `<p style="margin:0">We&#8217;re waiting for you! 💛</p><p style="margin:16px 0 0">Xyra</p>`;
+function reminder7Content(first: string, joinUrl: string, unsubUrl: string) {
+  const bodyHtml = `<p style="margin:0 0 16px">Hey ${brandEsc(first)}!</p>`
+    + `<p style="margin:0 0 16px">We&#8217;re live! Where are youuu? 👀</p>`
+    + `<p style="margin:0">Come join us, we&#8217;re waiting for you!</p>`;
+  const afterHtml = `<p style="margin:0">Xyra 💛</p>`;
   const footerHtml = `You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${brandEsc(unsubUrl)}" style="color:#77716a;text-decoration:underline">Unsubscribe</a>`;
   const html = brandedEmail({ bodyHtml, cta: { label: "JOIN US LIVE", href: joinUrl }, afterHtml, footerHtml });
   const text = brandedText({
-    lines: [`Hey ${first}! 💛`, "We're LIVE! 🎉", "Just wanted to make sure you didn't miss us!"],
+    lines: [`Hey ${first}!`, "We're live! Where are youuu? 👀", "Come join us, we're waiting for you!"],
     cta: { label: "JOIN US LIVE", href: joinUrl },
-    afterLines: ["We're waiting for you! 💛", "Xyra"],
+    afterLines: ["Xyra 💛"],
     footerLines: ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubUrl],
   });
   return { html, text };
@@ -561,15 +561,15 @@ async function eligibleNotJoined() {
     !x.joined_at && !x.last_joined_at && !(Number(x.join_clicks) > 0) && !(Number(x.attendance_seconds) > 0));
 }
 
-async function sendTimed(signup: { id: string; name: string; email: string; attendee_token: string }, which: "30" | "5", extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender"; delivery?: any; apps?: number | null }) {
+async function sendTimed(signup: { id: string; name: string; email: string; attendee_token: string }, which: "30" | "7", extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender"; delivery?: any; apps?: number | null }) {
   const token = signup.attendee_token;
   const joinUrl = `${SITE}/live?t=${encodeURIComponent(token)}`;
   const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
   const first = (signup.name || "there").split(/\s+/)[0];
-  const baseSubject = which === "30" ? REMINDER30_SUBJECT : REMINDER5_SUBJECT;
+  const baseSubject = which === "30" ? REMINDER30_SUBJECT : REMINDER7_SUBJECT;
   const finalSubject = extra?.prefixSubject ? `[TEST] ${baseSubject}` : baseSubject;
-  const { html, text } = which === "30" ? reminder30Content(first, joinUrl, unsubUrl) : reminder5Content(first, joinUrl, unsubUrl);
-  const key = which === "30" ? REMINDER30_KEY : REMINDER5_KEY;
+  const { html, text } = which === "30" ? reminder30Content(first, joinUrl, unsubUrl) : reminder7Content(first, joinUrl, unsubUrl);
+  const key = which === "30" ? REMINDER30_KEY : REMINDER7_KEY;
   const idem = extra?.uniqueIdem || `${key}:${signup.id}`;
   const event = await eventRow();
   const deadline = event?.scheduled_at ? new Date(new Date(event.scheduled_at).getTime() + 3 * 3600e3) : undefined; // +3h after start
@@ -577,14 +577,14 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
   const logRes = await api("rest/v1/email_delivery_log?select=id", {
     method: "POST",
     headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
-    body: JSON.stringify([{ idempotency_key: idem, email_type: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_5", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: key }, max_attempts: 3 }]),
+    body: JSON.stringify([{ idempotency_key: idem, email_type: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: key }, max_attempts: 3 }]),
   });
   if (!logRes.ok) console.error("timed reminder log insert failed", logRes.status, (await logRes.text().catch(() => "")).slice(0, 300));
 
   const delivery = extra?.delivery ?? await createEmailDelivery(`mc-${which}-${Date.now()}`);
   const result = await delivery.send({
     idempotencyKey: idem,
-    emailType: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_5",
+    emailType: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7",
     to: signup.email, toName: signup.name, subject: finalSubject, html, text,
     replyTo: REPLY, deadline, maxAttempts: 3,
     metadata: { signup_id: signup.id, campaign: key },
@@ -593,10 +593,10 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
   return { subject: finalSubject, joinUrl, unsubscribeUrl: unsubUrl, result };
 }
 
-async function handleTimed(which: "30" | "5", body: any) {
+async function handleTimed(which: "30" | "7", body: any) {
   if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
-  const target = which === "30" ? TARGET_30_UTC : TARGET_5_UTC;
-  const win = withinSendWindow(target);
+  const target = which === "30" ? TARGET_30_UTC : TARGET_7_UTC;
+  const win = which === "30" ? withinSendWindow(target, 5, 20) : withinSendWindow(target, 5, 15);
   if (!win.open) return { ok: true, skipped: "outside send window", target_utc: target, now_utc: win.now };
   const quotaSync = await syncQuotaInternal();
   const eligible = which === "30" ? await eligibleAllSignups() : await eligibleNotJoined();
@@ -621,10 +621,10 @@ async function handleTimed(which: "30" | "5", body: any) {
     }
   };
   await Promise.all(Array.from({ length: concurrency }, () => worker()));
-  return { ok: true, campaign: which === "30" ? REMINDER30_KEY : REMINDER5_KEY, target_utc: which === "30" ? TARGET_30_UTC : TARGET_5_UTC, concurrency, quotaSync, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
+  return { ok: true, campaign: which === "30" ? REMINDER30_KEY : REMINDER7_KEY, target_utc: which === "30" ? TARGET_30_UTC : TARGET_7_UTC, concurrency, quotaSync, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
 }
 
-async function handleTimedTest(which: "30" | "5", body: any) {
+async function handleTimedTest(which: "30" | "7", body: any) {
   if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
   const email = clean(body.email, 254).toLowerCase();
   if (!validEmail(email)) return { ok: false, error: "Valid email required" };
@@ -640,7 +640,7 @@ async function handleTimedTest(which: "30" | "5", body: any) {
   }
   let result;
   try {
-    result = await sendTimed(signup, which, { prefixSubject: true, uniqueIdem: `test:${which === "30" ? REMINDER30_KEY : REMINDER5_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
+    result = await sendTimed(signup, which, { prefixSubject: true, uniqueIdem: `test:${which === "30" ? REMINDER30_KEY : REMINDER7_KEY}:${signup.id}:${Date.now()}`, forceProvider: ["resend", "brevo", "sender"].includes(String(body.provider)) ? String(body.provider) as any : undefined });
   } catch (e) {
     return { ok: false, testEmail: email, forcedProvider: body.provider || null, error: String(e instanceof Error ? e.message : e) };
   }
@@ -888,7 +888,7 @@ Deno.serve(async (req: Request) => {
   if (act === "followup_test") return out(await handleFollowupTest(b));
   if (act === "reminder30") return out(await handleTimed("30", b));
   if (act === "reminder30_test") return out(await handleTimedTest("30", b));
-  if (act === "reminder5") return out(await handleTimed("5", b));
-  if (act === "reminder5_test") return out(await handleTimedTest("5", b));
+  if (act === "reminder7") return out(await handleTimed("7", b));
+  if (act === "reminder7_test") return out(await handleTimedTest("7", b));
   return out({ ok: false, error: "Unknown action" }, 400);
 });
