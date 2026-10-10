@@ -236,13 +236,12 @@
         <div class="statusRow">
           <div>
             <div class="title">Masterclass Presentation</div>
-            <div class="sub">Embedded from the deployed presentation. Use for rehearsal and during the live event.</div>
           </div>
         </div>
         <iframe class="presentation-frame" id="mcPresentationFrame" src="https://masterclass-presentation.vercel.app" allowfullscreen></iframe>
         <div class="presentation-actions">
           <button class="refresh" id="mcPresentationReload">Reload Presentation</button>
-          <a class="refresh" href="https://masterclass-presentation.vercel.app" target="_blank" rel="noopener noreferrer">Open in New Tab</a>
+          <button class="refresh" id="mcPresentationNewTab">Open in New Tab <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-left:6px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></button>
           <button class="refresh" id="mcPresentationFullscreen">Fullscreen</button>
         </div>
       </div>
@@ -523,6 +522,9 @@
       $("mcPresentationReload").onclick = () => {
         const frame = $("mcPresentationFrame");
         frame.src = frame.src;
+      };
+      $("mcPresentationNewTab").onclick = () => {
+        window.open("https://masterclass-presentation.vercel.app", "_blank", "noopener,noreferrer");
       };
       $("mcPresentationFullscreen").onclick = () => {
         const frame = $("mcPresentationFrame");
