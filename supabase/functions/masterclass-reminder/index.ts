@@ -20,7 +20,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createEmailDelivery, EmailDeliveryOptions } from "../_shared/email-delivery.ts";
-import { brandedEmail, brandedText, brandEsc } from "../_shared/email-brand.ts";
+import { brandedEmail, brandedText, brandEsc, countdownBand } from "../_shared/email-brand.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!;
 const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -516,7 +516,7 @@ function reminder30Content(first: string, joinUrl: string, unsubUrl: string) {
   const afterHtml = `<p style="margin:0 0 16px">Grab a coffee, get comfy, and I&#8217;ll see you soon! ☕✨</p>`
     + `<p style="margin:0">Xyra 💛</p>`;
   const footerHtml = `You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${brandEsc(unsubUrl)}" style="color:#77716a;text-decoration:underline">Unsubscribe</a>`;
-  const html = brandedEmail({ bodyHtml, cta: { label: "JOIN THE MASTERCLASS", href: joinUrl }, afterHtml, footerHtml });
+  const html = brandedEmail({ bodyHtml, cta: { label: "JOIN THE MASTERCLASS", href: joinUrl }, afterHtml, footerHtml, countdownHtml: countdownBand({ big: "30", label: "MINUTES TO GO", meta: "Sunday, October 11 · 6:00 PM PHT" }) });
   const text = brandedText({
     lines: [`Hey ${first}! 💛`, "It's almost time!! 😍", "We're going live in 30 minutes, and I can't wait to see you there!", "Here's your personal link:"],
     cta: { label: "JOIN THE MASTERCLASS", href: joinUrl },

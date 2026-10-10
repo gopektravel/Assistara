@@ -31,9 +31,13 @@ yellow "A" + white card + yellow CTA + light footer). Deployed references:
 - **Page background:** `#f4f3ef`
 - **Card:** `#fff`, border `1px solid #e2dfd7`, `border-radius:24px`, `max-width:600px`
 - **Header:** `#171717`, padding `20px 32px`
-- **Brand mark:** yellow `#FFD51F` rounded square (42×42, radius 12), letter **A**,
-  `color:#151515`, `font-size:27px`, `font-weight:900`, line-height 42px
-- **Wordmark:** `Assistara`, `#fff`, `23px`, bold
+- **Official logo:** `assistara-logo.png` (yellow rounded-square "A"), served at
+  **`https://www.getassistara.com/assistara-logo.png`** (absolute HTTPS, public).
+  **ALWAYS use this exact asset in the email header. NEVER replace it with a letter,
+  emoji, placeholder, or recreated shape.** `assistara-logo.svg` is web-only (Gmail
+  does not render SVG) — use the PNG. It is the **only** remote image allowed in
+  email HTML (enforced by `scripts/email-branding.test.js`).
+- **Wordmark:** `Assistara`, `#fff`, `23px`, bold (the mark alone does not contain the name)
 - **Heading (h1):** `32px`, `line-height:1.15`
 - **Body:** `16px`, `line-height:1.65`, `#4f4b45`
 - **CTA button:** bg `#ffd51f`, text `#151515`, `border-radius:999px`,
@@ -41,20 +45,27 @@ yellow "A" + white card + yellow CTA + light footer). Deployed references:
 - **Fallback link row:** `12px`, `#77716a`, `word-break:break-all`
 - **Footer:** `border-top:1px solid #ece9e2`, padding `20px 32px`, `12px`, `#77716a`
 - **Font:** `Arial, Helvetica, sans-serif` (email-safe). The site uses DM Sans; **emails use Arial.**
-- **Logo assets (web only):** `assistara-local-v9/assistara-logo.png`, `assistara-logo.svg`.
-  **Emails must NOT load remote images** — use the email-safe brand mark instead
-  (enforced by `scripts/email-branding.test.js`).
 
 ## 3. Components (from `_shared/email-brand.ts`)
 
-- `brandedEmail({ heading?, bodyHtml, cta?, afterHtml?, footerHtml?, showFallbackUrl? })`
-  — full HTML document (header + body + button + fallback + footer).
+- `brandedEmail({ heading?, bodyHtml, cta?, afterHtml?, footerHtml?, showFallbackUrl?, countdownHtml? })`
+  — full HTML document (header + logo + body + button + fallback + footer).
 - `brandedText({ heading?, lines, cta?, afterLines?, footerLines? })`
   — plain-text mirror. **Always send both HTML and text.**
 - `brandEsc(value)` — HTML-escape every dynamic value (name, URLs).
+- `LOGO_URL` — the official logo absolute HTTPS URL (use it; do not hardcode a copy).
+- `countdownBand({ big, label, meta? })` — **static** branded countdown band.
 
-Component order: header → optional heading → body → CTA button (+ fallback URL) →
-`afterHtml` → footer.
+Component order: header (logo) → optional heading → optional countdown → body →
+CTA button (+ fallback URL) → `afterHtml` → footer.
+
+### Countdown rule
+**Never** use a live/JS/dynamic countdown image in email. Gmail (and most clients)
+proxy and cache images, so a dynamic countdown would be stale or show wrong/negative
+time. Use the **static** `countdownBand({ big: "30", label: "MINUTES TO GO", meta })`.
+A real, updating countdown belongs on the **web page only** (the livestream page has
+a `setInterval(tick, 1000)` countdown to `2026-10-11T18:00:00+08:00`). Never claim an
+email countdown is "live" unless it genuinely updates reliably.
 
 ## 4. Transactional vs promotional variants
 

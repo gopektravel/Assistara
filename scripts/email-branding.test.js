@@ -74,6 +74,16 @@ test("no Edge Function references an external Assistara logo asset", () => {
   }
 });
 
+test("the shared branded shell uses only the official Assistara logo", () => {
+  const p = path.join(FUNCTIONS_DIR, "_shared", "email-brand.ts");
+  if (!fs.existsSync(p)) return; // shell not present yet
+  const code = fs.readFileSync(p, "utf8");
+  const logos = [...code.matchAll(/assistara-logo\.[a-z]+/gi)].map((m) => m[0].toLowerCase());
+  assert.deepEqual([...new Set(logos)].sort(), ["assistara-logo.png"], "email-brand must reference only assistara-logo.png");
+  assert.match(code, /https:\/\/www\.getassistara\.com\/assistara-logo\.png/, "logo must be an absolute HTTPS URL");
+  assert.ok(!/>A<\/td>/.test(code), "the shell must not recreate the logo as a letter");
+});
+
 test("the reminder email is plain text-only HTML (no logo, no remote images)", () => {
   const fn = sender("masterclass-reminder");
   const remoteImages = [...fn.code.matchAll(/<img\b[^>]*\bsrc="([^"]*)"/gi)].map((m) => m[1]);

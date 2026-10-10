@@ -29,6 +29,22 @@ export interface BrandEmailOptions {
   afterHtml?: string; // content rendered after the CTA button
   footerHtml?: string;
   showFallbackUrl?: boolean; // show the "copy this link" fallback under the CTA
+  countdownHtml?: string; // branded band rendered between header and body
+}
+
+// Official Assistara logo (yellow rounded-square "A"). Absolute HTTPS, public.
+// Gmail does not render SVG, so the PNG is used. Never replace with a letter/emoji.
+export const LOGO_URL = "https://www.getassistara.com/assistara-logo.png";
+
+// Static branded countdown band. Deliberately NOT a live/JS countdown: email
+// clients (esp. Gmail) proxy/cache images, so a dynamic countdown image would be
+// stale or wrong. This never shows incorrect/negative time.
+export function countdownBand(opts: { big: string; label: string; meta?: string }): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#171717;border-radius:18px"><tr><td align="center" style="padding:22px 18px">
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:44px;font-weight:900;line-height:1;color:#ffd51f;letter-spacing:-.02em">${brandEsc(opts.big)}</div>
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:800;letter-spacing:.14em;color:#ffffff;margin-top:8px">${brandEsc(opts.label)}</div>
+${opts.meta ? `<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#b9b3a8;margin-top:8px">${brandEsc(opts.meta)}</div>` : ""}
+</td></tr></table>`;
 }
 
 export function brandedEmail(opts: BrandEmailOptions): string {
@@ -40,10 +56,11 @@ export function brandedEmail(opts: BrandEmailOptions): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border:1px solid #e2dfd7;border-radius:24px;overflow:hidden">
 <tr><td style="background:#171717;padding:20px 32px"><table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td width="42" height="42" align="center" valign="middle" style="width:42px;height:42px;background:#FFD51F;border-radius:12px;color:#151515;font-family:Arial,sans-serif;font-size:27px;font-weight:900;line-height:42px">A</td>
-<td style="padding-left:12px"><b style="color:#fff;font-size:23px">Assistara</b></td>
+<td style="padding-right:12px"><img src="${LOGO_URL}" width="42" height="42" alt="Assistara" style="display:block;width:42px;height:42px;border:0;outline:none;text-decoration:none"></td>
+<td><b style="color:#fff;font-size:23px">Assistara</b></td>
 </tr></table></td></tr>
 ${heading ? `<tr><td style="padding:34px 32px 12px"><h1 style="margin:0;font-size:32px;line-height:1.15">${brandEsc(heading)}</h1></td></tr>` : ""}
+${opts.countdownHtml ? `<tr><td style="padding:${heading ? "4px" : "30px"} 32px 4px">${opts.countdownHtml}</td></tr>` : ""}
 <tr><td style="padding:${bodyPad};font-size:16px;line-height:1.65;color:#4f4b45">${bodyHtml}</td></tr>
 ${cta ? `<tr><td style="padding:8px 32px 12px"><a href="${brandEsc(cta.href)}" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-weight:700;padding:15px 21px;border-radius:999px">${brandEsc(cta.label)}</a></td></tr>${showFallback ? `<tr><td style="padding:0 32px 28px;color:#77716a;font-size:12px;line-height:1.55">If the button does not work, copy and paste this link into your browser:<br><a href="${brandEsc(cta.href)}" style="color:#4f4b45;word-break:break-all">${brandEsc(cta.href)}</a></td></tr>` : ""}` : ""}
 ${afterHtml ? `<tr><td style="padding:0 32px 24px;font-size:16px;line-height:1.65;color:#4f4b45">${afterHtml}</td></tr>` : ""}
