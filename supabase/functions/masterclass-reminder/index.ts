@@ -443,6 +443,9 @@ async function handleRun(body: any) {
 }
 
 async function handleTest(body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) {
+    return { ok: false, error: "Unauthorized" };
+  }
   const email = clean(body.email, 254).toLowerCase();
   if (!validEmail(email)) return { ok: false, error: "Valid email required" };
   const name = clean(body.name, 200) || "there";
