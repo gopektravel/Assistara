@@ -161,6 +161,15 @@
       }
     },
     {
+      "src": "api/masterclass-identity.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "api/_academy-security.js"
+        ]
+      }
+    },
+    {
       "src": "beta-account.html",
       "use": "@vercel/static"
     },
@@ -468,6 +477,10 @@
     {
       "src": "/api/masterclass-youtube",
       "dest": "/api/masterclass-youtube.js"
+    },
+    {
+      "src": "/api/masterclass-identity",
+      "dest": "/api/masterclass-identity.js"
     },
     {
       "src": "/styles.css",

@@ -26,8 +26,10 @@ var AssistaraChatClient = (() => {
   });
   var MASTERCLASS_ROOM_ID = "founding-masterclass-2026";
   var CHAT_WORKER_URL = "https://assistara-live-chat-production.up.railway.app";
+  var HOST_NAME = "Xyra";
   var AssistaraLiveChat = class {
     container;
+    options;
     ws = null;
     messages = [];
     userIdentity = null;
@@ -43,169 +45,56 @@ var AssistaraChatClient = (() => {
       messagesContainer: null,
       input: null,
       form: null,
-      statusIndicator: null,
       sendButton: null,
       nameForm: null,
-      nameInput: null
+      nameInput: null,
+      meLabel: null
     };
-    constructor(container) {
+    constructor(container, options = {}) {
       this.container = container;
+      this.options = options;
       this.init();
     }
     async init() {
       this.render();
       this.bindElements();
       this.loadIdentity();
-      this.updateIdentityUI();
       this.connect();
     }
     render() {
       this.container.innerHTML = `
-      <div class="assistara-chat" style="
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-height: 300px;
-        max-height: 600px;
-        background: #fff;
-        border: 1px solid var(--line, #e2ded4);
-        border-radius: 16px;
-        overflow: hidden;
-        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      ">
-        <!-- Header -->
-        <div class="chat-header" style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 14px 18px;
-          border-bottom: 1px solid var(--line, #e2ded4);
-          background: var(--cream, #fbfaf6);
-        ">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--ink, #151515); letter-spacing: -0.02em;">
-              Live Chat
-            </h3>
-            <span class="connection-status" style="
-              display: inline-flex;
-              align-items: center;
-              gap: 6px;
-              font-size: 11px;
-              font-weight: 600;
-              color: var(--muted, #68635d);
-              text-transform: uppercase;
-              letter-spacing: 0.06em;
-            ">
-              <span class="status-dot" style="
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: var(--muted, #68635d);
-                transition: background 0.2s ease;
-              "></span>
-              <span class="status-text">Connecting\u2026</span>
-            </span>
+      <div class="assistara-chat">
+        <div class="chat-messages" role="log" aria-live="polite"></div>
+
+        <div class="chat-composer">
+          <div class="chat-me"></div>
+          <div class="chat-input-row">
+            <textarea
+              class="chat-input"
+              placeholder="Say something..."
+              rows="1"
+              maxlength="500"
+            ></textarea>
+            <button type="submit" class="chat-send" aria-label="Send message" disabled>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <!-- Messages -->
-        <div class="messages-container" style="
-          flex: 1;
-          overflow-y: auto;
-          padding: 16px 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          background: var(--cream, #fbfaf6);
-        "></div>
-
-        <!-- Inline identity form: visible immediately, even while the
-             WebSocket is connecting or temporarily unavailable. -->
-        <form class="chat-name-form" style="
-          display: flex;
-          gap: 10px;
-          padding: 14px 18px;
-          border-top: 1px solid var(--line, #e2ded4);
-          background: #fff;
-        ">
-          <input
-            type="text"
-            name="name"
-            class="chat-name-input"
-            placeholder="Your name"
-            maxlength="30"
-            autocomplete="name"
-            style="
-              flex: 1;
-              min-width: 0;
-              padding: 12px 16px;
-              border: 1px solid var(--line, #e2ded4);
-              border-radius: 10px;
-              font-size: 14px;
-              font-family: inherit;
-              color: var(--ink, #151515);
-              background: #fff;
-            "
-          />
-          <button type="submit" style="
-            padding: 12px 16px;
-            border: 0;
-            border-radius: 10px;
-            font: 700 14px inherit;
-            color: #151515;
-            background: var(--yellow, #ffd51f);
-            cursor: pointer;
-          ">Join chat</button>
-        </form>
-
-        <!-- Input Area -->
-        <form class="chat-form" style="
-          display: flex;
-          gap: 10px;
-          padding: 14px 18px;
-          border-top: 1px solid var(--line, #e2ded4);
-          background: #fff;
-        ">
-          <input
-            type="text"
-            name="content"
-            class="chat-input"
-            placeholder="Say something\u2026"
-            autocomplete="off"
-            spellcheck="false"
-            style="
-              flex: 1;
-              padding: 12px 16px;
-              border: 1px solid var(--line, #e2ded4);
-              border-radius: 10px;
-              font-size: 14px;
-              font-family: inherit;
-              color: var(--ink, #151515);
-              background: #fff;
-              transition: border-color 0.15s ease, box-shadow 0.15s ease;
-            "
-            disabled
-          />
-          <button
-            type="submit"
-            class="send-button"
-            style="
-              padding: 12px 20px;
-              border: none;
-              border-radius: 10px;
-              font-size: 14px;
-              font-weight: 700;
-              font-family: inherit;
-              color: #fff;
-              background: var(--yellow, #ffd51f);
-              cursor: pointer;
-              transition: background 0.15s ease, transform 0.1s ease;
-              white-space: nowrap;
-            "
-            disabled
-          >
-            Send
-          </button>
+        <form class="chat-name-form">
+          <div class="chat-me">Join with your first name</div>
+          <div class="chat-input-row">
+            <input
+              type="text"
+              class="chat-name-input"
+              placeholder="Your first name"
+              maxlength="30"
+              autocomplete="name"
+            />
+            <button type="submit" class="chat-send">Join</button>
+          </div>
         </form>
       </div>
     `;
@@ -216,319 +105,250 @@ var AssistaraChatClient = (() => {
       const style = document.createElement("style");
       style.id = "assistara-chat-styles";
       style.textContent = `
-      .assistara-chat .chat-input:focus {
-        outline: none;
-        border-color: var(--yellow, #ffd51f) !important;
-        box-shadow: 0 0 0 3px rgba(255, 213, 31, 0.2) !important;
-      }
-
-      .assistara-chat .chat-name-input:focus {
-        outline: none;
-        border-color: var(--yellow, #ffd51f) !important;
-        box-shadow: 0 0 0 3px rgba(255, 213, 31, 0.2) !important;
-      }
-
-      .assistara-chat .send-button:hover:not(:disabled) {
-        background: #e6c000 !important;
-      }
-
-      .assistara-chat .send-button:active:not(:disabled) {
-        transform: scale(0.98);
-      }
-
-      .assistara-chat .send-button:disabled,
-      .assistara-chat .chat-input:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .assistara-chat .chat-input::placeholder {
-        color: var(--muted, #68635d);
-      }
-
-      /* Message bubbles */
-      .assistara-message {
-        animation: fadeInUp 0.25s ease-out;
-        max-width: 85%;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .assistara-message.own {
-        align-self: flex-end;
-      }
-
-      .assistara-message.host .message-bubble {
-        background: var(--ink, #151515) !important;
-        color: #fff !important;
-        border-color: var(--ink, #151515) !important;
-      }
-
-      .assistara-message.host .message-bubble::before {
-        border-right-color: var(--ink, #151515) !important;
-      }
-
-      .assistara-message.own .message-bubble {
-        background: var(--yellow, #ffd51f) !important;
-        color: #151515 !important;
-        border-color: var(--yellow, #ffd51f) !important;
-      }
-
-      .assistara-message.own .message-bubble::before {
-        border-left-color: var(--yellow, #ffd51f) !important;
-      }
-
-      .assistara-message.system .message-bubble {
-        background: transparent !important;
-        color: var(--muted, #68635d) !important;
-        font-size: 12px !important;
-        padding: 4px 12px !important;
-        border: none !important;
-      }
-
-      .assistara-message.system .message-bubble::before {
-        display: none !important;
-      }
-
-      .message-bubble {
-        position: relative;
-        padding: 10px 14px;
-        border-radius: 14px;
-        font-size: 14px;
-        line-height: 1.5;
-        border: 1px solid var(--line, #e2ded4);
-        background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      }
-
-      .message-bubble::before {
-        content: "";
-        position: absolute;
-        top: 16px;
-        width: 0;
-        height: 0;
-        border: 8px solid transparent;
-      }
-
-      .assistara-message:not(.own) .message-bubble::before {
-        left: -16px;
-        border-right-color: #fff;
-      }
-
-      .assistara-message.own .message-bubble::before {
-        right: -16px;
-        border-left-color: var(--yellow, #ffd51f);
-      }
-
-      .message-header {
+      .assistara-chat {
         display: flex;
-        align-items: baseline;
-        gap: 8px;
-        margin-bottom: 4px;
-        font-size: 11px;
-      }
-
-      .message-sender {
-        font-weight: 700;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        background: var(--cream, #fbfaf6);
         color: var(--ink, #151515);
+        font-family: "Manrope", "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
 
-      .assistara-message.host .message-sender {
-        color: #fff;
+      /* Compact flowing message list */
+      .assistara-chat .chat-messages {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 12px 14px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        scroll-behavior: smooth;
       }
-
-      .assistara-message.own .message-sender {
+      .assistara-chat .chat-msg {
+        font-size: 13.5px;
+        line-height: 1.45;
+        color: #1c1c1c;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      .assistara-chat .chat-name {
+        font-weight: 800;
         color: #151515;
+        letter-spacing: -0.01em;
       }
-
-      .message-time {
-        color: var(--muted, #68635d);
-        font-weight: 500;
-      }
-
-      .assistara-message.host .message-time {
-        color: rgba(255,255,255,0.7);
-      }
-
-      .assistara-message.own .message-time {
-        color: rgba(21,21,21,0.7);
-      }
-
-      .host-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 1px 6px;
-        border-radius: 999px;
+      .assistara-chat .chat-msg.own .chat-name { color: #8a6d00; }
+      .assistara-chat .chat-msg.host .chat-name { color: #8a6d00; }
+      .assistara-chat .chat-text { font-weight: 400; }
+      .assistara-chat .chat-host-badge {
+        display: inline-block;
         font-size: 9px;
         font-weight: 800;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
+        line-height: 1;
+        color: #151515;
+        background: var(--yellow, #ffd51f);
+        border-radius: 4px;
+        padding: 2px 5px;
+        margin: 0 5px;
+        vertical-align: 1px;
+      }
+      .assistara-chat .chat-msg.system { padding: 2px 0; }
+      .assistara-chat .chat-msg.system .chat-text {
+        color: #8a857e;
+        font-size: 12px;
+      }
+
+      /* Composer */
+      .assistara-chat .chat-composer {
+        border-top: 1px solid var(--line, #e2ded4);
+        background: #fff;
+        padding: 8px 10px 10px;
+      }
+      .assistara-chat .chat-me {
+        font-size: 11px;
+        font-weight: 600;
+        color: #8a857e;
+        margin-bottom: 5px;
+      }
+      .assistara-chat .chat-me strong { color: #151515; font-weight: 800; }
+      .assistara-chat .chat-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+      .assistara-chat .chat-input {
+        flex: 1;
+        min-width: 0;
+        resize: none;
+        border: 1px solid var(--line, #e2ded4);
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 13.5px;
+        font-family: inherit;
+        line-height: 1.4;
+        color: #151515;
+        background: #fff;
+        max-height: 96px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .assistara-chat .chat-input:focus {
+        outline: none;
+        border-color: var(--yellow, #ffd51f);
+        box-shadow: 0 0 0 3px rgba(255, 213, 31, 0.18);
+      }
+      .assistara-chat .chat-input:disabled { opacity: 0.55; }
+      .assistara-chat .chat-send {
+        flex: 0 0 auto;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 8px;
         background: var(--yellow, #ffd51f);
         color: #151515;
-      }
-
-      .delete-btn {
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        background: none;
-        border: none;
-        padding: 2px;
         cursor: pointer;
-        color: var(--muted, #68635d);
-        font-size: 14px;
-        line-height: 1;
+        transition: background 0.15s ease, transform 0.1s ease;
+      }
+      .assistara-chat .chat-send:hover:not(:disabled) { background: #f0c800; }
+      .assistara-chat .chat-send:active:not(:disabled) { transform: scale(0.96); }
+      .assistara-chat .chat-send:disabled { opacity: 0.4; cursor: default; }
+
+      /* Guest name form */
+      .assistara-chat .chat-name-form {
+        border-top: 1px solid var(--line, #e2ded4);
+        background: #fff;
+        padding: 10px;
+      }
+      .assistara-chat .chat-name-input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid var(--line, #e2ded4);
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 13.5px;
+        font-family: inherit;
+        color: #151515;
+        background: #fff;
+      }
+      .assistara-chat .chat-name-input:focus {
+        outline: none;
+        border-color: var(--yellow, #ffd51f);
+        box-shadow: 0 0 0 3px rgba(255, 213, 31, 0.18);
       }
 
-      .assistara-message:hover .delete-btn {
-        opacity: 1;
+      /* Subtle connection dot in the outer page header */
+      .chat-conn { display: inline-flex; align-items: center; gap: 6px; }
+      .chat-conn-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #8a857e; flex: 0 0 auto;
+        transition: background 0.2s ease;
       }
+      .chat-conn-dot.is-connected { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.18); }
+      .chat-conn-dot.is-connecting { background: #ffd51f; animation: chatPulse 1.4s infinite; }
+      .chat-conn-dot.is-disconnected { background: #ef4444; }
+      .chat-conn-text { font-weight: 700; }
+      @keyframes chatPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
 
-      .connection-status.connected .status-dot {
-        background: var(--green, #22c55e) !important;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
-      }
-
-      .connection-status.connecting .status-dot {
-        background: var(--yellow, #ffd51f) !important;
-        animation: pulse 1.5s infinite;
-      }
-
-      .connection-status.disconnected .status-dot {
-        background: var(--red, #ef4444) !important;
-      }
-
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-      }
-
-      /* Scrollbar */
-      .assistara-chat .messages-container::-webkit-scrollbar {
-        width: 6px;
-      }
-      .assistara-chat .messages-container::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .assistara-chat .messages-container::-webkit-scrollbar-thumb {
-        background: var(--line, #e2ded4);
-        border-radius: 3px;
-      }
-      .assistara-chat .messages-container::-webkit-scrollbar-thumb:hover {
-        background: var(--muted, #68635d);
-      }
-
-      /* Mobile responsive */
       @media (max-width: 640px) {
-        .assistara-chat {
-          border-radius: 0 !important;
-          min-height: 280px !important;
-        }
-        .assistara-message {
-          max-width: 90% !important;
-        }
+        .assistara-chat .chat-messages { padding: 10px 12px 6px; gap: 4px; }
+        .assistara-chat .chat-msg { font-size: 13px; }
+        .assistara-chat .chat-composer { padding: 7px 8px 8px; }
       }
     `;
       document.head.appendChild(style);
     }
     bindElements() {
-      this.elements.messagesContainer = this.container.querySelector(".messages-container");
+      this.elements.messagesContainer = this.container.querySelector(".chat-messages");
       this.elements.input = this.container.querySelector(".chat-input");
-      this.elements.form = this.container.querySelector(".chat-form");
-      this.elements.sendButton = this.container.querySelector(".send-button");
-      this.elements.statusIndicator = this.container.querySelector(".connection-status");
+      this.elements.form = this.container.querySelector(".chat-composer");
+      this.elements.sendButton = this.container.querySelector(".chat-send");
       this.elements.nameForm = this.container.querySelector(".chat-name-form");
       this.elements.nameInput = this.container.querySelector(".chat-name-input");
-      this.elements.form?.addEventListener("submit", (e) => this.handleSubmit(e));
+      this.elements.meLabel = this.container.querySelector(".chat-me");
+      this.elements.sendButton?.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.handleSubmit(e);
+      });
       this.elements.input?.addEventListener("keydown", (e) => this.handleKeydown(e));
+      this.elements.input?.addEventListener("input", () => this.autoResize());
       this.elements.nameForm?.addEventListener("submit", (e) => this.handleNameSubmit(e));
     }
     loadIdentity() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get("t");
-      if (token) {
-        try {
-          localStorage.setItem("assistara_masterclass_attendee_token", token);
-        } catch {
-        }
-      }
-      const storedToken = localStorage.getItem("assistara_masterclass_attendee_token");
-      if (storedToken) {
-        try {
-          const decoded = atob(storedToken);
-          const data = JSON.parse(decoded);
-          if (data.name) {
-            this.userIdentity = {
-              name: data.name,
-              userId: data.id || crypto.randomUUID(),
-              isHost: data.isHost === true
-            };
-            return;
-          }
-        } catch {
-          this.userIdentity = {
-            name: "Attendee",
-            userId: storedToken.slice(0, 8),
-            isHost: false
-          };
-          return;
-        }
+      const reg = this.options.identity;
+      if (reg && reg.name) {
+        const first = this.firstName(reg.name);
+        this.userIdentity = {
+          name: first,
+          userId: "reg-" + Math.random().toString(36).slice(2, 10),
+          isHost: false
+        };
+        this.updateIdentityUI();
+        return;
       }
       const adminToken = localStorage.getItem("assistara_admin_token") || sessionStorage.getItem("assistara_admin_token");
       if (adminToken) {
-        this.userIdentity = {
-          name: "Host",
-          userId: "host-" + crypto.randomUUID().slice(0, 8),
-          isHost: true
-        };
+        this.userIdentity = { name: HOST_NAME, userId: "host-" + Math.random().toString(36).slice(2, 10), isHost: true };
+        this.updateIdentityUI();
         return;
       }
+      let guest = null;
       try {
-        const storedName = localStorage.getItem("assistara_chat_name");
-        const storedUserId = localStorage.getItem("assistara_chat_user_id");
-        if (storedName && storedUserId) {
-          this.userIdentity = {
-            name: storedName,
-            userId: storedUserId,
-            isHost: false
-          };
-          return;
-        }
+        guest = sessionStorage.getItem("assistara_chat_guest_name");
       } catch {
       }
+      if (guest && guest.trim()) {
+        const first = this.firstName(guest);
+        this.userIdentity = { name: first, userId: "guest-" + Math.random().toString(36).slice(2, 10), isHost: false };
+        this.updateIdentityUI();
+        return;
+      }
       this.userIdentity = null;
+      this.updateIdentityUI();
     }
     updateIdentityUI() {
-      if (this.elements.nameForm) {
-        this.elements.nameForm.style.display = this.userIdentity ? "none" : "flex";
+      const has = !!this.userIdentity;
+      if (this.elements.form) this.elements.form.style.display = has ? "" : "none";
+      if (this.elements.nameForm) this.elements.nameForm.style.display = has ? "none" : "";
+      if (this.elements.meLabel) {
+        this.elements.meLabel.innerHTML = has ? `Message as <strong>${this.escapeHtml(this.userIdentity.name)}</strong>` : "Join the conversation";
+      }
+      if (has) {
+        this.elements.sendButton?.removeAttribute("disabled");
+        this.elements.input?.removeAttribute("disabled");
+      } else {
+        this.elements.sendButton?.setAttribute("disabled", "true");
+        this.elements.input?.setAttribute("disabled", "true");
       }
     }
     handleNameSubmit(e) {
       e.preventDefault();
-      const name = this.elements.nameInput?.value.trim().slice(0, 30) || "";
-      if (!name) {
+      const first = this.firstName(this.elements.nameInput?.value || "");
+      if (!first) {
         this.elements.nameInput?.focus();
         return;
       }
-      this.userIdentity = { name, userId: crypto.randomUUID(), isHost: false };
+      this.userIdentity = { name: first, userId: "guest-" + Math.random().toString(36).slice(2, 10), isHost: false };
       try {
-        localStorage.setItem("assistara_chat_name", name);
-        localStorage.setItem("assistara_chat_user_id", this.userIdentity.userId);
+        sessionStorage.setItem("assistara_chat_guest_name", first);
       } catch {
       }
       this.updateIdentityUI();
       if (this.ws?.readyState === WebSocket.OPEN) {
-        this.send({ type: "join", userId: this.userIdentity.userId, name, role: "attendee" });
-        this.enableInput();
+        this.send({ type: "join", userId: this.userIdentity.userId, name: first, role: "attendee" });
+        this.elements.input?.focus();
       }
+    }
+    // Display only the first name ("Maria Santos" -> "Maria"). Used for the
+    // guest form, the verified registered name, and message rendering, so the
+    // chat never shows a surname, full name, or email.
+    firstName(value) {
+      const first = String(value || "").trim().split(/\s+/)[0] || "";
+      return first.slice(0, 30);
     }
     connect() {
       if (this.disposed || this.isConnecting || this.connectionStatus === "connected") return;
@@ -555,7 +375,9 @@ var AssistaraChatClient = (() => {
               role: this.userIdentity.isHost ? "host" : "attendee"
             });
             this.enableInput();
-          } else this.updateIdentityUI();
+          } else {
+            this.updateIdentityUI();
+          }
         };
         socket.onmessage = (event) => {
           try {
@@ -586,30 +408,26 @@ var AssistaraChatClient = (() => {
     enableInput() {
       this.elements.input?.removeAttribute("disabled");
       this.elements.sendButton?.removeAttribute("disabled");
-      this.elements.input?.focus();
+      this.autoResize();
     }
     disableInput() {
       this.elements.input?.setAttribute("disabled", "true");
       this.elements.sendButton?.setAttribute("disabled", "true");
     }
+    autoResize() {
+      const ta = this.elements.input;
+      if (!ta) return;
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 96) + "px";
+    }
     updateConnectionStatus(status) {
-      const indicator = this.elements.statusIndicator;
-      if (!indicator) return;
-      indicator.className = `connection-status ${status}`;
-      const dot = indicator.querySelector(".status-dot");
-      const text = indicator.querySelector(".status-text");
+      this.connectionStatus = status;
+      const panel = this.container.closest(".chat");
+      const dot = panel ? panel.querySelector(".chat-conn-dot") : null;
+      const text = panel ? panel.querySelector(".chat-conn-text") : null;
+      if (dot) dot.className = "chat-conn-dot is-" + status;
       if (text) {
-        switch (status) {
-          case "connected":
-            text.textContent = "Live";
-            break;
-          case "connecting":
-            text.textContent = "Connecting\u2026";
-            break;
-          case "disconnected":
-            text.textContent = "Disconnected";
-            break;
-        }
+        text.textContent = status === "connected" ? "Live" : status === "connecting" ? "Connecting\u2026" : "Disconnected";
       }
     }
     scheduleReconnect() {
@@ -630,6 +448,7 @@ var AssistaraChatClient = (() => {
     handleServerMessage(msg) {
       switch (msg.type) {
         case "welcome":
+          if (msg.userId && this.userIdentity) this.userIdentity.userId = msg.userId;
           this.messages = msg.messages;
           this.sendEnabled = msg.sendEnabled;
           this.renderMessages();
@@ -644,10 +463,10 @@ var AssistaraChatClient = (() => {
           this.renderMessages();
           break;
         case "user_joined":
-          this.addSystemMessage(`${msg.name} joined the chat`);
+          this.addSystemMessage(`${msg.name} joined`);
           break;
         case "user_left":
-          this.addSystemMessage("Someone left the chat");
+          this.addSystemMessage("Someone left");
           break;
         case "message_deleted":
           this.removeMessage(msg.messageId);
@@ -666,12 +485,13 @@ var AssistaraChatClient = (() => {
     handleSubmit(e) {
       e.preventDefault();
       const input = this.elements.input;
-      if (!input || !this.sendEnabled) return;
+      if (!input || !this.userIdentity || !this.sendEnabled) return;
       const content = input.value.trim();
       if (!content) return;
       const tempId = crypto.randomUUID();
       this.send({ type: "send", content, tempId });
       input.value = "";
+      input.style.height = "auto";
     }
     handleKeydown(e) {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -700,7 +520,7 @@ var AssistaraChatClient = (() => {
     removeMessage(messageId) {
       const msgEl = this.elements.messagesContainer?.querySelector(`[data-message-id="${messageId}"]`);
       if (msgEl) {
-        msgEl.style.animation = "fadeInUp 0.15s ease-in reverse";
+        msgEl.style.opacity = "0";
         setTimeout(() => msgEl.remove(), 150);
       }
       this.messages = this.messages.filter((m) => m.id !== messageId);
@@ -721,44 +541,26 @@ var AssistaraChatClient = (() => {
       this.elements.messagesContainer.innerHTML = this.messages.map((msg) => this.renderMessage(msg)).join("");
     }
     renderMessage(msg) {
-      const isOwn = this.userIdentity && msg.userId === this.userIdentity.userId;
+      const isOwn = !!this.userIdentity && msg.userId === this.userIdentity.userId;
       const isHost = msg.role === "host";
       const isSystem = msg.role === "system";
-      const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const messageClass = [
-        "assistara-message",
+      const cls = [
+        "chat-msg",
         isOwn ? "own" : "",
         isHost ? "host" : "",
         isSystem ? "system" : ""
       ].filter(Boolean).join(" ");
       if (isSystem) {
-        return `
-        <div class="${messageClass}" data-message-id="${msg.id}" style="align-self: center; text-align: center; padding: 4px 12px;">
-          <div class="message-bubble" style="background: transparent; border: none; color: var(--muted); font-size: 12px; padding: 4px 12px;">
-            ${this.escapeHtml(msg.content)}
-          </div>
-        </div>
-      `;
+        return `<div class="${cls}"><span class="chat-text">${this.escapeHtml(msg.content)}</span></div>`;
       }
-      const canDelete = this.userIdentity?.isHost && !isSystem;
-      return `
-      <div class="${messageClass}" data-message-id="${msg.id}">
-        <div class="message-bubble">
-          <div class="message-header">
-            <span class="message-sender">${this.escapeHtml(msg.user)}</span>
-            ${isHost ? '<span class="host-badge">Host</span>' : ""}
-            ${canDelete && !isOwn ? `<button class="delete-btn" onclick="window.assistaraChat?.deleteMessage('${msg.id}')" aria-label="Delete message">\u2715</button>` : ""}
-            <span class="message-time">${time}</span>
-          </div>
-          <div class="message-content">${this.escapeHtml(msg.content)}</div>
-        </div>
-      </div>
-    `;
+      const name = this.escapeHtml(this.firstName(msg.user));
+      const badge = isHost ? '<span class="chat-host-badge">Host</span>' : "";
+      return `<div class="${cls}" data-message-id="${msg.id}"><span class="chat-name">${name}</span>${badge}<span class="chat-text">: ${this.escapeHtml(msg.content)}</span></div>`;
     }
     autoScroll() {
       const container = this.elements.messagesContainer;
       if (!container) return;
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
       if (isNearBottom) {
         container.scrollTop = container.scrollHeight;
       }
@@ -806,17 +608,17 @@ var AssistaraChatClient = (() => {
     }
   };
   var chatInstance = null;
-  function initAssistaraChatGlobal(container) {
+  function initAssistaraChatGlobal(container, options) {
     if (chatInstance) {
       chatInstance.disconnect();
     }
-    chatInstance = new AssistaraLiveChat(container);
+    chatInstance = new AssistaraLiveChat(container, options);
     window.assistaraChat = chatInstance;
     return chatInstance;
   }
   window.initAssistaraChat = initAssistaraChatGlobal;
-  function initAssistaraChat(container) {
-    return initAssistaraChatGlobal(container);
+  function initAssistaraChat(container, options) {
+    return initAssistaraChatGlobal(container, options);
   }
   return __toCommonJS(chat_exports);
 })();

@@ -111,6 +111,27 @@
   let assistaraMounted=false;
   let pollInFlight=false;
 
+  // Verified registered-attendee identity. A personal livestream link is
+  // /live?t=<token>; we resolve that token to the attendee's registered first
+  // name via the backend (never trusting a name from the URL) and hand it to
+  // the chat so registered attendees are auto-identified. null when the
+  // visitor is a guest (the chat then shows its inline name form).
+  let registeredIdentity=null;
+  async function resolveRegisteredIdentity(){
+    try{
+      const params=new URLSearchParams(location.search);
+      const token=(params.get('t')||'').trim();
+      if(!token){registeredIdentity=null;return;}
+      const r=await fetch('/api/masterclass-identity?token='+encodeURIComponent(token),{cache:'no-store'});
+      const d=await r.json().catch(()=>({}));
+      if(d&&d.ok&&d.identified&&d.name){
+        registeredIdentity={name:String(d.name).slice(0,30),isHost:false,registered:true};
+      }else{
+        registeredIdentity=null;
+      }
+    }catch{registeredIdentity=null;}
+  }
+
   function setPill(displayState){
     if(!pillLabel)return;
     const pill=pillLabel.closest('.live-pill');
@@ -177,11 +198,11 @@
     }
 
     if(scene==='assistara'){
-      chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>LIVE NOW</span></div><div id="assistara-live-chat" class="chat-frame-wrapper"></div>';
+      chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span class="chat-conn"><i class="chat-conn-dot"></i><span class="chat-conn-text">Connecting…</span></span></div><div id="assistara-live-chat" class="chat-frame-wrapper"></div>';
       const chatContainer=document.getElementById('assistara-live-chat');
       if(chatContainer&&window.initAssistaraChat){
         try{
-          window.initAssistaraChat(chatContainer);
+          window.initAssistaraChat(chatContainer,{identity:registeredIdentity});
           assistaraMounted=true;
         }catch(e){
           console.error('Assistara chat init failed',e);
@@ -230,6 +251,16 @@
       .catch(()=>{})
       .finally(()=>{pollInFlight=false;});
   }
+  resolveRegisteredIdentity().then(()=>{
+    // If the chat mounted as a guest before the registered identity resolved,
+    // re-mount so the verified name is used instead of the name form.
+    if(registeredIdentity&&assistaraMounted&&currentChatProvider==='assistara'&&currentDisplayState==='live'){
+      assistaraMounted=false;
+      renderedChatKey=null;
+      if(window.assistaraChat){try{window.assistaraChat.disconnect();}catch(e){}}
+      renderAll(currentDisplayState);
+    }
+  });
   loadConfig();
   setInterval(loadConfig,5000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadConfig();});
