@@ -162,12 +162,6 @@ function renderHtml(opts: {
   icsUrl: string;
 }) {
   const { first, eventDate, eventTime, dayWord, joinUrl, apps, limit, unsubscribeUrl, calendarUrl, icsUrl } = opts;
-  const count = typeof apps === "number" ? apps : 0;
-  const remaining = Math.max(0, limit - count);
-  const verified = typeof apps === "number";
-  const spotsLine = verified
-    ? `We&#8217;ve already received <b>${count} Academy applications!</b> We&#8217;re accepting just <b>${limit} students</b>, so if everyone gets accepted, that&#8217;s only <b>${remaining} spots left!</b> 🫣`
-    : `We&#8217;re accepting just <b>${limit} students</b> in the Academy, and applications are reviewed in the order they come in. 🫣`;
   const joinAttr = escAttr(joinUrl);
   const unsubAttr = escAttr(unsubscribeUrl);
   const calAttr = escAttr(calendarUrl);
@@ -203,9 +197,6 @@ function renderHtml(opts: {
     <p style="${P}">Grab your favorite drink, bring your questions, and come with an open mind. I have so much I want to share with you! ☀️</p>
     <p style="${P}">Can&#8217;t wait to see you there! 💛</p>
     <p style="margin:26px 0 30px;line-height:1.55;font-size:16px;color:#232323"><b>Xyra Mendoza</b><br><span style="color:#6b6b6b">Co-founder, Assistara</span></p>
-    <p style="margin:0 0 16px;line-height:1.62;font-size:15px;color:#232323"><b>P.S. 👀</b> ${spotsLine}</p>
-    <p style="margin:0 0 16px;line-height:1.62;font-size:15px;color:#232323">Our team will start reviewing applications in the order they came in right after the livestream. If the Academy has been on your mind, send in your application before we go live. I&#8217;d hate for you to miss out! 💛</p>
-    <p style="margin:0 0 34px;line-height:1.62;font-size:15px;color:#232323">Apply to the Academy: <a href="${ACADEMY_URL}" style="${A}">${ACADEMY_URL}</a></p>
     <p style="margin:0;line-height:1.6;font-size:12px;color:#8a8a8a">You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${unsubAttr}" style="color:#8a8a8a;text-decoration:underline">Unsubscribe</a></p>
   </td></tr>
 </table>
@@ -226,11 +217,6 @@ function renderText(opts: {
   icsUrl: string;
 }) {
   const { first, eventDate, eventTime, dayWord, joinUrl, apps, limit, unsubscribeUrl, calendarUrl, icsUrl } = opts;
-  const count = typeof apps === "number" ? apps : 0;
-  const remaining = Math.max(0, limit - count);
-  const spots = typeof apps === "number"
-    ? `P.S. ${count} Academy applications have already come in and the Academy accepts just ${limit} students - down to ${remaining} spots left!`
-    : "";
   return [
     `Hey ${first}! 💛`,
     "Okay, I have to admit... I've been looking forward to tomorrow all week! ✨",
@@ -250,9 +236,6 @@ function renderText(opts: {
     "Grab your favorite drink, bring your questions, and come with an open mind. I have so much I want to share with you! ☀️",
     "Can't wait to see you there! 💛",
     ["Xyra Mendoza", "Co-founder, Assistara"].join("\n"),
-    spots,
-    "Our team will start reviewing applications in the order they came in right after the livestream. If the Academy has been on your mind, send in your application before we go live. I'd hate for you to miss out! 💛",
-    "Apply to the Academy: " + ACADEMY_URL,
     ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubscribeUrl].join("\n"),
   ]
     .filter((p) => p && p.length > 0)
@@ -305,7 +288,7 @@ async function sendReminder(
   const dateLabel = eventDateLabel(event.scheduled_at);
   const timeLabel = eventTimeLabel(event.scheduled_at);
   const dayWord = relativeDay(event.scheduled_at);
-  const subject = `${first}, your first online paycheck starts with a plan! 💛`;
+  const subject = `${first}, your Assistara masterclass is ${dayWord} — here's your join link`;
   const finalSubject = extra?.subjectOverride ? extra.subjectOverride : (extra?.prefixSubject ? `[TEST] ${subject}` : subject);
   const html = renderHtml({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
   const text = renderText({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
