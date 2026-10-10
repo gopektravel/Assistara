@@ -68,6 +68,14 @@ Component order: header → optional heading → body → CTA button (+ fallback
   treat as **no consent** and do not send. Keep promotional emails in separate
   campaigns from reminders.
 
+## Permanent sender and signature conventions
+
+- General Assistara confirmations and administrative emails: display name **Assistara**, signature **The Assistara Team 💛**.
+- Academy communications and masterclass reminders: display name **Assistara Academy**, signature **The Assistara Team 💛**.
+- Explicitly approved personal messages (such as the already-sent day-before masterclass reminder) may instead use **Xyra 💛**. Do not apply Xyra's personal signature by default.
+- The exact team signature is **The Assistara Team 💛**, including the yellow heart, in **both HTML and plain text**. Never omit the heart.
+- Use only existing verified From email addresses; the display name and From address are separate settings. Preserve the approved copy, schedules, suppression rules, and delivery routing.
+
 ## 5. Personalization & fallbacks
 
 - First name: `(signup.name || "there").split(/\s+/)[0]` → fallback `"there"`.
@@ -120,4 +128,4 @@ Component order: header → optional heading → body → CTA button (+ fallback
 | 24h reminder | `run` | `founding-masterclass-2026:<id>` | plain personal |
 | Academy follow-up | `followup` | `academy-followup-2026-10-12:<id>` | plain personal |
 | 30-min reminder | `reminder30` | `reminder30-2026-10-11:<id>` | branded |
-| 5-min reminder | `reminder5` | `reminder5-2026-10-11:<id>` | branded |
+| 7-min reminder | `reminder7` | `reminder7-2026-10-11:<id>` | branded |
