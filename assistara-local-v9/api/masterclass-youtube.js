@@ -40,6 +40,48 @@ const CHAT_RESET_URL =
   process.env.CHAT_RESET_URL ||
   "https://assistara-live-chat-production.up.railway.app/internal/reset";
 
+// Live attendance metrics. "Not Yet Joined" must match the 6:07 PM reminder's
+// eligibleNotJoined() definition EXACTLY, so the dashboard and the reminder
+// email always agree on who has never joined.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SIGNUP_TOKEN_RE = /^[a-f0-9]{32,64}$/;
+// A viewer counts as "Watching Now" while their last heartbeat is newer than
+// this. The public page heartbeats every 30s (while the tab is visible), so a
+// 60s window tolerates one missed beat and expires a departed viewer shortly
+// after they close the tab.
+const WATCHING_TIMEOUT_MS = 60000;
+
+// Pure metric computation over the signup rows the admin endpoint fetched.
+// Same filters as the reminder's eligibleNotJoined so counts never disagree.
+function computeAttendanceStats(signups, nowMs) {
+  const valid = (Array.isArray(signups) ? signups : []).filter(
+    (x) => EMAIL_RE.test(String(x.email || "")) && SIGNUP_TOKEN_RE.test(String(x.attendee_token || ""))
+  );
+  const hasJoined = (x) =>
+    !!x.joined_at ||
+    !!x.last_joined_at ||
+    Number(x.join_clicks) > 0 ||
+    Number(x.attendance_seconds) > 0;
+  const now = Number.isFinite(nowMs) ? nowMs : Date.now();
+  const cutoff = now - WATCHING_TIMEOUT_MS;
+
+  const joined = valid.filter(hasJoined);
+  const registrations = valid.length;
+  const notYetJoined = registrations - joined.length;
+  const watchingNow = joined.filter((x) => {
+    const t = Date.parse(x.last_joined_at || x.joined_at || 0);
+    return Number.isFinite(t) && t >= cutoff;
+  }).length;
+
+  return {
+    watching_now: watchingNow,
+    unique_attendees: joined.length,
+    registrations,
+    not_yet_joined: notYetJoined,
+    watching_timeout_ms: WATCHING_TIMEOUT_MS,
+  };
+}
+
 // Accepts watch URLs (any youtube.com host), youtu.be, /live/, /embed/,
 // /shorts/, /v/ URLs and bare 11-character video IDs. Returns the video ID or
 // null. The result always matches VIDEO_ID_RE, so it is safe to interpolate
@@ -451,6 +493,30 @@ async function presenterKeyAction() {
   return { status: 200, body: { ok: true, hostToken: CHAT_SECRET } };
 }
 
+// Admin-only live attendance metrics. Reads masterclass_signups and derives the
+// numbers with the SAME filters the reminder uses, so "Not Yet Joined" always
+// equals the 6:07 PM reminder's eligible set. Read-only — it never writes, so it
+// cannot disturb attendance history or reminder eligibility.
+async function masterclassStatsAction(cfg, body) {
+  const key = eventKey(body.event_key);
+  const url =
+    cfg.url +
+    "/rest/v1/masterclass_signups?status=in.(registered,purchased)&unsubscribed_at=is.null&source=neq.test_reminder&select=email,attendee_token,joined_at,last_joined_at,join_clicks,attendance_seconds";
+  const { response, body: signups } = await requestJSON(url, { headers: serviceHeaders(cfg) });
+  if (!response.ok) return { status: 502, body: { ok: false, error: "Could not load attendance" } };
+  const stats = computeAttendanceStats(signups, Date.now());
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      event_key: key,
+      ...stats,
+      youtube_viewers_available: false, // no YouTube Data API credentials configured
+      generated_at: new Date().toISOString(),
+    },
+  };
+}
+
 module.exports = async function masterclassYoutube(req, res) {
   noStore(res);
   const origin = req.headers && req.headers.origin ? String(req.headers.origin) : "";
@@ -490,7 +556,7 @@ module.exports = async function masterclassYoutube(req, res) {
     if (parsed.error) return send(res, 400, { ok: false, error: parsed.error });
     const { body } = parsed;
     const action = String(body.action || "configure").trim().toLowerCase();
-    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream" && action !== "update_chat_provider" && action !== "presenter_key") {
+    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream" && action !== "update_chat_provider" && action !== "presenter_key" && action !== "stats") {
       return send(res, 400, { ok: false, error: "Unknown action" });
     }
     const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -550,6 +616,15 @@ module.exports = async function masterclassYoutube(req, res) {
         return send(res, 503, { ok: false, error: "Could not load presenter access" });
       }
     }
+    if (action === "stats") {
+      try {
+        const result = await masterclassStatsAction(cfg, body);
+        return send(res, result.status, result.body);
+      } catch (error) {
+        console.error("masterclass-youtube", error && error.message ? error.message : "stats failed");
+        return send(res, 503, { ok: false, error: "Could not load attendance" });
+      }
+    }
     try {
       const result = await configureAction(cfg, claims, body);
       return send(res, result.status, result.body);
@@ -576,3 +651,5 @@ module.exports.DISPLAY_STATES = DISPLAY_STATES;
 module.exports.DEFAULT_DISPLAY_STATE = DEFAULT_DISPLAY_STATE;
 module.exports.CHAT_PROVIDERS = CHAT_PROVIDERS;
 module.exports.DEFAULT_CHAT_PROVIDER = DEFAULT_CHAT_PROVIDER;
+module.exports.computeAttendanceStats = computeAttendanceStats;
+module.exports.WATCHING_TIMEOUT_MS = WATCHING_TIMEOUT_MS;

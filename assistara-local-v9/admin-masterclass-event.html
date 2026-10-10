@@ -98,6 +98,19 @@
       .cd b { display: block; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
       .cd span { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: #b9b4ac; text-transform: uppercase; }
       .countdownNote { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+      /* Live attendance stats */
+      .stat-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+      .stat { background: #faf9f5; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+      .stat-num { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+      .stat-label { margin-top: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+      .stat-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted); }
+      .stat-watching { background: #171717; border-color: #171717; }
+      .stat-watching .stat-num { color: #fff; font-size: 34px; }
+      .stat-watching .stat-label, .stat-watching .stat-hint { color: #b9b4ac; }
+      .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--greenInk); box-shadow: 0 0 0 4px rgba(29,106,59,0.14); margin-right: 4px; animation: mcPulse 1.6s infinite; }
+      @keyframes mcPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+      .stat-live { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
       .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
       button {
         font-family: "DM Sans", sans-serif;
@@ -152,7 +165,7 @@
       .presentation-frame { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--line); border-radius: 12px; background: #000; }
       .presentation-actions { display: flex; gap: 8px; margin-top: 10px; }
       .presentation-actions button { padding: 8px 14px; font-size: 12px; }
-      @media (max-width: 640px) { .facts { grid-template-columns: 1fr; } }
+      @media (max-width: 640px) { .facts { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: 1fr 1fr; } .stat-watching { grid-column: 1 / -1; } }
     </style>
   </head>
   <body>
@@ -199,6 +212,22 @@
         </div>
         <div class="feedback" id="mcFeedback"></div>
         <div class="muted" id="mcMeta"></div>
+      </div>
+
+      <div class="card" id="mcStatsCard">
+        <div class="statusRow">
+          <div>
+            <div class="title">Live Attendance</div>
+            <div class="sub"><span class="live-dot"></span><span class="stat-live">Live</span> · <span id="mcStatsUpdated">Loading…</span></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat stat-watching"><div class="stat-num" id="mcStatWatching">—</div><div class="stat-label">Watching Now <span class="stat-hint">on the page</span></div></div>
+          <div class="stat"><div class="stat-num" id="mcStatUnique">—</div><div class="stat-label">Unique Attendees</div></div>
+          <div class="stat"><div class="stat-num" id="mcStatReg">—</div><div class="stat-label">Registrations</div></div>
+          <div class="stat"><div class="stat-num" id="mcStatNotJoined">—</div><div class="stat-label">Not Yet Joined</div></div>
+        </div>
+        <div class="muted" style="margin-top:10px">Watching Now counts registered attendees with an active tab (updates every 12s; viewers expire ~60s after they close the page). Not Yet Joined matches the 6:07 PM reminder audience. This is page presence, not confirmed video playback.</div>
       </div>
 
       <div class="card" id="mcYtCard">
@@ -466,6 +495,28 @@
         }
       }
 
+      async function loadStats() {
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "stats", event_key: MC_EVENT_KEY }),
+            cache: "no-store",
+          });
+          if (r.status === 401) { adminSession.clear(); location.href = "/admin"; return; }
+          const d = await r.json().catch(() => ({}));
+          if (!d.ok) throw new Error(d.error || "Could not load attendance");
+          $("mcStatWatching").textContent = d.watching_now;
+          $("mcStatUnique").textContent = d.unique_attendees;
+          $("mcStatReg").textContent = d.registrations;
+          $("mcStatNotJoined").textContent = d.not_yet_joined;
+          const t = d.generated_at ? new Date(d.generated_at) : new Date();
+          $("mcStatsUpdated").textContent = "Updated " + t.toLocaleTimeString("en-PH", { timeZone: MC_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        } catch (e) {
+          $("mcStatsUpdated").textContent = "Update failed";
+        }
+      }
+
       async function streamAction(action, confirmMsg, btnId, successMsg) {
         if (!confirm(confirmMsg)) return;
         const btn = $(btnId);
@@ -605,8 +656,10 @@
 
       load();
       loadYoutube();
+      loadStats();
       setInterval(load, 20000);
-      document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+      setInterval(loadStats, 12000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) { load(); loadStats(); } });
       window.addEventListener("focus", () => load());
     </script>
   </body>

@@ -45,6 +45,7 @@ const {
   safeDomain,
   DISPLAY_STATES,
   DEFAULT_DISPLAY_STATE,
+  computeAttendanceStats,
 } = H;
 
 test("extractVideoId accepts every supported YouTube URL shape and bare IDs", () => {
@@ -650,6 +651,88 @@ test("presenter_key is rejected without an admin token (guest cannot claim host)
   );
   assert.equal(res.statusCode, 401);
   assert.equal(calls.length, 0);
+});
+
+test("computeAttendanceStats derives Watching Now / Unique / Not Yet Joined (matches reminder)", () => {
+  const now = Date.parse("2026-10-11T10:20:00Z");
+  const signups = [
+    { email: "a@x.com", attendee_token: "a".repeat(40), joined_at: "2026-10-11T10:00:00Z", last_joined_at: "2026-10-11T10:19:40Z", join_clicks: 1, attendance_seconds: 600 }, // active now
+    { email: "b@x.com", attendee_token: "b".repeat(40), joined_at: "2026-10-11T10:00:00Z", last_joined_at: "2026-10-11T10:10:00Z", join_clicks: 1, attendance_seconds: 600 }, // joined, left -> not watching
+    { email: "c@x.com", attendee_token: "c".repeat(40), joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 }, // never joined
+    { email: "not-an-email", attendee_token: "d".repeat(40), joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 }, // invalid email
+    { email: "e@x.com", attendee_token: "short", joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 }, // invalid token
+  ];
+  const s = computeAttendanceStats(signups, now);
+  assert.equal(s.registrations, 3);
+  assert.equal(s.unique_attendees, 2);
+  assert.equal(s.not_yet_joined, 1);
+  assert.equal(s.watching_now, 1); // only "a" heartbeat within the 60s window
+  assert.equal(s.watching_timeout_ms, 60000);
+});
+
+test("POST stats returns the four attendance metrics (admin-only)", async () => {
+  const iso = new Date().toISOString();
+  const rows = [
+    { email: "a@x.com", attendee_token: "a".repeat(40), joined_at: iso, last_joined_at: iso, join_clicks: 1, attendance_seconds: 30 },
+    { email: "b@x.com", attendee_token: "b".repeat(40), joined_at: null, last_joined_at: null, join_clicks: 0, attendance_seconds: 0 },
+  ];
+  const calls = [];
+  global.fetch = async (url, options = {}) => {
+    const u = String(url);
+    calls.push({ url: u, options });
+    if (u.includes("/functions/v1/admin-api")) return { ok: true, status: 200, json: async () => ({ ok: true }) };
+    if (u.includes("/rest/v1/masterclass_signups")) return { ok: true, status: 200, json: async () => rows };
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "stats", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.registrations, 2);
+  assert.equal(body.unique_attendees, 1);
+  assert.equal(body.not_yet_joined, 1);
+  assert.equal(body.watching_now, 1);
+  assert.equal(body.youtube_viewers_available, false); // no YouTube Data API credentials -> hidden
+  const q = calls.find((c) => c.url.includes("/rest/v1/masterclass_signups"));
+  assert.ok(q, "stats must query masterclass_signups");
+  assert.match(q.url, /source=neq\.test_reminder/); // same base filter as the reminder
+});
+
+test("POST stats is rejected without an admin token (guests cannot read analytics)", async () => {
+  const { fetchImpl, calls } = mockFetch();
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json" },
+      body: JSON.stringify({ action: "stats" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 401);
+  assert.equal(calls.length, 0);
+});
+
+test("the admin event page shows the live attendance cards", () => {
+  assert.match(eventPage, /id="mcStatsCard"/);
+  assert.match(eventPage, /id="mcStatWatching"/);
+  assert.match(eventPage, /id="mcStatUnique"/);
+  assert.match(eventPage, /id="mcStatReg"/);
+  assert.match(eventPage, /id="mcStatNotJoined"/);
+  assert.match(eventPage, /action: "stats"/);
+  assert.match(eventPage, /setInterval\(loadStats, 12000\)/);
+  assert.match(eventPage, /stat-watching/); // Watching Now is the prominent card
 });
 
 test("the public page wires host tokens and the presenter page is routed", () => {
