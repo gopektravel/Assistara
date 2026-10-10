@@ -1,19 +1,19 @@
 "use strict";
 
-// admin-counter-consistency.test.js — guards against silent divergence of
-// application counters across the admin dashboard.
+// admin-counter-consistency.test.js — the admin dashboard must report ONE
+// application total everywhere.
 //
-// The Applications tab and Webinar Signups tab show different counts because
-// they measure different things:
-//   - Applications tab: non-enrolled application records (active applicant pool)
-//   - Webinar tab: signups with application_id (webinar-to-application conversion)
+// The Applications tab and the Webinar Signups tab used to compute their own
+// numbers from different sources (non-enrolled application rows vs signups
+// carrying an application_id), so they could disagree. They now both read the
+// single canonical `totalApplications()` helper, which is the only place the
+// application total is defined. These tests lock that in.
 //
-// These tests ensure:
-//   1. Both tabs use clear, distinct labels
-//   2. The Webinar "Applied" count only counts signups linked to existing applications
-//   3. The Webinar tab shows "Direct applications" for unlinked applications
-//   4. The stat() function supports subtitles for metric definitions
-//   5. The edge function returns the correct data shape
+// They also prove:
+//   1. There is exactly one definition of the application total.
+//   2. Both tabs call it (and neither re-derives its own number).
+//   3. No hardcoded counts, and counters refresh through load()/render().
+//   4. The edge function still returns the data the helper relies on.
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
@@ -25,68 +25,79 @@ const v9 = path.join(root, "assistara-local-v9");
 const adminHtml = fs.readFileSync(path.join(v9, "admin.html"), "utf8");
 const edgeFn = fs.readFileSync(path.join(root, "supabase", "functions", "admin-applications", "index.ts"), "utf8");
 
-// Helper: check if a string exists in the source
 function contains(src, str) {
   return src.includes(str);
 }
 
-// ─── Applications tab metric definition ───
+// ─── One canonical definition ───
 
-test("Applications tab uses 'Active applications' label with 'Not yet enrolled' subtitle", () => {
-  assert.ok(contains(adminHtml, '"Active applications", "Not yet enrolled"'),
-    "Applications tab must clearly label the count as active (non-enrolled) applications");
+test("there is exactly one canonical application total", () => {
+  const defs = adminHtml.match(/function totalApplications\(\)/g) || [];
+  assert.equal(defs.length, 1, "totalApplications() must be defined exactly once");
 });
 
-test("Applications tab still filters out fully enrolled students", () => {
+test("totalApplications() is the non-enrolled application count", () => {
+  assert.ok(contains(adminHtml, "function totalApplications()"),
+    "totalApplications() must exist");
+  assert.ok(contains(adminHtml, "return activeApps().length;"),
+    "totalApplications() must return activeApps().length");
+});
+
+test("activeApps() still filters out fully enrolled students", () => {
   assert.ok(contains(adminHtml, "function activeApps()"),
     "activeApps() function must exist");
   assert.ok(contains(adminHtml, 'x.status === "onboarded" && x.payment_status === "paid" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at'),
     "activeApps() must filter out fully enrolled students");
 });
 
-// ─── Webinar tab metric definition ───
+// ─── Both tabs read the one definition ───
 
-test("Webinar tab uses 'Applied from webinar' label with clear subtitle", () => {
-  assert.ok(contains(adminHtml, '"Applied from webinar", "Webinar registrants who applied"'),
-    "Webinar tab must clearly label the count as webinar-sourced applications");
+test("Applications tab reports the canonical total", () => {
+  assert.ok(contains(adminHtml, '[totalApplications(), "Applications", "Total applications"]'),
+    "Applications tab must show the canonical total labelled 'Applications'");
 });
 
-test("Webinar tab shows 'Direct applications' stat for unlinked applications", () => {
-  assert.ok(contains(adminHtml, '"Direct applications", "Applied without webinar"'),
-    "Webinar tab must show direct applications (without webinar signup)");
+test("Webinar Signups tab reports the SAME canonical total", () => {
+  // The webinar stat block must contain the identical canonical call.
+  assert.ok(contains(adminHtml, '[totalApplications(), "Applications", "Total applications"]'),
+    "Webinar tab must show the canonical total with the same label");
 });
 
-test("Webinar 'Applied from webinar' only counts signups linked to existing applications", () => {
-  assert.ok(contains(adminHtml, "const allAppIds = new Set([...apps, ...students].map(x => String(x.id)))"),
-    "Must build set of all application IDs (enrolled + non-enrolled)");
-  assert.ok(contains(adminHtml, "const appliedFromWebinar = visibleWeb.filter(x => x.application_id && allAppIds.has(String(x.application_id)))"),
-    "Must only count signups whose application_id points to an existing application");
+test("the canonical call appears in both the applicants and webinar branches", () => {
+  const call = '[totalApplications(), "Applications", "Total applications"]';
+  const count = adminHtml.split(call).length - 1;
+  assert.equal(count, 2,
+    "both the Applications tab and the Webinar tab must read the canonical total (expected 2 call sites)");
 });
 
-test("Webinar tab builds linked application ID set for direct app calculation", () => {
-  assert.ok(contains(adminHtml, "const linkedAppIds = new Set(visibleWeb.filter(x => x.application_id).map(x => String(x.application_id)))"),
-    "Must build set of application IDs that have a linked signup");
-  assert.ok(contains(adminHtml, "const directApps = apps.filter(x => !linkedAppIds.has(String(x.id)))"),
-    "Direct applications must be non-enrolled apps without a linked signup");
+test("the webinar tab no longer re-derives its own application number", () => {
+  assert.ok(!contains(adminHtml, "appliedFromWebinar"),
+    "the old 'Applied from webinar' derivation must be gone");
+  assert.ok(!contains(adminHtml, "directApps"),
+    "the old 'Direct applications' derivation must be gone");
+  assert.ok(!contains(adminHtml, "appliedFromWebinar.length"),
+    "no counter may re-derive a separate application total");
 });
 
-// ─── stat() function supports subtitles ───
+test("no counter hardcodes the old 12 or 13", () => {
+  assert.ok(!/[^0-9](12|13)[^0-9]\s*,\s*["'](Applications|Applied)["']/.test(adminHtml),
+    "the application total must never be hardcoded");
+});
 
-test("stat() function supports optional subtitle as third array element", () => {
+// ─── stat() subtitles ───
+
+test("stat() function supports an optional subtitle", () => {
   assert.ok(contains(adminHtml, "function stat(a)"),
     "stat() function must exist");
-  assert.ok(contains(adminHtml, "${x[2] ? `<small>${x[2]}</small>` : \"\"}"),
-    "stat() must render subtitle when provided");
-});
-
-test("stat small element has CSS styling", () => {
+  assert.ok(contains(adminHtml, '${x[2] ? `<small>${x[2]}</small>` : ""}'),
+    "stat() must render a subtitle when provided");
   assert.ok(contains(adminHtml, ".stat small"),
     "CSS must style the stat subtitle element");
 });
 
 // ─── Edge function data shape ───
 
-test("edge function returns applications (non-enrolled) and students (enrolled) separately", () => {
+test("edge function returns non-enrolled applications and enrolled students separately", () => {
   assert.ok(contains(edgeFn, "applicants=x.filter") && contains(edgeFn, "!isEnrolled(z)"),
     "Edge function must split applications into non-enrolled (applicants)");
   assert.ok(contains(edgeFn, "students=x.filter(isEnrolled)"),
@@ -102,26 +113,9 @@ test("edge function returns all signups without filtering", () => {
     "Edge function must return all signups (filtering happens in frontend)");
 });
 
-// ─── Metric distinction is explicit ───
+// ─── Refresh behaviour ───
 
-test("Applications tab and Webinar tab use different, clearly labeled metrics", () => {
-  assert.ok(contains(adminHtml, '"Active applications", "Not yet enrolled"'),
-    "Applications tab must use 'Active applications' label");
-  assert.ok(contains(adminHtml, '"Applied from webinar", "Webinar registrants who applied"'),
-    "Webinar tab must use 'Applied from webinar' label");
-});
-
-// ─── No hardcoded counts ───
-
-test("no hardcoded application counts in admin.html", () => {
-  const hardcodedPattern = /\b(12|13)\b\s*,\s*["']Applications["']/;
-  assert.doesNotMatch(adminHtml, hardcodedPattern,
-    "Must not hardcode application counts");
-});
-
-// ─── Refresh behavior ───
-
-test("counters refresh on page load via load() function", () => {
+test("counters refresh on page load via load()", () => {
   assert.ok(contains(adminHtml, "async function load()"),
     "load() function must exist");
   assert.ok(contains(adminHtml, "apps = d.applications || []"),

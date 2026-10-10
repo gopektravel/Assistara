@@ -1328,6 +1328,15 @@
         // Defense-in-depth: also filter out fully enrolled students on the frontend.
         return apps.filter((x) => !(x.status === "onboarded" && x.payment_status === "paid" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at));
       }
+      // ONE canonical definition of "total applications". Every counter that
+      // reports an application total reads this, so the Applications tab and the
+      // Webinar Signups tab can never drift apart again. Enrolled students are
+      // listed separately on the Students tab. Not search-filtered: it is a
+      // total, and a total that changes while typing in the search box is not a
+      // total.
+      function totalApplications() {
+        return activeApps().length;
+      }
       function actionablePending() {
         return activeApps().filter(
           (x) =>
@@ -1915,7 +1924,7 @@
         if (tab === "applicants") {
           const a = activeApps().filter(match);
           stat([
-            [a.length, "Active applications", "Not yet enrolled"],
+            [totalApplications(), "Applications", "Total applications"],
             [
               a.filter((x) => currentDecision(x) === "accepted" && String(x.payment_status || "not_requested").toLowerCase() !== "paid").length,
               "Waiting for payment",
@@ -1992,18 +2001,12 @@
           const sourceFor=x=>window.AssistaraAttribution.resolve(x,{kind:"signup",links:acquisitionLinks,visits:acquisitionVisits,signups:web});
           const attrCounts={Tracked:0,Recovered:0,UTM:0,Direct:0,Untracked:0};
           visibleWeb.forEach((x)=>{const s=sourceFor(x);attrCounts[s.status]=(attrCounts[s.status]||0)+1});
-          // Build a set of all application IDs (enrolled + non-enrolled) to verify signup links
-          const allAppIds = new Set([...apps, ...students].map(x => String(x.id)));
-          // Count signups whose application_id points to an existing application
-          const appliedFromWebinar = visibleWeb.filter(x => x.application_id && allAppIds.has(String(x.application_id)));
-          // Count non-enrolled applications without a linked webinar signup
-          const linkedAppIds = new Set(visibleWeb.filter(x => x.application_id).map(x => String(x.application_id)));
-          const directApps = apps.filter(x => !linkedAppIds.has(String(x.id)));
+          // Total applications, read from the ONE canonical counter so this tab
+          // and the Applications tab always show the exact same number.
           stat([
             [visibleWeb.length, "Registered"],
             [visibleWeb.filter((x) => x.attended).length, "Attended"],
-            [appliedFromWebinar.length, "Applied from webinar", "Webinar registrants who applied"],
-            [directApps.length, "Direct applications", "Applied without webinar"],
+            [totalApplications(), "Applications", "Total applications"],
             [visibleWeb.filter((x) => x.purchased).length, "Purchased"],
           ]);
           $("signupGoal").innerHTML += `<div class="attrSummary">Attribution · Tracked ${attrCounts.Tracked} · Recovered ${attrCounts.Recovered}${attrCounts.UTM?" · UTM "+attrCounts.UTM:""}${attrCounts.Direct?" · Direct "+attrCounts.Direct:""} · Untracked ${attrCounts.Untracked}</div>`;
