@@ -217,6 +217,25 @@
 
         <label class="check"><input type="checkbox" id="mcYtChat" checked> Show live chat on the public page</label>
 
+        <div class="field">
+          <span class="label">Chat Provider</span>
+          <div class="radio-group" style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;">
+            <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="mcYtChatProvider" value="assistara" checked style="accent-color: #171717;">
+              <span style="font-weight: 600;">Assistara Chat (Recommended)</span>
+            </label>
+            <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="mcYtChatProvider" value="youtube" style="accent-color: #171717;">
+              <span style="font-weight: 600;">YouTube Chat (Fallback)</span>
+            </label>
+            <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="mcYtChatProvider" value="off" style="accent-color: #171717;">
+              <span style="font-weight: 600;">Chat Off</span>
+            </label>
+          </div>
+          <div class="muted" style="margin-top: 8px;">Assistara Chat uses our branded interface. YouTube Chat shows YouTube's native embed. Chat Off hides the chat panel entirely.</div>
+        </div>
+
         <div id="mcYtConfiguredUrl" class="configured-url hidden"></div>
 
         <div class="stream-controls">
@@ -405,6 +424,12 @@
         const hasUrl = !!d.video_id;
         $("mcYtUrl").value = d.youtube_url || "";
         $("mcYtChat").checked = d.chat_enabled !== false;
+        // Update chat provider radio buttons
+        const provider = d.chat_provider || "assistara";
+        const providerRadios = document.querySelectorAll('input[name="mcYtChatProvider"]');
+        providerRadios.forEach(radio => {
+          radio.checked = radio.value === provider;
+        });
         // Update display state badge
         const stateBadge = $("mcYtStateBadge");
         const state = d.display_state || "waiting";
@@ -488,6 +513,7 @@
               youtube_url: $("mcYtUrl").value.trim(),
               chat_enabled: $("mcYtChat").checked,
               replay_enabled: false,
+              chat_provider: document.querySelector('input[name="mcYtChatProvider"]:checked')?.value || "assistara",
             }),
           });
           const d = await r.json().catch(() => ({}));

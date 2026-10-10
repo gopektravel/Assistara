@@ -17,7 +17,7 @@
 <body>
 <header class="header"><div class="shell"><div class="nav"><div class="brand"><img class="mark" src="/assistara-logo.svg" alt="Assistara"/>Assistara Academy</div><div class="live-pill"><span class="live-dot"></span> <span id="livePillLabel">FREE LIVE MASTERCLASS</span></div></div></div></header>
 <main><section class="hero"><div class="shell"><h1>How to Land Your <span>First Remote Client</span></h1></div></section>
-<section class="stage"><div class="shell"><div class="live-grid"><div class="video-shell"><div class="video prelive-video" id="preliveVideo"><div class="prelive-wrap"><div class="prelive-kicker">WE GO LIVE IN</div><div class="prelive-countdown" aria-live="polite"><div><strong id="liveDays">05</strong><small>DAYS</small></div><span>:</span><div><strong id="liveHours">10</strong><small>HOURS</small></div><span>:</span><div><strong id="liveMinutes">45</strong><small>MIN</small></div><span>:</span><div><strong id="liveSeconds">00</strong><small>SEC</small></div></div><div class="prelive-date">SUNDAY, OCTOBER 11 · 6:00 PM PHT</div><div class="prelive-note">Your masterclass will play here when we go live.</div></div></div><div class="youtube-note"><span>Streamed through YouTube Live · Stay on Assistara</span><a href="#" onclick="return false">Watch on YouTube ↗</a></div></div><aside class="chat"><div class="chat-head"><span>LIVE CHAT</span><span>COMING SOON</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">Live chat opens with the masterclass.</strong><span>Join the conversation here when we go live.</span></div></div></aside></div>
+<section class="stage"><div class="shell"><div class="live-grid"><div class="video-shell"><div class="video prelive-video" id="preliveVideo"><div class="prelive-wrap"><div class="prelive-kicker">WE GO LIVE IN</div><div class="prelive-countdown" aria-live="polite"><div><strong id="liveDays">05</strong><small>DAYS</small></div><span>:</span><div><strong id="liveHours">10</strong><small>HOURS</small></div><span>:</span><div><strong id="liveMinutes">45</strong><small>MIN</small></div><span>:</span><div><strong id="liveSeconds">00</strong><small>SEC</small></div></div><div class="prelive-date">SUNDAY, OCTOBER 11 · 6:00 PM PHT</div><div class="prelive-note">Your masterclass will play here when we go live.</div></div></div><div class="youtube-note"><span>Streamed through YouTube Live · Stay on Assistara</span></div></div><aside class="chat"><div class="chat-head"><span>LIVE CHAT</span><span>COMING SOON</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">Live chat opens with the masterclass.</strong><span>Join the conversation here when we go live.</span></div></div></aside></div>
 <div class="bottom"><div class="info"><div class="info-row"><div class="info-copy"><div class="label">TODAY'S SESSION</div><h2>Build your path into remote work.</h2><p><span class="promise">Turn the skills you already have into something valuable and take the first step toward landing a real client.</span> Learn what clients pay for, how to position your skills, and the simplest path from beginner to getting paid.</p></div><div class="meta"><span>≈ 60 min</span><span>Live</span><span>Beginner friendly</span><span>Free</span></div></div></div><aside class="cta"><div class="label">FOUNDING COHORT</div><h3>Ready to get your first client?</h3><div class="scarcity"><span class="scarcity-dot"></span>Only 15 spots available</div><a class="btn" href="/academy/apply" target="_blank" rel="noopener noreferrer">Apply for Assistara Academy →</a></aside></div></div></section></main>
 <script id="prelive-countdown-js">(()=>{
   const ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status';
@@ -135,8 +135,9 @@
   function renderChat(displayState){
     if(!chatEl)return;
     const hasStream=!!(cfg&&cfg.video_id);
-    const showChat=hasStream&&cfg.chat_enabled&&displayState==='live';
-    if(showChat){
+    const chatProvider = cfg?.chat_provider || 'assistara';
+    const showChat=hasStream&&cfg.chat_enabled&&displayState==='live' && chatProvider !== 'off';
+    if(showChat && chatProvider === 'assistara'){
       // Use Assistara Live Chat instead of YouTube Live Chat
       chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>LIVE NOW</span></div><div id="assistara-live-chat" class="chat-frame-wrapper"></div>';
       // Initialize Assistara Live Chat when container is ready
@@ -144,6 +145,10 @@
       if(chatContainer && window.initAssistaraChat){
         window.initAssistaraChat(chatContainer);
       }
+    } else if(showChat && chatProvider === 'youtube'){
+      // Use YouTube Live Chat (fallback)
+      const mobileFallback = '<div class="chat-mobile-fallback"><a href="'+cfg.youtube_url+'" target="_blank" rel="noopener noreferrer">Open Chat on YouTube ↗</a></div>';
+      chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>LIVE NOW</span></div><iframe class="chat-frame" src="'+cfg.chat_url+'" title="YouTube live chat" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-crossorigin"></iframe>'+mobileFallback;
     } else if(displayState==='ended'){
       chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>ENDED</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">This masterclass has ended.</strong><span>Chat closes when the live stream ends.</span></div></div>';
     } else {

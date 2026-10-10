@@ -82,6 +82,10 @@ function safeDomain(input) {
 const DISPLAY_STATES = ["waiting", "live", "ended"];
 const DEFAULT_DISPLAY_STATE = "waiting";
 
+// Chat provider options
+const CHAT_PROVIDERS = ["assistara", "youtube", "off"];
+const DEFAULT_CHAT_PROVIDER = "assistara";
+
 // The stored column holds our JSON config. Tolerate a legacy/plain-URL value
 // and treat anything unreadable as "no stream configured".
 function parseConfig(raw) {
@@ -91,6 +95,7 @@ function parseConfig(raw) {
     chat_enabled: true,
     replay_enabled: false, // replay disabled per requirements
     display_state: DEFAULT_DISPLAY_STATE,
+    chat_provider: DEFAULT_CHAT_PROVIDER,
   };
   if (!raw || typeof raw !== "string") return out;
   let cfg = null;
@@ -109,6 +114,9 @@ function parseConfig(raw) {
     if (typeof cfg.replay === "boolean") out.replay_enabled = cfg.replay;
     if (typeof cfg.display_state === "string" && DISPLAY_STATES.includes(cfg.display_state)) {
       out.display_state = cfg.display_state;
+    }
+    if (typeof cfg.chat_provider === "string" && CHAT_PROVIDERS.includes(cfg.chat_provider)) {
+      out.chat_provider = cfg.chat_provider;
     }
     return out;
   }
@@ -197,6 +205,7 @@ function publicConfig(row, domain) {
     chat_enabled: cfg.chat_enabled,
     replay_enabled: cfg.replay_enabled,
     display_state: cfg.display_state,
+    chat_provider: cfg.chat_provider,
     chat_url: cfg.video_id ? buildChatUrl(cfg.video_id, domain) : null,
   };
 }
@@ -217,7 +226,13 @@ async function readEventRow(cfg, key) {
 
 async function configureAction(cfg, claims, body) {
   const key = eventKey(body.event_key);
-  const next = { youtube_url: null, chat: true, replay: false, display_state: DEFAULT_DISPLAY_STATE };
+  const next = { 
+    youtube_url: null, 
+    chat: true, 
+    replay: false, 
+    display_state: DEFAULT_DISPLAY_STATE,
+    chat_provider: DEFAULT_CHAT_PROVIDER,
+  };
   const rawUrl = body.youtube_url === undefined || body.youtube_url === null ? "" : String(body.youtube_url).trim();
   if (rawUrl) {
     const id = extractVideoId(rawUrl);
@@ -234,6 +249,9 @@ async function configureAction(cfg, claims, body) {
   next.replay = false;
   if (typeof body.display_state === "string" && DISPLAY_STATES.includes(body.display_state)) {
     next.display_state = body.display_state;
+  }
+  if (typeof body.chat_provider === "string" && CHAT_PROVIDERS.includes(body.chat_provider)) {
+    next.chat_provider = body.chat_provider;
   }
 
   const { response } = await requestJSON(
@@ -262,6 +280,7 @@ async function configureAction(cfg, claims, body) {
       chat_enabled: next.chat,
       replay_enabled: next.replay,
       display_state: next.display_state,
+      chat_provider: next.chat_provider,
     },
   };
 }
@@ -450,3 +469,5 @@ module.exports.safeDomain = safeDomain;
 module.exports.DEFAULT_EVENT_KEY = DEFAULT_EVENT_KEY;
 module.exports.DISPLAY_STATES = DISPLAY_STATES;
 module.exports.DEFAULT_DISPLAY_STATE = DEFAULT_DISPLAY_STATE;
+module.exports.CHAT_PROVIDERS = CHAT_PROVIDERS;
+module.exports.DEFAULT_CHAT_PROVIDER = DEFAULT_CHAT_PROVIDER;

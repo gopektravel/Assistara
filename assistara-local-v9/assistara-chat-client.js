@@ -706,13 +706,17 @@ var AssistaraLiveChat = class {
   }
 };
 var chatInstance = null;
-function initAssistaraChat(container) {
+function initAssistaraChatGlobal(container) {
   if (chatInstance) {
     chatInstance.disconnect();
   }
   chatInstance = new AssistaraLiveChat(container);
   window.assistaraChat = chatInstance;
   return chatInstance;
+}
+window.initAssistaraChat = initAssistaraChatGlobal;
+function initAssistaraChat(container) {
+  return initAssistaraChatGlobal(container);
 }
 export {
   AssistaraLiveChat,
