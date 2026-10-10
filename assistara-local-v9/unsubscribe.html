@@ -34,7 +34,7 @@
   </main>
   <script>
     (function () {
-      var TOKEN_RE = /^[0-9a-f]{48}$/i;
+      var TOKEN_RE = /^[0-9a-f]{32,64}$/i;
       var params = new URLSearchParams(location.search);
       var token = params.get("t") || "";
       var title = document.getElementById("title");

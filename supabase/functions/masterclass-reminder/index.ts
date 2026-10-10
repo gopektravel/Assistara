@@ -59,7 +59,7 @@ const validEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.leng
 const esc = (s: string) =>
   s.replaceAll("&", "&").replaceAll("<", "<").replaceAll(">", ">").replaceAll('"', "&").replaceAll("'", "&#039;");
 const escAttr = (s: string) => esc(s).replaceAll("`", "&#096;");
-const TOKEN_RE = /^[a-f0-9]{48}$/;
+const TOKEN_RE = /^[a-f0-9]{32,64}$/;
 
 async function api(path: string, init?: RequestInit) {
   const r = await fetch(`${U}/${path}`, {
@@ -290,11 +290,11 @@ function relativeDay(iso: string) {
 // ----------------------------------------------------------------------------
 async function sendReminder(
   signup: { id: string; name: string; email: string; attendee_token: string },
-  extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender"; subjectOverride?: string }
+  extra?: { prefixSubject?: boolean; uniqueIdem?: string; forceProvider?: "resend" | "brevo" | "sender"; subjectOverride?: string; delivery?: any; event?: any; apps?: number | null }
 ) {
-  const event = await eventRow();
+  const event = extra?.event ?? await eventRow();
   if (!event?.scheduled_at) throw Error("Event not scheduled");
-  const apps = await academyAppCount();
+  const apps = extra?.apps !== undefined ? extra.apps : await academyAppCount();
   const token = signup.attendee_token;
   const joinUrl = `${SITE}/live?t=${encodeURIComponent(token)}`;
   const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
@@ -336,8 +336,8 @@ async function sendReminder(
     console.error("email_delivery_log insert failed", logRes.status, t.slice(0, 300));
   }
 
-  // Send via centralized delivery
-  const delivery = await createEmailDelivery(`mc-reminder-${Date.now()}`);
+  // Send via centralized delivery (reuse a shared client when provided)
+  const delivery = extra?.delivery ?? await createEmailDelivery(`mc-reminder-${Date.now()}`);
   
   const result = await delivery.send({
     idempotencyKey: idem,
@@ -371,36 +371,45 @@ async function handleRun(body: any) {
   if (Number.isFinite(sched) && now >= sched) return { ok: true, skipped: "event started" };
   const target = sched - REMIND_HOURS * 36e5;
   const windowOpen = Number.isFinite(sched) && now >= target - GRACE_BEFORE_HOURS * 36e5;
-  if (!windowOpen) return { ok: true, skipped: "window not yet open", started: false };
 
-  if (!ENABLED) return { ok: true, disabled: "MASTERCLASS_REMINDER_ENABLED is false — production sending off", started: false };
+  // One-time manual override: `force: true` (with the cron secret) bypasses ONLY
+  // the enablement + reminder-window gates for an explicitly approved manual send.
+  // Every other protection (auth, unsubscribe, quota, idempotency, and the
+  // never-after-event-start deadline above) stays enforced.
+  const force = body.force === true;
+  if (!windowOpen && !force) return { ok: true, skipped: "window not yet open", started: false };
+  if (!ENABLED && !force) return { ok: true, disabled: "MASTERCLASS_REMINDER_ENABLED is false — production sending off", started: false };
 
   const eligible = await eligibleSignups(new Date(target).toISOString());
   const sent: string[] = [];
-  const skipped: string[] = [];
   const failed: string[] = [];
   const unknown: string[] = [];
 
-  for (const s of eligible) {
-    try {
-      const result = await sendReminder(s);
-      
-      if (result.result.success) {
-        sent.push(String(s.email));
-      } else if (result.result.status === 'unknown') {
-        unknown.push(String(s.email));
-        // Log for reconciliation - don't auto-retry
-      } else {
+  // Shared client + cached event/apps; bounded concurrency (claims and quota
+  // reservations are atomic, so parallel workers cannot double-send).
+  const delivery = await createEmailDelivery(`mc-batch-${Date.now()}`);
+  const apps = await academyAppCount();
+  const concurrency = Math.max(1, Math.min(6, Number(body.concurrency) || 4));
+  let idx = 0;
+  const worker = async () => {
+    while (true) {
+      const my = idx++;
+      if (my >= eligible.length) return;
+      const s = eligible[my];
+      try {
+        const result = await sendReminder(s, { delivery, event, apps });
+        if (result.result.success) sent.push(String(s.email));
+        else if (result.result.status === "unknown") unknown.push(String(s.email));
+        else failed.push(String(s.email));
+      } catch (e) {
         failed.push(String(s.email));
+        console.error(`Failed to send reminder to ${s.email}:`, String(e instanceof Error ? e.message : e));
       }
-    } catch (e) {
-      const msg = String(e instanceof Error ? e.message : e);
-      failed.push(String(s.email));
-      console.error(`Failed to send reminder to ${s.email}:`, msg);
     }
-  }
+  };
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
 
-  return { ok: true, started: true, eligible: eligible.length, sent, skipped, failed, unknown };
+  return { ok: true, started: true, forced: force, concurrency, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
 }
 
 async function handleTest(body: any) {
@@ -471,12 +480,39 @@ async function emailStatus(body: any) {
   if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
   const id = clean(body.id, 100);
   if (!/^[0-9a-fA-F-]{36}$/.test(id)) return { ok: false, error: "Valid message id required" };
-  // We can't check Resend directly anymore without API key - use our log
   const r = await api(`rest/v1/email_delivery_log?provider_message_id=eq.${encodeURIComponent(id)}&select=*&limit=1`);
   const j = await r.json().catch(() => []);
   const d = j[0];
   if (!d) return { ok: false, error: "Message not found in delivery log" };
   return { ok: true, id, state: d.status, subject: d.subject, from: d.recipient_email, created_at: d.created_at, provider_status: 200 };
+}
+
+// ----------------------------------------------------------------------------
+// Read-only provider readiness probe (never sends). Gated by the cron secret.
+// ----------------------------------------------------------------------------
+async function providerCheck(body: any) {
+  if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return { ok: false, error: "Unauthorized" };
+  const R = Deno.env.get("RESEND_API_KEY") || "";
+  const B = Deno.env.get("BREVO_API_KEY") || "";
+  const out: any = {};
+  if (R) {
+    const r = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${R}` } });
+    const j = await r.json().catch(() => ({}));
+    out.resend = { status: r.status, ok: r.ok, domains: (j.data || []).map((d: any) => ({ name: d.name, status: d.status })) };
+  } else out.resend = { ok: false, error: "RESEND_API_KEY missing" };
+  if (B) {
+    const a = await fetch("https://api.brevo.com/v3/account", { headers: { "api-key": B, Accept: "application/json" } });
+    const atext = await a.text().catch(() => "");
+    let aj: any = {}; try { aj = JSON.parse(atext); } catch {}
+    out.brevo = { status: a.status, ok: a.ok, key_format: /^xkeysib-/.test(B) ? "brevo_v3" : "other", key_length: B.length, account: { email: aj.email, companyName: aj.companyName, plan: aj.plan }, raw_error: a.ok ? undefined : atext.slice(0, 300) };
+    const s = await fetch("https://api.brevo.com/v3/senders", { headers: { "api-key": B, Accept: "application/json" } });
+    const sj = await s.json().catch(() => ({}));
+    out.brevo.senders = { status: s.status, ok: s.ok, list: (sj.senders || []).map((x: any) => ({ email: x.email, active: x.active })) };
+    const dom = await fetch("https://api.brevo.com/v3/senders/domains", { headers: { "api-key": B, Accept: "application/json" } });
+    const domj = await dom.json().catch(() => ({}));
+    out.brevo.domains = { status: dom.status, ok: dom.ok, list: (domj.domains || []).map((x: any) => ({ domain_name: x.domain_name, authenticated: x.authenticated, verified: x.verified })) };
+  } else out.brevo = { ok: false, error: "BREVO_API_KEY missing" };
+  return { ok: true, ...out };
 }
 
 Deno.serve(async (req: Request) => {
@@ -542,5 +578,6 @@ Deno.serve(async (req: Request) => {
     return out(await handleStats());
   }
   if (act === "email_status") return out(await emailStatus(b));
+  if (act === "provider_check") return out(await providerCheck(b));
   return out({ ok: false, error: "Unknown action" }, 400);
 });
