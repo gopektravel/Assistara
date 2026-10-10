@@ -347,6 +347,8 @@ async function handleRun(body: any) {
   if (clean(body.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) {
     return { ok: false, error: "Unauthorized" };
   }
+  // Reconcile internal counters with the providers' real usage before sending.
+  const quotaSync = await syncQuotaInternal();
   const event = await eventRow();
   if (!event?.scheduled_at) return { ok: false, error: "Event not scheduled" };
   const sched = Date.parse(event.scheduled_at);
@@ -392,7 +394,7 @@ async function handleRun(body: any) {
   };
   await Promise.all(Array.from({ length: concurrency }, () => worker()));
 
-  return { ok: true, started: true, forced: force, concurrency, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
+  return { ok: true, started: true, forced: force, concurrency, quotaSync, eligible: eligible.length, sent: sent.length, failed: failed.length, unknown: unknown.length, sentEmails: sent, failedEmails: failed, unknownEmails: unknown };
 }
 
 async function handleTest(body: any) {
@@ -471,6 +473,50 @@ async function emailStatus(body: any) {
 }
 
 // ----------------------------------------------------------------------------
+// Reconcile the internal quota counters with the providers' REAL usage so the
+// router never exceeds actual account limits. Resend exposes /usage; Brevo's
+// account `credits` is the remaining send limit for the period.
+// ----------------------------------------------------------------------------
+async function syncQuotaInternal() {
+  const R = Deno.env.get("RESEND_API_KEY") || "";
+  const B = Deno.env.get("BREVO_API_KEY") || "";
+  const quotaDate = new Date().toISOString().slice(0, 10);
+  const out: any = {};
+  if (R) {
+    try {
+      await api("rest/v1/rpc/email_reserve_quota", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_provider: "resend", p_count: 0 }) });
+      const r = await fetch("https://api.resend.com/usage", { headers: { Authorization: `Bearer ${R}` } });
+      const j = await r.json().catch(() => ({} as any));
+      const daily = j?.emails?.daily?.used, monthly = j?.emails?.monthly?.used;
+      if (typeof daily === "number") {
+        const patch: any = { used_count: daily, last_checked_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+        if (typeof monthly === "number") patch.monthly_used = monthly;
+        await api(`rest/v1/email_provider_quota?provider=eq.resend&quota_date=eq.${quotaDate}`, { method: "PATCH", body: JSON.stringify(patch) });
+        out.resend = { daily_used: daily, monthly_used: monthly, remaining_today: (j?.emails?.daily?.limit ?? 100) - daily };
+      }
+    } catch (e) { out.resend_error = String(e instanceof Error ? e.message : e); }
+  }
+  if (B) {
+    try {
+      await api("rest/v1/rpc/email_reserve_quota", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_provider: "brevo", p_count: 0 }) });
+      const a = await fetch("https://api.brevo.com/v3/account", { headers: { "api-key": B, Accept: "application/json" } });
+      const aj = await a.json().catch(() => ({} as any));
+      const plan = Array.isArray(aj.plan) ? aj.plan[0] : aj.plan;
+      const remaining = plan?.creditsType === "sendLimit" ? plan?.credits : null;
+      if (typeof remaining === "number") {
+        const cfg = await api("rest/v1/email_provider_config?provider=eq.brevo&select=daily_limit_override&limit=1");
+        const cfj = await cfg.json().catch(() => []);
+        const dlimit = cfj?.[0]?.daily_limit_override || 300;
+        const used = Math.max(0, dlimit - remaining);
+        await api(`rest/v1/email_provider_quota?provider=eq.brevo&quota_date=eq.${quotaDate}`, { method: "PATCH", body: JSON.stringify({ used_count: used, last_checked_at: new Date().toISOString(), updated_at: new Date().toISOString() }) });
+        out.brevo = { remaining_credits: remaining, derived_used: used, daily_limit: dlimit };
+      }
+    } catch (e) { out.brevo_error = String(e instanceof Error ? e.message : e); }
+  }
+  return out;
+}
+
+// ----------------------------------------------------------------------------
 // Read-only provider readiness probe (never sends). Gated by the cron secret.
 // ----------------------------------------------------------------------------
 async function providerCheck(body: any) {
@@ -482,6 +528,24 @@ async function providerCheck(body: any) {
     const r = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${R}` } });
     const j = await r.json().catch(() => ({}));
     out.resend = { status: r.status, ok: r.ok, domains: (j.data || []).map((d: any) => ({ name: d.name, status: d.status })) };
+    out.resend.probes = {};
+    const probeTargets: Record<string, string> = {
+      emails: "https://api.resend.com/emails?limit=100",
+      emails_all: "https://api.resend.com/emails",
+      api_keys: "https://api.resend.com/api-keys",
+      usage: "https://api.resend.com/usage",
+      stats: "https://api.resend.com/stats",
+    };
+    for (const [name, url] of Object.entries(probeTargets)) {
+      try {
+        const pr = await fetch(url, { headers: { Authorization: `Bearer ${R}` } });
+        const text = await pr.text().catch(() => "");
+        let body: any = null; try { body = JSON.parse(text); } catch { body = text.slice(0, 200); }
+        out.resend.probes[name] = { status: pr.status, ok: pr.ok, count: Array.isArray(body?.data) ? body.data.length : undefined, sample: JSON.stringify(body).slice(0, 400) };
+      } catch (e) {
+        out.resend.probes[name] = { error: String(e instanceof Error ? e.message : e) };
+      }
+    }
   } else out.resend = { ok: false, error: "RESEND_API_KEY missing" };
   if (B) {
     const a = await fetch("https://api.brevo.com/v3/account", { headers: { "api-key": B, Accept: "application/json" } });
@@ -494,6 +558,22 @@ async function providerCheck(body: any) {
     const dom = await fetch("https://api.brevo.com/v3/senders/domains", { headers: { "api-key": B, Accept: "application/json" } });
     const domj = await dom.json().catch(() => ({}));
     out.brevo.domains = { status: dom.status, ok: dom.ok, list: (domj.domains || []).map((x: any) => ({ domain_name: x.domain_name, authenticated: x.authenticated, verified: x.verified })) };
+    out.brevo.probes = {};
+    const bprobe: Record<string, string> = {
+      agg_report: "https://api.brevo.com/v3/smtp/statistics/aggregatedReport?startDate=2026-10-10&endDate=2026-10-10",
+      emails: "https://api.brevo.com/v3/smtp/statistics/emails?startDate=2026-10-10&endDate=2026-10-10&limit=100",
+      account: "https://api.brevo.com/v3/account",
+    };
+    for (const [name, url] of Object.entries(bprobe)) {
+      try {
+        const pr = await fetch(url, { headers: { "api-key": B, Accept: "application/json" } });
+        const text = await pr.text().catch(() => "");
+        let body: any = null; try { body = JSON.parse(text); } catch { body = text.slice(0, 200); }
+        out.brevo.probes[name] = { status: pr.status, ok: pr.ok, sample: JSON.stringify(body).slice(0, 500) };
+      } catch (e) {
+        out.brevo.probes[name] = { error: String(e instanceof Error ? e.message : e) };
+      }
+    }
   } else out.brevo = { ok: false, error: "BREVO_API_KEY missing" };
   return { ok: true, ...out };
 }
@@ -562,5 +642,9 @@ Deno.serve(async (req: Request) => {
   }
   if (act === "email_status") return out(await emailStatus(b));
   if (act === "provider_check") return out(await providerCheck(b));
+  if (act === "sync_quota") {
+    if (clean(b.cron_secret, 200) !== CRON_SECRET || !CRON_SECRET) return out({ ok: false, error: "Unauthorized" }, 401);
+    return out({ ok: true, ...(await syncQuotaInternal()) });
+  }
   return out({ ok: false, error: "Unknown action" }, 400);
 });
