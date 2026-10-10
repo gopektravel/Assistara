@@ -90,7 +90,7 @@
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) poll(); });
   window.addEventListener('focus',()=>poll());
 })();</script>
-<script id="masterclass-attendance-tracking">(()=>{const endpoint='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-attendance',params=new URLSearchParams(location.search);let token=(params.get('t')||'').trim();try{if(token)localStorage.setItem('assistara_masterclass_attendee_token',token);else token=localStorage.getItem('assistara_masterclass_attendee_token')||''}catch{}if(!token)return;const send=(kind,seconds)=>fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,kind,seconds})}).catch(()=>{});send('join');let visibleAt=Date.now();document.addEventListener('visibilitychange',()=>{if(document.hidden){const s=Math.floor((Date.now()-visibleAt)/1000);if(s>0)send('heartbeat',Math.min(s,120))}else visibleAt=Date.now()});setInterval(()=>{if(!document.hidden){send('heartbeat',30);visibleAt=Date.now()}},30000)})();</script>
+<script id="masterclass-attendance-tracking">(()=>{const endpoint='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-attendance',params=new URLSearchParams(location.search);let token=(params.get('t')||'').trim();try{if(token)localStorage.setItem('assistara_masterclass_attendee_token',token);else token=localStorage.getItem('assistara_masterclass_attendee_token')||''}catch{}if(!token)return;const post=body=>fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>null);const joinRetry=async attempts=>{for(let i=0;i<attempts;i++){try{const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,kind:'join'})});if(r.ok){const j=await r.json().catch(()=>({}));if(j&&j.ok)return;}else if(r.status<500)return;}catch{}if(i<attempts-1)await new Promise(res=>setTimeout(res,1000*(i+1)));}};joinRetry(4);let visibleAt=Date.now();document.addEventListener('visibilitychange',()=>{if(document.hidden){const s=Math.floor((Date.now()-visibleAt)/1000);if(s>0)post({token,kind:'heartbeat',seconds:Math.min(s,120)});}else visibleAt=Date.now()});setInterval(()=>{if(!document.hidden){post({token,kind:'heartbeat',seconds:30});visibleAt=Date.now()}},30000)})();</script>
 <script id="masterclass-youtube-js">(()=>{
   // YouTube Live player for the masterclass. The stream is configured at
   // runtime by an Admin (Assistara Admin -> Masterclass Event -> YouTube Live)
@@ -130,6 +130,27 @@
         registeredIdentity=null;
       }
     }catch{registeredIdentity=null;}
+  }
+
+  // HOST presenter secret. A host is granted only by this secret (never a
+  // nickname). Xyra uses her private presenter link (?presenter=<secret>) on
+  // either interface; an Admin viewing /live derives it via the admin-authed
+  // presenter_key action so the existing admin-experience keeps working.
+  let hostToken=null;
+  async function resolveHostToken(){
+    try{
+      const params=new URLSearchParams(location.search);
+      const p=(params.get('presenter')||'').trim();
+      if(p){hostToken=p;return;}
+      const admin=localStorage.getItem('assistara_admin_token')||sessionStorage.getItem('assistara_admin_token');
+      if(!admin){hostToken=null;return;}
+      const r=await fetch('/api/masterclass-youtube',{
+        method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+admin},
+        body:JSON.stringify({action:'presenter_key',event_key:'founding-masterclass-2026'}),cache:'no-store'
+      });
+      const d=await r.json().catch(()=>({}));
+      hostToken=(d&&d.ok&&d.hostToken)?d.hostToken:null;
+    }catch{hostToken=null;}
   }
 
   function setPill(displayState){
@@ -202,7 +223,7 @@
       const chatContainer=document.getElementById('assistara-live-chat');
       if(chatContainer&&window.initAssistaraChat){
         try{
-          window.initAssistaraChat(chatContainer,{identity:registeredIdentity});
+          window.initAssistaraChat(chatContainer,{identity:registeredIdentity,hostToken:hostToken});
           assistaraMounted=true;
         }catch(e){
           console.error('Assistara chat init failed',e);
@@ -251,10 +272,14 @@
       .catch(()=>{})
       .finally(()=>{pollInFlight=false;});
   }
-  resolveRegisteredIdentity().then(()=>{
-    // If the chat mounted as a guest before the registered identity resolved,
-    // re-mount so the verified name is used instead of the name form.
-    if(registeredIdentity&&assistaraMounted&&currentChatProvider==='assistara'&&currentDisplayState==='live'){
+  Promise.all([resolveRegisteredIdentity(),resolveHostToken()]).then(()=>{
+    // If the chat already mounted before the registered identity / host token
+    // resolved, re-mount so the verified name and host role are applied.
+    if(!assistaraMounted||currentChatProvider!=='assistara'||currentDisplayState!=='live')return;
+    const cur=window.assistaraChat?window.assistaraChat.userIdentity:null;
+    const needHost=!!hostToken&&!(cur&&cur.isHost);
+    const needName=!!registeredIdentity&&!(cur&&cur.name);
+    if(needHost||needName){
       assistaraMounted=false;
       renderedChatKey=null;
       if(window.assistaraChat){try{window.assistaraChat.disconnect();}catch(e){}}
