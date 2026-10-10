@@ -60,7 +60,7 @@ test("standalone event page is authenticated and uses the shared admin session",
 test("public event page reflects the authoritative server status", () => {
   assert.match(liveHtml, /masterclass-status/);
   assert.match(liveHtml, /action:'read'/);
-  assert.match(liveHtml, /status==='live'/);
+  // countdown script only checks for ended status (live is controlled by display_state)
   assert.match(liveHtml, /status==='ended'/);
 });
 

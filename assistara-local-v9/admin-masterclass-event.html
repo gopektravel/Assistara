@@ -138,6 +138,20 @@
         cursor: pointer;
       }
       .hidden { display: none !important; }
+      .state-badge { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: #f1efe9; color: var(--muted); }
+      .state-badge.waiting { background: #f1efe9; color: var(--muted); border-color: var(--line); }
+      .state-badge.live { background: var(--green); color: var(--greenInk); border-color: #b9e4c8; }
+      .state-badge.ended { background: var(--orange); color: var(--orangeInk); border-color: #f1c889; }
+      .stream-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+      .stream-controls button { padding: 10px 16px; font-size: 13px; }
+      .stream-controls .start { background: var(--greenInk); color: #fff; }
+      .stream-controls .end { background: var(--redInk); color: #fff; }
+      .stream-controls .reset { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+      .configured-url { font-family: monospace; font-size: 12px; background: #faf9f5; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); word-break: break-all; margin-top: 8px; }
+      .presentation-wrap { margin-top: 24px; }
+      .presentation-frame { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--line); border-radius: 12px; background: #000; }
+      .presentation-actions { display: flex; gap: 8px; margin-top: 10px; }
+      .presentation-actions button { padding: 8px 14px; font-size: 12px; }
       @media (max-width: 640px) { .facts { grid-template-columns: 1fr; } }
     </style>
   </head>
@@ -193,7 +207,7 @@
             <div class="title">YouTube Live stream</div>
             <div class="sub">Paste the YouTube livestream link once — the public page uses it immediately. No redeploy, no code change.</div>
           </div>
-          <span class="badge scheduled" id="mcYtBadge"><span class="dot"></span><span id="mcYtBadgeText">Not set</span></span>
+          <span class="state-badge waiting" id="mcYtStateBadge">WAITING</span>
         </div>
 
         <div class="field">
@@ -202,13 +216,35 @@
         </div>
 
         <label class="check"><input type="checkbox" id="mcYtChat" checked> Show live chat on the public page</label>
-        <label class="check"><input type="checkbox" id="mcYtReplay" checked> Show the replay after the masterclass ends</label>
+
+        <div id="mcYtConfiguredUrl" class="configured-url hidden"></div>
+
+        <div class="stream-controls">
+          <button class="start hidden" id="mcYtStart">Start Stream</button>
+          <button class="end hidden" id="mcYtEnd">End Stream</button>
+          <button class="reset hidden" id="mcYtReset">Reset to Waiting</button>
+        </div>
 
         <div class="actions">
           <button class="refresh" id="mcYtSave">Save YouTube stream</button>
         </div>
         <div class="feedback" id="mcYtFeedback"></div>
         <div class="muted">Leave the URL empty and save to remove the stream. Playback starts muted when the browser blocks autoplay; viewers unmute with one tap.</div>
+      </div>
+
+      <div class="card presentation-wrap" id="mcPresentationCard">
+        <div class="statusRow">
+          <div>
+            <div class="title">Masterclass Presentation</div>
+            <div class="sub">Embedded from the deployed presentation. Use for rehearsal and during the live event.</div>
+          </div>
+        </div>
+        <iframe class="presentation-frame" id="mcPresentationFrame" src="https://masterclass-presentation.vercel.app" allowfullscreen></iframe>
+        <div class="presentation-actions">
+          <button class="refresh" id="mcPresentationReload">Reload Presentation</button>
+          <a class="refresh" href="https://masterclass-presentation.vercel.app" target="_blank" rel="noopener noreferrer">Open in New Tab</a>
+          <button class="refresh" id="mcPresentationFullscreen">Fullscreen</button>
+        </div>
       </div>
     </div>
 
@@ -366,21 +402,74 @@
       // endpoint, so a save here is live within seconds — nothing to rebuild.
       const YT_ENDPOINT = "/api/masterclass-youtube";
 
+      function updateYoutubeUI(d) {
+        const hasUrl = !!d.video_id;
+        $("mcYtUrl").value = d.youtube_url || "";
+        $("mcYtChat").checked = d.chat_enabled !== false;
+        // Update display state badge
+        const stateBadge = $("mcYtStateBadge");
+        const state = d.display_state || "waiting";
+        stateBadge.textContent = state.toUpperCase();
+        stateBadge.className = "state-badge " + state;
+        // Show/hide configured URL
+        const urlEl = $("mcYtConfiguredUrl");
+        if (hasUrl) {
+          urlEl.textContent = "Configured: " + d.youtube_url;
+          urlEl.classList.remove("hidden");
+        } else {
+          urlEl.classList.add("hidden");
+        }
+        // Show/hide stream control buttons based on state and URL
+        const startBtn = $("mcYtStart");
+        const endBtn = $("mcYtEnd");
+        const resetBtn = $("mcYtReset");
+        startBtn.classList.toggle("hidden", !hasUrl || state === "live");
+        endBtn.classList.toggle("hidden", state !== "live");
+        resetBtn.classList.toggle("hidden", state === "waiting");
+      }
+
       async function loadYoutube() {
         try {
           const r = await fetch(YT_ENDPOINT, { cache: "no-store" });
           const d = await r.json().catch(() => ({}));
           if (!r.ok || !d.ok) throw new Error(d.error || "Could not load the YouTube stream");
-          $("mcYtUrl").value = d.youtube_url || "";
-          $("mcYtChat").checked = d.chat_enabled !== false;
-          $("mcYtReplay").checked = d.replay_enabled !== false;
-          const badge = $("mcYtBadge");
-          badge.className = "badge " + (d.video_id ? "live" : "scheduled");
-          $("mcYtBadgeText").textContent = d.video_id ? "Set" : "Not set";
+          updateYoutubeUI(d);
         } catch (e) {
           const fb = $("mcYtFeedback");
           fb.className = "feedback err";
           fb.textContent = e.message;
+        }
+      }
+
+      async function streamAction(action, confirmMsg, btnId, successMsg) {
+        if (!confirm(confirmMsg)) return;
+        const btn = $(btnId);
+        const fb = $("mcYtFeedback");
+        btn.disabled = true;
+        fb.className = "feedback";
+        fb.textContent = "Processing…";
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action, event_key: MC_EVENT_KEY }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.className = "feedback err";
+            fb.textContent = "Your admin session expired. Please log in again.";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not " + action.replace("_", " ") + " the stream");
+          fb.className = "feedback ok";
+          fb.textContent = d.message || successMsg;
+          await loadYoutube();
+        } catch (e) {
+          fb.className = "feedback err";
+          fb.textContent = "Could not " + action.replace("_", " ") + " the stream. " + e.message;
+        } finally {
+          btn.disabled = false;
         }
       }
 
@@ -399,7 +488,7 @@
               event_key: MC_EVENT_KEY,
               youtube_url: $("mcYtUrl").value.trim(),
               chat_enabled: $("mcYtChat").checked,
-              replay_enabled: $("mcYtReplay").checked,
+              replay_enabled: false,
             }),
           });
           const d = await r.json().catch(() => ({}));
@@ -421,6 +510,25 @@
         } finally {
           btn.disabled = false;
         }
+      };
+
+      $("mcYtStart").onclick = () =>
+        streamAction("start_stream", "Start the livestream on the public page? Viewers will see the YouTube player immediately.", "mcYtStart", "Stream is now LIVE");
+      $("mcYtEnd").onclick = () =>
+        streamAction("end_stream", "End the livestream? Viewers will see the thank-you message.", "mcYtEnd", "Stream ended");
+      $("mcYtReset").onclick = () =>
+        streamAction("reset_stream", "Reset to waiting? The countdown and waiting screen will reappear for viewers.", "mcYtReset", "Reset to waiting");
+
+      // Presentation embed controls
+      $("mcPresentationReload").onclick = () => {
+        const frame = $("mcPresentationFrame");
+        frame.src = frame.src;
+      };
+      $("mcPresentationFullscreen").onclick = () => {
+        const frame = $("mcPresentationFrame");
+        if (frame.requestFullscreen) frame.requestFullscreen();
+        else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+        else if (frame.msRequestFullscreen) frame.msRequestFullscreen();
       };
 
       load();

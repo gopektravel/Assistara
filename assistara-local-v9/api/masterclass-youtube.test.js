@@ -34,7 +34,17 @@ function loadHandler(env = {}) {
 }
 
 const H = loadHandler();
-const { extractVideoId, canonicalWatchUrl, buildEmbedUrl, buildChatUrl, parseConfig, publicConfig, safeDomain } = H;
+const {
+  extractVideoId,
+  canonicalWatchUrl,
+  buildEmbedUrl,
+  buildChatUrl,
+  parseConfig,
+  publicConfig,
+  safeDomain,
+  DISPLAY_STATES,
+  DEFAULT_DISPLAY_STATE,
+} = H;
 
 test("extractVideoId accepts every supported YouTube URL shape and bare IDs", () => {
   const good = [
@@ -98,18 +108,21 @@ test("parseConfig reads JSON config, legacy plain URLs, and empty storage", () =
   assert.equal(cfg.video_id, "aqz-KE-bpKQ");
   assert.equal(cfg.youtube_url, "https://www.youtube.com/watch?v=aqz-KE-bpKQ");
   assert.equal(cfg.chat_enabled, false);
-  assert.equal(cfg.replay_enabled, true);
+  assert.equal(cfg.replay_enabled, true); // replay can be set but defaults to false
+  assert.equal(cfg.display_state, "waiting");
 
   const legacy = parseConfig("https://www.youtube.com/watch?v=aqz-KE-bpKQ");
   assert.equal(legacy.video_id, "aqz-KE-bpKQ");
   assert.equal(legacy.chat_enabled, true); // defaults
-  assert.equal(legacy.replay_enabled, true);
+  assert.equal(legacy.replay_enabled, false); // replay disabled by default
+  assert.equal(legacy.display_state, "waiting");
 
   for (const empty of [null, undefined, "", "not json", "{broken", "123"]) {
     const cfg2 = parseConfig(empty);
     assert.equal(cfg2.video_id, null, JSON.stringify(empty));
     assert.equal(cfg2.chat_enabled, true);
-    assert.equal(cfg2.replay_enabled, true);
+    assert.equal(cfg2.replay_enabled, false);
+    assert.equal(cfg2.display_state, "waiting");
   }
 
   // an invalid URL inside JSON is rejected, not passed through
@@ -117,11 +130,31 @@ test("parseConfig reads JSON config, legacy plain URLs, and empty storage", () =
   assert.equal(bad.video_id, null);
 });
 
-test("publicConfig shapes the public read (no secrets, no-store fields)", () => {
+test("parseConfig reads display_state from JSON config", () => {
+  const json = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "live" });
+  const cfg = parseConfig(json);
+  assert.equal(cfg.display_state, "live");
+
+  const json2 = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "ended" });
+  const cfg2 = parseConfig(json2);
+  assert.equal(cfg2.display_state, "ended");
+
+  // invalid display_state falls back to default
+  const json3 = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "invalid" });
+  const cfg3 = parseConfig(json3);
+  assert.equal(cfg3.display_state, "waiting");
+});
+
+test("DISPLAY_STATES and DEFAULT_DISPLAY_STATE are exported", () => {
+  assert.deepEqual(DISPLAY_STATES, ["waiting", "live", "ended"]);
+  assert.equal(DEFAULT_DISPLAY_STATE, "waiting");
+});
+
+test("publicConfig shapes the public read (includes display_state)", () => {
   const row = {
     event_key: "founding-masterclass-2026",
     title: "How to Land Your First Remote Client",
-    live_destination_url: JSON.stringify({ youtube_url: "aqz-KE-bpKQ", chat: true, replay: false }),
+    live_destination_url: JSON.stringify({ youtube_url: "aqz-KE-bpKQ", chat: true, replay: false, display_state: "live" }),
   };
   const out = publicConfig(row, "www.getassistara.com");
   assert.equal(out.ok, true);
@@ -129,7 +162,8 @@ test("publicConfig shapes the public read (no secrets, no-store fields)", () => 
   assert.equal(out.embed_url, buildEmbedUrl("aqz-KE-bpKQ"));
   assert.equal(out.chat_url, buildChatUrl("aqz-KE-bpKQ", "www.getassistara.com"));
   assert.equal(out.replay_enabled, false);
-  assert.equal(publicConfig(null, "www.getassistara.com").video_id, null);
+  assert.equal(out.display_state, "live");
+  assert.equal(publicConfig(null, "www.getassistara.com").display_state, "waiting");
 });
 
 // --- handler with mocked fetch ------------------------------------------------
@@ -196,6 +230,7 @@ test("GET returns the public config and never requires a session", async () => {
   assert.equal(res.statusCode, 200);
   assert.equal(res.json().ok, true);
   assert.equal(res.json().video_id, null);
+  assert.equal(res.json().display_state, "waiting");
   assert.match(res.headers["Cache-Control"], /no-store/);
 });
 
@@ -259,7 +294,7 @@ test("POST configure rejects an invalid YouTube URL with a clear 400", async () 
   assert.equal(calls.length, 1); // session-check only; no write attempted
 });
 
-test("POST configure saves the normalized config and returns it", async () => {
+test("POST configure saves the normalized config with display_state and replay=false", async () => {
   const { fetchImpl, calls } = mockFetch();
   global.fetch = fetchImpl;
   const res = mockRes();
@@ -287,18 +322,21 @@ test("POST configure saves the normalized config and returns it", async () => {
   assert.equal(body.video_id, "aqz-KE-bpKQ");
   assert.equal(body.youtube_url, "https://www.youtube.com/watch?v=aqz-KE-bpKQ");
   assert.equal(body.chat_enabled, false);
+  assert.equal(body.replay_enabled, false); // replay is forced to false
+  assert.equal(body.display_state, "waiting"); // display_state defaults to waiting
   const write = calls.find((c) => String(c.url).includes("masterclass_events"));
   assert.ok(write, "expected an upsert call to masterclass_events");
   const sent = JSON.parse(write.options.body);
   const stored = JSON.parse(sent.live_destination_url);
   assert.equal(stored.youtube_url, "https://www.youtube.com/watch?v=aqz-KE-bpKQ");
   assert.equal(stored.chat, false);
-  assert.equal(stored.replay, true);
+  assert.equal(stored.replay, false);
+  assert.equal(stored.display_state, "waiting");
   assert.equal(sent.event_key, "founding-masterclass-2026");
   assert.equal(sent.updated_by, "admin");
 });
 
-test("POST configure with an empty URL clears the stream", async () => {
+test("POST configure with an empty URL clears the stream and resets display_state", async () => {
   const { fetchImpl, calls } = mockFetch();
   global.fetch = fetchImpl;
   const res = mockRes();
@@ -317,9 +355,124 @@ test("POST configure with an empty URL clears the stream", async () => {
   );
   assert.equal(res.statusCode, 200);
   assert.equal(res.json().video_id, null);
+  assert.equal(res.json().display_state, "waiting");
   const write = calls.find((c) => String(c.url).includes("masterclass_events"));
   const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
   assert.equal(stored.youtube_url, null);
+  assert.equal(stored.display_state, "waiting");
+});
+
+test("POST start_stream without a configured URL returns 400", async () => {
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: null } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "start_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 400);
+  assert.match(res.json().error, /No YouTube stream configured/);
+  // Should not attempt a write
+  const writeCalls = calls.filter((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  assert.equal(writeCalls.length, 0);
+});
+
+test("POST start_stream sets display_state to live when URL is configured", async () => {
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting" });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "start_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.display_state, "live");
+  assert.match(body.message, /LIVE/);
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  assert.ok(write);
+  const sent = JSON.parse(write.options.body);
+  const stored = JSON.parse(sent.live_destination_url);
+  assert.equal(stored.display_state, "live");
+  assert.equal(stored.youtube_url, "https://www.youtube.com/watch?v=aqz-KE-bpKQ");
+});
+
+test("POST end_stream sets display_state to ended", async () => {
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "live" });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "end_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.display_state, "ended");
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  assert.ok(write);
+  const sent = JSON.parse(write.options.body);
+  const stored = JSON.parse(sent.live_destination_url);
+  assert.equal(stored.display_state, "ended");
+});
+
+test("POST reset_stream sets display_state to waiting", async () => {
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "ended" });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: {
+        origin: "https://www.getassistara.com",
+        "content-type": "application/json",
+        authorization: "Bearer " + adminToken(),
+      },
+      body: JSON.stringify({ action: "reset_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const body = res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.display_state, "waiting");
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  assert.ok(write);
+  const sent = JSON.parse(write.options.body);
+  const stored = JSON.parse(sent.live_destination_url);
+  assert.equal(stored.display_state, "waiting");
 });
 
 test("POST from a disallowed origin is forbidden", async () => {
@@ -374,8 +527,8 @@ test("the public page reads the runtime config and only embeds a saved stream", 
   assert.match(liveHtml, /\/api\/masterclass-youtube/);
   assert.match(liveHtml, /cache:'no-store'/);
   assert.match(liveHtml, /domain='[+]encodeURIComponent\(location\.hostname\)/);
-  // the player is rendered only when a stream is configured
-  assert.match(liveHtml, /hasStream&&\(status==='live'\|\|\(status==='ended'&&cfg\.replay_enabled\)\)/);
+  // the player is rendered only when display_state === 'live'
+  assert.match(liveHtml, /displayState==='live'/);
   // the static markup ships no iframe: nothing to break before a stream is saved
   const stripScripts = (html) => {
     let out = "";
@@ -420,8 +573,7 @@ test("the public page keeps its original waiting state and countdown", () => {
   assert.match(liveHtml, /WE GO LIVE IN/);
   assert.match(liveHtml, /masterclass-status/);
   assert.match(liveHtml, /action:'read'/);
-  assert.match(liveHtml, /status==='live'/);
-  assert.match(liveHtml, /status==='ended'/);
+  assert.match(liveHtml, /status==='ended'/); // countdown script only checks for ended
   // the countdown stays until the server says the event is live
   assert.match(liveHtml, /window\.__mcEventStatus='scheduled'/);
   // no misleading LIVE indicator: the pill only flips on server status
@@ -429,16 +581,44 @@ test("the public page keeps its original waiting state and countdown", () => {
   assert.match(liveHtml, /FREE LIVE MASTERCLASS/);
 });
 
+test("the public page countdown stops at zero and shows Starting Soon", () => {
+  assert.match(liveHtml, /STARTING SOON/);
+  assert.match(liveHtml, /countdownReachedZero/);
+  assert.match(liveHtml, /showStartingSoon/);
+});
+
+test("the public page uses display_state from config for rendering", () => {
+  assert.match(liveHtml, /display_state/);
+  assert.match(liveHtml, /cfg\?\.display_state/);
+  assert.match(liveHtml, /renderAll\(cfg\?\.display_state/);
+});
+
 // --- admin page contract ------------------------------------------------------
 
-test("the admin event page has the YouTube configuration card", () => {
+test("the admin event page has the YouTube configuration card with stream controls", () => {
   assert.match(eventPage, /id="mcYtUrl"/);
   assert.match(eventPage, /id="mcYtChat"/);
-  assert.match(eventPage, /id="mcYtReplay"/);
+  assert.doesNotMatch(eventPage, /id="mcYtReplay"/); // replay toggle removed
   assert.match(eventPage, /id="mcYtSave"/);
+  assert.match(eventPage, /id="mcYtStart"/);
+  assert.match(eventPage, /id="mcYtEnd"/);
+  assert.match(eventPage, /id="mcYtReset"/);
+  assert.match(eventPage, /id="mcYtStateBadge"/);
   assert.match(eventPage, /action: "configure"/);
+  assert.match(eventPage, /streamAction\("start_stream"/);
+  assert.match(eventPage, /streamAction\("end_stream"/);
+  assert.match(eventPage, /streamAction\("reset_stream"/);
   assert.match(eventPage, /Authorization: "Bearer " \+ token/);
   assert.match(eventPage, /const YT_ENDPOINT = "\/api\/masterclass-youtube"/);
+});
+
+test("the admin event page has the embedded presentation", () => {
+  assert.match(eventPage, /id="mcPresentationCard"/);
+  assert.match(eventPage, /id="mcPresentationFrame"/);
+  assert.match(eventPage, /masterclass-presentation\.vercel\.app/);
+  assert.match(eventPage, /id="mcPresentationReload"/);
+  assert.match(eventPage, /id="mcPresentationFullscreen"/);
+  assert.match(eventPage, /Open in New Tab/);
 });
 
 test("the admin event page stays admin-only", () => {

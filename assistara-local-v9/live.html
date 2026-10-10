@@ -28,19 +28,32 @@
   const pad=n=>String(n).padStart(2,'0');
   let target=new Date('2026-10-11T18:00:00+08:00').getTime();
   let timer=null;
+  let countdownReachedZero=false;
   function clearTimer(){ if(timer){clearInterval(timer);timer=null;} }
   function fmtDate(iso){ try{return new Date(iso).toLocaleString('en-PH',{timeZone:'Asia/Manila',weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'}).toUpperCase()+' PHT'}catch(e){return ''} }
-  function showLive(){ clearTimer(); if(window.__mcRenderPlayer){window.__mcRenderPlayer();return;} if(!wrap)return; wrap.innerHTML='<div class="prelive-kicker">WE\'RE LIVE</div><div style="font-size:clamp(32px,5vw,68px);font-weight:800;letter-spacing:-.05em;color:#fff">The masterclass is starting.</div>'; }
-  function showEnded(){ clearTimer(); if(window.__mcRenderPlayer){window.__mcRenderPlayer();return;} if(!wrap)return; wrap.innerHTML='<div class="prelive-kicker">MASTERCLASS ENDED</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">This masterclass has ended.</div>'; }
+  function showStartingSoon(){
+    clearTimer();
+    countdownReachedZero=true;
+    if(!wrap)return;
+    wrap.innerHTML='<div class="prelive-kicker">STARTING SOON</div><div style="font-size:clamp(32px,5vw,68px);font-weight:800;letter-spacing:-.05em;color:#fff">The masterclass is about to begin.</div>';
+  }
+  function showEnded(){
+    clearTimer();
+    if(!wrap)return;
+    wrap.innerHTML='<div class="prelive-kicker">MASTERCLASS ENDED</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">This masterclass has ended.</div>';
+  }
   function tick(){
     const d=document.getElementById('liveDays'),h=document.getElementById('liveHours'),m=document.getElementById('liveMinutes'),s=document.getElementById('liveSeconds');
     if(!d||!h||!m||!s)return;
     const diff=target-Date.now();
-    if(diff<=0){ showLive(); return; }
+    if(diff<=0){
+      if(!countdownReachedZero){ showStartingSoon(); }
+      return;
+    }
     const sec=Math.floor(diff/1000);
     d.textContent=pad(Math.floor(sec/86400));h.textContent=pad(Math.floor(sec%86400/3600));m.textContent=pad(Math.floor(sec%3600/60));s.textContent=pad(sec%60);
   }
-  function startCountdown(){ clearTimer(); tick(); timer=setInterval(tick,1000); }
+  function startCountdown(){ clearTimer(); countdownReachedZero=false; tick(); timer=setInterval(tick,1000); }
   async function poll(){
     try{
       const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'read',event_key:KEY})});
@@ -48,8 +61,14 @@
       if(!d||!d.ok||!d.event)return;
       if(d.event.scheduled_at){const t=new Date(d.event.scheduled_at).getTime();if(Number.isFinite(t))target=t;}
       if(dateEl){const label=fmtDate(d.event.scheduled_at);if(label)dateEl.textContent=label;}
-      if(d.event.status==='live'){ window.__mcEventStatus='live'; showLive(); return; }
-      if(d.event.status==='ended'){ window.__mcEventStatus='ended'; showEnded(); return; }
+      // Event status from server (scheduled/live/ended) — for reference only.
+      // The actual display state (WAITING/LIVE/ENDED) comes from /api/masterclass-youtube
+      // and is handled by the masterclass-youtube-js script.
+      if(d.event.status==='ended'){
+        window.__mcEventStatus='ended';
+        showEnded();
+        return;
+      }
       window.__mcEventStatus='scheduled';
       startCountdown();
     }catch(e){}
@@ -65,6 +84,7 @@
   // runtime by an Admin (Assistara Admin -> Masterclass Event -> YouTube Live)
   // and read here from /api/masterclass-youtube. Until a stream is saved the
   // page keeps its original countdown/waiting state — never a broken iframe.
+  // Display state (WAITING/LIVE/ENDED) is controlled by Admin, not by event schedule.
   const CFG_ENDPOINT='/api/masterclass-youtube';
   const videoEl=document.getElementById('preliveVideo');
   const chatEl=document.querySelector('.chat');
@@ -73,11 +93,11 @@
   const chatOriginal=chatEl?chatEl.innerHTML:'';
   let cfg=null;
 
-  function setPill(status){
+  function setPill(displayState){
     if(!pillLabel)return;
     const pill=pillLabel.closest('.live-pill');
-    if(status==='live'){pillLabel.textContent='LIVE NOW';if(pill)pill.classList.add('is-live');}
-    else if(status==='ended'){pillLabel.textContent='ENDED';if(pill)pill.classList.remove('is-live');}
+    if(displayState==='live'){pillLabel.textContent='LIVE NOW';if(pill)pill.classList.add('is-live');}
+    else if(displayState==='ended'){pillLabel.textContent='ENDED';if(pill)pill.classList.remove('is-live');}
     else{pillLabel.textContent='FREE LIVE MASTERCLASS';if(pill)pill.classList.remove('is-live');}
   }
 
@@ -92,55 +112,54 @@
     }
   }
 
-  function renderVideo(status){
+  function renderVideo(displayState){
     if(!videoEl)return;
     const hasStream=!!(cfg&&cfg.video_id);
-    if(hasStream&&(status==='live'||(status==='ended'&&cfg.replay_enabled))){
+    if(hasStream&&displayState==='live'){
       videoEl.innerHTML='<iframe class="yt-frame" src="'+cfg.embed_url+'" title="Assistara masterclass — YouTube live stream" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-crossorigin"></iframe>';
       renderNote(true);
       return;
     }
-    if(!hasStream&&status==='live'){
-      videoEl.innerHTML='<div class="prelive-wrap"><div class="prelive-kicker">WE\'RE LIVE</div><div style="font-size:clamp(32px,5vw,68px);font-weight:800;letter-spacing:-.05em;color:#fff">The masterclass is starting.</div></div>';
-    } else if(!hasStream&&status==='ended'){
-      videoEl.innerHTML='<div class="prelive-wrap"><div class="prelive-kicker">MASTERCLASS ENDED</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">This masterclass has ended.</div></div>';
-    } else if(hasStream&&status==='scheduled'){
+    if(displayState==='ended'){
+      videoEl.innerHTML='<div class="prelive-wrap"><div class="prelive-kicker">THANK YOU</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">Thanks for attending the masterclass!</div></div>';
+      renderNote(false);
+      return;
+    }
+    // WAITING (or scheduled but not live yet)
+    if(hasStream&&displayState==='waiting'){
       renderNote(true);
     }
     if(!hasStream)renderNote(false);
   }
 
-  function renderChat(status){
+  function renderChat(displayState){
     if(!chatEl)return;
     const hasStream=!!(cfg&&cfg.video_id);
-    const showChat=hasStream&&cfg.chat_enabled&&status==='live';
-    const showReplayChat=hasStream&&cfg.chat_enabled&&cfg.replay_enabled&&status==='ended';
-    if(showChat||showReplayChat){
-      const tag=status==='live'?'LIVE NOW':'CHAT REPLAY';
-      chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>'+tag+'</span></div><iframe class="chat-frame" src="'+cfg.chat_url+'" title="YouTube live chat" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-crossorigin"></iframe>';
-    } else if(status==='ended'){
+    const showChat=hasStream&&cfg.chat_enabled&&displayState==='live';
+    if(showChat){
+      chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>LIVE NOW</span></div><iframe class="chat-frame" src="'+cfg.chat_url+'" title="YouTube live chat" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-crossorigin"></iframe>';
+    } else if(displayState==='ended'){
       chatEl.innerHTML='<div class="chat-head"><span>LIVE CHAT</span><span>ENDED</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">This masterclass has ended.</strong><span>Chat closes when the live stream ends.</span></div></div>';
     } else {
       chatEl.innerHTML=chatOriginal;
     }
   }
 
-  function renderAll(){
-    const status=window.__mcEventStatus||'scheduled';
-    setPill(status);
-    renderVideo(status);
-    renderChat(status);
+  function renderAll(displayState){
+    setPill(displayState);
+    renderVideo(displayState);
+    renderChat(displayState);
   }
-  window.__mcRenderPlayer=renderAll;
+  window.__mcRenderPlayer=function(){ renderAll(cfg?.display_state || 'waiting'); };
 
   function loadConfig(){
     fetch(CFG_ENDPOINT+'?domain='+encodeURIComponent(location.hostname),{cache:'no-store'})
       .then(r=>r.json())
       .then(d=>{
         if(d&&d.ok){
-          cfg={youtube_url:d.youtube_url,video_id:d.video_id,embed_url:d.embed_url,chat_enabled:d.chat_enabled,replay_enabled:d.replay_enabled,chat_url:d.chat_url};
+          cfg={youtube_url:d.youtube_url,video_id:d.video_id,embed_url:d.embed_url,chat_enabled:d.chat_enabled,replay_enabled:d.replay_enabled,chat_url:d.chat_url,display_state:d.display_state||'waiting'};
         }
-        renderAll();
+        renderAll(cfg?.display_state || 'waiting');
       })
       .catch(()=>{});
   }

@@ -78,10 +78,20 @@ function safeDomain(input) {
   return DOMAIN_RE.test(d) ? d : SITE_DOMAIN;
 }
 
+// Valid livestream display states (admin-controlled, independent of event schedule)
+const DISPLAY_STATES = ["waiting", "live", "ended"];
+const DEFAULT_DISPLAY_STATE = "waiting";
+
 // The stored column holds our JSON config. Tolerate a legacy/plain-URL value
 // and treat anything unreadable as "no stream configured".
 function parseConfig(raw) {
-  const out = { youtube_url: null, video_id: null, chat_enabled: true, replay_enabled: true };
+  const out = {
+    youtube_url: null,
+    video_id: null,
+    chat_enabled: true,
+    replay_enabled: false, // replay disabled per requirements
+    display_state: DEFAULT_DISPLAY_STATE,
+  };
   if (!raw || typeof raw !== "string") return out;
   let cfg = null;
   try {
@@ -97,6 +107,9 @@ function parseConfig(raw) {
     }
     if (typeof cfg.chat === "boolean") out.chat_enabled = cfg.chat;
     if (typeof cfg.replay === "boolean") out.replay_enabled = cfg.replay;
+    if (typeof cfg.display_state === "string" && DISPLAY_STATES.includes(cfg.display_state)) {
+      out.display_state = cfg.display_state;
+    }
     return out;
   }
   const id = extractVideoId(raw); // legacy: plain URL or bare ID
@@ -183,6 +196,7 @@ function publicConfig(row, domain) {
     embed_url: cfg.video_id ? buildEmbedUrl(cfg.video_id) : null,
     chat_enabled: cfg.chat_enabled,
     replay_enabled: cfg.replay_enabled,
+    display_state: cfg.display_state,
     chat_url: cfg.video_id ? buildChatUrl(cfg.video_id, domain) : null,
   };
 }
@@ -203,7 +217,7 @@ async function readEventRow(cfg, key) {
 
 async function configureAction(cfg, claims, body) {
   const key = eventKey(body.event_key);
-  const next = { youtube_url: null, chat: true, replay: true };
+  const next = { youtube_url: null, chat: true, replay: false, display_state: DEFAULT_DISPLAY_STATE };
   const rawUrl = body.youtube_url === undefined || body.youtube_url === null ? "" : String(body.youtube_url).trim();
   if (rawUrl) {
     const id = extractVideoId(rawUrl);
@@ -216,7 +230,11 @@ async function configureAction(cfg, claims, body) {
     next.youtube_url = canonicalWatchUrl(id);
   }
   if (typeof body.chat_enabled === "boolean") next.chat = body.chat_enabled;
-  if (typeof body.replay_enabled === "boolean") next.replay = body.replay_enabled;
+  // replay is always disabled per requirements — ignore any replay_enabled in request
+  next.replay = false;
+  if (typeof body.display_state === "string" && DISPLAY_STATES.includes(body.display_state)) {
+    next.display_state = body.display_state;
+  }
 
   const { response } = await requestJSON(
     cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
@@ -243,7 +261,87 @@ async function configureAction(cfg, claims, body) {
       video_id: id,
       chat_enabled: next.chat,
       replay_enabled: next.replay,
+      display_state: next.display_state,
     },
+  };
+}
+
+async function startStreamAction(cfg, claims, body) {
+  const key = eventKey(body.event_key);
+  // Read current config to validate URL exists
+  const row = await readEventRow(cfg, key);
+  const current = parseConfig(row ? row.live_destination_url : null);
+  if (!current.video_id) {
+    return { status: 400, body: { ok: false, error: "No YouTube stream configured. Save a URL first." } };
+  }
+  const next = { ...current, display_state: "live" };
+  const { response } = await requestJSON(
+    cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
+    {
+      method: "POST",
+      headers: serviceHeaders(cfg, { Prefer: "resolution=merge-duplicates" }),
+      body: JSON.stringify({
+        event_key: key,
+        live_destination_url: JSON.stringify(next),
+        updated_at: new Date().toISOString(),
+        updated_by: claims.u,
+      }),
+    }
+  );
+  if (!response.ok) return { status: 500, body: { ok: false, error: "Could not start the stream" } };
+  return {
+    status: 200,
+    body: { ok: true, event_key: key, display_state: "live", message: "Stream is now LIVE" },
+  };
+}
+
+async function endStreamAction(cfg, claims, body) {
+  const key = eventKey(body.event_key);
+  const row = await readEventRow(cfg, key);
+  const current = parseConfig(row ? row.live_destination_url : null);
+  const next = { ...current, display_state: "ended" };
+  const { response } = await requestJSON(
+    cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
+    {
+      method: "POST",
+      headers: serviceHeaders(cfg, { Prefer: "resolution=merge-duplicates" }),
+      body: JSON.stringify({
+        event_key: key,
+        live_destination_url: JSON.stringify(next),
+        updated_at: new Date().toISOString(),
+        updated_by: claims.u,
+      }),
+    }
+  );
+  if (!response.ok) return { status: 500, body: { ok: false, error: "Could not end the stream" } };
+  return {
+    status: 200,
+    body: { ok: true, event_key: key, display_state: "ended", message: "Stream ended" },
+  };
+}
+
+async function resetStreamAction(cfg, claims, body) {
+  const key = eventKey(body.event_key);
+  const row = await readEventRow(cfg, key);
+  const current = parseConfig(row ? row.live_destination_url : null);
+  const next = { ...current, display_state: "waiting" };
+  const { response } = await requestJSON(
+    cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
+    {
+      method: "POST",
+      headers: serviceHeaders(cfg, { Prefer: "resolution=merge-duplicates" }),
+      body: JSON.stringify({
+        event_key: key,
+        live_destination_url: JSON.stringify(next),
+        updated_at: new Date().toISOString(),
+        updated_by: claims.u,
+      }),
+    }
+  );
+  if (!response.ok) return { status: 500, body: { ok: false, error: "Could not reset the stream" } };
+  return {
+    status: 200,
+    body: { ok: true, event_key: key, display_state: "waiting", message: "Reset to waiting" },
   };
 }
 
@@ -286,7 +384,7 @@ module.exports = async function masterclassYoutube(req, res) {
     if (parsed.error) return send(res, 400, { ok: false, error: parsed.error });
     const { body } = parsed;
     const action = String(body.action || "configure").trim().toLowerCase();
-    if (action !== "configure" && action !== "read") {
+    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream") {
       return send(res, 400, { ok: false, error: "Unknown action" });
     }
     const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -299,6 +397,33 @@ module.exports = async function masterclassYoutube(req, res) {
       } catch (error) {
         console.error("masterclass-youtube", error && error.message ? error.message : "read failed");
         return send(res, 503, { ok: false, error: "Could not load the YouTube configuration" });
+      }
+    }
+    if (action === "start_stream") {
+      try {
+        const result = await startStreamAction(cfg, claims, body);
+        return send(res, result.status, result.body);
+      } catch (error) {
+        console.error("masterclass-youtube", error && error.message ? error.message : "start_stream failed");
+        return send(res, 503, { ok: false, error: "Could not start the stream" });
+      }
+    }
+    if (action === "end_stream") {
+      try {
+        const result = await endStreamAction(cfg, claims, body);
+        return send(res, result.status, result.body);
+      } catch (error) {
+        console.error("masterclass-youtube", error && error.message ? error.message : "end_stream failed");
+        return send(res, 503, { ok: false, error: "Could not end the stream" });
+      }
+    }
+    if (action === "reset_stream") {
+      try {
+        const result = await resetStreamAction(cfg, claims, body);
+        return send(res, result.status, result.body);
+      } catch (error) {
+        console.error("masterclass-youtube", error && error.message ? error.message : "reset_stream failed");
+        return send(res, 503, { ok: false, error: "Could not reset the stream" });
       }
     }
     try {
@@ -323,3 +448,5 @@ module.exports.parseConfig = parseConfig;
 module.exports.publicConfig = publicConfig;
 module.exports.safeDomain = safeDomain;
 module.exports.DEFAULT_EVENT_KEY = DEFAULT_EVENT_KEY;
+module.exports.DISPLAY_STATES = DISPLAY_STATES;
+module.exports.DEFAULT_DISPLAY_STATE = DEFAULT_DISPLAY_STATE;
