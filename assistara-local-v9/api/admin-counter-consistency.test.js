@@ -23,6 +23,7 @@ const path = require("node:path");
 const root = path.join(__dirname, "..", "..");
 const v9 = path.join(root, "assistara-local-v9");
 const adminHtml = fs.readFileSync(path.join(v9, "admin.html"), "utf8");
+const financeHtml = fs.readFileSync(path.join(v9, "admin-finance.html"), "utf8");
 const edgeFn = fs.readFileSync(path.join(root, "supabase", "functions", "admin-applications", "index.ts"), "utf8");
 
 function contains(src, str) {
@@ -70,13 +71,36 @@ test("the canonical call appears in both the applicants and webinar branches", (
     "both the Applications tab and the Webinar tab must read the canonical total (expected 2 call sites)");
 });
 
-test("the webinar tab no longer re-derives its own application number", () => {
+test("the webinar tab never re-derives the application total", () => {
   assert.ok(!contains(adminHtml, "appliedFromWebinar"),
-    "the old 'Applied from webinar' derivation must be gone");
-  assert.ok(!contains(adminHtml, "directApps"),
-    "the old 'Direct applications' derivation must be gone");
-  assert.ok(!contains(adminHtml, "appliedFromWebinar.length"),
-    "no counter may re-derive a separate application total");
+    "the old 'Applied from webinar' count derivation must be gone");
+  assert.ok(!contains(adminHtml, 'directApps.length, "Applications"'),
+    "the application total must come from totalApplications(), not a local list");
+});
+
+// ─── Acquisition points include direct applicants ───
+
+test("webinar acquisition points include direct applications", () => {
+  assert.ok(contains(adminHtml, "acquisitionWeightOf"),
+    "the readiness->weight helper must exist");
+  assert.ok(contains(adminHtml, "directApps.reduce((sum,a)=>sum+acquisitionWeightOf(a.payment_readiness),0)"),
+    "direct applications must add their own readiness weight to the goal");
+});
+
+test("webinar points never double-count an application already represented by a signup", () => {
+  assert.ok(contains(adminHtml, "linkedAppIds"),
+    "applications linked to a signup must be excluded from the direct-app list");
+  assert.ok(contains(adminHtml, "signupEmails"),
+    "email linkage must be honoured when excluding linked applications");
+});
+
+test("finance acquisition points include direct applications", () => {
+  assert.ok(contains(financeHtml, "acquisitionWeightFromReadiness"),
+    "the readiness->weight helper must exist in finance");
+  assert.ok(contains(financeHtml, "if (isDirectApp(a)) row.points += acquisitionWeightFromReadiness(a.payment_readiness);"),
+    "direct applications must add their readiness weight in the finance funnel");
+  assert.ok(contains(financeHtml, "const isDirectApp = (a) =>"),
+    "finance must exclude applications already represented by a signup");
 });
 
 test("no counter hardcodes the old 12 or 13", () => {

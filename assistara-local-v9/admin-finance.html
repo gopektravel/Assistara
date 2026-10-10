@@ -1302,12 +1302,15 @@
         apps.forEach((a) => a.email && m.set(String(a.email).trim().toLowerCase(), a));
         return m;
       }
-      function acquisitionWeight(signup, byEmail) {
-        const app = byEmail.get(String(signup.email || "").trim().toLowerCase());
-        const r = String(app?.payment_readiness || "").trim().toLowerCase();
+      function acquisitionWeightFromReadiness(readiness) {
+        const r = String(readiness || "").trim().toLowerCase();
         if (r === "willing to invest in myself") return 15;
         if (r === "need payment plan") return 8;
         return 1;
+      }
+      function acquisitionWeight(signup, byEmail) {
+        const app = byEmail.get(String(signup.email || "").trim().toLowerCase());
+        return acquisitionWeightFromReadiness(app?.payment_readiness);
       }
 
       /* ---------------------------------------------------------------- *
@@ -1315,6 +1318,16 @@
        * ---------------------------------------------------------------- */
       function marketingRows() {
         const byEmail = buildAppByEmail();
+        // Applications that no signup already represents earn their own
+        // acquisition points, so a direct applicant counts toward the funnel
+        // exactly like a webinar lead.
+        const signupIds = new Set(signups.map((s) => String(s.id)));
+        const signupEmails = new Set(signups.filter((s) => s.email).map((s) => String(s.email).trim().toLowerCase()));
+        const linkedAppIds = new Set(signups.filter((s) => s.application_id).map((s) => String(s.application_id)));
+        const isDirectApp = (a) =>
+          !linkedAppIds.has(String(a.id)) &&
+          !(a.masterclass_signup_id && signupIds.has(String(a.masterclass_signup_id))) &&
+          !(a.email && signupEmails.has(String(a.email).trim().toLowerCase()));
         const rows = new Map();
         const keyOf = (id) => (id === undefined || id === null || id === "" ? "" : String(id));
         const ensure = (id, label, link, kind) => {
@@ -1377,7 +1390,11 @@
           if (isTestApp(a) || isDiagApp(a)) continue;
           const src = studentSrc(a);
           const row = ensure(src.id, src.label, src.link, "academy");
-          if (inRange(Date.parse(a.created_at || 0))) row.apps += 1;
+          if (inRange(Date.parse(a.created_at || 0))) {
+            row.apps += 1;
+            // Direct applications (no linked signup) also earn acquisition points.
+            if (isDirectApp(a)) row.points += acquisitionWeightFromReadiness(a.payment_readiness);
+          }
           if (String(a.payment_status || "") === "paid" && a.paid_at && inRange(Date.parse(a.paid_at))) {
             row.paid += 1;
             row.revenue += phpDisplay(knownRevenue(a) || 0) ?? NaN;
