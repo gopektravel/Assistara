@@ -32,9 +32,6 @@ const SOURCES = functionSources();
 const EMAIL_SOURCES = SOURCES.filter((fn) => fn.code.includes("api.resend.com"));
 
 // The only senders allowed after the B2B-email and duplicate-decision cleanup.
-// masterclass-reminder is the deliberate exception to the "email-safe brand
-// mark" and "no remote image" rules: it is a personal-email design that shows
-// the real Assistara logo (PNG) per the 2026 reminder brief.
 const EXPECTED_SENDERS = [
   "admin-academy-capacity",
   "admin-applications",
@@ -68,29 +65,22 @@ test("the email inventory is exactly the approved senders", () => {
 
 test("no Edge Function references an external Assistara logo asset", () => {
   for (const fn of SOURCES) {
-    if (fn.name === "masterclass-reminder") continue; // the approved personal-email exception
     assert.ok(!/assistara-logo/i.test(fn.code), `${fn.name} references assistara-logo`);
     assert.ok(!/assistara-icon/i.test(fn.code), `${fn.name} references assistara-icon`);
   }
 });
 
-test("the reminder email loads exactly the one approved logo PNG", () => {
+test("the reminder email is plain text-only HTML (no logo, no remote images)", () => {
   const fn = sender("masterclass-reminder");
   const remoteImages = [...fn.code.matchAll(/<img\b[^>]*\bsrc="([^"]*)"/gi)].map((m) => m[1]);
-  // The same logo appears in the email body and on the unsubscribe confirm page.
-  assert.deepEqual(
-    [...new Set(remoteImages)],
-    ["${LOGO_URL}"],
-    "masterclass-reminder must only ever load assistara-logo.png"
-  );
-  assert.match(fn.code, /LOGO_URL.*assistara-logo\.png/, "LOGO_URL must point at assistara-logo.png");
-  assert.match(fn.code, /const SITE = "https:\/\/www\.getassistara\.com"/, "logo must be served over HTTPS from the Assistara site");
+  assert.deepEqual(remoteImages, [], "masterclass-reminder must not load any image");
+  assert.ok(!/<img\b/i.test(fn.code), "masterclass-reminder must not contain an <img> tag");
+  assert.ok(!/assistara-logo/i.test(fn.code), "masterclass-reminder must not reference the logo asset");
   assert.ok(!/<img\b[^>]*\.svg/i.test(fn.code), "masterclass-reminder must not use an SVG image");
 });
 
 test("email HTML never loads an image over the network", () => {
   for (const fn of EMAIL_SOURCES) {
-    if (fn.name === "masterclass-reminder") continue; // approved logo exception, checked separately
     const remoteImages = [...fn.code.matchAll(/<img\b[^>]*\bsrc="([^"]*)"/gi)]
       .map((match) => match[1])
       .filter((src) => /^https?:/i.test(src));

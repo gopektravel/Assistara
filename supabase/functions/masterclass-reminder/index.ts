@@ -28,11 +28,10 @@ const ENABLED = Deno.env.get("MASTERCLASS_REMINDER_ENABLED") === "true";
 
 const SITE = "https://www.getassistara.com";
 const EVENT_KEY = "founding-masterclass-2026";
-const SENDER_NAME = "Xyra Mendoza | Assistara";
+const SENDER_NAME = "Xyra from Assistara";
 const SENDER_EMAIL = "xyra@getassistara.com";
 const FROM = `${SENDER_NAME} <${SENDER_EMAIL}>`;
 const REPLY = SENDER_EMAIL;
-const LOGO_URL = `${SITE}/assistara-logo.png`;
 const ACADEMY_URL = `${SITE}/academy/apply`;
 const INTAKE_LIMIT = 15;
 const REMIND_HOURS = 24;
@@ -221,7 +220,60 @@ function relativeDay(iso: string) {
 }
 
 // ----------------------------------------------------------------------------
-// Approved copy -> email HTML (personal email: white, left aligned, one button)
+// Calendar helpers (configured event details only — no hardcoded dates)
+// ----------------------------------------------------------------------------
+const EVENT_DURATION_MINUTES = 90; // masterclass run time (a duration, not a date)
+
+function utcBasic(iso: string) {
+  return new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+function calendarSpan(startIso: string) {
+  const start = new Date(startIso);
+  const end = new Date(start.getTime() + EVENT_DURATION_MINUTES * 60 * 1000);
+  return { startBasic: utcBasic(start.toISOString()), endBasic: utcBasic(end.toISOString()) };
+}
+function googleCalendarUrl(title: string, startIso: string, joinUrl: string) {
+  const { startBasic, endBasic } = calendarSpan(startIso);
+  const q = new URLSearchParams({
+    action: "TEMPLATE",
+    text: title,
+    dates: `${startBasic}/${endBasic}`,
+    details: `Join the free masterclass live here:\n${joinUrl}\n\nSave this email so you can easily find your link when it's time to join! 💛`,
+    location: joinUrl,
+    ctz: "Asia/Manila",
+  });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+}
+function icsEscape(v: string) {
+  return v.replaceAll("\\", "\\\\").replaceAll("\n", "\\n").replaceAll(",", "\\,").replaceAll(";", "\\;");
+}
+function icsContent(title: string, startIso: string, joinUrl: string, uid: string) {
+  const { startBasic, endBasic } = calendarSpan(startIso);
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Assistara//Masterclass Reminder//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${utcBasic(new Date().toISOString())}`,
+    `DTSTART:${startBasic}`,
+    `DTEND:${endBasic}`,
+    `SUMMARY:${icsEscape(title)}`,
+    `DESCRIPTION:${icsEscape("Join the free masterclass live here: " + joinUrl)}`,
+    `LOCATION:${icsEscape(joinUrl)}`,
+    `URL:${joinUrl}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n") + "\r\n";
+}
+
+// ----------------------------------------------------------------------------
+// Approved copy -> email HTML. Personal email, as if written in Gmail: white
+// background, left aligned, plain paragraphs, no logo, no buttons, no cards.
+// The only links are the recipient's private join URL, Add to Calendar, the
+// Academy application, and unsubscribe.
 // ----------------------------------------------------------------------------
 function renderHtml(opts: {
   first: string;
@@ -232,8 +284,10 @@ function renderHtml(opts: {
   apps: number | null;
   limit: number;
   unsubscribeUrl: string;
+  calendarUrl: string;
+  icsUrl: string;
 }) {
-  const { first, eventDate, eventTime, dayWord, joinUrl, apps, limit, unsubscribeUrl } = opts;
+  const { first, eventDate, eventTime, dayWord, joinUrl, apps, limit, unsubscribeUrl, calendarUrl, icsUrl } = opts;
   const count = typeof apps === "number" ? apps : 0;
   const remaining = Math.max(0, limit - count);
   const verified = typeof apps === "number";
@@ -242,12 +296,14 @@ function renderHtml(opts: {
     : `We&#8217;re accepting just <b>${limit} students</b> in the Academy, and applications are reviewed in the order they come in. 🫣`;
   const joinAttr = escAttr(joinUrl);
   const unsubAttr = escAttr(unsubscribeUrl);
+  const calAttr = escAttr(calendarUrl);
+  const icsAttr = escAttr(icsUrl);
   const P = "margin:0 0 18px;line-height:1.62;font-size:16px;color:#232323";
+  const A = "color:#1155cc;text-decoration:underline";
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your free masterclass reminder</title></head>
 <body style="margin:0;padding:0;background:#ffffff">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td align="center" style="padding:36px 16px 44px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td align="left" style="padding:32px 20px 44px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
-  <tr><td style="padding:0 0 26px"><a href="${SITE}"><img src="${LOGO_URL}" width="118" height="118" alt="Assistara" style="display:block;width:118px;height:118px;border:0;outline:none;text-decoration:none"></a></td></tr>
   <tr><td style="font-family:Arial,Helvetica,sans-serif;color:#232323;font-size:16px;line-height:1.62">
     <p style="${P}">Hey ${esc(first)}! 💛</p>
     <p style="${P}">Okay, I have to admit... I&#8217;ve been looking forward to <b>tomorrow</b> all week! ✨</p>
@@ -265,106 +321,96 @@ function renderHtml(opts: {
       ⏰ <b>${esc(eventTime)} Philippine Time</b><br>
       📍 <b>Live on Assistara</b>
     </p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 22px"><tr>
-      <td style="border-radius:999px;background:#ffd51f"><a href="${joinAttr}" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:15px;padding:15px 26px;border-radius:999px">JOIN THE FREE MASTERCLASS &#8594;</a></td>
-    </tr></table>
-    <p style="${P}">Button not working? No worries! You can also join using your personal link below:</p>
-    <p style="margin:0 0 18px;line-height:1.5;font-size:13px;color:#6b6b6b"><a href="${joinAttr}" style="color:#6b6b6b;word-break:break-all">${esc(joinUrl)}</a></p>
+    <p style="${P}">Here&#8217;s your personal link to join us live:</p>
+    <p style="${P}"><a href="${joinAttr}" style="${A};word-break:break-all">${esc(joinUrl)}</a></p>
+    <p style="${P}">Save this email so you can easily find your link when it&#8217;s time to join! 💛</p>
+    <p style="${P}"><a href="${calAttr}" style="${A}">📅 Add to Calendar</a></p>
+    <p style="margin:-8px 0 18px;line-height:1.5;font-size:13px;color:#8a8a8a">On Apple or Outlook? <a href="${icsAttr}" style="color:#8a8a8a;text-decoration:underline">Download the calendar file (.ics)</a></p>
     <p style="${P}">Grab your favorite drink, bring your questions, and come with an open mind. I have so much I want to share with you! ☀️</p>
     <p style="${P}">Can&#8217;t wait to see you there! 💛</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 30px"><tr><td style="border-top:1px solid #ececec;padding-top:22px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#232323">
-      <b>Xyra Mendoza</b><br><span style="color:#6b6b6b">Co-founder, Assistara</span>
-    </td></tr></table>
-    <p style="margin:0 0 16px;line-height:1.62;font-size:15px;color:#232323">
-      <b>P.S. 👀</b> ${spotsLine}
-    </p>
-    <p style="margin:0 0 16px;line-height:1.62;font-size:15px;color:#232323">
-      Our team will start reviewing applications in the order they came in right after the livestream. If the Academy has been on your mind, send in your application before we go live. I&#8217;d hate for you to miss out! 💛
-    </p>
-    <p style="margin:0 0 34px"><a href="${ACADEMY_URL}" style="color:#151515;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:15px;text-decoration:underline">APPLY TO THE ACADEMY &#8594;</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0"><tr><td style="border-top:1px solid #f0f0f0;padding-top:18px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#8a8a8a">
-      You&#8217;re receiving this because you registered for the Assistara free masterclass.<br>
-      <a href="${unsubAttr}" style="color:#8a8a8a;text-decoration:underline">Unsubscribe</a>
-    </td></tr></table>
+    <p style="margin:26px 0 30px;line-height:1.55;font-size:16px;color:#232323"><b>Xyra Mendoza</b><br><span style="color:#6b6b6b">Co-founder, Assistara</span></p>
+    <p style="margin:0 0 16px;line-height:1.62;font-size:15px;color:#232323"><b>P.S. 👀</b> ${spotsLine}</p>
+    <p style="margin:0 0 16px;line-height:1.62;font-size:15px;color:#232323">Our team will start reviewing applications in the order they came in right after the livestream. If the Academy has been on your mind, send in your application before we go live. I&#8217;d hate for you to miss out! 💛</p>
+    <p style="margin:0 0 34px;line-height:1.62;font-size:15px;color:#232323">Apply to the Academy: <a href="${ACADEMY_URL}" style="${A}">${ACADEMY_URL}</a></p>
+    <p style="margin:0;line-height:1.6;font-size:12px;color:#8a8a8a">You&#8217;re receiving this because you registered for the Assistara free masterclass.<br><a href="${unsubAttr}" style="color:#8a8a8a;text-decoration:underline">Unsubscribe</a></p>
   </td></tr>
 </table>
 </td></tr></table>
 </body></html>`;
 }
 
-function renderText(opts: { first: string; eventDate: string; eventTime: string; dayWord: string; joinUrl: string; apps: number | null; limit: number; unsubscribeUrl: string }) {
-  const { first, eventDate, eventTime, dayWord, joinUrl, apps, limit, unsubscribeUrl } = opts;
+function renderText(opts: {
+  first: string;
+  eventDate: string;
+  eventTime: string;
+  dayWord: string;
+  joinUrl: string;
+  apps: number | null;
+  limit: number;
+  unsubscribeUrl: string;
+  calendarUrl: string;
+  icsUrl: string;
+}) {
+  const { first, eventDate, eventTime, dayWord, joinUrl, apps, limit, unsubscribeUrl, calendarUrl, icsUrl } = opts;
   const count = typeof apps === "number" ? apps : 0;
   const remaining = Math.max(0, limit - count);
-  const spots = typeof apps === "number" ? `P.S. ${count} Academy applications have already come in and the Academy accepts just ${limit} students - down to ${remaining} spots left!` : "";
+  const spots = typeof apps === "number"
+    ? `P.S. ${count} Academy applications have already come in and the Academy accepts just ${limit} students - down to ${remaining} spots left!`
+    : "";
   return [
     `Hey ${first}! 💛`,
-    "",
     "Okay, I have to admit... I've been looking forward to tomorrow all week! ✨",
-    "",
     `I'm Xyra, co-founder of Assistara, and ${dayWord} I'll be going live with the free masterclass you signed up for:`,
-    "",
     "How to Land Your First Remote Client (as a Complete Beginner)",
-    "",
     `And don't worry, I'm not going to tell you to just "learn some skills" and send 100 job applications. 😅`,
-    "",
     "I've worked remotely with multiple international clients, earned in foreign currencies, and experienced firsthand what it's like to build opportunities beyond the traditional 9-to-5.",
-    "",
     "I've seen what clients actually look for, what makes them trust someone enough to hire them, and why so many beginners struggle to get noticed.",
-    "",
     "And if there's one thing that experience has taught me, it's this:",
-    "",
     "Making money online doesn't have to be as complicated as people make it seem. 💛",
-    "",
     "You don't need to have everything figured out. You need to know what services people are willing to pay for, where to find the right clients, and how to give them a reason to choose you.",
-    "",
     `That's exactly what I want to show you ${dayWord}.`,
-    "",
-    `- ${eventDate}`,
-    `- ${eventTime} Philippine Time`,
-    "- Live on Assistara",
-    "",
-    `Join: ${joinUrl}`,
-    "",
+    [`📅 ${eventDate}`, `⏰ ${eventTime} Philippine Time`, "📍 Live on Assistara"].join("\n"),
+    ["Here's your personal link to join us live:", joinUrl].join("\n"),
+    "Save this email so you can easily find your link when it's time to join! 💛",
+    ["Add to Calendar: " + calendarUrl, "Apple / Outlook (.ics): " + icsUrl].join("\n"),
     "Grab your favorite drink, bring your questions, and come with an open mind. I have so much I want to share with you! ☀️",
-    "",
     "Can't wait to see you there! 💛",
-    "",
-    "Xyra Mendoza",
-    "Co-founder, Assistara",
-    "",
+    ["Xyra Mendoza", "Co-founder, Assistara"].join("\n"),
     spots,
-    "",
     "Our team will start reviewing applications in the order they came in right after the livestream. If the Academy has been on your mind, send in your application before we go live. I'd hate for you to miss out! 💛",
-    `Apply to the Academy: ${ACADEMY_URL}`,
-    "",
-    "You're receiving this because you registered for the Assistara free masterclass.",
-    `Unsubscribe: ${unsubscribeUrl}`,
+    "Apply to the Academy: " + ACADEMY_URL,
+    ["You're receiving this because you registered for the Assistara free masterclass.", "Unsubscribe: " + unsubscribeUrl].join("\n"),
   ]
-    .filter((l) => l !== "")
-    .join("\n");
+    .filter((p) => p && p.length > 0)
+    .join("\n\n");
 }
 
 // ----------------------------------------------------------------------------
 // The reminder send itself (shared by run + test)
 // ----------------------------------------------------------------------------
-async function sendReminder(signup: { id: string; name: string; email: string; attendee_token: string }, extra?: { prefixSubject?: string }) {
+async function sendReminder(signup: { id: string; name: string; email: string; attendee_token: string }, extra?: { prefixSubject?: boolean; uniqueIdem?: string }) {
   const event = await eventRow();
   if (!event?.scheduled_at) throw Error("Event not scheduled");
   const apps = await academyAppCount();
-  const joinUrl = `${SITE}/live?t=${encodeURIComponent(signup.attendee_token)}`;
-  const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(signup.attendee_token)}`;
+  const token = signup.attendee_token;
+  const joinUrl = `${SITE}/live?t=${encodeURIComponent(token)}`;
+  const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
+  const title = event.title || "Assistara Free Masterclass";
+  // Calendar links use the configured event date/time/title and carry the
+  // recipient's private join URL in the location + description.
+  const calendarUrl = googleCalendarUrl(title, event.scheduled_at, joinUrl);
+  const icsUrl = `${SITE}/masterclass.ics?action=calendar&t=${encodeURIComponent(token)}`;
   const first = (signup.name || "there").split(/\s+/)[0];
   const dateLabel = eventDateLabel(event.scheduled_at);
   const timeLabel = eventTimeLabel(event.scheduled_at);
   const dayWord = relativeDay(event.scheduled_at);
   const subject = `${first}, your first online paycheck starts with a plan! 💛`;
   const finalSubject = extra?.prefixSubject ? `[TEST] ${subject}` : subject;
-  const html = renderHtml({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl });
-  const text = renderText({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl });
-  const idem = `${EVENT_KEY}:${signup.id}`;
+  const html = renderHtml({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
+  const text = renderText({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
+  const idem = extra?.uniqueIdem || `${EVENT_KEY}:${signup.id}`;
   const result = await mail(signup.email, finalSubject, html, text, idem);
-  return { event, apps, joinUrl, unsubUrl, subject: finalSubject, result, defaults: { date: dateLabel, time: timeLabel, dayWord }, logo: LOGO_URL, academyUrl: ACADEMY_URL };
+  return { event, apps, joinUrl, unsubUrl, calendarUrl, icsUrl, subject: finalSubject, result, defaults: { date: dateLabel, time: timeLabel, dayWord }, academyUrl: ACADEMY_URL };
 }
 
 // ----------------------------------------------------------------------------
@@ -454,7 +500,7 @@ async function handleTest(body: any) {
     signup = { id: crj[0].id, name, email, attendee_token: token };
   }
   const sender = await senderStatus();
-  const result = await sendReminder(signup, { prefixSubject: true });
+  const result = await sendReminder(signup, { prefixSubject: true, uniqueIdem: `test:${EVENT_KEY}:${signup.id}:${Date.now()}` });
   return { ok: true, testEmail: email, sender, ...result };
 }
 
@@ -518,11 +564,32 @@ Deno.serve(async (req: Request) => {
   const token = clean(params.get("t"), 64);
   const queryAction = clean(params.get("action"), 50);
 
-  // GET serves only the unsubscribe confirm page: /unsubscribe?t=...
+  // GET serves the calendar .ics download (?action=calendar&t=...) and the
+  // unsubscribe confirm-required contract; nothing auto-unsubscribes.
   if (req.method === "GET") {
+    if (queryAction === "calendar") {
+      const t = clean(params.get("t"), 64);
+      if (!TOKEN_RE.test(t)) return out({ ok: false, error: "Valid token required" }, 400);
+      const event = await eventRow();
+      if (!event?.scheduled_at) return out({ ok: false, error: "Event not scheduled" }, 400);
+      const joinUrl = `${SITE}/live?t=${encodeURIComponent(t)}`;
+      const title = event.title || "Assistara Free Masterclass";
+      const uid = `${EVENT_KEY}-${t}@getassistara.com`;
+      const body = icsContent(title, event.scheduled_at, joinUrl, uid);
+      return new Response(body, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/calendar; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="assistara-masterclass.ics"',
+          "Cache-Control": "no-store",
+          "X-Robots-Tag": "noindex, nofollow",
+        },
+      });
+    }
     if (queryAction === "unsubscribe" || token) return out({ ok: false, error: "Unsubscribe requires confirmation — open this link in a browser and click the confirm button.", status: "confirm_required" }, 400);
     return out({ ok: false, error: "Not found" }, 404);
   }
+
   if (req.method !== "POST") return out({ ok: false, error: "Method not allowed" }, 405);
 
   const ctype = (req.headers.get("content-type") || "").toLowerCase();

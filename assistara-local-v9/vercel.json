@@ -676,6 +676,11 @@
       "dest": "/unsubscribe.html"
     },
     {
+      "src": "/masterclass.ics",
+      "methods": ["GET"],
+      "dest": "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-reminder"
+    },
+    {
       "src": "/login",
       "dest": "/login.html"
     },
