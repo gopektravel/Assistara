@@ -27,13 +27,15 @@ official logo; never invent a new design.
 
 | Email purpose | Sender display name | Signature |
 |---------------|---------------------|-----------|
-| General Assistara (registration confirmations, notifications, admin) | `Assistara` | The Assistara Team |
-| Academy / masterclass (reminders, enrollment, decisions) | `Assistara Academy` | The Assistara Team |
+| General Assistara (registration confirmations, notifications, admin) | `Assistara` | The Assistara Team 💛 |
+| Academy / masterclass (reminders, enrollment, decisions) | `Assistara Academy` | The Assistara Team 💛 |
 | **Personal day-before masterclass reminder** (Xyra's own) | `Assistara Academy` | `Xyra 💛` |
-| 30-minute reminder | `Assistara Academy` | The Assistara Team |
-| 7-minute reminder | `Assistara Academy` | The Assistara Team |
+| 30-minute reminder | `Assistara Academy` | The Assistara Team 💛 |
+| 7-minute reminder | `Assistara Academy` | The Assistara Team 💛 |
 
 - **Signatures are chosen by email purpose**, not hardcoded into every template.
+- **The team signature is always exactly `The Assistara Team 💛`** (with the yellow
+  heart) in both the HTML and plain-text versions.
 - **Only the personal day-before masterclass reminder is signed by Xyra.** Never
   auto-insert her name, and never sign other emails as Xyra.
 - **From address:** the verified `xyra@getassistara.com` on the verified
@@ -176,5 +178,5 @@ footer, but the copy, components and CTA are chosen per email.
 |----------|--------|-----|----------|--------|-----------|
 | 24h reminder | `run` | `founding-masterclass-2026:<id>` | plain personal | Assistara Academy | Xyra Mendoza |
 | Academy follow-up | `followup` | `academy-followup-2026-10-12:<id>` | plain personal | Xyra (approved) | Xyra 💛 |
-| 30-min reminder | `reminder30` | `reminder30-2026-10-11:<id>` | branded (visual reference) | Assistara Academy | The Assistara Team |
-| 7-min reminder | `reminder7` | `reminder7-2026-10-11:<id>` | branded | Assistara Academy | The Assistara Team |
+| 30-min reminder | `reminder30` | `reminder30-2026-10-11:<id>` | branded (visual reference) | Assistara Academy | The Assistara Team 💛 |
+| 7-min reminder | `reminder7` | `reminder7-2026-10-11:<id>` | branded | Assistara Academy | The Assistara Team 💛 |
