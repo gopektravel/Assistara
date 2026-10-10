@@ -177,6 +177,7 @@ function parseConfig(raw) {
     display_state: DEFAULT_DISPLAY_STATE,
     chat_provider: DEFAULT_CHAT_PROVIDER,
     viewer_session: 0, // session epoch; viewer counters reset when this advances
+    chat_open: null,  // admin chat toggle: null=unset (live shows, waiting closed), true/false=explicit
   };
   if (!raw || typeof raw !== "string") return out;
   let cfg = null;
@@ -202,6 +203,8 @@ function parseConfig(raw) {
     if (Number.isFinite(Number(cfg.viewer_session)) && Number(cfg.viewer_session) > 0) {
       out.viewer_session = Math.floor(Number(cfg.viewer_session));
     }
+    // chat_open is an explicit admin toggle independent of the stream state.
+    if (typeof cfg.chat_open === "boolean") out.chat_open = cfg.chat_open;
     // Derive chat_enabled from chat_provider only if chat not explicitly set
     if (typeof cfg.chat !== "boolean") {
       out.chat_enabled = cfg.chat_provider !== 'off';
@@ -294,6 +297,7 @@ function publicConfig(row, domain) {
     replay_enabled: cfg.replay_enabled,
     display_state: cfg.display_state,
     chat_provider: cfg.chat_provider,
+    chat_open: cfg.chat_open,
     viewer_session_id: cfg.viewer_session,
     chat_url: cfg.video_id ? buildChatUrl(cfg.video_id, domain) : null,
   };
@@ -328,15 +332,18 @@ async function configureAction(cfg, claims, body) {
     }
     url = canonicalWatchUrl(id);
   }
-  // Preserve the live viewer session: saving/clearing the URL must NOT reset it.
+  // Preserve the live viewer session and the chat toggle: saving/clearing the
+  // URL must NOT reset viewers or the admin's chat open/closed setting.
   const cur = await readEventRow(cfg, key);
+  const curCfg = parseConfig(cur ? cur.live_destination_url : null);
   const next = {
     youtube_url: url,
     chat: true,
     replay: false,
     display_state: DEFAULT_DISPLAY_STATE,
     chat_provider: DEFAULT_CHAT_PROVIDER,
-    viewer_session: parseConfig(cur ? cur.live_destination_url : null).viewer_session,
+    viewer_session: curCfg.viewer_session,
+    chat_open: curCfg.chat_open,
   };
   if (typeof body.chat_enabled === "boolean") next.chat = body.chat_enabled;
   // replay is always disabled per requirements — ignore any replay_enabled in request
@@ -402,7 +409,9 @@ async function startStreamAction(cfg, claims, body) {
     }
   );
   if (!response.ok) return { status: 500, body: { ok: false, error: "Could not start the stream" } };
-  await resetChatSession("start"); // fresh chat session for the new livestream
+  // Starting the livestream does NOT reset or interrupt the chat: a chat opened
+  // while Waiting continues into the Live stream unchanged (and viewer_counters
+  // are unaffected). Chat/Viewer resets only happen on End/Reset below.
   return {
     status: 200,
     body: { ok: true, event_key: key, display_state: "live", message: "Stream is now LIVE" },
@@ -484,6 +493,7 @@ async function updateChatProviderAction(cfg, claims, body) {
     display_state: current.display_state,
     chat_provider: provider,
     viewer_session: current.viewer_session,
+    chat_open: current.chat_open,
   };
   const { response } = await requestJSON(
     cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
@@ -510,6 +520,46 @@ async function updateChatProviderAction(cfg, claims, body) {
       video_id: current.video_id,
       youtube_url: current.youtube_url,
     },
+  };
+}
+
+// Admin opens/closes the live chat independently of the stream. Changes ONLY
+// chat_open; preserves the URL, video id, provider, viewer session and display
+// state, so it never resets the livestream, viewers or attendance.
+async function setChatOpenAction(cfg, claims, body) {
+  const key = eventKey(body.event_key);
+  if (typeof body.chat_open !== "boolean") {
+    return { status: 400, body: { ok: false, error: "chat_open must be true or false" } };
+  }
+  const open = body.chat_open;
+  const row = await readEventRow(cfg, key);
+  const current = parseConfig(row ? row.live_destination_url : null);
+  const next = {
+    youtube_url: current.youtube_url,
+    chat: current.chat_provider !== "off",
+    replay: current.replay_enabled,
+    display_state: current.display_state,
+    chat_provider: current.chat_provider,
+    viewer_session: current.viewer_session,
+    chat_open: open,
+  };
+  const { response } = await requestJSON(
+    cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
+    {
+      method: "POST",
+      headers: serviceHeaders(cfg, { Prefer: "resolution=merge-duplicates" }),
+      body: JSON.stringify({
+        event_key: key,
+        live_destination_url: JSON.stringify(next),
+        updated_at: new Date().toISOString(),
+        updated_by: claims.u,
+      }),
+    }
+  );
+  if (!response.ok) return { status: 500, body: { ok: false, error: "Could not update chat status" } };
+  return {
+    status: 200,
+    body: { ok: true, event_key: key, chat_open: open, display_state: current.display_state, message: open ? "Chat is now Open" : "Chat is now Closed" },
   };
 }
 
@@ -612,7 +662,7 @@ module.exports = async function masterclassYoutube(req, res) {
     if (parsed.error) return send(res, 400, { ok: false, error: parsed.error });
     const { body } = parsed;
     const action = String(body.action || "configure").trim().toLowerCase();
-    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream" && action !== "update_chat_provider" && action !== "presenter_key" && action !== "stats") {
+    if (action !== "configure" && action !== "read" && action !== "start_stream" && action !== "end_stream" && action !== "reset_stream" && action !== "update_chat_provider" && action !== "presenter_key" && action !== "stats" && action !== "set_chat_open") {
       return send(res, 400, { ok: false, error: "Unknown action" });
     }
     const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -661,6 +711,15 @@ module.exports = async function masterclassYoutube(req, res) {
       } catch (error) {
         console.error("masterclass-youtube", error && error.message ? error.message : "update_chat_provider failed");
         return send(res, 503, { ok: false, error: "Could not save the chat provider" });
+      }
+    }
+    if (action === "set_chat_open") {
+      try {
+        const result = await setChatOpenAction(cfg, claims, body);
+        return send(res, result.status, result.body);
+      } catch (error) {
+        console.error("masterclass-youtube", error && error.message ? error.message : "set_chat_open failed");
+        return send(res, 503, { ok: false, error: "Could not update chat status" });
       }
     }
     if (action === "presenter_key") {

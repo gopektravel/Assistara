@@ -17,13 +17,26 @@
 @media(max-width:899px){
   .live-grid.chat-off{grid-template-columns:minmax(0,1fr)}
 }
+/* Waiting room: personalized quote + cinematic countdown accents */
+.prelive-quote{max-width:660px;margin:8px auto 2px;padding:0 clamp(6px,2vw,18px);text-align:center;color:#fff;animation:mcFadeUp .6s cubic-bezier(.2,.7,.2,1) both}
+.prelive-quote-hi{font-weight:700;font-size:clamp(12.5px,1.5vw,15px);color:#eae7df;letter-spacing:-.01em}
+.prelive-quote-hi .prelive-quote-heart{color:var(--yellow)}
+.prelive-quote-text{font-weight:600;font-size:clamp(15px,2vw,20px);line-height:1.5;letter-spacing:-.015em;margin:9px 0 0;color:#fff;position:relative;display:inline-block}
+.prelive-quote-text::before{content:"";position:absolute;left:50%;top:-13px;transform:translateX(-50%);width:32px;height:2px;border-radius:2px;background:var(--yellow);opacity:.9}
+.prelive-kicker{animation:mcFadeUp .5s ease both}
+.prelive-countdown strong{text-shadow:0 0 34px rgba(255,213,31,.16);animation:mcFadeUp .5s ease both}
+.prelive-countdown small{animation:mcFadeUp .6s ease both}
+.digit-tick{animation:mcDigitIn .3s cubic-bezier(.2,.7,.2,1)}
+@keyframes mcDigitIn{from{opacity:0;transform:translateY(-0.14em)}to{opacity:1;transform:none}}
+@keyframes mcFadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.prelive-quote,.prelive-kicker,.prelive-countdown strong,.prelive-countdown small,.digit-tick,.prelive-date{animation:none!important;transition:none!important}}
 </style>
 <script src="/oaiq-pixel.js"></script>
 <script src="/googletag.js"></script></head>
 <body>
 <header class="header"><div class="shell"><div class="nav"><div class="brand"><img class="mark" src="/assistara-logo.svg" alt="Assistara"/>Assistara Academy</div><div class="live-pill"><span class="live-dot"></span> <span id="livePillLabel">FREE LIVE MASTERCLASS</span></div></div></div></header>
 <main><section class="hero"><div class="shell"><h1>How to Land Your <span>First Remote Client</span></h1></div></section>
-<section class="stage"><div class="shell"><div class="live-grid"><div class="video-shell"><div class="video prelive-video" id="preliveVideo"><div class="prelive-wrap"><div class="prelive-kicker">WE GO LIVE IN</div><div class="prelive-countdown" aria-live="polite"><div><strong id="liveDays">05</strong><small>DAYS</small></div><span>:</span><div><strong id="liveHours">10</strong><small>HOURS</small></div><span>:</span><div><strong id="liveMinutes">45</strong><small>MIN</small></div><span>:</span><div><strong id="liveSeconds">00</strong><small>SEC</small></div></div><div class="prelive-date">SUNDAY, OCTOBER 11 · 6:00 PM PHT</div><div class="prelive-note">Your masterclass will play here when we go live.</div></div></div><div class="youtube-note"><span>Streamed through YouTube Live · Stay on Assistara</span></div></div><aside class="chat"><div class="chat-head"><span>LIVE CHAT</span><span>COMING SOON</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">Live chat opens with the masterclass.</strong><span>Join the conversation here when we go live.</span></div></div></aside></div>
+<section class="stage"><div class="shell"><div class="live-grid"><div class="video-shell"><div class="video prelive-video" id="preliveVideo"><div class="prelive-wrap"><div class="prelive-kicker">WE GO LIVE IN</div><div class="prelive-countdown" aria-live="polite"><div><strong id="liveDays">05</strong><small>DAYS</small></div><span>:</span><div><strong id="liveHours">10</strong><small>HOURS</small></div><span>:</span><div><strong id="liveMinutes">45</strong><small>MIN</small></div><span>:</span><div><strong id="liveSeconds">00</strong><small>SEC</small></div></div><div class="prelive-date">SUNDAY, OCTOBER 11 · 6:00 PM PHT</div><div class="prelive-note">Your masterclass will play here when we go live.</div></div></div><div class="prelive-quote" id="mcQuote" hidden></div><div class="youtube-note"><span>Streamed through YouTube Live · Stay on Assistara</span></div></div><aside class="chat"><div class="chat-head"><span>LIVE CHAT</span><span>COMING SOON</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">Live chat opens with the masterclass.</strong><span>Join the conversation here when we go live.</span></div></div></aside></div>
 <div class="bottom"><div class="info"><div class="info-row"><div class="info-copy"><div class="label">TODAY'S SESSION</div><h2>Build your path into remote work.</h2><p><span class="promise">Turn the skills you already have into something valuable and take the first step toward landing a real client.</span> Learn what clients pay for, how to position your skills, and the simplest path from beginner to getting paid.</p></div><div class="meta"><span>≈ 90 min</span><span>Live</span><span>Beginner friendly</span><span>Free</span></div></div></div><aside class="cta"><div class="label">FOUNDING COHORT</div><h3>Ready to get your first client?</h3><div class="scarcity"><span class="scarcity-dot"></span>Only 15 spots available</div><a class="btn" href="/academy/apply" target="_blank" rel="noopener noreferrer">Apply for Assistara Academy →</a></aside></div></div></section></main>
 <script id="prelive-countdown-js">(()=>{
   const ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status';
@@ -54,6 +67,17 @@
     if(!wrapNow)return;
     wrapNow.innerHTML='<div class="prelive-kicker">MASTERCLASS ENDED</div><div style="font-size:clamp(26px,4vw,52px);font-weight:800;letter-spacing:-.04em;color:#fff">This masterclass has ended.</div>';
   }
+  const prefersReduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function setDigit(el,val){
+    if(!el)return;
+    const v=pad(val);
+    if(el.textContent===v)return;
+    el.textContent=v;
+    if(prefersReduced)return;
+    el.classList.remove('digit-tick');
+    void el.offsetWidth; // restart the transition on each change
+    el.classList.add('digit-tick');
+  }
   function tick(){
     const d=document.getElementById('liveDays'),h=document.getElementById('liveHours'),m=document.getElementById('liveMinutes'),s=document.getElementById('liveSeconds');
     if(!d||!h||!m||!s)return;
@@ -63,7 +87,7 @@
       return;
     }
     const sec=Math.floor(diff/1000);
-    d.textContent=pad(Math.floor(sec/86400));h.textContent=pad(Math.floor(sec%86400/3600));m.textContent=pad(Math.floor(sec%3600/60));s.textContent=pad(sec%60);
+    setDigit(d,Math.floor(sec/86400));setDigit(h,Math.floor(sec%86400/3600));setDigit(m,Math.floor(sec%3600/60));setDigit(s,sec%60);
   }
   function startCountdown(){ clearTimer(); countdownReachedZero=false; tick(); timer=setInterval(tick,1000); }
   async function poll(){
@@ -191,13 +215,24 @@
     assistaraMounted=false;
   }
 
+  // Chat visibility is admin-controlled (chat_open), independent of the stream
+  // state so chat can be opened while Waiting. Unset => shown while LIVE only
+  // (preserves the original behavior). provider 'off' => no chat panel.
+  function chatOpenFor(displayState){
+    if(!cfg)return false;
+    if((cfg.chat_provider||'assistara')==='off')return false;
+    if(cfg.chat_open===true)return true;      // admin opened (waiting or live)
+    if(cfg.chat_open===false)return false;    // admin closed
+    return displayState==='live';             // unset: show during live (existing)
+  }
+
   function renderChat(displayState){
     if(!chatEl)return;
     const hasStream=!!(cfg&&cfg.video_id);
     const chatProvider=cfg?(cfg.chat_provider||'assistara'):'assistara';
     const chatDisabled=(chatProvider==='off')||(!!cfg&&cfg.chat_enabled===false);
-    const showChat=hasStream&&!chatDisabled&&displayState==='live';
-    const hidePanel=displayState==='live'&&chatDisabled;
+    const showChat=!chatDisabled && chatOpenFor(displayState);
+    const hidePanel=chatDisabled; // provider off / disabled => no chat panel, video/countdown full width
 
     if(gridEl)gridEl.classList.toggle('chat-off',hidePanel);
 
@@ -205,8 +240,8 @@
     if(hidePanel)scene='off';
     else if(displayState==='ended')scene='ended';
     else if(showChat&&chatProvider==='assistara')scene='assistara';
-    else if(showChat&&chatProvider==='youtube')scene='youtube';
-    else scene='waiting';
+    else if(showChat&&chatProvider==='youtube'&&displayState==='live')scene='youtube';
+    else scene='waiting'; // closed while waiting, or YouTube chat before it's live
 
     const chatKey=scene+'|'+chatProvider;
     if(chatKey===renderedChatKey&&(scene!=='assistara'||assistaraMounted))return;
@@ -251,10 +286,58 @@
     chatEl.innerHTML=chatOriginal;
   }
 
+  // --- Personalized waiting-room quote ----------------------------------------
+  // 15 curated reminders; one is chosen deterministically from a stable id
+  // (the verified attendee token, else a browser-local random id), so it stays
+  // the same across refreshes without any API/db/AI. No identifier is exposed.
+  const MC_QUOTES=[
+    "You don't have to be an expert to get started. You just have to start.",
+    "Your first client could be closer than you think.",
+    "Every successful freelancer started with zero clients.",
+    "You have more to offer than you realize.",
+    "Your next opportunity might start with one simple step.",
+    "You don't need experience in everything. You need a place to begin.",
+    "Small beginnings can lead to big opportunities.",
+    "Someone out there needs the skills you already have.",
+    "You don't need to have it all figured out today.",
+    "Your future doesn't have to look like your past.",
+    "The first step is often the hardest. You're already taking it.",
+    "You can be a beginner and still have something valuable to offer.",
+    "A new career starts with learning something new.",
+    "You don't need permission to build a better future.",
+    "Today could be the beginning of something bigger."
+  ];
+  const escQ=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  function quoteId(){
+    try{
+      const t=(new URLSearchParams(location.search).get('t')||'').trim();
+      if(t&&registeredIdentity)return t;            // verified attendee only
+      let id=localStorage.getItem('assistara_masterclass_quote_id');
+      if(!id){id=(crypto.randomUUID?crypto.randomUUID():'q'+Date.now()+Math.random().toString(36).slice(2));try{localStorage.setItem('assistara_masterclass_quote_id',id);}catch(e){}}
+      return id;                                     // anonymous: stable per browser
+    }catch(e){return 'anon';}
+  }
+  function renderQuote(){
+    const q=document.getElementById('mcQuote');
+    if(!q||q.getAttribute('data-done')==='1')return;
+    // First name only — never a surname, even if the identity source returned a full name.
+    const fullName=registeredIdentity&&registeredIdentity.name?String(registeredIdentity.name):'';
+    const name=fullName?fullName.trim().split(/\s+/)[0]:null;
+    const hi=name?('A little reminder for you, '+escQ(name)+' <span class="prelive-quote-heart">💛</span>'):'A little reminder <span class="prelive-quote-heart">💛</span>';
+    const id=quoteId();let h=0;for(let i=0;i<id.length;i++)h=(Math.imul(h,31)+id.charCodeAt(i))>>>0;
+    const text=MC_QUOTES[h%MC_QUOTES.length];
+    q.innerHTML='<div class="prelive-quote-hi">'+hi+'</div><blockquote class="prelive-quote-text">'+escQ(text)+'</blockquote>';
+    q.setAttribute('data-done','1');
+    setQuoteVisible(true); // renderAll re-checks against the real stream state; show meanwhile.
+  }
+  function setQuoteVisible(v){const q=document.getElementById('mcQuote');if(q)q.hidden=!v;}
+
   function renderAll(displayState){
     setPill(displayState);
     renderVideo(displayState);
     renderChat(displayState);
+    // Personalized quote only while the room is Waiting; hidden once Live/Ended.
+    setQuoteVisible(displayState==='waiting');
     // Live viewer presence: heartbeat only while the stream is actually LIVE,
     // so Waiting/Ended never repopulate the "Watching Now" counter.
     if(displayState==='live' && cfg && cfg.video_id){ startViewerHeartbeat(); } else { stopViewerHeartbeat(); }
@@ -281,7 +364,7 @@
       .then(r=>r.json())
       .then(d=>{
         if(d&&d.ok){
-          cfg={youtube_url:d.youtube_url,video_id:d.video_id,embed_url:d.embed_url,chat_enabled:d.chat_enabled,replay_enabled:d.replay_enabled,chat_url:d.chat_url,display_state:d.display_state||'waiting',chat_provider:d.chat_provider||'assistara'};
+          cfg={youtube_url:d.youtube_url,video_id:d.video_id,embed_url:d.embed_url,chat_enabled:d.chat_enabled,replay_enabled:d.replay_enabled,chat_url:d.chat_url,display_state:d.display_state||'waiting',chat_provider:d.chat_provider||'assistara',chat_open:(typeof d.chat_open==='boolean'?d.chat_open:null)};
           renderAll(cfg.display_state);
         }
       })
@@ -289,9 +372,13 @@
       .finally(()=>{pollInFlight=false;});
   }
   Promise.all([resolveRegisteredIdentity(),resolveHostToken()]).then(()=>{
-    // If the chat already mounted before the registered identity / host token
-    // resolved, re-mount so the verified name and host role are applied.
-    if(!assistaraMounted||currentChatProvider!=='assistara'||currentDisplayState!=='live')return;
+    // Render the personalized quote as soon as the verified name is known.
+    renderQuote();
+    // If the chat already mounted (as a guest) before the registered identity /
+    // host token resolved, re-mount so the verified name and host role apply.
+    if(!assistaraMounted||!cfg)return;
+    if(cfg.display_state!=='waiting'&&cfg.display_state!=='live')return;
+    if(!chatOpenFor(cfg.display_state)||(cfg.chat_provider||'assistara')!=='assistara')return;
     const cur=window.assistaraChat?window.assistaraChat.userIdentity:null;
     const needHost=!!hostToken&&!(cur&&cur.isHost);
     const needName=!!registeredIdentity&&!(cur&&cur.name);
@@ -299,7 +386,7 @@
       assistaraMounted=false;
       renderedChatKey=null;
       if(window.assistaraChat){try{window.assistaraChat.disconnect();}catch(e){}}
-      renderAll(currentDisplayState);
+      renderAll(cfg.display_state);
     }
   });
   loadConfig();

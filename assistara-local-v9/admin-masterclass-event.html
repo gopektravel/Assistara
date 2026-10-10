@@ -266,6 +266,15 @@
           </div>
         </div>
 
+        <div class="field" style="margin-top:16px">
+          <span class="label">Live Chat</span>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+            <span class="state-badge waiting" id="mcChatStateBadge">Closed</span>
+            <button class="refresh" id="mcChatToggle">Open Chat</button>
+            <span class="muted" style="font-size:12px">Open chat any time — even while Waiting. Viewers update within seconds; closing keeps existing messages.</span>
+          </div>
+        </div>
+
         <div id="mcYtConfiguredUrl" class="configured-url hidden"></div>
 
         <div class="stream-controls">
@@ -457,6 +466,7 @@
       // provider uses a dedicated API action that changes ONLY the
       // provider, so the stream state and YouTube URL are preserved.
       let savedProvider = "assistara";
+      let chatOpenState = null;
 
       function updateYoutubeUI(d) {
         const hasUrl = !!d.video_id;
@@ -468,6 +478,16 @@
         providerRadios.forEach(radio => {
           radio.checked = radio.value === provider;
         });
+        // Chat open/closed toggle (independent of stream + provider)
+        chatOpenState = d.chat_open === undefined || d.chat_open === null ? null : d.chat_open;
+        const chatOpen = chatOpenState === true;
+        const chatBadge = $("mcChatStateBadge");
+        if (chatBadge) {
+          chatBadge.textContent = chatOpenState === null ? "Closed · opens at live" : (chatOpen ? "Open" : "Closed");
+          chatBadge.className = "state-badge " + (chatOpen ? "live" : "waiting");
+        }
+        const chatToggleBtn = $("mcChatToggle");
+        if (chatToggleBtn) chatToggleBtn.textContent = chatOpen ? "Close Chat" : "Open Chat";
         // Update display state badge
         const stateBadge = $("mcYtStateBadge");
         const state = d.display_state || "waiting";
@@ -682,6 +702,43 @@
           }
         });
       });
+
+      // Open/Close live chat (independent of the stream). Changes ONLY chat_open;
+      // never resets the livestream, viewers or attendance.
+      $("mcChatToggle").onclick = async () => {
+        const fb = $("mcYtFeedback");
+        const btn = $("mcChatToggle");
+        const next = chatOpenState !== true; // toggle to the opposite of the current state
+        btn.disabled = true;
+        fb.className = "feedback";
+        fb.textContent = "Saving…";
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "set_chat_open", event_key: MC_EVENT_KEY, chat_open: next }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.className = "feedback err";
+            fb.textContent = "Your admin session expired. Please log in again.";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not update chat");
+          chatOpenState = next;
+          fb.className = "feedback ok";
+          fb.textContent = next ? "Chat is now Open — viewers can join." : "Chat is now Closed — existing messages are kept.";
+          const badge = $("mcChatStateBadge");
+          if (badge) { badge.textContent = next ? "Open" : "Closed"; badge.className = "state-badge " + (next ? "live" : "waiting"); }
+          btn.textContent = next ? "Close Chat" : "Open Chat";
+        } catch (e) {
+          fb.className = "feedback err";
+          fb.textContent = "Could not update chat. " + e.message;
+        } finally {
+          btn.disabled = false;
+        }
+      };
 
       // Presentation embed controls
       $("mcPresentationReload").onclick = () => {

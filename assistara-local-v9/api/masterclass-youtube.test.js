@@ -584,9 +584,10 @@ test("POST update_chat_provider rejects an unknown provider", async () => {
   assert.equal(body.ok, false);
 });
 
-test("start_stream triggers idempotent chat reset (epoch + shared secret)", async () => {
+test("start_stream continues the chat (no reset) and preserves the admin chat toggle", async () => {
   const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
-  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting" });
+  // Chat opened while Waiting; starting must carry it into Live unchanged.
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting", chat_open: true, viewer_session: 50 });
   const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
   global.fetch = fetchImpl;
   const res = mockRes();
@@ -594,23 +595,20 @@ test("start_stream triggers idempotent chat reset (epoch + shared secret)", asyn
     mockReq({
       method: "POST",
       url: "/api/masterclass-youtube",
-      headers: {
-        origin: "https://www.getassistara.com",
-        "content-type": "application/json",
-        authorization: "Bearer " + adminToken(),
-      },
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
       body: JSON.stringify({ action: "start_stream", event_key: "founding-masterclass-2026" }),
     }),
     res
   );
   assert.equal(res.statusCode, 200);
-  const reset = calls.find((c) => String(c.url).includes("/internal/reset") && c.options.method === "POST");
-  assert.ok(reset, "start_stream must call the chat reset endpoint");
-  assert.equal(reset.options.headers["x-reset-token"], "chat-secret-123");
-  const sent = JSON.parse(reset.options.body);
-  assert.equal(sent.reason, "start");
-  assert.equal(typeof sent.epoch, "number");
-  assert.ok(sent.epoch > 0);
+  // Starting must NOT reset the chat (a Waiting chat continues into Live).
+  assert.equal(calls.some((c) => String(c.url).includes("/internal/reset")), false, "start must not reset chat");
+  // The admin chat toggle + viewer session are preserved through the transition.
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
+  assert.equal(stored.display_state, "live");
+  assert.equal(stored.chat_open, true);
+  assert.equal(stored.viewer_session, 50);
 });
 
 test("end_stream and reset_stream also clear the chat session", async () => {
@@ -638,6 +636,80 @@ test("end_stream and reset_stream also clear the chat session", async () => {
     assert.ok(reset, action + " must reset chat");
     assert.equal(JSON.parse(reset.options.body).reason, action === "end_stream" ? "end" : "reset");
   }
+});
+
+test("POST set_chat_open opens/closes chat without touching the stream, URL or viewers", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "secret-1" });
+  for (const open of [true, false]) {
+    const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "live", chat_provider: "assistara", viewer_session: 77, chat_open: !open });
+    const { fetchImpl } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+    global.fetch = fetchImpl;
+    const res = mockRes();
+    await H2(
+      mockReq({
+        method: "POST",
+        url: "/api/masterclass-youtube",
+        headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+        body: JSON.stringify({ action: "set_chat_open", chat_open: open, event_key: "founding-masterclass-2026" }),
+      }),
+      res
+    );
+    assert.equal(res.statusCode, 200, "open=" + open);
+    const b = res.json();
+    assert.equal(b.ok, true);
+    assert.equal(b.chat_open, open);
+    assert.equal(b.display_state, "live"); // stream state untouched
+  }
+});
+
+test("POST set_chat_open never resets chat or viewers (no internal reset calls)", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "secret-1" });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting", viewer_session: 5 }) } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "set_chat_open", chat_open: true, event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls.some((c) => String(c.url).includes("/internal/reset")), false);
+  assert.equal(calls.some((c) => String(c.url).includes("/internal/viewer-session")), false);
+});
+
+test("POST set_chat_open rejects a non-boolean value and unauthenticated callers", async () => {
+  const { fetchImpl } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: "{}" } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "set_chat_open", chat_open: "yes" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 400);
+
+  const { fetchImpl: f2, calls } = mockFetch();
+  global.fetch = f2;
+  const res2 = mockRes();
+  await H(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json" },
+      body: JSON.stringify({ action: "set_chat_open", chat_open: true }),
+    }),
+    res2
+  );
+  assert.equal(res2.statusCode, 401);
+  assert.equal(calls.length, 0);
 });
 
 test("start_stream does not reset chat when CHAT_SECRET is unset (no crash)", async () => {
@@ -862,6 +934,35 @@ test("the admin Masterclass tab has an Open Host Chat shortcut to the existing p
   assert.match(eventPage, /action: "presenter_key"/);
   assert.match(eventPage, /\/live\/chat\?presenter=/);
   assert.doesNotMatch(eventPage, /presenter=[0-9a-f]{32,}/); // no hardcoded secret
+});
+
+test("the admin Masterclass tab has an independent Chat Open/Closed control", () => {
+  assert.match(eventPage, /id="mcChatToggle"/);
+  assert.match(eventPage, /id="mcChatStateBadge"/);
+  assert.match(eventPage, /action: "set_chat_open"/); // server-side, admin-only toggle
+  assert.match(eventPage, /chatOpenState/);
+  // Opens/closes independent of the provider selector.
+  assert.match(eventPage, /set_chat_open/);
+});
+
+test("the public page shows chat when the admin opened it, even while Waiting", () => {
+  // Chat visibility is driven by chat_open, not by display_state.
+  assert.match(liveHtml, /cfg\.chat_open===true\)return true/);
+  assert.match(liveHtml, /cfg\.chat_open===false\)return false/);
+  assert.match(liveHtml, /return displayState==='live'/); // unset => show during live (existing behavior)
+});
+
+test("the public page shows a personalized waiting-room quote and an animated countdown", () => {
+  assert.match(liveHtml, /id="mcQuote"/);
+  assert.match(liveHtml, /MC_QUOTES/);
+  assert.match(liveHtml, /A little reminder for you, /);      // registered first name
+  assert.match(liveHtml, /A little reminder <span/);         // anonymous, no name
+  assert.match(liveHtml, /assistara_masterclass_quote_id/);  // stable browser-local id for guests
+  assert.match(liveHtml, /prefers-reduced-motion/);          // reduced-motion respected
+  assert.match(liveHtml, /digit-tick/);                      // countdown digit animation
+  assert.match(liveHtml, /setQuoteVisible/);                 // quote only while Waiting
+  // countdown stays accurate (still targets the scheduled 6:00 PM PHT start)
+  assert.match(liveHtml, /2026-10-11T18:00:00\+08:00/);
 });
 
 test("the public page wires host tokens and the presenter page is routed", () => {
