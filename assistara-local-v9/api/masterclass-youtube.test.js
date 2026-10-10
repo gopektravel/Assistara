@@ -876,6 +876,12 @@ test("the public page countdown stops at zero and shows Starting Soon", () => {
   assert.match(liveHtml, /showStartingSoon/);
 });
 
+test("the public live page shows the correct ~90 minute duration", () => {
+  assert.match(liveHtml, /≈ 90 min/);
+  assert.doesNotMatch(liveHtml, /≈ 60 min/);
+  assert.match(liveHtml, /6:00 PM PHT/); // start time unchanged
+});
+
 test("the public page uses display_state from config for rendering", () => {
   assert.match(liveHtml, /display_state/);
   assert.match(liveHtml, /renderAll\(cfg\.display_state/);
