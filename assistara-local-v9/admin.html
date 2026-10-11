@@ -3395,7 +3395,7 @@
               // Tab-scoped containers are managed centrally by
               // resetTabScaffold() inside render(); capacity is (re)loaded
               // each time Applicants or Cohorts is opened.
-              if (tab === "applicants" || tab === "cohorts") capacityDirty = true;
+              if (tab === "applicants") capacityDirty = true;
               render();
               saveUiState();
             }),
