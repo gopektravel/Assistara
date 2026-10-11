@@ -58,10 +58,11 @@ test("logout clears the session and the saved UI state without a pagehide re-sav
 });
 
 test("admin tools are mounted by client-side routing, never by loading another document", () => {
-  // The tool buttons are data-driven switches, not hard navigations.
+  // The tool buttons are data-driven switches in the sidebar, not hard navigations.
+  // Check that the sidebar contains the three tool nav-items in the Marketing group.
   assert.match(
     admin,
-    /data-tool="acquisition"[\s\S]*data-tool="finance"[\s\S]*data-tool="masterclass"/,
+    /data-tool="acquisition"[\s\S]*data-tool="masterclass"[\s\S]*data-tool="email"/,
   );
   assert.doesNotMatch(admin, /location\.href\s*=\s*"\/admin\/finance"/);
   assert.doesNotMatch(admin, /location\.href\s*=\s*"\/admin\/acquisition"/);

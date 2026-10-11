@@ -424,6 +424,87 @@
         color: var(--redInk);
         border: 1px solid #efb8b3;
       }
+      /* Coupon status badges */
+      .badge.active {
+        background: var(--green);
+        color: var(--greenInk);
+        border: 1px solid #b9e4c8;
+      }
+      .badge.inactive {
+        background: #efede8;
+        color: var(--muted);
+        border: 1px solid var(--line);
+      }
+      .badge.scheduled {
+        background: #e8f0fe;
+        color: #1a73e8;
+        border: 1px solid #a8c7fa;
+      }
+      .badge.expired {
+        background: #fce8e6;
+        color: #c5221f;
+        border: 1px solid #f5b7b1;
+      }
+      .badge.exhausted {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+      }
+      .couponCard .cardtop {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .couponCard .cardMeta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .couponCard .appPanel {
+        border-top: 1px solid var(--line);
+        margin-top: 12px;
+        padding-top: 12px;
+      }
+      .couponCard .recordSection {
+        margin-bottom: 16px;
+      }
+      .couponCard .recordSection h3 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--muted);
+      }
+      .waitlistHeader, .exceptionHeader {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--muted);
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      .waitlistRow, .exceptionRow {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .waitlistRow:last-child, .exceptionRow:last-child {
+        border-bottom: 0;
+      }
+      @media (max-width: 900px) {
+        .waitlistRow, .exceptionRow {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
       .studentDetail {
         margin-top: 14px;
       }
@@ -1150,7 +1231,18 @@
         NOTES = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
         PROGRESS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
         COUPONS =
-          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-coupons";
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-coupons",
+        // Read-only endpoints reused by the Overview command center so it
+        // can surface finance, email and capacity status without mounting
+        // (or duplicating) the standalone tool views.
+        FINANCE =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-finance",
+        EMAIL =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-email",
+        CAPACITY =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-academy-capacity",
+        ACQUISITION =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition";
       // One shared Admin session for every Admin page. The token is short-lived
       // (2h, server-signed) and server-revocable; this store only keeps the
       // browser copy so a new tab, Back/Forward and refresh keep the session.
@@ -1206,6 +1298,131 @@
       // before the shell router below, so saveUiState can always read it.
       let agentView = "dashboard";
       const viewScroll = { dashboard: 0 };
+      /* ---------------------------------------------------------------- *
+       * Sidebar — collapse state (persisted) and mobile drawer.
+       * ---------------------------------------------------------------- */
+      const SIDEBAR_KEY = "assistara_admin_sidebar";
+      function readSidebarCollapsed() {
+        try { return localStorage.getItem(SIDEBAR_KEY) === "1"; } catch { return false; }
+      }
+      function applySidebarState() {
+        const collapsed = readSidebarCollapsed();
+        $("sidebar").classList.toggle("collapsed", collapsed);
+        $("sidebarCollapse").setAttribute(
+          "aria-label",
+          collapsed ? "Expand sidebar" : "Collapse sidebar",
+        );
+      }
+      function toggleSidebar() {
+        const next = !$("sidebar").classList.contains("collapsed");
+        $("sidebar").classList.toggle("collapsed", next);
+        try { localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0"); } catch {}
+        $("sidebarCollapse").setAttribute(
+          "aria-label",
+          next ? "Expand sidebar" : "Collapse sidebar",
+        );
+      }
+      function openMobileSidebar() {
+        $("sidebar").classList.add("open");
+        $("sidebarOverlay").classList.add("show");
+        $("menuToggle").setAttribute("aria-expanded", "true");
+        const first = $("sidebar").querySelector(".nav-item");
+        if (first) first.focus();
+      }
+      function closeMobileSidebar() {
+        if (!$("sidebar").classList.contains("open")) return;
+        $("sidebar").classList.remove("open");
+        $("sidebarOverlay").classList.remove("show");
+        $("menuToggle").setAttribute("aria-expanded", "false");
+      }
+      /* ---------------------------------------------------------------- *
+       * Page chrome — shared header (breadcrumbs, title, subtitle) and
+       * the contextual search box. Dashboard tabs keep the search because
+       * it filters records; the Overview, Cohorts and mounted tools do
+       * not use it, so it is hidden there.
+       * ---------------------------------------------------------------- */
+      const DASH_VIEW_META = {
+        overview: {
+          crumb: [["Overview", "Dashboard"]],
+          title: "Dashboard",
+          sub: "Business command center — applications, enrollment, revenue, acquisition and urgent actions.",
+          search: false,
+        },
+        applicants: {
+          crumb: [["Academy", "Applications"]],
+          title: "Applications",
+          sub: "Review applications, payments and cohort capacity.",
+          search: true,
+        },
+        students: {
+          crumb: [["Academy", "Students"]],
+          title: "Students",
+          sub: "Student progress, assessments and account actions.",
+          search: true,
+        },
+        cohorts: {
+          crumb: [["Academy", "Cohorts & Enrollment"]],
+          title: "Cohorts & Enrollment",
+          sub: "Cohort capacity, seat enforcement, waitlist and payment exceptions.",
+          search: false,
+        },
+        coupons: {
+          crumb: [["Academy", "Coupons"]],
+          title: "Coupons",
+          sub: "Discount codes, redemptions and revenue impact.",
+          search: false,
+        },
+        webinar: {
+          crumb: [["Marketing", "Webinar Signups"]],
+          title: "Webinar Signups",
+          sub: "Masterclass signups, attendance and acquisition attribution.",
+          search: true,
+        },
+        b2b: {
+          crumb: [["Business", "B2B Discovery"]],
+          title: "B2B Discovery",
+          sub: "B2B discovery calls, qualification and pipeline.",
+          search: true,
+        },
+      };
+      const TOOL_VIEW_META = {
+        acquisition: {
+          crumb: [["Marketing", "Acquisition Tracker"]],
+          title: "Acquisition Tracker",
+          sub: "Tracked links, visits, signups and campaign attribution.",
+        },
+        finance: {
+          crumb: [["Business", "Finance"]],
+          title: "Finance",
+          sub: "Revenue, expenses, marketing performance and reconciliation.",
+        },
+        masterclass: {
+          crumb: [["Marketing", "Masterclass Event"]],
+          title: "Masterclass Event",
+          sub: "Livestream status, YouTube stream, chat and presentation.",
+        },
+        email: {
+          crumb: [["Marketing", "Email Command Center"]],
+          title: "Email Command Center",
+          sub: "Delivery, campaigns, recipients, providers and live activity.",
+        },
+      };
+      function renderBreadcrumbs(crumb) {
+        $("pageBreadcrumbs").innerHTML = crumb
+          .map((c, i) =>
+            i === crumb.length - 1
+              ? '<span aria-current="page">' + esc(c[1]) + "</span>"
+              : '<a href="/admin">' + esc(c[0]) + '</a><span class="separator" aria-hidden="true">/</span>',
+          )
+          .join("");
+      }
+      function updateChrome(meta) {
+        renderBreadcrumbs(meta.crumb);
+        $("pageTitle").textContent = meta.title;
+        $("pageSubtitle").textContent = meta.sub;
+        const wrap = $("searchWrap");
+        if (wrap) wrap.style.display = meta.search ? "" : "none";
+      }
       function readUiState() {
         try { return JSON.parse(sessionStorage.getItem(UI_KEY) || "null"); } catch { return null; }
       }
@@ -1233,7 +1450,7 @@
       }
       function applyUiState(s) {
         if (!s) return;
-        if (["applicants", "students", "webinar", "b2b", "coupons"].includes(s.tab)) tab = s.tab;
+        if (["applicants", "students", "webinar", "b2b", "coupons", "cohorts"].includes(s.tab)) tab = s.tab;
         if ($("search") && typeof s.q === "string") $("search").value = s.q;
         if ($("studentFilter") && typeof s.studentFilter === "string") $("studentFilter").value = s.studentFilter;
         if ($("studentSort") && typeof s.studentSort === "string") $("studentSort").value = s.studentSort;
@@ -1242,8 +1459,8 @@
         if (Array.isArray(s.openApps)) s.openApps.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openApps.add(String(id)); });
         if (Array.isArray(s.openStudents)) s.openStudents.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openStudents.add(String(id)); });
         if (Array.isArray(s.openCoupons)) s.openCoupons.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openCoupons.add(String(id)); });
-        document.querySelectorAll(".nav button[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
-        if (tab === "applicants") capacityDirty = true;
+        document.querySelectorAll(".sidebar-nav .nav-item[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+        if (tab === "applicants" || tab === "cohorts") capacityDirty = true;
       }
       // Applied after the first render so expanded student cards and scroll work.
       function applyRestoredView(s) {
@@ -2027,6 +2244,16 @@
           if (capacityDirty) { capacityDirty = false; renderCapacity(); }
           return;
         }
+        // Cohorts & Enrollment reuses the existing capacity management
+        // (cohort overview, priority waitlist, payment exceptions) rather
+        // than introducing a duplicate system.
+        if (tab === "cohorts") {
+          $("stats").innerHTML = "";
+          $("cards").innerHTML = "";
+          $("capacityPanel").style.display = "block";
+          if (capacityDirty) { capacityDirty = false; renderCapacity(); }
+          return;
+        }
         if (tab === "students") {
           const s = students.filter(match);
           // Apply status filter
@@ -2237,6 +2464,292 @@
         html += '</div>';
         return html;
       }
+      /* ---------------------------------------------------------------- *
+       * Coupons tab rendering
+       * ---------------------------------------------------------------- */
+      const MONEY_PHP = (centavos) => '₱' + (centavos / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const COUPON_STATUS_BADGE = {
+        active: { label: 'Active', class: 'active' },
+        inactive: { label: 'Inactive', class: 'inactive' },
+        scheduled: { label: 'Scheduled', class: 'scheduled' },
+        expired: { label: 'Expired', class: 'expired' },
+        exhausted: { label: 'Exhausted', class: 'exhausted' },
+      };
+      function couponStatus(c) {
+        const now = Date.now();
+        const startsAt = c.starts_at ? new Date(c.starts_at).getTime() : 0;
+        const expiresAt = c.expires_at ? new Date(c.expires_at).getTime() : 0;
+        if (!c.active) return 'inactive';
+        if (startsAt && startsAt > now) return 'scheduled';
+        if (expiresAt && expiresAt <= now) return 'expired';
+        if (c.max_redemptions !== null && c.max_redemptions !== undefined) {
+          const used = c.confirmed_redemptions || 0;
+          if (used >= c.max_redemptions) return 'exhausted';
+        }
+        return 'active';
+      }
+      function couponStatusBadge(c) {
+        const status = couponStatus(c);
+        const info = COUPON_STATUS_BADGE[status] || { label: status, class: 'inactive' };
+        return `<span class="badge ${info.class}">${info.label}</span>`;
+      }
+      function formatDateShort(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+      function couponCard(c) {
+        const preview = c.preview || {};
+        const status = couponStatus(c);
+        const discountTypeLabel = {
+          fixed_php: 'Fixed Amount',
+          percentage: 'Percentage',
+          target_price: 'Target Price',
+        }[c.discount_type] || c.discount_type;
+        const discountValueDisplay = c.discount_type === 'fixed_php' || c.discount_type === 'target_price'
+          ? MONEY_PHP(c.discount_value)
+          : (c.discount_value / 100).toFixed(1) + '%';
+        return `<div class="card couponCard${openCoupons.has(c.id) ? ' open' : ''}" id="coupon-${c.id}">
+          <div class="cardtop">
+            <div>
+              <div class="name"><code style="background:#f5f3ee;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:14px">${esc(c.code)}</code></div>
+              <div class="sub">${esc(c.campaign_name || 'No campaign name')}</div>
+            </div>
+            <div class="cardMeta">
+              ${couponStatusBadge(c)}
+              <span class="sub" style="color:var(--muted)">${discountTypeLabel}: ${discountValueDisplay}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button onclick="toggleCoupon('${c.id}')">${openCoupons.has(c.id) ? 'Collapse' : 'Expand'}</button>
+            <button onclick="editCoupon('${c.id}')">Edit</button>
+            <button onclick="duplicateCoupon('${c.id}')">Duplicate</button>
+            <button class="${c.active ? 'danger' : 'success'}" onclick="toggleCouponActive('${c.id}', ${!c.active})">
+              ${c.active ? 'Deactivate' : 'Activate'}
+            </button>
+            <button class="danger" onclick="deleteCoupon('${c.id}')">Delete</button>
+          </div>
+          ${openCoupons.has(c.id) ? `
+          <div class="appPanel open">
+            <section class="recordSection">
+              <h3>Coupon Details</h3>
+              <dl class="recordFacts">
+                <div><dt>Code</dt><dd><code>${esc(c.code)}</code></dd></div>
+                <div><dt>Campaign</dt><dd>${esc(c.campaign_name || '—')}</dd></div>
+                <div><dt>Description</dt><dd>${esc(c.description || '—')}</dd></div>
+                <div><dt>Discount Type</dt><dd>${discountTypeLabel}</dd></div>
+                <div><dt>Discount Value</dt><dd>${discountValueDisplay}</dd></div>
+                <div><dt>Regular Price</dt><dd>${MONEY_PHP(preview.regular_price_php || 690000)}</dd></div>
+                <div><dt>Discount Amount</dt><dd>${MONEY_PHP(preview.discount_amount_php || 0)}</dd></div>
+                <div><dt>Final Price</dt><dd><strong>${MONEY_PHP(preview.final_price_php || 0)}</strong></dd></div>
+                <div><dt>Start Date</dt><dd>${c.starts_at ? formatDateShort(c.starts_at) : 'Immediate'}</dd></div>
+                <div><dt>Expiration</dt><dd>${c.expires_at ? formatDateShort(c.expires_at) : 'No expiration'}</dd></div>
+                <div><dt>Max Redemptions</dt><dd>${c.max_redemptions ? c.max_redemptions : 'Unlimited'}</dd></div>
+                <div><dt>Max Per Customer</dt><dd>${c.max_redemptions_per_customer}</dd></div>
+                <div><dt>Created</dt><dd>${formatDateShort(c.created_at)}</dd></div>
+                <div><dt>Last Updated</dt><dd>${formatDateShort(c.updated_at)}</dd></div>
+              </dl>
+            </section>
+            <section class="recordSection">
+              <h3>Performance Metrics</h3>
+              <dl class="recordFacts">
+                <div><dt>Confirmed Redemptions</dt><dd><strong>${c.confirmed_redemptions || 0}</strong></dd></div>
+                <div><dt>Pending Redemptions</dt><dd>${c.pending_redemptions || 0}</dd></div>
+                <div><dt>Failed Redemptions</dt><dd>${c.failed_redemptions || 0}</dd></div>
+                <div><dt>Refunded Redemptions</dt><dd>${c.refunded_redemptions || 0}</dd></div>
+                <div><dt>Revenue Generated</dt><dd>${MONEY_PHP(c.revenue_php || 0)}</dd></div>
+                <div><dt>Total Discounts Given</dt><dd>${MONEY_PHP(c.total_discounts_php || 0)}</dd></div>
+                <div><dt>Remaining Redemptions</dt><dd>${c.remaining_redemptions !== null && c.remaining_redemptions !== undefined ? c.remaining_redemptions : 'Unlimited'}</dd></div>
+                <div><dt>Last Redemption</dt><dd>${c.last_redemption_at ? formatDateShort(c.last_redemption_at) : 'Never'}</dd></div>
+              </dl>
+            </section>
+            <section class="recordSection">
+              <h3>Redemption History</h3>
+              <div id="coupon-redemptions-${c.id}"></div>
+            </section>
+          </div>
+          ` : ''}
+        </div>`;
+      }
+      function renderCoupons() {
+        resetTabScaffold();
+        $("couponFilters").style.display = "flex";
+        // Apply status filter
+        const statusFilter = $("couponFilter") ? $("couponFilter").value : "all";
+        let filtered = coupons;
+        if (statusFilter !== "all") {
+          filtered = coupons.filter(c => couponStatus(c) === statusFilter);
+        }
+        // Apply sorting
+        const sortBy = $("couponSort") ? $("couponSort").value : "recent";
+        const sorted = [...filtered].sort((a, b) => {
+          if (sortBy === "recent") return new Date(b.created_at) - new Date(a.created_at);
+          if (sortBy === "oldest") return new Date(a.created_at) - new Date(b.created_at);
+          if (sortBy === "code") return a.code.localeCompare(b.code);
+          if (sortBy === "redemptions") return (b.confirmed_redemptions || 0) - (a.confirmed_redemptions || 0);
+          if (sortBy === "revenue") return (b.revenue_php || 0) - (a.revenue_php || 0);
+          return 0;
+        });
+        // Stats
+        const total = coupons.length;
+        const activeCount = coupons.filter(c => couponStatus(c) === 'active').length;
+        const totalRedemptions = coupons.reduce((sum, c) => sum + (c.confirmed_redemptions || 0), 0);
+        const totalRevenue = coupons.reduce((sum, c) => sum + (c.revenue_php || 0), 0);
+        const totalDiscounts = coupons.reduce((sum, c) => sum + (c.total_discounts_php || 0), 0);
+        stat([
+          [total, "Coupons"],
+          [activeCount, "Active"],
+          [totalRedemptions, "Redemptions"],
+          [MONEY_PHP(totalRevenue), "Revenue"],
+        ]);
+        // Create coupon button
+        const createCouponBtn = `<div class="actions" style="margin-bottom:14px"><button class="success" onclick="createCoupon()">+ Create Coupon</button></div>`;
+        $("cards").innerHTML = createCouponBtn + (sorted.length
+          ? sorted.map(couponCard).join("")
+          : '<div class="empty">No coupons found. Click "Create Coupon" to get started.</div>');
+        // Hydrate expanded coupons with redemption history
+        openCoupons.forEach(id => {
+          const box = $("coupon-redemptions-" + id);
+          if (box) loadCouponRedemptions(id, box);
+        });
+      }
+      window.toggleCoupon = (id) => {
+        const key = String(id);
+        const e = $("coupon-" + key);
+        if (e) e.classList.toggle("open");
+        const isOpen = !!e && e.classList.contains("open");
+        if (isOpen) openCoupons.add(key); else openCoupons.delete(key);
+        if (isOpen) {
+          const box = $("coupon-redemptions-" + key);
+          if (box) loadCouponRedemptions(key, box);
+        }
+        saveUiState();
+      };
+      async function loadCouponRedemptions(couponId, box) {
+        box.innerHTML = '<div class="empty">Loading redemption history...</div>';
+        try {
+          const data = await req("get", { id: couponId }, COUPONS);
+          if (data.ok && data.coupon && data.coupon.redemptions) {
+            const redemptions = data.coupon.redemptions;
+            if (redemptions.length === 0) {
+              box.innerHTML = '<div class="empty">No redemptions yet.</div>';
+              return;
+            }
+            const rows = redemptions.map(r => {
+              const statusBadge = {
+                confirmed: '<span class="badge paid">Confirmed</span>',
+                pending: '<span class="badge pending">Pending</span>',
+                failed: '<span class="badge declined">Failed</span>',
+                refunded: '<span class="badge suspended">Refunded</span>',
+              }[r.status] || r.status;
+              return `<div class="waitlistRow"><div><b>${esc(r.customer_email)}</b></div><div>${statusBadge}</div><div>${MONEY_PHP(r.original_price_php)}</div><div>${MONEY_PHP(r.discount_amount_php)}</div><div>${MONEY_PHP(r.final_price_php)}</div><div>${r.payment_method}</div><div>${formatDateShort(r.redeemed_at)}</div><div>${formatDateShort(r.confirmed_at)}</div></div>`;
+            }).join('');
+            box.innerHTML = '<div class="waitlistHeader">Customer | Status | Original | Discount | Final | Method | Redeemed | Confirmed</div>' + rows;
+          } else {
+            box.innerHTML = '<div class="error">Failed to load redemptions.</div>';
+          }
+        } catch (e) {
+          box.innerHTML = '<div class="error">Error: ' + esc(e.message) + '</div>';
+        }
+      }
+      window.createCoupon = async () => {
+        const code = prompt("Enter coupon code (e.g., SUMMER2026):")?.trim().toUpperCase();
+        if (!code) return;
+        if (!/^[A-Z0-9_-]{3,32}$/.test(code)) { alert("Invalid code format. Use 3-32 alphanumeric characters, hyphens, or underscores."); return; }
+        const campaign = prompt("Campaign name (optional):")?.trim() || null;
+        const description = prompt("Description (optional):")?.trim() || null;
+        const type = prompt("Discount type (fixed_php, percentage, target_price):", "fixed_php")?.trim();
+        if (!["fixed_php", "percentage", "target_price"].includes(type)) { alert("Invalid discount type"); return; }
+        let value = 0;
+        if (type === "fixed_php" || type === "target_price") {
+          const input = prompt("Discount value in PHP (e.g., 3000 for ₱3,000):", "3000");
+          value = Math.round(parseFloat(input) * 100);
+        } else {
+          const input = prompt("Discount percentage (e.g., 25 for 25%):", "25");
+          value = Math.round(parseFloat(input) * 100); // basis points
+        }
+        if (!value || value <= 0) { alert("Invalid discount value"); return; }
+        const active = confirm("Activate immediately?");
+        try {
+          const data = await req("create", { code, campaign_name: campaign, description, discount_type: type, discount_value: value, active }, COUPONS);
+          if (data.ok) {
+            toast("Coupon created: " + data.coupon.code);
+            await load();
+          } else alert(data.error);
+        } catch (e) { alert(e.message); }
+      };
+      window.editCoupon = async (id) => {
+        try {
+          const data = await req("get", { id }, COUPONS);
+          if (!data.ok) throw Error(data.error);
+          const c = data.coupon;
+          const campaign = prompt("Campaign name:", c.campaign_name || "")?.trim() || null;
+          const description = prompt("Description:", c.description || "")?.trim() || null;
+          const type = prompt("Discount type (fixed_php, percentage, target_price):", c.discount_type);
+          if (!["fixed_php", "percentage", "target_price"].includes(type)) { alert("Invalid discount type"); return; }
+          let value = 0;
+          if (type === "fixed_php" || type === "target_price") {
+            const input = prompt("Discount value in PHP:", (c.discount_value / 100).toFixed(2));
+            value = Math.round(parseFloat(input) * 100);
+          } else {
+            const input = prompt("Discount percentage:", (c.discount_value / 100).toFixed(1));
+            value = Math.round(parseFloat(input) * 100);
+          }
+          if (!value || value <= 0) { alert("Invalid discount value"); return; }
+          const starts = prompt("Start date (ISO, empty for immediate):", c.starts_at ? c.starts_at.slice(0, 16) : "")?.trim() || null;
+          const expires = prompt("Expiration date (ISO, empty for never):", c.expires_at ? c.expires_at.slice(0, 16) : "")?.trim() || null;
+          const maxRed = prompt("Max redemptions (empty for unlimited):", c.max_redemptions || "")?.trim();
+          const maxPerCustomer = prompt("Max per customer:", c.max_redemptions_per_customer || "1")?.trim();
+          const active = confirm("Set as active?");
+          const updateData = {
+            id,
+            campaign_name: campaign,
+            description,
+            discount_type: type,
+            discount_value: value,
+            starts_at: starts,
+            expires_at: expires,
+            max_redemptions: maxRed ? parseInt(maxRed) : null,
+            max_redemptions_per_customer: parseInt(maxPerCustomer) || 1,
+            active,
+          };
+          const result = await req("update", updateData, COUPONS);
+          if (result.ok) {
+            toast("Coupon updated: " + result.coupon.code);
+            await load();
+          } else alert(result.error);
+        } catch (e) { alert(e.message); }
+      };
+      window.duplicateCoupon = async (id) => {
+        if (!confirm("Duplicate this coupon?")) return;
+        try {
+          const data = await req("duplicate", { id }, COUPONS);
+          if (data.ok) {
+            toast("Coupon duplicated: " + data.coupon.code);
+            await load();
+          } else alert(data.error);
+        } catch (e) { alert(e.message); }
+      };
+      window.toggleCouponActive = async (id, active) => {
+        try {
+          const data = await req("toggle_active", { id, active }, COUPONS);
+          if (data.ok) {
+            toast(data.coupon.code + (active ? " activated" : " deactivated"));
+            await load();
+          } else alert(data.error);
+        } catch (e) { alert(e.message); }
+      };
+      window.deleteCoupon = async (id) => {
+        if (!confirm("Delete this coupon? This cannot be undone if there are no redemptions.")) return;
+        const force = confirm("Force delete even if there are confirmed redemptions? (This will orphan redemption records)");
+        try {
+          const data = await req("delete", { id, force }, COUPONS);
+          if (data.ok) {
+            toast("Coupon deleted");
+            await load();
+          } else alert(data.error);
+        } catch (e) { alert(e.message); }
+      };
       // One record expander per application; all record sections live inside it.
       $("cards").addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) return;
@@ -2490,35 +3003,436 @@
           } catch (e) { alert(e.message); }
         };
       }
-      document.querySelectorAll(".nav button[data-tab]").forEach(
-        (b) =>
-          (b.onclick = () => {
-            tab = b.dataset.tab;
-            // Choosing a dashboard tab always leaves any mounted tool and
-            // returns to the dashboard, pushing history so Back goes to the tool.
-            showDashboard({ push: true });
-            document
-              .querySelectorAll(".nav button")
-              .forEach((x) => x.classList.toggle("active", x === b));
-            // Student filters and all other tab-scoped containers are managed
-            // centrally by resetTabScaffold() inside render().
-            // Refresh the integrated capacity block each time Applicants is opened.
-            if (tab === "applicants") capacityDirty = true;
-            render();
-            saveUiState();
-          }),
-      );
-      // Finance / Acquisition Tracker / Masterclass Event are mounted inside the
-      // shell (client-side) instead of navigating away to a separate document.
+      /* ---------------------------------------------------------------- *
+       * Overview command center
+       *
+       * Surfaces real, authorized data from the endpoints the existing
+       * tools already use. Every widget is independently guarded: when a
+       * source is unavailable it says so — a number is never invented and
+       * an unavailable metric is never silently rendered as zero.
+       * Async data is cached briefly so moving in and out of the
+       * Overview never fires redundant requests.
+       * ---------------------------------------------------------------- */
+      function ovIsTestApp(x) {
+        return (
+          /^(internal_.*(qa|test)|sandbox)/i.test(String(x.source || "")) ||
+          /(^|\b)test(\b|$)/i.test(String(x.name || "")) ||
+          String(x.email || "").toLowerCase() === "paymongo-qa@getassistara.com"
+        );
+      }
+      function ovIsDiagApp(x) {
+        return (
+          /^diag(?:nostic)?[-_]/i.test(String(x.email || "")) ||
+          /diagnostic/i.test(String(x.name || "")) ||
+          /diagnostic/i.test(String(x.source || ""))
+        );
+      }
+      // Canonical known payment amount — mirrors Finance. A paid record
+      // without a known amount counts as paid but contributes no revenue
+      // (the amount is genuinely unknown, never assumed).
+      function ovKnownRevenue(x) {
+        const p = Number(x.purchase_amount);
+        if (Number.isFinite(p) && p > 0) return p;
+        const c = Number(x.checkout_amount_php);
+        return Number.isFinite(c) && c > 0 ? c : null;
+      }
+      function ovMoney(php) {
+        if (php == null || !Number.isFinite(Number(php))) return "Unavailable";
+        return "₱" + Number(php).toLocaleString("en-PH", { maximumFractionDigits: 0 });
+      }
+      function ovNum(n) {
+        if (n == null || !Number.isFinite(Number(n))) return "Unavailable";
+        return Number(n).toLocaleString("en-PH");
+      }
+      // Materialise recurring expenses into the current month and sum
+      // their PHP value — the same occurrence model Finance uses.
+      function ovExpensesThisMonth(expenses) {
+        const now = new Date();
+        const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+        const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0);
+        const dayUTC = (d) => {
+          const ms = Date.parse(String(d || "").slice(0, 10) + "T00:00:00Z");
+          return Number.isFinite(ms) ? ms : NaN;
+        };
+        const addMonths = (ms, n) => {
+          const d = new Date(ms);
+          return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, d.getUTCDate());
+        };
+        const STEP = { monthly: 1, quarterly: 3, yearly: 12 };
+        let total = 0,
+          occurrences = 0,
+          schedules = 0;
+        for (const e of expenses) {
+          const amount = Number(e.amount);
+          if (!Number.isFinite(amount)) continue;
+          const php =
+            e.currency === "PHP" ? amount : amount * Number(e.fx_rate_php || 0);
+          if (!(php > 0)) continue;
+          const base = dayUTC(e.expense_date);
+          if (!Number.isFinite(base)) continue;
+          let dates = [];
+          if (!e.recurring) {
+            if (base >= start && base <= end) dates = [base];
+          } else {
+            let stop = end;
+            if (e.ends_on) {
+              const s = dayUTC(e.ends_on);
+              if (Number.isFinite(s)) stop = Math.min(stop, s);
+            }
+            const step = STEP[e.recurrence_frequency] || 1;
+            for (let d = base; d <= stop; d = addMonths(d, step)) {
+              if (d >= start) dates.push(d);
+            }
+          }
+          if (dates.length) {
+            total += php * dates.length;
+            occurrences += dates.length;
+            schedules++;
+          }
+        }
+        return { total, occurrences, schedules };
+      }
+      const ovStat = (value, label, sub, cls) =>
+        '<div class="stat-card' +
+        (cls ? " " + cls : "") +
+        '"><div class="stat-value">' +
+        value +
+        '</div><div class="stat-label">' +
+        label +
+        "</div>" +
+        (sub ? '<div class="stat-sublabel">' + sub + "</div>" : "") +
+        "</div>";
+      const ovSkeleton = () =>
+        '<div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text-sm" style="margin-top:8px"></div>';
+      let overviewCache = null;
+      let overviewLoading = false;
+      const OVERVIEW_TTL = 60000;
+      async function fetchOverviewData() {
+        const [cap, fin, em] = await Promise.allSettled([
+          req("overview", { cohort_code: "founding-2026" }, CAPACITY),
+          req("list", {}, FINANCE),
+          req("overview", {
+            from: new Date(Date.now() - 30 * 86400000).toISOString(),
+            to: new Date().toISOString(),
+          }, EMAIL),
+        ]);
+        return {
+          capacity: cap.status === "fulfilled" ? cap.value : null,
+          capacityError: cap.status === "rejected" ? cap.reason : null,
+          expenses:
+            fin.status === "fulfilled" && Array.isArray(fin.value.expenses)
+              ? fin.value.expenses
+              : null,
+          expensesError: fin.status === "rejected" ? fin.reason : null,
+          email: em.status === "fulfilled" ? em.value : null,
+          emailError: em.status === "rejected" ? em.reason : null,
+        };
+      }
+      function paintOverview(data) {
+        // Academy + revenue KPIs (from already-loaded shell data).
+        const reviewable = activeApps().filter((x) => !currentDecision(x));
+        const paidApps = activeApps().filter(
+          (x) =>
+            String(x.payment_status || "").toLowerCase() === "paid" &&
+            !ovIsTestApp(x) &&
+            !ovIsDiagApp(x),
+        );
+        const revenue = paidApps.reduce((s, x) => s + (ovKnownRevenue(x) || 0), 0);
+        const paidUnknown = paidApps.filter((x) => ovKnownRevenue(x) === null).length;
+        // Acquisition funnel from the shell's own loaded data.
+        const visibleSignups = web.filter(
+          (x) =>
+            !/^diag(?:nostic)?[-_]/i.test(String(x.email || "")) &&
+            !/diagnostic/i.test(String(x.name || "")) &&
+            !/diagnostic/i.test(String(x.source || "")),
+        );
+        const attended = visibleSignups.filter((x) => x.attended).length;
+        const purchased = visibleSignups.filter((x) => x.purchased).length;
+        const pendingPayments = actionablePending().length;
+
+        $("ovKpis").innerHTML =
+          ovStat(ovNum(totalApplications()), "Applications", ovNum(reviewable.length) + " awaiting review") +
+          ovStat(
+            data.capacity ? ovNum(data.capacity.paid) : ovSkeleton(),
+            "Paid enrollments",
+            data.capacity
+              ? ovNum(data.capacity.available) + " of " + ovNum(data.capacity.capacity) + " seats available"
+              : "",
+          ) +
+          ovStat(
+            ovMoney(revenue),
+            "Gross revenue",
+            paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded",
+          ) +
+          ovStat(
+            data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : ovSkeleton(),
+            "Expenses this month",
+            data.expenses
+              ? ovNum(ovExpensesThisMonth(data.expenses).occurrences) + " occurrences across " + ovNum(ovExpensesThisMonth(data.expenses).schedules) + " schedules"
+              : "",
+          );
+
+        // Acquisition funnel.
+        const funnelSteps = [
+          ["Tracked visits", acquisitionVisits.length],
+          ["Webinar signups", visibleSignups.length],
+          ["Applications", totalApplications()],
+          ["Attended", attended],
+          ["Purchased", purchased],
+        ];
+        const funnelMax = Math.max(1, ...funnelSteps.map((s) => s[1]));
+        $("ovFunnel").innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Acquisition funnel</h3><div class="card-subtitle">Last recorded visits, signups, applications and purchases.</div></div></div>' +
+          '<div class="chart-funnel">' +
+          funnelSteps
+            .map(
+              ([label, value]) =>
+                '<div class="chart-funnel-step"><div class="chart-funnel-label">' +
+                label +
+                '</div><div class="chart-funnel-bar" style="width:' +
+                Math.max(2, Math.round((value / funnelMax) * 100)) +
+                '%"></div><div class="chart-funnel-value">' +
+                ovNum(value) +
+                "</div></div>",
+            )
+            .join("") +
+          "</div>";
+
+        // Recent activity — derived from real timestamps only.
+        const events = [];
+        paidApps.forEach((x) => {
+          const t = Date.parse(x.paid_at || "");
+          if (Number.isFinite(t))
+            events.push({
+              t,
+              label: "Payment received",
+              detail: esc(x.name || "Applicant") + " · " + ovMoney(ovKnownRevenue(x)),
+              kind: "success",
+            });
+        });
+        activeApps().forEach((x) => {
+          const t = Date.parse(x.created_at || "");
+          if (Number.isFinite(t))
+            events.push({
+              t,
+              label: "New application",
+              detail: esc(x.name || "Applicant"),
+              kind: "info",
+            });
+        });
+        visibleSignups.forEach((x) => {
+          const t = Date.parse(x.created_at || "");
+          if (Number.isFinite(t))
+            events.push({
+              t,
+              label: "Webinar signup",
+              detail: esc(x.name || "Signup"),
+              kind: "info",
+            });
+        });
+        events.sort((a, b) => b.t - a.t);
+        const recent = events.slice(0, 8);
+        $("ovActivity").innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Recent activity</h3><div class="card-subtitle">Payments, applications and signups.</div></div></div>' +
+          (recent.length
+            ? '<ul class="activityTimeline">' +
+              recent
+                .map(
+                  (e) =>
+                    "<li><time>" +
+                    new Date(e.t).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) +
+                    "</time><div><strong>" +
+                    e.label +
+                    "</strong><div class=\"sub\">" +
+                    e.detail +
+                    "</div></div></li>",
+                )
+                .join("") +
+              "</ul>"
+            : '<div class="empty">No recent activity.</div>');
+
+        // Urgent actions — only real, actionable items.
+        const urgent = [];
+        if (pendingPayments)
+          urgent.push([pendingPayments, "GCash payment" + (pendingPayments === 1 ? "" : "s") + " awaiting verification", "/admin"]);
+        if (data.capacity) {
+          if (data.capacity.waitlist_waiting)
+            urgent.push([data.capacity.waitlist_waiting, "applicant" + (data.capacity.waitlist_waiting === 1 ? "" : "s") + " on the waitlist", "/admin"]);
+          if (data.capacity.exceptions_open)
+            urgent.push([data.capacity.exceptions_open, "open payment exception" + (data.capacity.exceptions_open === 1 ? "" : "s"), "/admin"]);
+        }
+        const emailFailures =
+          data.email && data.email.overview
+            ? Number(data.email.overview.totals?.failed || 0)
+            : 0;
+        if (emailFailures)
+          urgent.push([emailFailures, "failed email" + (emailFailures === 1 ? "" : "s") + " in the last 30 days", "/admin/email"]);
+        $("ovUrgent").innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Urgent actions</h3><div class="card-subtitle">Items that need an admin decision.</div></div></div>' +
+          (urgent.length
+            ? '<div class="grid" style="gap:10px">' +
+              urgent
+                .map(
+                  ([n, label, href]) =>
+                    '<a class="card card-interactive" href="' +
+                    href +
+                    '" style="display:flex;align-items:center;gap:12px"><span class="stat-value" style="color:var(--warning-dark)">' +
+                    ovNum(n) +
+                    '</span><span class="stat-label">' +
+                    label +
+                    "</span></a>",
+                )
+                .join("") +
+              "</div>"
+            : '<div class="empty">Nothing requires action right now.</div>');
+
+        // Email delivery status (30 days).
+        const ov = data.email ? data.email.overview : null;
+        const av = ov ? ov.availability : {};
+        const totals = ov ? ov.totals : {};
+        const measured = ov ? ov.measured : {};
+        const rates = ov ? ov.rates : {};
+        const pct = (v) =>
+          v == null || !Number.isFinite(Number(v)) ? "Unavailable" : (Number(v) * 100).toFixed(1) + "%";
+        $("ovEmail").innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Email delivery</h3><div class="card-subtitle">Last 30 days.</div></div></div>' +
+          (data.emailError
+            ? '<div class="alert alert-warning"><div><div class="alert-title">Delivery status unavailable</div><p>' +
+              esc(data.emailError.message || "Could not load email status.") +
+              "</p></div></div>"
+            : '<div class="grid-stats-2">' +
+              ovStat(ovNum(totals.accepted), "Accepted (30d)", ovNum(totals.attempts) + " provider attempts") +
+              ovStat(
+                av.deliveryEvents ? ovNum(measured.delivered) : "Unavailable",
+                "Delivered",
+                av.deliveryEvents ? "Delivery rate " + pct(rates.deliveryRate) : "Provider webhooks not configured",
+              ) +
+              ovStat(
+                av.deliveryEvents ? ovNum(measured.bounced) : "Unavailable",
+                "Bounced",
+                av.deliveryEvents ? "Bounce rate " + pct(rates.bounceRate) : "Provider webhooks not configured",
+              ) +
+              ovStat(ovNum(totals.failed), "Failed", "Definitive provider rejection") +
+              "</div>" +
+              '<p class="sub" style="margin-top:12px">Acceptance is exact. Delivery, bounces, opens and clicks are measured only from provider webhook events — where webhooks are not configured the metric is shown as Unavailable rather than zero.</p>');
+
+        // Finance summary.
+        $("ovFinance").innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Finance summary</h3><div class="card-subtitle">Gross revenue (all paid, known amounts) and current-month expenses.</div></div><div class="page-actions"><a class="btn btn-ghost" href="/admin/finance">Open Finance</a></div></div>' +
+          '<div class="grid-stats-3">' +
+          ovStat(ovMoney(revenue), "Gross revenue", paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded") +
+          ovStat(
+            data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : "Unavailable",
+            "Expenses this month",
+            data.expenses
+              ? ovNum(ovExpensesThisMonth(data.expenses).schedules) + " recurring / one-time schedules"
+              : "",
+          ) +
+          ovStat(
+            data.expenses && revenue != null
+              ? ovMoney(revenue - ovExpensesThisMonth(data.expenses).total)
+              : "Unavailable",
+            "Net (revenue − expenses)",
+            "Known revenue minus current-month expenses",
+          ) +
+          "</div>" +
+          (data.expensesError
+            ? '<div class="alert alert-warning" style="margin-top:12px"><div><div class="alert-title">Expenses unavailable</div><p>' +
+              esc(data.expensesError.message || "Could not load expenses.") +
+              "</p></div></div>"
+            : "");
+      }
+      async function renderOverview(force = false) {
+        const view = $("overviewView");
+        if (!view) return;
+        const now = Date.now();
+        if (!force && overviewCache && now - overviewCache.at < OVERVIEW_TTL) {
+          paintOverview(overviewCache.data);
+          return;
+        }
+        // First paint: synchronous KPIs and funnel render immediately
+        // from already-loaded data; async widgets paint as skeletons
+        // and fill once their endpoints resolve.
+        if (!overviewCache) {
+          paintOverview({
+            capacity: null,
+            expenses: null,
+            email: null,
+          });
+        }
+        if (overviewLoading) return;
+        overviewLoading = true;
+        try {
+          const data = await fetchOverviewData();
+          overviewCache = { at: Date.now(), data };
+          if (agentView === "overview") paintOverview(data);
+        } catch {
+          // Each widget already guards its own failure; a total
+          // failure here leaves the synchronous widgets intact.
+        } finally {
+          overviewLoading = false;
+        }
+      }
+      // Sidebar navigation — dashboard tabs, mounted tools and the
+      // Overview all live in the one shell.
       document
-        .querySelectorAll(".nav button[data-tool]")
-        .forEach((b) => (b.onclick = () => openTool(b.dataset.tool)));
+        .querySelectorAll(".sidebar-nav .nav-item[data-tab]")
+        .forEach(
+          (b) =>
+            (b.onclick = () => {
+              tab = b.dataset.tab;
+              closeMobileSidebar();
+              // Choosing a dashboard tab always leaves any mounted tool
+              // or the Overview and returns to the dashboard, pushing
+              // history so Back goes to where the Admin was.
+              showDashboard({ push: true });
+              // Tab-scoped containers are managed centrally by
+              // resetTabScaffold() inside render(); capacity is (re)loaded
+              // each time Applicants or Cohorts is opened.
+              if (tab === "applicants" || tab === "cohorts") capacityDirty = true;
+              render();
+              saveUiState();
+            }),
+        );
+      document
+        .querySelectorAll(".sidebar-nav .nav-item[data-tool]")
+        .forEach((b) =>
+          (b.onclick = () => {
+            closeMobileSidebar();
+            openTool(b.dataset.tool);
+          }),
+        );
+      document
+        .querySelectorAll('.sidebar-nav .nav-item[data-view="overview"]')
+        .forEach(
+          (b) =>
+            (b.onclick = () => {
+              closeMobileSidebar();
+              showOverview();
+            }),
+        );
+      // Sidebar collapse / expand (persisted) and the mobile drawer.
+      $("sidebarCollapse").onclick = toggleSidebar;
+      $("menuToggle").onclick = openMobileSidebar;
+      $("sidebarOverlay").onclick = closeMobileSidebar;
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMobileSidebar();
+      });
+      window.addEventListener("resize", () => {
+        if (window.innerWidth >= 1024) closeMobileSidebar();
+      });
+      applySidebarState();
       $("search").oninput = () => { render(); saveUiState(); };
       // Student filter/sort listeners
       const studentFilter = $("studentFilter");
       if (studentFilter) studentFilter.onchange = () => { render(); saveUiState(); };
       const studentSort = $("studentSort");
       if (studentSort) studentSort.onchange = () => { render(); saveUiState(); };
+      // Coupon filter/sort listeners
+      const couponFilter = $("couponFilter");
+      if (couponFilter) couponFilter.onchange = () => { render(); saveUiState(); };
+      const couponSort = $("couponSort");
+      if (couponSort) couponSort.onchange = () => { render(); saveUiState(); };
       // Capture scroll position (and any last change) as the tab leaves for a tool.
       window.addEventListener("pagehide", saveUiState);
       $("login").onsubmit = async (event) => {
@@ -2567,6 +3481,9 @@
         document.documentElement.removeAttribute("data-admin-session");
         $("login").style.display = "none";
         $("dash").style.display = "block";
+        $("sidebar").style.display = "flex";
+        $("workspaceTop").style.display = "block";
+        $("pageHeader").style.display = "block";
         $("logout").style.display = "block";
         $("testPortal").style.display = "block";
       }
@@ -2577,6 +3494,7 @@
         // the session in place so a returning visitor never sees the login form
         // or a separate loading screen.
         show();
+        applySidebarState();
         try {
           await req("session-check", {}, LOGIN);
         } catch {
@@ -2584,6 +3502,9 @@
           adminSession.clear();
           document.documentElement.removeAttribute("data-admin-session");
           $("dash").style.display = "none";
+          $("sidebar").style.display = "none";
+          $("workspaceTop").style.display = "none";
+          $("pageHeader").style.display = "none";
           $("logout").style.display = "none";
           $("testPortal").style.display = "none";
           $("login").style.display = "block";
@@ -2777,7 +3698,7 @@
       }
       function markNav(selector) {
         document
-          .querySelectorAll(".nav button")
+          .querySelectorAll(".sidebar-nav .nav-item")
           .forEach((x) => x.classList.toggle("active", x.matches(selector)));
       }
       function captureScroll() {
@@ -2786,6 +3707,25 @@
       function restoreScroll(name) {
         const y = viewScroll[name] || 0;
         requestAnimationFrame(() => window.scrollTo(0, y));
+      }
+
+      // Show the Overview command center (the Admin home).
+      function showOverview(opts = {}) {
+        const switching = agentView !== "overview";
+        if (switching) captureScroll();
+        agentView = "overview";
+        if (mountedTool) disposeTool();
+        $("toolView").hidden = true;
+        $("toolView").replaceChildren();
+        $("dashBody").style.display = "";
+        $("overviewView").hidden = false;
+        $("tabScaffold").style.display = "none";
+        if (switching && opts.push !== false)
+          history.pushState({ view: "overview" }, "", "/admin/overview");
+        markNav('.sidebar-nav .nav-item[data-view="overview"]');
+        updateChrome(DASH_VIEW_META.overview);
+        if (switching) restoreScroll("overview");
+        renderOverview();
       }
 
       // Show the dashboard and leave any mounted tool. `push` adds a history
@@ -2798,9 +3738,12 @@
         $("toolView").hidden = true;
         $("toolView").replaceChildren();
         $("dashBody").style.display = "";
+        $("overviewView").hidden = true;
+        $("tabScaffold").style.display = "";
         if (switching && opts.push !== false)
           history.pushState({ view: "dashboard" }, "", "/admin");
-        markNav('.nav button[data-tab="' + tab + '"]');
+        markNav('.sidebar-nav .nav-item[data-tab="' + tab + '"]');
+        updateChrome(DASH_VIEW_META[tab] || DASH_VIEW_META.applicants);
         if (switching) restoreScroll("dashboard");
       }
 
@@ -2814,7 +3757,8 @@
         if (switching && opts.push !== false) history.pushState({ view: name }, "", t.path);
         $("dashBody").style.display = "none";
         $("toolView").hidden = false;
-        markNav('.nav button[data-tool="' + name + '"]');
+        markNav('.sidebar-nav .nav-item[data-tool="' + name + '"]');
+        updateChrome(TOOL_VIEW_META[name] || TOOL_VIEW_META.acquisition);
         return mountTool(name);
       }
 
@@ -3016,19 +3960,24 @@
       window.addEventListener("popstate", () => {
         const name = pathTool(location.pathname);
         if (name) openTool(name, { push: false });
+        else if (location.pathname === "/admin/overview")
+          showOverview({ push: false });
         else showDashboard({ push: false });
       });
 
       // Runs after a successful login or session restore: honour the current
       // URL, then let the dashboard data load underneath whichever view shows.
+      // /admin and /admin/overview both open the Overview command center.
       async function enterApp() {
         const ui = readUiState();
         applyUiState(ui);
         const routeTool = pathTool(location.pathname);
         if (routeTool) {
           await openTool(routeTool, { push: false });
+        } else if (location.pathname === "/admin/overview") {
+          showOverview({ push: false });
         } else {
-          showDashboard({ push: false });
+          showOverview({ push: false });
         }
         try {
           await load();
