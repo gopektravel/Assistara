@@ -1,0 +1,156 @@
+/* ==========================================================================
+   Assistara Admin — Layout
+   App shell grid, workspace, responsive grid utilities.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- *
+ * App shell: sidebar + full-width workspace
+ * ---------------------------------------------------------------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+  transition: grid-template-columns var(--transition-slow);
+}
+
+/* When the sidebar collapses to its icon rail, the workspace takes the
+   freed width — no dead gap between rail and content. */
+@media (min-width: 1024px) {
+  .app-shell:has(.sidebar.collapsed) {
+    grid-template-columns: var(--sidebar-collapsed-width) minmax(0, 1fr);
+  }
+}
+
+.workspace {
+  grid-column: 2;
+  min-width: 0; /* Prevent grid blowout from wide tables/charts */
+  padding: var(--space-workspace);
+  padding-top: var(--space-component);
+}
+
+.workspace-inner {
+  display: grid;
+  gap: var(--space-section);
+  align-content: start;
+}
+
+/* Content width limits — text-heavy sections only */
+.content-narrow {
+  max-width: 720px;
+}
+
+.content-standard {
+  max-width: 1200px;
+}
+
+/* Charts, tables and analytics stay full width */
+
+/* ---------------------------------------------------------------- *
+ * 12-column fluid grid
+ * ---------------------------------------------------------------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--space-component);
+}
+
+.col-12 { grid-column: span 12; }
+.col-11 { grid-column: span 11; }
+.col-10 { grid-column: span 10; }
+.col-9 { grid-column: span 9; }
+.col-8 { grid-column: span 8; }
+.col-7 { grid-column: span 7; }
+.col-6 { grid-column: span 6; }
+.col-5 { grid-column: span 5; }
+.col-4 { grid-column: span 4; }
+.col-3 { grid-column: span 3; }
+
+/* Auto-fit card grid — fills available width */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-card-gap);
+}
+
+.grid-cards-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-component);
+}
+
+/* Stat grids */
+.grid-stats-2,
+.grid-stats-3,
+.grid-stats-4 {
+  display: grid;
+  gap: var(--space-component);
+}
+
+.grid-stats-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-stats-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-stats-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Form grids */
+.form-grid {
+  display: grid;
+  gap: var(--space-component);
+}
+
+.form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.form-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.form-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.field-span-2 { grid-column: span 2; }
+.field-span-3 { grid-column: span 3; }
+.field-span-full { grid-column: 1 / -1; }
+
+/* ---------------------------------------------------------------- *
+ * Responsive — tablet
+ * ---------------------------------------------------------------- */
+@media (max-width: 1023px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace {
+    grid-column: 1;
+    padding: var(--space-workspace-tablet);
+    padding-top: var(--space-component);
+  }
+
+  .col-11, .col-10, .col-9, .col-8, .col-7 { grid-column: span 12; }
+  .col-6, .col-5, .col-4 { grid-column: span 6; }
+  .col-3 { grid-column: span 6; }
+
+  .grid-stats-4,
+  .grid-stats-3 { grid-template-columns: repeat(2, 1fr); }
+
+  .form-grid-4,
+  .form-grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .field-span-3, .field-span-2 { grid-column: span 2; }
+}
+
+/* ---------------------------------------------------------------- *
+ * Responsive — mobile
+ * ---------------------------------------------------------------- */
+@media (max-width: 639px) {
+  .workspace {
+    padding: var(--space-workspace-mobile);
+    padding-top: var(--space-component);
+  }
+
+  .col-6, .col-5, .col-4, .col-3 { grid-column: span 12; }
+
+  .grid-stats-4,
+  .grid-stats-3,
+  .grid-stats-2 { grid-template-columns: 1fr; }
+
+  .form-grid-2,
+  .form-grid-3,
+  .form-grid-4 { grid-template-columns: 1fr; }
+  .field-span-2, .field-span-3 { grid-column: span 1; }
+
+  .grid-cards {
+    grid-template-columns: 1fr;
+  }
+}

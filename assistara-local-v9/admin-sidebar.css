@@ -1,0 +1,431 @@
+/* ==========================================================================
+   Assistara Admin — Sidebar
+   Persistent left navigation: groups, items, collapse, mobile drawer.
+   ========================================================================== */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  z-index: 100;
+  width: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+  color: #fff;
+  transition: width var(--transition-slow);
+}
+
+/* ---------------------------------------------------------------- *
+ * Sidebar header (brand + collapse)
+ * ---------------------------------------------------------------- */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-component);
+  padding: 16px;
+  border-bottom: 1px solid var(--sidebar-divider);
+  min-height: 64px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: var(--text-body-lg);
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-brand img {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.sidebar-brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-collapse {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--sidebar-border);
+  background: transparent;
+  color: var(--sidebar-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.sidebar-collapse:hover {
+  background: var(--sidebar-hover);
+  color: #fff;
+}
+
+.sidebar-collapse:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.sidebar-collapse svg {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--transition-slow);
+}
+
+.sidebar.collapsed .sidebar-collapse svg {
+  transform: rotate(180deg);
+}
+
+/* ---------------------------------------------------------------- *
+ * Sidebar nav
+ * ---------------------------------------------------------------- */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-border) transparent;
+}
+
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.nav-group-title {
+  font: var(--text-micro);
+  letter-spacing: 0.08em;
+  color: var(--sidebar-muted);
+  padding: 10px 16px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: #fff;
+  font: var(--text-body-sm);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-base), border-color var(--transition-base);
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background: var(--sidebar-hover);
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: -2px;
+}
+
+.nav-item.active {
+  background: var(--sidebar-active);
+  border-left-color: var(--yellow);
+  font-weight: 700;
+}
+
+.nav-item-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--sidebar-muted);
+  display: grid;
+  place-items: center;
+}
+
+.nav-item-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.nav-item.active .nav-item-icon {
+  color: var(--yellow);
+}
+
+.nav-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-item-count {
+  margin-left: auto;
+  font: var(--text-micro);
+  color: var(--sidebar-muted);
+  background: var(--sidebar-hover);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+}
+
+.nav-item.active .nav-item-count {
+  color: var(--yellow);
+  background: rgba(255, 213, 31, 0.12);
+}
+
+/* External quick-tool links open in a new tab */
+.nav-item.nav-external .nav-item-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------------------------------------------------------------- *
+ * Collapsed state — icons-only rail
+ * ---------------------------------------------------------------- */
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar.collapsed .nav-group-title,
+.sidebar.collapsed .nav-item-label,
+.sidebar.collapsed .nav-item-count,
+.sidebar.collapsed .sidebar-brand span,
+.sidebar.collapsed .sidebar-user-info,
+.sidebar.collapsed .sidebar-actions {
+  display: none;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 16px 8px;
+}
+
+.sidebar.collapsed .sidebar-user {
+  justify-content: center;
+}
+
+/* Tooltips on collapsed icons */
+.sidebar.collapsed .nav-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  background: var(--sidebar-hover);
+  border: 1px solid var(--sidebar-border);
+  color: #fff;
+  font: var(--text-caption);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+  z-index: 200;
+}
+
+.sidebar.collapsed .nav-item:hover::after,
+.sidebar.collapsed .nav-item:focus-visible::after {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------- *
+ * Sidebar footer (user + actions)
+ * ---------------------------------------------------------------- */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--sidebar-divider);
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebar-user-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sidebar-border);
+  display: grid;
+  place-items: center;
+  font: var(--text-caption);
+  font-weight: 700;
+  color: #fff;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font: var(--text-body-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  font: var(--text-micro);
+  color: var(--sidebar-muted);
+}
+
+.sidebar-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sidebar-action {
+  flex: 1;
+  padding: 8px;
+  font: var(--text-caption);
+  font-weight: 700;
+  color: #fff;
+  background: var(--sidebar-hover);
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-base);
+}
+
+.sidebar-action:hover {
+  background: var(--sidebar-border);
+}
+
+.sidebar-action:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.sidebar-action.primary {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--ink);
+}
+
+.sidebar-action.primary:hover {
+  background: var(--yellow-hover);
+}
+
+/* ---------------------------------------------------------------- *
+ * Mobile — slide-out drawer with overlay
+ * ---------------------------------------------------------------- */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(21, 21, 21, 0.5);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-slow), visibility var(--transition-slow);
+}
+
+.sidebar-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform var(--transition-slow);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Collapsed rail does not apply on mobile */
+  .sidebar.collapsed {
+    width: 260px;
+  }
+
+  .sidebar.collapsed .nav-group-title,
+  .sidebar.collapsed .nav-item-label,
+  .sidebar.collapsed .nav-item-count,
+  .sidebar.collapsed .sidebar-brand span,
+  .sidebar.collapsed .sidebar-user-info,
+  .sidebar.collapsed .sidebar-actions {
+    display: block;
+  }
+
+  .sidebar.collapsed .nav-item {
+    justify-content: flex-start;
+    padding: 10px 16px;
+  }
+
+  .sidebar.collapsed .nav-item::after {
+    display: none;
+  }
+
+  .sidebar.collapsed .sidebar-header {
+    justify-content: space-between;
+    padding: 16px;
+  }
+
+  .sidebar.collapsed .sidebar-collapse svg {
+    transform: none;
+  }
+
+  /* The collapse toggle is not used on mobile (drawer instead) */
+  .sidebar-collapse {
+    display: none;
+  }
+}
+
+/* Hamburger toggle — visible only on mobile */
+.menu-toggle {
+  display: none;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.menu-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.menu-toggle:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1023px) {
+  .menu-toggle {
+    display: grid;
+  }
+}

@@ -1,0 +1,150 @@
+/* ==========================================================================
+   Assistara Admin — Page Header
+   Shared header: breadcrumbs, title, subtitle, contextual actions.
+   ========================================================================== */
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-component);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-section);
+  padding-bottom: var(--space-component);
+  border-bottom: 1px solid var(--line);
+}
+
+.page-header-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-component);
+  min-width: 0;
+}
+
+.page-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--text-caption);
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.page-breadcrumbs a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.page-breadcrumbs a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.page-breadcrumbs .separator {
+  color: var(--line);
+}
+
+.page-title {
+  font: var(--text-h1);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font: var(--text-caption);
+  color: var(--muted);
+  margin-top: 4px;
+  max-width: 640px;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------- *
+ * Top utility bar — search, session actions (replaces old .top)
+ * ---------------------------------------------------------------- */
+.workspace-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-component);
+  margin-bottom: var(--space-section);
+}
+
+.workspace-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 420px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  min-height: 40px;
+}
+
+.workspace-search svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+
+.workspace-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: var(--text-body);
+  color: var(--ink);
+  padding: 8px 0;
+}
+
+.workspace-search input::placeholder {
+  color: var(--muted);
+}
+
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-actions .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-actions {
+    width: 100%;
+  }
+
+  .page-actions .btn {
+    flex: 1;
+  }
+
+  .workspace-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workspace-search {
+    max-width: none;
+  }
+
+  .session-actions {
+    width: 100%;
+  }
+}
