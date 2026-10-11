@@ -4,13 +4,10 @@
  * Provider priority: Resend → Brevo → Sender.net
  */
 
-import {
-  planTrackableLinks,
-  applyTracking,
-  signOpenToken,
-  signClickToken,
-  type TrackableLink,
-} from './email-tracking.ts';
+// No custom tracking — we rely on provider-native tracking (Resend, Brevo, Sender)
+// via their webhooks and APIs. The gateway only ensures:
+//   * idempotency, suppression, quota, fallback, previews
+//   * native tracking headers are passed through to providers that support them
 
 // Utility: base64 encode Uint8Array
 function b64(bytes: Uint8Array): string {
@@ -253,15 +250,6 @@ export class EmailDelivery {
         await this.captureRender(logId, options);
       }
 
-      // First-party (Assistara-owned) tracking: inject the open pixel and rewrite
-      // links to signed redirects BEFORE provider selection, so it is identical
-      // across a Resend -> Brevo -> Sender fallback. Fully fail-open: if tracking
-      // is not configured (no TRACKING_SECRET) or anything fails, the email is
-      // sent byte-identical to before.
-      const outbound: EmailDeliveryOptions = logId
-        ? { ...options, html: await this.instrumentTracking(logId, options, logRow) }
-        : options;
-
       // Get available providers in priority order
       let providers = await this.getAvailableProviders(1);
       // Test-only: pin a single provider (still respects enabled/cooldown/quota)
@@ -292,7 +280,7 @@ export class EmailDelivery {
 
         try {
           attemptNo++;
-          const result = await this.sendViaProvider(provider, outbound);
+          const result = await this.sendViaProvider(provider, options);
           await this.recordAttempt(logId, idempotencyKey, provider.provider, attemptNo, result);
 
           if (result.success) {
@@ -786,101 +774,6 @@ export class EmailDelivery {
       });
     } catch {
       // never block a send on preview capture
-    }
-  }
-
-  // ---- First-party tracking instrumentation (best-effort; never alters a send)
-
-  /**
-   * Return the HTML to actually send: identical to the input unless first-party
-   * tracking is configured, in which case a pixel is inserted and trackable links
-   * are rewritten to signed redirects. Persisting the opaque tracking id + link
-   * map happens BEFORE the email leaves, so every URL we emit is resolvable.
-   */
-  private async instrumentTracking(
-    logId: string,
-    options: EmailDeliveryOptions,
-    existing: { tracking_id?: string | null } | null,
-  ): Promise<string> {
-    const original = options.html || '';
-    try {
-      const secret = Deno.env.get('TRACKING_SECRET') || '';
-      if (!secret || !original) return original;
-      if (!/<a\b|<\/body>/i.test(original)) return original;
-
-      const base = (
-        Deno.env.get('TRACKING_BASE_URL') || `${this.supabaseUrl}/functions/v1/email-track`
-      ).replace(/\/+$/, '');
-
-      const links = planTrackableLinks(original, { baseUrl: base, maxLinks: 50 });
-
-      // Reuse an existing tracking id (idempotent retry); otherwise mint + persist.
-      let trackingId = existing?.tracking_id || null;
-      if (!trackingId) {
-        trackingId = crypto.randomUUID().replace(/-/g, '');
-        if (!(await this.persistTracking(logId, trackingId, links))) return original;
-      }
-
-      const openToken = await signOpenToken(secret, trackingId);
-      const clickUrls = new Map<number, string>();
-      for (const link of links) {
-        clickUrls.set(link.index, `${base}/c?t=${await signClickToken(secret, trackingId, link.index)}`);
-      }
-
-      return applyTracking(original, {
-        openPixelUrl: `${base}/o?t=${openToken}`,
-        clickUrls,
-        baseUrl: base,
-        maxLinks: 50,
-      });
-    } catch {
-      return original;
-    }
-  }
-
-  private async persistTracking(logId: string, trackingId: string, links: TrackableLink[]): Promise<boolean> {
-    try {
-      const patch = await fetch(`${this.supabaseUrl}/rest/v1/email_delivery_log?id=eq.${logId}`, {
-        method: 'PATCH',
-        headers: {
-          apikey: this.supabaseKey,
-          Authorization: `Bearer ${this.supabaseKey}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
-        },
-        body: JSON.stringify({
-          tracking_id: trackingId,
-          has_first_party_tracking: true,
-          updated_at: new Date().toISOString(),
-        }),
-      });
-      if (!patch.ok) return false;
-
-      if (links.length) {
-        const insert = await fetch(
-          `${this.supabaseUrl}/rest/v1/email_tracking_links?on_conflict=delivery_log_id,link_index`,
-          {
-            method: 'POST',
-            headers: {
-              apikey: this.supabaseKey,
-              Authorization: `Bearer ${this.supabaseKey}`,
-              'Content-Type': 'application/json',
-              Prefer: 'resolution=merge-duplicates,return=minimal',
-            },
-            body: JSON.stringify(
-              links.map((l) => ({
-                delivery_log_id: logId,
-                link_index: l.index,
-                destination_url: l.url,
-              })),
-            ),
-          },
-        );
-        if (!insert.ok) return false;
-      }
-      return true;
-    } catch {
-      return false;
     }
   }
 

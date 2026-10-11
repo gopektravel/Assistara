@@ -770,16 +770,6 @@
       "dest": "/index.html"
     },
     {
-      "src": "/t/o",
-      "methods": ["GET"],
-      "dest": "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/email-track/o"
-    },
-    {
-      "src": "/t/c",
-      "methods": ["GET"],
-      "dest": "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/email-track/c"
-    },
-    {
       "src": "/(.*)",
       "dest": "/404.html"
     }

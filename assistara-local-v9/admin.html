@@ -6,16 +6,21 @@
     <meta name="robots" content="noindex,nofollow" />
     <title>Admin | Assistara</title>
     <link rel="icon" href="/assistara-logo.svg" />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/admin-tokens.css" />
+    <link rel="stylesheet" href="/admin-components.css" />
+    <link rel="stylesheet" href="/admin-charts.css" />
+    <link rel="stylesheet" href="/admin-layout.css" />
+    <link rel="stylesheet" href="/admin-sidebar.css" />
+    <link rel="stylesheet" href="/admin-header.css" />
     <style>
       :root {
-        --ink: #171717;
-        --cream: #f7f5ef;
-        --line: #e2ded4;
-        --muted: #746e65;
+        --ink: #151515;
+        --cream: #fbfaf6;
+        --line: #dedbd3;
+        --muted: #66625f;
         --yellow: #ffd51f;
         --green: #e8f7ed;
-        --greenInk: #1d6a3b;
+        --greenInk: #156b35;
         --red: #fde9e7;
         --redInk: #8b2825;
         --orange: #fff0db;
@@ -35,9 +40,32 @@
         color: var(--ink);
         font-family: "DM Sans", sans-serif;
       }
+      /* App shell — sidebar + full-width workspace (see admin-*.css) */
       .shell {
-        width: min(1120px, calc(100% - 28px));
-        margin: auto;
+        width: 100%;
+      }
+      /* Sidebar visibility — hidden until a session exists */
+      #sidebar {
+        display: none;
+      }
+      html[data-admin-session="1"] #sidebar {
+        display: flex;
+      }
+      /* Workspace chrome — hidden until a session exists */
+      #workspaceTop,
+      #pageHeader {
+        display: none;
+      }
+      html[data-admin-session="1"] #workspaceTop,
+      html[data-admin-session="1"] #pageHeader {
+        display: block;
+      }
+      /* Pre-session: no chrome, just the centered login */
+      #workspace {
+        padding-top: 0;
+      }
+      html[data-admin-session="1"] #workspace {
+        padding-top: var(--space-component);
       }
       .top {
         margin-top: 16px;
@@ -169,27 +197,7 @@
       }
       .dash {
         display: none;
-        padding: 24px 0 60px;
-      }
-      .nav {
-        margin: 18px 0 14px;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 15px;
-        display: flex;
-        gap: 18px;
-        padding: 0 14px;
-        overflow: auto;
-      }
-      .nav button {
-        border: 0;
-        background: none;
-        padding: 15px 2px;
-        font-weight: 700;
-        white-space: nowrap;
-      }
-      .nav button.active {
-        border-bottom: 3px solid #171717;
+        padding: 0 0 60px;
       }
       .alert {
         background: #fff8dc;
@@ -668,47 +676,6 @@
           margin-top: 10px;
         }
       }
-      .quick {
-        display: flex;
-        gap: 3px;
-        flex-wrap: wrap;
-        margin: 0;
-      }
-      .quick a {
-        min-height: 32px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid transparent;
-        background: transparent;
-        border-radius: 8px;
-        padding: 6px 8px;
-        color: var(--ink);
-        font-size: 12px;
-        font-weight: 700;
-        text-decoration: none;
-        transition: background 0.15s ease, color 0.15s ease;
-      }
-      .quick svg {
-        width: 15px;
-        height: 15px;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        fill: none;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-      .quick a:hover {
-        background: #fff;
-        border-color: var(--line);
-      }
-      .adminHead {
-        display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        align-items: end;
-        flex-wrap: wrap;
-      }
       .callDetail {
         display: none;
         border-top: 1px solid var(--line);
@@ -968,69 +935,144 @@
 </head>
   <body>
     <script>try{if(localStorage.getItem("assistara_admin_token")||sessionStorage.getItem("assistara_admin_token"))document.documentElement.setAttribute("data-admin-session","1");}catch(e){}</script>
-    <div class="shell">
-      <div class="top">
-        <div class="brand">
-          <img src="/assistara-logo.svg" /><span>Assistara Admin</span>
-        </div>
-        <div class="actions">
-          <button id="testPortal" style="display: none">
-            Test student portal
+    <a class="skip-link" href="#workspace">Skip to content</a>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
+        <div class="sidebar-header">
+          <a class="sidebar-brand" href="/admin"><img src="/assistara-logo.svg" alt="Assistara" /><span>Assistara Admin</span></a>
+          <button class="sidebar-collapse" id="sidebarCollapse" type="button" aria-label="Collapse sidebar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
           </button>
-          <button id="logout" style="display: none">Log out</button>
         </div>
-      </div>
-      <form id="login" class="login" autocomplete="on">
-        <h1>Admin login</h1>
-        <p>Manage Assistara operations.</p>
-        <label class="field"
-          ><span>Username</span
-          ><input id="username" name="username" autocomplete="username" value="admin" /></label
-        ><label class="field"
-          ><span>Password</span
-          ><input id="password" name="password" type="password" autocomplete="current-password" /></label
-        ><button id="loginBtn" class="main" type="submit">Log in</button>
-        <div id="loginError" class="error" role="alert" aria-live="polite"></div>
-      </form>
-      <section id="dash" class="dash">
-        <div class="adminHead">
-          <div>
-            <h1>Admin</h1>
-            <div class="sub">
-              Applications, students, acquisition tracking and B2B discovery calls.
+        <nav class="sidebar-nav" aria-label="Admin sections">
+          <div class="nav-group">
+            <div class="nav-group-title">Overview</div>
+            <button class="nav-item" type="button" data-view="overview" data-tooltip="Dashboard">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+              <span class="nav-item-label">Dashboard</span>
+            </button>
+          </div>
+          <div class="nav-group">
+            <div class="nav-group-title">Academy</div>
+            <button class="nav-item" type="button" data-tab="applicants" data-tooltip="Applications">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg></span>
+              <span class="nav-item-label">Applications</span>
+            </button>
+            <button class="nav-item" type="button" data-tab="students" data-tooltip="Students">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              <span class="nav-item-label">Students</span>
+            </button>
+            <button class="nav-item" type="button" data-tab="cohorts" data-tooltip="Cohorts & Enrollment">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 4.9-9 4.9-9-4.9z"/><path d="m3 11.9 9 4.9 9-4.9"/><path d="m3 16.9 9 4.9 9-4.9"/></svg></span>
+              <span class="nav-item-label">Cohorts</span>
+            </button>
+            <button class="nav-item" type="button" data-tab="coupons" data-tooltip="Coupons">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg></span>
+              <span class="nav-item-label">Coupons</span>
+            </button>
+          </div>
+          <div class="nav-group">
+            <div class="nav-group-title">Marketing</div>
+            <button class="nav-item" type="button" data-tool="acquisition" data-tooltip="Acquisition Tracker">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
+              <span class="nav-item-label">Acquisition Tracker</span>
+            </button>
+            <button class="nav-item" type="button" data-tab="webinar" data-tooltip="Webinar Signups">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/></svg></span>
+              <span class="nav-item-label">Webinar Signups</span>
+            </button>
+            <button class="nav-item" type="button" data-tool="masterclass" data-tooltip="Masterclass Event">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m10 15 5-3-5-3z"/></svg></span>
+              <span class="nav-item-label">Masterclass Event</span>
+            </button>
+            <button class="nav-item" type="button" data-tool="email" data-tooltip="Email Command Center">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+              <span class="nav-item-label">Email Command Center</span>
+            </button>
+          </div>
+          <div class="nav-group">
+            <div class="nav-group-title">Business</div>
+            <button class="nav-item" type="button" data-tool="finance" data-tooltip="Finance">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></span>
+              <span class="nav-item-label">Finance</span>
+            </button>
+            <button class="nav-item" type="button" data-tab="b2b" data-tooltip="B2B Discovery">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>
+              <span class="nav-item-label">B2B</span>
+            </button>
+          </div>
+          <div class="nav-group">
+            <div class="nav-group-title">Quick tools</div>
+            <a class="nav-item nav-external" href="https://mail.nameslink.com/" target="_blank" rel="noopener" data-tooltip="Email">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+              <span class="nav-item-label">Email</span>
+            </a>
+            <a class="nav-item nav-external" href="https://app.clickup.com/1300450000003242/v/s/1300450000016533" target="_blank" rel="noopener" data-tooltip="ClickUp">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7 7 7 7-7"/><path d="m8 12 4 4 4-4"/><path d="m11 17 1 1 1-1"/></svg></span>
+              <span class="nav-item-label">ClickUp</span>
+            </a>
+            <a class="nav-item nav-external" href="https://supabase.com/dashboard/project/jhmmwleejgidrxavzdlq" target="_blank" rel="noopener" data-tooltip="Database">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="3"/><path d="M5 5.5v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/><path d="M5 12.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span>
+              <span class="nav-item-label">Database</span>
+            </a>
+            <a class="nav-item nav-external" href="https://drive.google.com/drive/folders/1JoAQPRC9PsPw3ccEgZ7GXRtXt72ahIwQ" target="_blank" rel="noopener" data-tooltip="Drive">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5h6l1.8 2H20a1.5 1.5 0 0 1 1.5 1.5v6.5A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5V9A1.5 1.5 0 0 1 4 7.5Z"/><path d="M3 10h18"/></svg></span>
+              <span class="nav-item-label">Drive</span>
+            </a>
+          </div>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-user-avatar" aria-hidden="true">A</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Administrator</div>
+              <div class="sidebar-user-role">Admin</div>
             </div>
           </div>
-          <div class="quick">
-            <a href="https://mail.nameslink.com/" target="_blank"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Email</a
-            ><a
-              href="https://app.clickup.com/1300450000003242/v/s/1300450000016533"
-              target="_blank"
-              ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 7 7 7 7-7"/><path d="m8 12 4 4 4-4"/><path d="m11 17 1 1 1-1"/></svg>ClickUp</a
-            ><a
-              href="https://supabase.com/dashboard/project/jhmmwleejgidrxavzdlq"
-              target="_blank"
-              ><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="3"/><path d="M5 5.5v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/><path d="M5 12.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>Database</a
-            ><a
-              href="https://drive.google.com/drive/folders/1JoAQPRC9PsPw3ccEgZ7GXRtXt72ahIwQ"
-              target="_blank"
-              ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h6l1.8 2H20a1.5 1.5 0 0 1 1.5 1.5v6.5A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5V9A1.5 1.5 0 0 1 4 7.5Z"/><path d="M3 10h18"/></svg>Drive</a
-            >
+          <div class="sidebar-actions">
+            <button class="sidebar-action primary" id="testPortal" type="button" style="display:none">Test portal</button>
+            <button class="sidebar-action" id="logout" type="button" style="display:none">Log out</button>
           </div>
         </div>
-        <div class="nav">
-          <button class="active" data-tab="applicants">
-            Applications <span id="payCount"></span></button
-          ><button data-tab="students">Students</button
-          ><button data-tab="webinar">Webinar Signups</button
-          ><button type="button" data-tool="acquisition">Acquisition Tracker</button
-          ><button type="button" data-tool="finance">Finance</button
-          ><button type="button" data-tool="masterclass">Masterclass Event</button
-          ><button type="button" data-tool="email">Email Command Center</button
-          ><button data-tab="b2b">B2B</button>
+      </aside>
+      <main class="workspace" id="workspace">
+        <form id="login" class="login" autocomplete="on">
+          <h1>Admin login</h1>
+          <p>Manage Assistara operations.</p>
+          <label class="field"
+            ><span>Username</span
+            ><input id="username" name="username" autocomplete="username" value="admin" /></label
+          ><label class="field"
+            ><span>Password</span
+            ><input id="password" name="password" type="password" autocomplete="current-password" /></label
+          ><button id="loginBtn" class="main" type="submit">Log in</button>
+          <div id="loginError" class="error" role="alert" aria-live="polite"></div>
+        </form>
+        <div class="workspace-top" id="workspaceTop">
+          <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div class="workspace-search" id="searchWrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="search" placeholder="Search..." aria-label="Search applications, students and signups" />
+          </div>
         </div>
+        <header class="page-header" id="pageHeader">
+          <div class="page-header-main">
+            <div>
+              <nav class="page-breadcrumbs" id="pageBreadcrumbs" aria-label="Breadcrumb"></nav>
+              <h1 class="page-title" id="pageTitle">Dashboard</h1>
+              <div class="page-subtitle" id="pageSubtitle"></div>
+            </div>
+          </div>
+          <div class="page-actions" id="pageActions"></div>
+        </header>
+      <section id="dash" class="dash">
         <div id="dashBody">
+        <div id="overviewView" hidden></div>
+        <div id="tabScaffold">
         <div id="pendingBox"></div>
-        <input id="search" class="search" placeholder="Search..." />
         <div class="studentFilters" id="studentFilters" style="display:none">
           <select id="studentFilter">
             <option value="all">All Students</option>
@@ -1046,6 +1088,23 @@
             <option value="highest_progress">Highest Progress</option>
             <option value="lowest_progress">Lowest Progress</option>
             <option value="recently_enrolled">Recently Enrolled</option>
+          </select>
+        </div>
+        <div class="studentFilters" id="couponFilters" style="display:none">
+          <select id="couponFilter">
+            <option value="all">All Coupons</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="expired">Expired</option>
+            <option value="exhausted">Exhausted</option>
+          </select>
+          <select id="couponSort">
+            <option value="recent">Most Recent</option>
+            <option value="oldest">Oldest</option>
+            <option value="code">Code (A-Z)</option>
+            <option value="redemptions">Most Redemptions</option>
+            <option value="revenue">Highest Revenue</option>
           </select>
         </div>
         <div id="signupGoal"></div><div id="stats" class="stats"></div>
@@ -1067,8 +1126,10 @@
         </div>
         <div id="cards" class="cards"></div>
         </div>
+        </div>
       </section>
       <div id="toolView" hidden></div>
+      </main>
     </div>
     <div id="toast" class="toast"></div>
     <script src="/attribution.js"></script>
@@ -1087,7 +1148,9 @@
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-send-onboarding",
         ANSWERS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
         NOTES = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
-        PROGRESS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api";
+        PROGRESS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
+        COUPONS =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-coupons";
       // One shared Admin session for every Admin page. The token is short-lived
       // (2h, server-signed) and server-revocable; this store only keeps the
       // browser copy so a new tab, Back/Forward and refresh keep the session.
@@ -1124,6 +1187,7 @@
         acquisitionLinks = [],
         acquisitionVisits = [],
         studentProgress = [],
+        coupons = [],
         tab = "applicants";
       // Cohort capacity now lives inside the Applicants view; it is (re)loaded
       // when the Applicants tab is entered, not on every render/keystroke.
@@ -1136,6 +1200,7 @@
        * ---------------------------------------------------------------- */
       const UI_KEY = "assistara_admin_ui";
       const openStudents = new Set();
+      const openCoupons = new Set();
       let uiDisabled = false;
       // Which Admin view is showing: "dashboard" or a tool name. Declared here,
       // before the shell router below, so saveUiState can always read it.
@@ -1152,8 +1217,11 @@
             q: $("search") ? $("search").value : "",
             studentFilter: $("studentFilter") ? $("studentFilter").value : "",
             studentSort: $("studentSort") ? $("studentSort").value : "",
+            couponFilter: $("couponFilter") ? $("couponFilter").value : "",
+            couponSort: $("couponSort") ? $("couponSort").value : "",
             openApps: [...openApps],
             openStudents: [...openStudents],
+            openCoupons: [...openCoupons],
             // Only the dashboard's own scroll is meaningful when a tool view is
             // mounted, so a tool's scroll is never restored onto the dashboard.
             scroll: agentView === "dashboard" ? (window.scrollY || 0) : (viewScroll.dashboard || 0),
@@ -1165,12 +1233,15 @@
       }
       function applyUiState(s) {
         if (!s) return;
-        if (["applicants", "students", "webinar", "b2b"].includes(s.tab)) tab = s.tab;
+        if (["applicants", "students", "webinar", "b2b", "coupons"].includes(s.tab)) tab = s.tab;
         if ($("search") && typeof s.q === "string") $("search").value = s.q;
         if ($("studentFilter") && typeof s.studentFilter === "string") $("studentFilter").value = s.studentFilter;
         if ($("studentSort") && typeof s.studentSort === "string") $("studentSort").value = s.studentSort;
+        if ($("couponFilter") && typeof s.couponFilter === "string") $("couponFilter").value = s.couponFilter;
+        if ($("couponSort") && typeof s.couponSort === "string") $("couponSort").value = s.couponSort;
         if (Array.isArray(s.openApps)) s.openApps.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openApps.add(String(id)); });
         if (Array.isArray(s.openStudents)) s.openStudents.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openStudents.add(String(id)); });
+        if (Array.isArray(s.openCoupons)) s.openCoupons.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openCoupons.add(String(id)); });
         document.querySelectorAll(".nav button[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
         if (tab === "applicants") capacityDirty = true;
       }
@@ -1183,6 +1254,10 @@
           const student = students.find((x) => String(x.id) === String(id));
           const detail = $("student-detail-" + id);
           if (student && detail) detail.innerHTML = renderStudentDetail(student);
+        });
+        openCoupons.forEach((id) => {
+          const card = $("coupon-" + id);
+          if (card) card.classList.add("open");
         });
         if (typeof s.scroll === "number" && s.scroll > 0) window.scrollTo(0, s.scroll);
       }
@@ -1918,6 +1993,8 @@
         $("pendingBox").innerHTML = "";
         const f = $("studentFilters");
         if (f) f.style.display = "none";
+        const cf = $("couponFilters");
+        if (cf) cf.style.display = "none";
       }
       async function render() {
         resetTabScaffold();
@@ -2025,6 +2102,10 @@
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
+        if (tab === "coupons") {
+          renderCoupons();
+          return;
+        }
         $("capacityPanel").style.display = "none";
         $("signupGoal").innerHTML = "";
         stat([
@@ -2070,6 +2151,13 @@
         for (const s of students) {
           const pe = progressByUid.get(s.auth_user_id);
           s._progress = computeStudentProgress(s, pe);
+        }
+        // Fetch coupons
+        try {
+          const cData = await req("list", {}, COUPONS);
+          coupons = cData.coupons || [];
+        } catch {
+          coupons = [];
         }
         render();
       }
