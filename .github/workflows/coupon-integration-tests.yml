@@ -127,6 +127,11 @@ jobs:
           ('22222222-2222-2222-2222-222222222222'),
           ('33333333-3333-3333-3333-333333333333');
 
+        -- Insert Test 8 application (for status-constraint check with fresh app/coupon combo)
+        INSERT INTO public.academy_applications (id, name, email, enrollment_token, checkout_amount_php, promo_code)
+        VALUES ('99999999-9999-9999-9999-999999999999', 'Test 8 User', 'test8@example.com', gen_random_uuid(), 3900, 'XYRA')
+        ON CONFLICT (id) DO NOTHING;
+
         -- Mock Supabase auth functions for testing (production uses real Supabase auth)
         CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT 'service_role'::text $$;
 
