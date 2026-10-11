@@ -1,25 +1,683 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Email Command Center | Assistara Admin</title><link rel="icon" href="/assistara-logo.svg"><link rel="stylesheet" href="/manrope-lock.css"><link rel="stylesheet" href="/admin-tokens.css"><link rel="stylesheet" href="/admin-components.css"><link rel="stylesheet" href="/admin-charts.css"><link rel="stylesheet" href="/admin-layout.css"><link rel="stylesheet" href="/admin-sidebar.css"><link rel="stylesheet" href="/admin-header.css"><style>:root{--ink:#171717;--cream:#f7f5ef;--card:#fff;--line:#e6e2d9;--muted:#746e65;--yellow:#ffd51f;--good:#1c7c43;--warn:#9a6a00;--bad:#b3261e}</style></head>
-<body><div class="app-shell"><aside class="sidebar" id="sidebar" aria-label="Admin"><div class="sidebar-header"><a class="sidebar-brand" href="/admin"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Admin</span></a><button class="sidebar-collapse" id="sidebarCollapse" type="button" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button></div>
-<nav class="sidebar-nav" aria-label="Admin sections"><div class="nav-group"><div class="nav-group-title">Overview</div><button class="nav-item" type="button" data-view="overview"><span class="nav-item-label">Dashboard</span></button></div><div class="nav-group"><div class="nav-group-title">Marketing</div><button class="nav-item" type="button" data-tool="email"><span class="nav-item-label">Email</span></button></div></nav>
-<div class="sidebar-footer"><div class="sidebar-user"><div class="sidebar-user-avatar">A</div><div class="sidebar-user-info"><div class="sidebar-user-name">Administrator</div><div class="sidebar-user-role">Admin</div></div></div></div></aside>
-<main class="workspace" id="workspace"><div class="workspace-top" id="workspaceTop"><button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
-<header class="page-header" id="pageHeader"><nav class="page-breadcrumbs" aria-label="Breadcrumb"><a href="/admin">Admin</a> <span>/</span> <a href="/admin">Marketing</a> <span>/</span> <span>Email Command Center</span></nav><h1 class="page-title">Email Command Center</h1><div class="page-subtitle">Transactional and campaign email across Resend, Brevo and Sender.</div></header>
-<div class="toolRoot" id="toolRoot"><div class="shell" style="padding-top:14px;padding-bottom:60px"><div class="head"><h1>Email Command Center</h1><div class="sub">Sending acceptance is measured; delivery/bounces from webhooks; opens/clicks first-party.</div><div class="controls"><select class="btn" id="range"></select><button class="btn" id="refresh">Refresh</button></div></div><div class="tabs" id="tabs"></div><div id="view"></div></div></div></main></div>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Email Command Center | Assistara Admin</title>
+<link rel="icon" href="/assistara-logo.svg" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--ink:#171717;--cream:#f7f5ef;--card:#fff;--line:#e6e2d9;--muted:#746e65;--yellow:#ffd51f;--yellow-ink:#151515;--good:#1c7c43;--warn:#9a6a00;--bad:#b3261e;--na:#8a857c;font-family:"DM Sans",sans-serif}
+  *{box-sizing:border-box}
+  body,button,input,select{font-family:"DM Sans",sans-serif}
+  body{margin:0;background:var(--cream);color:var(--ink)}
+  a{color:inherit}
+  .shell{width:min(1240px,calc(100% - 28px));margin:auto;padding-bottom:60px}
+  .top{margin-top:16px;background:#171717;color:#fff;border-radius:18px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+  .brand img{width:32px}
+  .back{color:#fff;text-decoration:none;border:1px solid #3c3c3c;background:#2a2a2a;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700}
+  .head{margin:26px 0 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .head h1{margin:0;font-size:32px;letter-spacing:-.02em}
+  .head .sub{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:760px;line-height:1.5}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink)}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.55;cursor:default}
+  select.btn{padding:8px 12px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 16px}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 15px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--muted)}
+  .tab.on{background:#171717;color:#fff;border-color:#171717}
+  .tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad);margin-left:6px;vertical-align:middle}
+  .grid{display:grid;gap:14px}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(196px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .card h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
+  .kpi{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .kpi.sm{font-size:22px}
+  .kpi .unit{font-size:14px;font-weight:700;color:var(--muted);margin-left:4px}
+  .kpi-sub{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}
+  .kpi.na{color:var(--na);font-size:17px;font-weight:800}
+  .pill{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid var(--line);background:#faf9f6;color:var(--muted)}
+  .pill.good{color:var(--good);border-color:#bfe3cb;background:#eefaf1}
+  .pill.warn{color:var(--warn);border-color:#f0e0b0;background:#fdf7e6}
+  .pill.bad{color:var(--bad);border-color:#f0c9c6;background:#fdeeed}
+  .banner{border-radius:16px;padding:13px 15px;font-size:13px;line-height:1.55;margin-bottom:14px;border:1px solid var(--line);background:#fff}
+  .banner.warn{background:#fdf7e6;border-color:#f0e0b0}
+  .banner.bad{background:#fdeeed;border-color:#f0c9c6}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 10px;border-bottom:1px solid #f0eee8;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  .mono{font-variant-numeric:tabular-nums}
+  .num{font-variant-numeric:tabular-nums;font-weight:700}
+  .muted{color:var(--muted)}
+  .small{font-size:12px}
+  .chiprow{display:flex;gap:6px;flex-wrap:wrap}
+  .scroll{overflow:auto;max-height:none}
+  .provider{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+  @media (max-width:920px){.provider{grid-template-columns:1fr}}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12.5px}
+  .kv dt{color:var(--muted);font-weight:700}
+  .kv dd{margin:0;text-align:right;font-weight:600}
+  .feed{display:flex;flex-direction:column;gap:0}
+  .feed .row{display:grid;grid-template-columns:70px 120px 1fr auto;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid #f0eee8;font-size:12.5px}
+  .brain{display:flex;align-items:center;gap:8px;font-weight:800}
+  .brain .badge{width:26px;height:26px;border-radius:8px;background:var(--yellow);color:var(--yellow-ink);display:grid;place-items:center;font-size:13px}
+  .timeline{position:relative;padding-left:18px;margin:6px 0 0}
+  .timeline:before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:#eceae3}
+  .tl{position:relative;padding:5px 0 5px 6px;font-size:12.5px}
+  .tl:before{content:"";position:absolute;left:-17px;top:9px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid #cfcabd}
+  .tl.delivered:before{border-color:var(--good)}
+  .tl.opened:before{border-color:#2f7fd1}
+  .tl.clicked:before{border-color:#7a4fd1}
+  .tl.bounced:before,.tl.failed:before,.tl.complained:before{border-color:var(--bad)}
+  .tl.unsubscribed:before{border-color:var(--warn)}
+  .msgcard{border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;background:#fff}
+  .msghead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
+  .msghead .t{font-weight:800}
+  .msghead .s{font-size:12px;color:var(--muted)}
+  details summary{cursor:pointer;font-weight:700;font-size:12.5px;color:var(--muted)}
+  .preview-wrap{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f4f3ef}
+  .preview-wrap iframe{width:100%;height:560px;border:0;background:#fff}
+  .modal{position:fixed;inset:0;background:rgba(20,20,20,.5);display:none;z-index:50;padding:24px;overflow:auto}
+  .modal.on{display:block}
+  .modal .box{width:min(760px,100%);margin:0 auto;background:#fff;border-radius:18px;padding:16px}
+  .modal .box header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+  .setup-item{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid #f0eee8}
+  .setup-item:last-child{border-bottom:0}
+  .setup-item .mark{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:1px}
+  .setup-item .mark.ok{background:#eefaf1;color:var(--good);border:1px solid #bfe3cb}
+  .setup-item .mark.no{background:#fdeeed;color:var(--bad);border:1px solid #f0c9c6}
+  code{background:#f4f2ec;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12px}
+  .spark{width:100%;height:120px;display:block}
+  .empty{padding:26px;text-align:center;color:var(--muted);font-size:13px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#171717;color:#fff;padding:11px 16px;border-radius:999px;font-size:12.5px;font-weight:700;opacity:0;transition:.2s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand"><img src="/assistara-logo.svg" alt="Assistara" /><span>Assistara Admin</span></div>
+    <a class="back" href="/admin">Back to dashboard</a>
+  </div>
+
+  <div class="shell">
+    <div class="head">
+      <div>
+        <h1>Email Command Center</h1>
+        <div class="sub">
+          A single view of every transactional and campaign email across Resend, Brevo and Sender.
+          Sending <strong>acceptance</strong> is always measured; <strong>delivery, bounces and complaints</strong>
+          come from signed provider webhooks, and <strong>opens/clicks</strong> are measured first-party by Assistara.
+          Opens are <strong>estimated</strong> (image proxies and blocking reduce accuracy) and scanner clicks are
+          excluded from engagement. Nothing here is back-filled.
+        </div>
+      </div>
+      <div class="controls">
+        <select class="btn" id="range"></select>
+        <button class="btn" id="refresh">Refresh</button>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+    <div id="view"></div>
+  </div>
+
+  <div class="modal" id="modal"><div class="box"><header><strong id="modal-title">Preview</strong><button class="btn" id="modal-close">Close</button></header><div id="modal-body"></div></div></div>
+  <div class="toast" id="toast"></div>
+
 <script>
-const API="https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-email";const token=(()=>{try{return localStorage.getItem("assistara_admin_token")||sessionStorage.getItem("assistara_admin_token")||"";}catch{return"";}})();const $=(x)=>document.getElementById(x);const esc=(s)=>String(s??"").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));if(!token)location.href="/admin";
-async function req(action,p={}){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action,...p})});const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||"Request failed");return j;}
-function toast(s){const t=$("toast");t.textContent=s;t.className="toast show";setTimeout(()=>t.className="toast",2200);}
-const n=(v)=>(v===null||v===undefined||Number.isNaN(v)?"Unavailable":Number(v).toLocaleString());const dt=(v)=>(v?new Date(v).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—");const dayKey=(v)=>(v?new Date(v).toISOString().slice(0,10):"");
-const state={tab:"overview",provider:"",campaign:"",live:false,liveTimer:null,since:new Date(Date.now()-300000).toISOString()};
-const TABS=[["overview","Overview"],["reminder30","30-Min Reminder"],["campaigns","Campaigns"],["recipients","Recipients"],["providers","Providers"],["activity","Live activity"],["setup","Setup Required"],["acquisition","Acquisition"]];
-function rangeSelect(){const sel=$("range");const opts=[["7","Last 7 days"],["30","Last 30 days"],["90","Last 90 days"],["all","All time"]];sel.innerHTML=opts.map(([v,l])=>`<option value="${v}"${v==="30"?" selected":""}>${l}</option>`).join("");}
-function rangeParams(){const v=$("range").value;if(v==="all")return{from:"2020-01-01T00:00:00.000Z",to:new Date(Date.now()+86400000).toISOString()};return{from:new Date(Date.now()-Number(v)*86400000).toISOString(),to:new Date().toISOString()};}
-function renderTabs(){$("tabs").innerHTML=TABS.map(([id,lab])=>`<button class="btn${state.tab===id?" primary":""}" data-tab="${id}">${lab}</button>`).join("");}
-// Shared sidebar state
-const SIDEBAR_KEY="assistara_admin_sidebar";function applySidebarState(){try{const c=localStorage.getItem(SIDEBAR_KEY)==="1";$("sidebar").classList.toggle("collapsed",c);}catch{}}applySidebarState();
-// Load default view render
-document.addEventListener("DOMContentLoaded",()=>{rangeSelect();renderTabs();});
+const API = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-email";
+const token = (() => { try { return localStorage.getItem("assistara_admin_token") || sessionStorage.getItem("assistara_admin_token") || ""; } catch { return ""; } })();
+const $ = (x) => document.getElementById(x);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c]));
+if (!token) location.href = "/admin";
+
+async function req(action, p = {}) {
+  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ action, ...p }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Error(j.error || "Request failed");
+  return j;
+}
+function toast(s) { const t = $("toast"); t.textContent = s; t.className = "toast show"; setTimeout(() => (t.className = "toast"), 2200); }
+const n = (v) => (v === null || v === undefined || Number.isNaN(v) ? "Unavailable" : Number(v).toLocaleString());
+const num = (v) => (v === null || v === undefined ? "—" : Number(v).toLocaleString());
+const pct = (v) => (v === null || v === undefined ? "Unavailable" : (Number(v) * 100).toFixed(1) + "%");
+const dt = (v) => (v ? new Date(v).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
+const dayKey = (v) => (v ? new Date(v).toISOString().slice(0, 10) : "");
+
+const state = { tab: "overview", provider: "", campaign: "", live: false, liveTimer: null, since: new Date(Date.now() - 300000).toISOString() };
+
+const TABS = [
+  ["overview", "Overview"], ["reminder30", "30-Min Reminder"], ["campaigns", "Campaigns"], ["recipients", "Recipients"],
+  ["providers", "Providers"], ["activity", "Live activity"], ["setup", "Setup Required"], ["acquisition", "Acquisition"],
+];
+
+function rangeSelect() {
+  const sel = $("range");
+  const opts = [["7", "Last 7 days"], ["30", "Last 30 days"], ["90", "Last 90 days"], ["all", "All time"]];
+  sel.innerHTML = opts.map(([v, l]) => `<option value="${v}"${v === "30" ? " selected" : ""}>${l}</option>`).join("");
+}
+function rangeParams() {
+  const v = $("range").value;
+  if (v === "all") return { from: "2020-01-01T00:00:00.000Z", to: new Date(Date.now() + 86400000).toISOString() };
+  return { from: new Date(Date.now() - Number(v) * 86400000).toISOString(), to: new Date().toISOString() };
+}
+
+function renderTabs() {
+  $("tabs").innerHTML = TABS.map(([id, label]) => `<button class="tab${state.tab === id ? " on" : ""}" data-tab="${id}">${label}</button>`).join("");
+}
+
+function show(id) { $("modal-title").textContent = id; $("modal-body").innerHTML = ""; $("modal").classList.add("on"); }
+function hide() { $("modal").classList.remove("on"); $("modal-body").innerHTML = ""; }
+
+function metricCard(label, value, sub, available) {
+  return `<div class="card"><h3>${esc(label)}</h3>${available === false
+    ? `<div class="kpi na">Unavailable</div><div class="kpi-sub">${sub || "No provider reporting configured"}</div>`
+    : `<div class="kpi">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}`}</div>`;
+}
+
+function availabilityBanner(av) {
+  if (av.deliveryEvents && av.openTracking && av.clickTracking) {
+    return `<div class="banner"><span class="pill good">Measured</span> Delivery, open and click events are being reported by: <strong>${esc(av.providersReporting.join(", ") || "—")}</strong>.</div>`;
+  }
+  const missing = [];
+  if (!av.deliveryEvents) missing.push("delivery / bounce");
+  if (!av.openTracking) missing.push("opens");
+  if (!av.clickTracking) missing.push("clicks");
+  return `<div class="banner warn">
+    <span class="pill warn">Partial measurement</span>
+    Provider webhooks are not (fully) configured, so <strong>${esc(missing.join(", "))}</strong> are shown as
+    <em>Unavailable</em> rather than zero. Acceptance below is still exact. Configure webhooks under
+    <strong>Setup Required</strong> to turn these on.</div>`;
+}
+
+function sparkline(series, avail) {
+  if (!series || !series.length) return `<div class="empty">No sending activity in this range.</div>`;
+  const w = Math.max(320, series.length * 42), h = 120, pad = 22;
+  const max = Math.max(1, ...series.map((d) => Number(d.accepted || 0)));
+  const bw = (w - pad * 2) / series.length;
+  const bars = series.map((d, i) => {
+    const bh = ((Number(d.accepted || 0) / max) * (h - pad * 2)) || 0;
+    const x = pad + i * bw + bw * 0.15;
+    const y = h - pad - bh;
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="#ffd51f"></rect>
+      <text x="${(x + bw * 0.35).toFixed(1)}" y="${h - 6}" font-size="9" text-anchor="middle" fill="#8a857c">${esc(d.day.slice(5))}</text>`;
+  }).join("");
+  const dl = avail.deliveryEvents ? series.map((d, i) => {
+    const bh = ((Number(d.delivered || 0) / max) * (h - pad * 2)) || 0;
+    const x = pad + i * bw + bw * 0.15;
+    return `<rect x="${x.toFixed(1)}" y="${(h - pad - bh).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="#1c7c43" opacity=".55"></rect>`;
+  }).join("") : "";
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${bars}${dl}</svg>
+    <div class="small muted" style="margin-top:6px">Bars = accepted per day${avail.deliveryEvents ? " · green overlay = delivered" : ""} (UTC).</div>`;
+}
+
+/* ------------------------------ Overview ------------------------------ */
+async function renderOverview() {
+  const j = await req("overview", rangeParams());
+  const o = j.overview, av = o.availability, t = o.totals, m = o.measured, r = o.rates;
+  const html = `
+    ${availabilityBanner(av)}
+    <div class="grid cards">
+      ${metricCard("Messages", num(t.messages), `${num(t.attempts)} provider attempts`, true)}
+      ${metricCard("Accepted by provider", num(t.accepted), "Provider accepted the send (not yet delivery)", true)}
+      ${metricCard("Failed", num(t.failed), "Definitive provider rejection", true)}
+      ${metricCard("Unknown / pending", `${num(t.unknown)} / ${num(t.pending)}`, "Ambiguous or awaiting result", true)}
+      ${metricCard("Delivered", av.deliveryEvents ? num(m.delivered) : null, av.deliveryEvents ? `Delivery rate ${pct(r.deliveryRate)}` : "Provider webhooks not configured", av.deliveryEvents)}
+      ${metricCard("Unique opens (est.)", av.openTracking ? num(m.uniqueOpens) : null, av.openTracking ? `Estimated · open rate ${pct(r.openRate)} of delivered` : "Open tracking not configured", av.openTracking)}
+      ${metricCard("Unique clicks", av.clickTracking ? num(m.uniqueClicks) : null, av.clickTracking ? `CTR ${pct(r.clickThroughRate)} of delivered` : "Click tracking not configured", av.clickTracking)}
+      ${metricCard("Bounces", av.deliveryEvents ? num(m.bounced) : null, av.deliveryEvents ? `Bounce rate ${pct(r.bounceRate)} of accepted` : "Provider webhooks not configured", av.deliveryEvents)}
+      ${metricCard("Suppressed addresses", num(j.suppressions), av.unsubscribeEvents ? `${num(m.unsubscribes)} unsubscribe event(s) reported` : "Unsubscribe events not yet reported", j.suppressions !== null)}
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Accepted per day</h3>
+      ${sparkline(o.series, av)}
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>By provider</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Provider</th><th>Accepted</th><th>Failed</th><th>Unknown</th><th>Delivered</th><th>Unique opens</th><th>Unique clicks</th><th>Bounces</th></tr></thead>
+        <tbody>${o.providers.length ? o.providers.map((p) => `<tr>
+          <td><strong>${esc(p.provider)}</strong></td>
+          <td class="num">${num(p.accepted)}</td><td class="num">${num(p.failed)}</td><td class="num">${num(p.unknown)}</td>
+          <td class="num">${av.deliveryEvents ? num(p.delivered) : "<span class='muted'>—</span>"}</td>
+          <td class="num">${av.openTracking ? num(p.uniqueOpens) : "<span class='muted'>—</span>"}</td>
+          <td class="num">${av.clickTracking ? num(p.uniqueClicks) : "<span class='muted'>—</span>"}</td>
+          <td class="num">${av.deliveryEvents ? num(p.bounced) : "<span class='muted'>—</span>"}</td></tr>`).join("")
+          : `<tr><td colspan="8" class="muted">No sends in this range.</td></tr>`}</tbody>
+      </table></div>
+    </div>
+    <div class="small muted" style="margin-top:10px">Generated ${esc(dt(j.generatedAt))}. Acceptance = provider API accepted the message. Delivery/opens/clicks are measured only from provider webhook events.</div>`;
+  $("view").innerHTML = html;
+}
+
+/* ------------------------------ Campaigns ------------------------------ */
+async function renderCampaigns() {
+  const j = await req("campaigns", rangeParams());
+  const rows = j.campaigns || [];
+  $("view").innerHTML = `
+    <div class="card">
+      <div class="head" style="margin:0 0 10px"><div><h1 style="font-size:20px">Campaigns &amp; automated email</h1>
+      <div class="sub">Grouped by the campaign key each sender already records. "Campaign" = audience sends (masterclass, Academy follow-up); "automated" = one-to-one transactional email.</div></div>
+      <div class="controls"><select class="btn" id="kindfilter"><option value="">All kinds</option><option value="campaign">Campaigns</option><option value="automated">Automated</option></select></div></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Campaign</th><th>Kind</th><th>Recipients</th><th>Accepted</th><th>Failed</th><th>Delivered</th><th>Unique opens</th><th>Unique clicks</th><th>Bounces</th><th>Providers</th><th>Last sent</th><th>Preview</th></tr></thead>
+        <tbody id="campbody"></tbody>
+      </table></div>
+    </div>`;
+  const draw = () => {
+    const kf = $("kindfilter").value;
+    const list = rows.filter((c) => !kf || c.kind === kf);
+    $("campbody").innerHTML = list.length ? list.map((c) => `<tr>
+      <td><strong>${esc(c.name)}</strong><div class="small muted">${esc(c.subject || c.emailType)}</div></td>
+      <td><span class="pill ${c.kind === "campaign" ? "warn" : ""}">${esc(c.kind)}</span></td>
+      <td class="num">${num(c.recipients)}</td>
+      <td class="num">${num(c.totals.accepted)}</td>
+      <td class="num">${num(c.totals.failed)}</td>
+      <td class="num">${c.measured.delivered || !c.measured.eventsReceived ? "<span class='muted'>—</span>" : num(c.measured.delivered)}</td>
+      <td class="num">${c.measured.uniqueOpens || !c.measured.eventsReceived ? "<span class='muted'>—</span>" : num(c.measured.uniqueOpens)}</td>
+      <td class="num">${c.measured.uniqueClicks || !c.measured.eventsReceived ? "<span class='muted'>—</span>" : num(c.measured.uniqueClicks)}</td>
+      <td class="num">${num(c.measured.bounced)}</td>
+      <td class="small">${esc(c.providers.join(", ") || "—")}</td>
+      <td class="small">${esc(dt(c.lastSentAt))}</td>
+      <td><button class="btn" data-preview-campaign="${esc(c.key)}">View</button></td></tr>`).join("")
+      : `<tr><td colspan="12" class="muted">No campaigns in this range.</td></tr>`;
+  };
+  $("kindfilter").addEventListener("change", draw);
+  draw();
+}
+
+async function previewCampaign(key) {
+  show("Campaign preview");
+  $("modal-body").innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const j = await req("campaign_preview", { campaign: key });
+    if (j.captured || (j.html && j.rendered_from === "current_template")) {
+      const tag = j.captured ? "Exact captured copy" : "Current deployed template";
+      const who = j.render && j.render.sample_recipient ? ` · sample recipient ${esc(j.render.sample_recipient)}` : "";
+      const body = (j.render && j.render.html) || j.html;
+      $("modal-body").innerHTML = `<div class="small muted">${esc(tag)}${who}</div>
+        <div class="preview-wrap"><iframe sandbox="" srcdoc="${esc(body)}"></iframe></div>`;
+    } else {
+      $("modal-body").innerHTML = `<div class="banner warn"><strong>No rendered copy available.</strong><br>${esc(j.note || "")}</div>
+        <div class="small muted">Email type: ${esc(j.email_type || "unknown")}. Render capture is enabled now, so every send from this point on will have an exact preview.</div>`;
+    }
+  } catch (e) { $("modal-body").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
+}
+
+/* ------------------------------ Recipients ------------------------------ */
+function statusPill(status) {
+  const map = { sent: ["good", "Accepted"], failed: ["bad", "Failed"], unknown: ["warn", "Unknown"], expired: ["warn", "Expired"], suppressed: ["warn", "Suppressed"], pending: ["", "Pending"] };
+  const [cls, label] = map[status] || ["", status || "—"];
+  return `<span class="pill ${cls}">${esc(label)}</span>`;
+}
+function renderRecipientTimeline(msgs) {
+  if (!msgs.length) return `<div class="empty">No email on record for this address.</div>`;
+  return msgs.map((m) => {
+    const events = [];
+    events.push({ t: m.created_at, k: "queued", label: "Email queued" });
+    (m.sendAttempts || []).forEach((a) => events.push({ t: a.created_at, k: "attempt", label: `Sending attempt #${a.attempt_number} via ${a.provider}` }));
+    if (m.status === "sent") events.push({ t: m.sent_at, k: "accepted", label: `Accepted by ${m.provider}` });
+    if (m.provider_message_id) events.push({ t: m.sent_at, k: "accepted", label: `Provider message id ${m.provider_message_id}` });
+    (m.events || []).forEach((e) => events.push({ t: e.event_timestamp, k: "ev_" + e.event_type, label: evLabel(e.event_type) + ` (${e.provider})` }));
+    if (m.status === "failed") events.push({ t: m.created_at, k: "failed", label: `Failed` });
+    events.sort((a, b) => String(a.t || "").localeCompare(String(b.t || "")));
+    return `<div class="msgcard">
+      <div class="msghead">
+        <div>
+          <div class="t">${esc(m.subject || m.email_type)}</div>
+          <div class="s">${esc(m.email_type)} · ${esc(m.campaign_key || "")}</div>
+        </div>
+        <div style="text-align:right">${statusPill(m.status)}<div class="s">${esc(dt(m.sent_at || m.created_at))}</div></div>
+      </div>
+      <div class="timeline">${events.map((e) => `<div class="tl ${e.k === "ev_delivered" ? "delivered" : e.k === "ev_opened" ? "opened" : e.k === "ev_clicked" ? "clicked" : e.k === "ev_bounced" || e.k === "ev_complained" || e.k === "failed" ? "bounced" : e.k === "ev_unsubscribed" ? "unsubscribed" : ""}"><strong>${esc(e.label)}</strong> <span class="muted">${esc(dt(e.t))}</span></div>`).join("")}</div>
+      <div style="margin-top:10px"><button class="btn" data-preview-message="${esc(m.id)}">Preview exact sent copy</button></div>
+    </div>`;
+  }).join("");
+}
+function evLabel(type) {
+  return { delivered: "Delivered", opened: "Opened", clicked: "Link clicked", bounced: "Bounced", complained: "Marked as spam", deferred: "Deferred", unsubscribed: "Unsubscribed", accepted: "Accepted", failed: "Failed", queued: "Queued" }[type] || type;
+}
+async function renderRecipients() {
+  $("view").innerHTML = `
+    <div class="card">
+      <div class="head" style="margin:0 0 10px"><div><h1 style="font-size:20px">Recipient timeline</h1>
+      <div class="sub">Search an email address to see every message, provider attempt and tracking event. Personal livestream links and tokens are never rewritten by this view.</div></div></div>
+      <div class="controls" style="justify-content:flex-start">
+        <input class="btn" id="remail" placeholder="name@example.com" style="min-width:280px" />
+        <button class="btn primary" id="rsearch">Search</button>
+      </div>
+      <div id="rresult" style="margin-top:14px"></div>
+    </div>`;
+  const go = async () => {
+    const email = $("remail").value.trim();
+    if (!email) return;
+    $("rresult").innerHTML = `<div class="empty">Loading…</div>`;
+    try {
+      const j = await req("recipient", { email });
+      const supp = j.suppression ? `<div class="banner warn"><strong>Suppressed</strong> — ${esc(j.suppression.reason)} (${esc(j.suppression.source || j.suppression.provider || "source")}, ${esc(dt(j.suppression.created_at))}). No further email will be sent to this address.</div>` : "";
+      $("rresult").innerHTML = supp + renderRecipientTimeline(j.messages || []);
+    } catch (e) { $("rresult").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
+  };
+  $("rsearch").addEventListener("click", go);
+  $("remail").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+}
+
+/* ------------------------------ Providers ------------------------------ */
+function capText(live) {
+  if (!live) return `<span class="muted">Not checked — click <strong>Sync</strong> to query the provider API.</span>`;
+  if (!live.capacity || !live.capacity.available) {
+    return `<span class="pill warn">Unavailable via API</span> <span class="small muted">${esc(live.capacity?.source || "")}</span>`;
+  }
+  const c = live.capacity;
+  return `<strong>${num(c.remaining)}${c.limit != null ? " / " + num(c.limit) : ""}</strong> remaining <span class="small muted">· ${esc(c.source)}${c.resetAt ? " · resets " + esc(dt(c.resetAt)) : ""}</span>`;
+}
+async function renderProviders(sync) {
+  if (!sync) $("view").innerHTML = `<div class="empty">Loading…</div>`;
+  let j;
+  try { j = await req("providers", { sync: !!sync }); }
+  catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; return; }
+  const live = new Map((j.live || []).map((s) => [s.provider, s]));
+  const quotaBy = new Map();
+  for (const q of j.quota || []) if (!quotaBy.has(q.provider)) quotaBy.set(q.provider, q);
+  const healthBy = new Map((j.health || []).map((x) => [x.provider, x]));
+  const usageBy = new Map((j.usage || []).map((x) => [x.provider, x]));
+
+  $("view").innerHTML = `
+    <div class="banner"><span class="pill ${j.live && j.live.length ? "good" : "warn"}">${j.live && j.live.length ? "Synced from provider APIs" : "Internal status"}</span>
+      Capacity and domain verification are only shown from an authoritative provider API. Where an API does not expose it, the value reads <em>Unavailable via API</em>.
+      <div style="margin-top:8px"><button class="btn primary" id="syncbtn">Sync from providers (authoritative)</button></div></div>
+    ${(j.providers || []).map((p) => {
+      const l = live.get(p.provider), q = quotaBy.get(p.provider), h = healthBy.get(p.provider), u = usageBy.get(p.provider) || {};
+      return `<div class="card" style="margin-bottom:14px">
+        <div class="provider">
+          <div>
+            <h3>${esc(p.provider)} ${p.is_enabled === false ? "<span class='pill bad'>disabled</span>" : "<span class='pill good'>enabled</span>"} <span class="pill">priority ${esc(p.priority)}</span></h3>
+            <dl class="kv">
+              <dt>From</dt><dd>${esc(p.from_name || "")} &lt;${esc(p.from_email || "")}&gt;</dd>
+              <dt>Domain</dt><dd>${esc(p.domain || "—")} ${p.domain_verified ? "<span class='pill good'>verified</span>" : "<span class='pill warn'>unknown/unverified</span>"}${l ? (l.domainVerified === true ? " <span class='pill good'>API: verified</span>" : l.domainVerified === false ? " <span class='pill bad'>API: not verified</span>" : "") : ""}</dd>
+              <dt>Sender verified</dt><dd>${p.verified_sender ? "yes" : "no"}${l && l.senderVerified !== null ? (l.senderVerified ? " <span class='pill good'>API: yes</span>" : " <span class='pill bad'>API: no</span>") : ""}</dd>
+              <dt>Open tracking</dt><dd>${p.tracking_open ? "<span class='pill good'>enabled</span>" : "<span class='pill warn'>off</span>"}</dd>
+              <dt>Click tracking</dt><dd>${p.tracking_click ? "<span class='pill good'>enabled</span>" : "<span class='pill warn'>off</span>"}</dd>
+              <dt>Webhook</dt><dd>${p.webhook_verified_at ? `<span class='pill good'>verified ${esc(dt(p.webhook_verified_at))}</span>` : `<span class='pill warn'>not receiving</span>`} <span class="small muted">${esc(p.webhook_secret_name || "")}</span></dd>
+              <dt>Connection</dt><dd>${l ? (l.reachable ? `<span class='pill good'>reachable (HTTP ${esc(l.httpStatus)})</span>` : `<span class='pill bad'>unreachable</span>`) : "<span class='muted'>not checked</span>"}</dd>
+            </dl>
+            ${p.dashboard_url ? `<div class="small" style="margin-top:8px"><a href="${esc(p.dashboard_url)}" target="_blank" rel="noopener">Open ${esc(p.provider)} dashboard →</a></div>` : ""}
+          </div>
+          <div>
+            <h3>Capacity &amp; usage</h3>
+            <dl class="kv">
+              <dt>Remaining capacity</dt><dd>${capText(l)}</dd>
+              <dt>Internal counter (today)</dt><dd>${q ? `${num(q.used_count)} / ${num(q.daily_limit)}` : "—"}</dd>
+              <dt>Internal counter (month)</dt><dd>${q ? `${num(q.monthly_used)} / ${num(q.monthly_limit)}` : "—"}</dd>
+              <dt>Last 7d accepted</dt><dd>${num(u.accepted)} (failed ${num(u.failed)}, unknown ${num(u.unknown)})</dd>
+              <dt>Health</dt><dd>${h ? (h.cooldown_until && new Date(h.cooldown_until) > new Date() ? `<span class='pill warn'>cooldown until ${esc(dt(h.cooldown_until))}</span>` : `<span class='pill good'>ok</span>`) : "<span class='muted'>—</span>"} <span class="small muted">${h && h.consecutive_failures ? esc(h.consecutive_failures) + " consecutive failures" : ""}</span></dd>
+              <dt>Last checked</dt><dd>${q ? esc(dt(q.last_checked_at)) : "—"}</dd>
+            </dl>
+            ${l && l.errors && l.errors.length ? `<div class="small" style="margin-top:8px;color:#b3261e">${l.errors.map(esc).join("<br>")}</div>` : ""}
+          </div>
+        </div>
+      </div>`;
+    }).join("")}
+    <div class="card">
+      <h3>Recent failures &amp; unknowns</h3>
+      <div class="scroll"><table><thead><tr><th>When</th><th>Provider</th><th>Type</th><th>Recipient</th><th>Category</th><th>Error</th></tr></thead>
+      <tbody>${(j.failures || []).length ? j.failures.map((f) => `<tr><td class="small">${esc(dt(f.created_at))}</td><td>${esc(f.provider || "—")}</td><td class="small">${esc(f.email_type)}</td><td class="small">${esc(f.recipient_email)}</td><td><span class="pill ${f.status === "failed" ? "bad" : "warn"}">${esc(f.last_error_category || f.status)}</span></td><td class="small muted">${esc((f.last_error || "").slice(0, 140))}</td></tr>`).join("") : `<tr><td colspan="6" class="muted">No failures on record.</td></tr>`}</tbody></table></div>
+    </div>`;
+  $("syncbtn").addEventListener("click", async () => { $("syncbtn").disabled = true; $("syncbtn").textContent = "Syncing…"; await renderProviders(true); toast("Providers synced"); });
+}
+
+/* ------------------------------ Live activity ------------------------------ */
+async function renderActivity() {
+  let j;
+  try { j = await req("activity", { since: state.since }); }
+  catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; return; }
+  const rows = [
+    ...(j.events || []).map((e) => ({ kind: "event", t: e.event_timestamp, provider: e.provider, label: `${e.event_type} · ${e.campaign_key || ""}`, who: e.recipient_email || "" })),
+    ...(j.receipts || []).map((r) => ({ kind: "receipt", t: r.received_at, provider: r.provider, label: `${r.verified ? "verified" : "UNVERIFIED"} ${r.event_type || ""}`, who: r.processing_error || "" })),
+  ].sort((a, b) => String(b.t).localeCompare(String(a.t)));
+
+  $("view").innerHTML = `
+    <div class="banner">
+      <span class="pill ${state.live ? "good" : ""}">${state.live ? "Auto-refresh on (10s)" : "Auto-refresh off"}</span>
+      Tracking events received in the last few minutes. Polling only reads Supabase — no provider API is called on refresh.
+      <div style="margin-top:8px"><button class="btn ${state.live ? "" : "primary"}" id="livetoggle">${state.live ? "Stop" : "Start"} live monitoring</button>
+      <button class="btn" id="actrefresh" style="margin-left:6px">Refresh</button></div>
+    </div>
+    <div class="grid cards">
+      ${metricCard("Events received (all time)", num(j.totals.events), null, true)}
+      ${metricCard("Webhook receipts", num(j.totals.receipts), null, true)}
+      ${metricCard("Unverified receipts", num(j.totals.unverified), j.totals.unverified ? "A provider is posting without a valid secret" : "All verified", j.totals.unverified ? false : true)}
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Recent events &amp; receipts</h3>
+      <div class="feed">${rows.length ? rows.slice(0, 60).map((r) => `<div class="row">
+        <div class="small muted">${esc(dt(r.t))}</div>
+        <div><span class="pill ${r.kind === "receipt" ? (r.label.startsWith("UNVERIFIED") ? "bad" : "good") : ""}">${esc(r.provider)}</span></div>
+        <div>${esc(r.label)}</div><div class="small muted">${esc(r.who)}</div></div>`).join("") : `<div class="empty">No recent events. This is expected until provider webhooks are configured (see Setup Required).</div>`}</div>
+    </div>`;
+  $("actrefresh").addEventListener("click", renderActivity);
+  $("livetoggle").addEventListener("click", () => {
+    state.live = !state.live;
+    if (state.live) { state.since = new Date(Date.now() - 300000).toISOString(); state.liveTimer = setInterval(renderActivity, 10000); }
+    else { clearInterval(state.liveTimer); state.liveTimer = null; }
+    renderActivity();
+  });
+}
+
+/* ------------------------------ Setup Required ------------------------------ */
+async function renderSetup() {
+  let j;
+  try { j = await req("setup"); } catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; return; }
+  $("view").innerHTML = `
+    <div class="banner ${j.ready ? "" : "warn"}">
+      <span class="pill ${j.ready ? "good" : "warn"}">${j.ready ? "All set" : "Action required"}</span>
+      These are the things a person must do in the provider dashboards / Supabase. The Command Center detects each automatically.
+    </div>
+    <div class="card">
+      ${(j.items || []).map((i) => `<div class="setup-item">
+        <div class="mark ${i.ok ? "ok" : "no"}">${i.ok ? "✓" : "!"}</div>
+        <div><strong>${esc(i.title)}</strong><div class="small muted">${esc(i.detail)}</div>
+        ${i.action ? (i.action.startsWith("http") ? `<div class="small" style="margin-top:5px"><a href="${esc(i.action)}" target="_blank" rel="noopener">Open settings →</a></div>` : `<div class="small" style="margin-top:5px"><code>${esc(i.action)}</code></div>`) : ""}</div>
+        <div></div></div>`).join("")}
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Webhook endpoints</h3>
+      <dl class="kv">
+        <dt>Resend</dt><dd><code>${esc(j.endpoints.resend)}</code></dd>
+        <dt>Brevo</dt><dd><code>${esc(j.endpoints.brevo)}</code> <span class="small muted">(append &amp;secret=…)</span></dd>
+        <dt>Sender</dt><dd><code>${esc(j.endpoints.sender)}</code> <span class="small muted">(append &amp;secret=…)</span></dd>
+      </dl>
+      <div class="small muted" style="margin-top:8px">An endpoint with no configured secret rejects every payload with 401 and records the attempt as unverified — it can never mark a delivery as trusted.</div>
+    </div>`;
+}
+
+/* ------------------------------ Acquisition ------------------------------ */
+async function renderAcquisition() {
+  let j;
+  try { j = await req("acquisition"); } catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; return; }
+  const a = j.acquisition;
+  const c = (obj, label) => metricCard(label, obj && obj.total !== null ? num(obj.total) : null, obj && obj.last30d !== null ? `${num(obj.last30d)} in last 30 days` : "Unavailable", !!(obj && obj.total !== null));
+  $("view").innerHTML = `
+    <div class="banner">Acquisition is tracked separately from email engagement. Opens and clicks below are email events only and are never blended with advertising attribution.</div>
+    <div class="grid cards">
+      ${c(a.visits, "Landing page visits")}
+      ${c(a.masterclassRegistrations, "Masterclass registrations")}
+      ${c(a.academyApplications, "Academy applications")}
+      ${c(a.paidEnrollments, "Paid enrollments")}
+      ${metricCard("Email clicks (all time)", num(a.emailClicks), "Distinct link-click events reported by providers", true)}
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Full attribution</h3>
+      <div class="small muted">${esc(a.attribution.note)}</div>
+      <div style="margin-top:8px"><a class="btn" href="${esc(a.attribution.tracker)}">Open Acquisition Tracker →</a></div>
+    </div>`;
+}
+
+/* ------------------------------ 30-Minute Reminder Verification ------------------------------ */
+async function renderReminder30() {
+  let j;
+  try { j = await req("reminder30_verify"); } catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; return; }
+
+  const t = j.totals;
+  const exec = j.execution;
+  const elig = j.eligible;
+  const provs = j.providers || [];
+  const recips = j.recipients || [];
+
+  // Status pill for recipient rows
+  const rstatus = (r) => {
+    if (r.status === "failed") return `<span class="pill bad">Failed</span>`;
+    if (r.status === "unknown") return `<span class="pill warn">Unknown</span>`;
+    if (r.status === "pending") return `<span class="pill">Pending</span>`;
+    if (r.delivered) return `<span class="pill good">Delivered</span>`;
+    if (r.status === "sent") return `<span class="pill good">Accepted</span>`;
+    return `<span class="pill">${esc(r.status)}</span>`;
+  };
+
+  // Provider breakdown table
+  const provTable = provs.length ? provs.map((p) => `<tr>
+    <td><strong>${esc(p.provider)}</strong></td>
+    <td class="num">${num(p.accepted)}</td>
+    <td class="num">${num(p.delivered)}</td>
+    <td class="num">${num(p.failed)}</td>
+    <td class="num">${num(p.unknown)}</td>
+    <td class="num">${num(p.bounced)}</td>
+  </tr>`).join("") : `<tr><td colspan="6" class="muted">No provider data.</td></tr>`;
+
+  // Recipient rows (show first 100, with note if more)
+  const recipRows = recips.slice(0, 100).map((r) => `<tr>
+    <td class="small">${esc(r.email)}</td>
+    <td>${rstatus(r)}</td>
+    <td class="small">${esc(r.provider || "—")}</td>
+    <td class="small muted">${esc(r.provider_message_id || "—")}</td>
+    <td class="small muted">${esc(dt(r.sent_at || r.created_at))}</td>
+    <td class="small muted">${r.last_error ? esc(r.last_error.slice(0, 60)) : "—"}</td>
+  </tr>`).join("");
+  const moreNote = recips.length > 100 ? `<div class="small muted" style="margin-top:8px">Showing 100 of ${num(recips.length)} recipients. Use recipient search for specific addresses.</div>` : "";
+
+  // Failed recipients for retry button
+  const failedRecips = recips.filter((r) => r.status === "failed" || r.status === "unknown");
+  const retryBtn = failedRecips.length ? `<button class="btn primary" id="retry-failed">Retry ${num(failedRecips.length)} failed/unknown</button>` : "";
+
+  $("view").innerHTML = `
+    <div class="banner">
+      <span class="pill good">30-Minute Reminder</span> Campaign <strong>${esc(j.campaign)}</strong> · Target <strong>${esc(dt(exec.target_utc))}</strong> (UTC)
+      ${j.event ? `<br>Event: <strong>${esc(j.event.title)}</strong> scheduled ${esc(dt(j.event.scheduled_at))}` : ""}
+      <div style="margin-top:6px;font-size:12px">Accepted = provider API accepted the message. Delivered = confirmed by provider webhook. These are NOT the same.</div>
+    </div>
+
+    <div class="grid cards">
+      ${metricCard("Eligible recipients", num(elig.total), `${num(elig.unsubscribed_excluded)} unsubscribed excluded`, true)}
+      ${metricCard("Skipped (no log)", num(elig.skipped), "Eligible but no delivery log entry", elig.skipped > 0)}
+      ${metricCard("Accepted by provider", num(t.accepted), "Provider API accepted the send", true)}
+      ${metricCard("Confirmed delivered", num(t.delivered), "Verified by provider webhook", true)}
+      ${metricCard("Failed", num(t.failed), "Definitive provider rejection", true)}
+      ${metricCard("Unknown", num(t.unknown), "Ambiguous result — not confirmed", true)}
+      ${metricCard("Pending", num(t.pending), "Awaiting result", true)}
+      ${metricCard("Bounced", num(t.bounced), "Webhook-confirmed bounce", true)}
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Execution timeline</h3>
+      <dl class="kv">
+        <dt>Target (UTC)</dt><dd>${esc(exec.target_utc)}</dd>
+        <dt>First sent</dt><dd>${esc(dt(exec.first_sent_at))}</dd>
+        <dt>Last sent</dt><dd>${esc(dt(exec.last_sent_at))}</dd>
+        <dt>Total logs</dt><dd>${num(exec.total_logs)}</dd>
+      </dl>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>By provider</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Provider</th><th>Accepted</th><th>Delivered</th><th>Failed</th><th>Unknown</th><th>Bounced</th></tr></thead>
+        <tbody>${provTable}</tbody>
+      </table></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="head" style="margin:0 0 10px"><div><h3 style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800">Recipient-level detail</h3>
+      <div class="sub" style="font-size:12.5px;color:var(--muted);margin-top:4px">Provider message IDs and per-recipient status. "Accepted" means the provider API accepted; "Delivered" is webhook-confirmed.</div></div>
+      <div class="controls">${retryBtn}</div></div>
+      <div class="scroll"><table style="font-size:12px">
+        <thead><tr><th>Recipient</th><th>Status</th><th>Provider</th><th>Message ID</th><th>Sent</th><th>Error</th></tr></thead>
+        <tbody>${recipRows || `<tr><td colspan="6" class="muted">No recipients found.</td></tr>`}</tbody>
+      </table></div>
+      ${moreNote}
+    </div>
+
+    <div class="small muted" style="margin-top:10px">Generated ${esc(dt(j.generatedAt))}. Delivery confirmation requires provider webhooks. Missing webhook data means "Unknown", not "Delivered".</div>`;
+
+  const retryBtnEl = $("retry-failed");
+  if (retryBtnEl) {
+    retryBtnEl.addEventListener("click", async () => {
+      retryBtnEl.disabled = true;
+      retryBtnEl.textContent = "Retrying…";
+      try {
+        const ids = failedRecips.map((r) => r.id);
+        const result = await req("reminder30_retry", { ids });
+        toast(`Retry queued for ${num(ids.length)} recipients`);
+        renderReminder30();
+      } catch (e) {
+        toast("Retry failed: " + e.message);
+        retryBtnEl.disabled = false;
+        retryBtnEl.textContent = `Retry ${num(failedRecips.length)} failed/unknown`;
+      }
+    });
+  }
+}
+
+/* ------------------------------ Router ------------------------------ */
+async function previewMessage(id) {
+  show("Message preview");
+  $("modal-body").innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const j = await req("message", { id });
+    if (j.captured) {
+      $("modal-body").innerHTML = `<div class="small muted">Exact captured copy · sent to ${esc((j.render && j.render.sample_recipient) || "recipient")}</div>
+        <div class="preview-wrap"><iframe sandbox="" srcdoc="${esc(j.render.html)}"></iframe></div>`;
+    } else {
+      $("modal-body").innerHTML = `<div class="banner warn">${esc(j.note || "No captured copy for this message.")}</div>`;
+    }
+  } catch (e) { $("modal-body").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
+}
+const RENDER = { overview: renderOverview, reminder30: renderReminder30, campaigns: renderCampaigns, recipients: renderRecipients, providers: () => renderProviders(false), activity: renderActivity, setup: renderSetup, acquisition: renderAcquisition };
+
+async function draw() {
+  renderTabs();
+  $("view").innerHTML = `<div class="empty">Loading…</div>`;
+  try { await RENDER[state.tab](); }
+  catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
+}
+
+$("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-tab]");
+  if (!b) return;
+  if (state.live) { state.live = false; clearInterval(state.liveTimer); state.liveTimer = null; }
+  state.tab = b.dataset.tab;
+  draw();
+});
+$("view").addEventListener("click", (e) => {
+  const pc = e.target.closest("[data-preview-campaign]");
+  if (pc) return previewCampaign(pc.dataset.previewCampaign);
+  const pm = e.target.closest("[data-preview-message]");
+  if (pm) return previewMessage(pm.dataset.previewMessage);
+});
+$("refresh").addEventListener("click", draw);
+$("range").addEventListener("change", draw);
+$("modal-close").addEventListener("click", hide);
+$("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hide(); });
+
+rangeSelect();
+renderTabs();
+draw();
 </script>
-<div class="toast" id="toast"></div>
-</body></html>
+</body>
+</html>

@@ -226,6 +226,18 @@
         color: var(--muted);
         margin-top: 4px;
       }
+      /* Legacy stat markup is retained for counter-test and workflow
+         compatibility; these aliases give it the shared stat-card treatment. */
+      .stat {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .stat b { display: block; font-size: 26px; }
+      .stat span,
+      .stat small { display: block; color: var(--muted); font-size: 12px; }
+      .stat small { margin-top: 2px; font-size: 11px; }
       .actions {
         display: flex;
         gap: 7px;

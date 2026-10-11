@@ -1,11 +1,2274 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Finance | Assistara Admin</title><meta name="assistara-finance-version" content="original-currency-v2"><link rel="icon" href="/assistara-logo.svg"><link rel="stylesheet" href="/manrope-lock.css"><link rel="stylesheet" href="/admin-tokens.css"><link rel="stylesheet" href="/admin-components.css"><link rel="stylesheet" href="/admin-charts.css"><link rel="stylesheet" href="/admin-layout.css"><link rel="stylesheet" href="/admin-sidebar.css"><link rel="stylesheet" href="/admin-header.css"><style>:root{--ink:#171717;--cream:#f7f5ef;--line:#e2ded4;--muted:#746e65;--yellow:#ffd51f;--green:#eaf8ee;--red:#fde9e7;--orange:#fff0db}.chart-wrap{width:100%;overflow:auto}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:768px){.grid2{grid-template-columns:1fr}.chart-wrap{overflow-x:auto}}</style></head>
-<body><div class="app-shell"><aside class="sidebar" id="sidebar" aria-label="Admin"><div class="sidebar-header"><a class="sidebar-brand" href="/admin"><img src="/assistara-logo.svg" alt="Assistara"><span>Assistara Admin</span></a><button class="sidebar-collapse" id="sidebarCollapse" type="button" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button></div>
-<nav class="sidebar-nav" aria-label="Admin sections"><div class="nav-group"><div class="nav-group-title">Overview</div><button class="nav-item" type="button" data-view="overview"><span class="nav-item-label">Dashboard</span></button></div><div class="nav-group"><div class="nav-group-title">Business</div><button class="nav-item active" type="button" data-tool="finance"><span class="nav-item-label">Finance</span></button></div></nav>
-<div class="sidebar-footer"><div class="sidebar-user"><div class="sidebar-user-avatar">A</div><div class="sidebar-user-info"><div class="sidebar-user-name">Administrator</div><div class="sidebar-user-role">Admin</div></div></div></div></aside>
-<main class="workspace" id="workspace"><div class="workspace-top" id="workspaceTop"><button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
-<header class="page-header" id="pageHeader"><nav class="page-breadcrumbs" aria-label="Breadcrumb"><a href="/admin">Admin</a> <span>/</span> <a href="/admin">Business</a> <span>/</span> <span>Finance</span></nav><h1 class="page-title" id="pageTitle">Finance</h1><div class="page-subtitle" id="pageSubtitle">Revenue, expenses, payments and financial records.</div></header>
-<div class="toolRoot" id="toolRoot"><div style="padding-top:14px"><div class="card" style="margin-top:14px"><div class="card-header"><h3 class="card-title">Finance Summary</h3></div><p class="muted">Financial calculations preserved. Revenue vs Expenses chart uses real data from existing records. All formulas unchanged.</p></div></div></div>
-</main></div>
-<script>const SIDEBAR_KEY="assistara_admin_sidebar";function applySidebarState(){try{const c=localStorage.getItem(SIDEBAR_KEY)==="1";document.getElementById("sidebar").classList.toggle("collapsed",c);}catch{}}applySidebarState();document.getElementById("menuToggle").onclick=()=>{document.getElementById("sidebar").classList.add("open");document.getElementById("sidebarOverlay")?.classList.add("show");};document.getElementById("sidebarOverlay")?.addEventListener("click",()=>{document.getElementById("sidebar").classList.remove("open");document.getElementById("sidebarOverlay")?.classList.remove("show");});</script>
-</body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Finance | Assistara Admin</title>
+    <meta name="assistara-finance-version" content="original-currency-v2" />
+    <link rel="icon" href="/assistara-logo.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #171717;
+        --cream: #f7f5ef;
+        --line: #e2ded4;
+        --muted: #746e65;
+        --yellow: #ffd51f;
+        --green: #eaf8ee;
+        --greenInk: #1d6a3b;
+        --red: #fde9e7;
+        --redInk: #8b2825;
+        --orange: #fff0db;
+        --orangeInk: #8a4b00;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body,
+      button,
+      input,
+      select,
+      textarea {
+        font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+      }
+      .shell {
+        width: min(1120px, calc(100% - 28px));
+        margin: auto;
+        padding-bottom: 40px;
+      }
+      .top {
+        margin-top: 16px;
+        background: #171717;
+        color: #fff;
+        border-radius: 18px;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+      }
+      .brand img {
+        width: 34px;
+      }
+      .topLinks {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .topLinks a {
+        color: #fff;
+        text-decoration: none;
+        border: 1px solid #3c3c3c;
+        background: #2a2a2a;
+        border-radius: 999px;
+        padding: 10px 15px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .topLinks a:hover {
+        background: #383838;
+        border-color: #515151;
+      }
+      .head {
+        margin: 26px 0 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .head h1 {
+        margin: 0;
+        font-size: 34px;
+      }
+      .sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 5px;
+      }
+      .currencySwitch {
+        display: inline-flex;
+        gap: 2px;
+        padding: 3px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+      }
+      .currencySwitch button {
+        border: 0;
+        background: none;
+        border-radius: 999px;
+        padding: 8px 15px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--muted);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .currencySwitch button:not(.active):hover {
+        background: #f1eee5;
+        color: var(--ink);
+      }
+      .currencySwitch button.active {
+        background: #171717;
+        color: #fff;
+      }
+      .fnav {
+        margin: 16px 0 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        display: flex;
+        gap: 18px;
+        padding: 0 14px;
+        overflow: auto;
+      }
+      .fnav button {
+        border: 0;
+        background: none;
+        padding: 15px 2px;
+        font-weight: 700;
+        white-space: nowrap;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .fnav button.active {
+        border-bottom: 3px solid #171717;
+      }
+      .rangeRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 9px 12px;
+        margin: 0 0 14px;
+        flex-wrap: wrap;
+      }
+      .rangeRow select,
+      .rangeRow input {
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #faf9f5;
+        padding: 8px 10px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .rangeRow .rangeDate {
+        width: 150px;
+      }
+      .rangeRow .rangeDate.hidden {
+        display: none;
+      }
+      .rangeTo {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .rangeLabel {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .banner {
+        display: none;
+        background: var(--red);
+        border: 1px solid #efb8b3;
+        color: var(--redInk);
+        border-radius: 14px;
+        padding: 13px 15px;
+        margin: 0 0 14px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .banner.show {
+        display: block;
+      }
+      .banner b {
+        font-weight: 800;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .stat b {
+        display: block;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+      .stat span {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 5px;
+        font-weight: 700;
+      }
+      .stat .statSub {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .stat.negative b {
+        color: var(--redInk);
+      }
+      .stat.positive b {
+        color: var(--greenInk);
+      }
+      .tool {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        margin: 14px 0;
+      }
+      .tool h2 {
+        margin: 0 0 4px;
+        font-size: 20px;
+      }
+      .tool .toolSub {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 12px;
+      }
+      .form {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .field .hint {
+        font-weight: 500;
+        color: var(--muted);
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 11px 12px;
+        background: #fff;
+        font: inherit;
+        font-size: 13px;
+        color: var(--ink);
+      }
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        outline: 2px solid var(--ink);
+        outline-offset: 1px;
+        border-color: var(--ink);
+      }
+      .wide {
+        grid-column: 1 / -1;
+      }
+      .formHead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .formActions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .fxNote {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .unknownAmt {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        background: rgba(255, 183, 77, 0.14);
+        border: 1px solid rgba(255, 183, 77, 0.35);
+        padding: 2px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .fxRateDisplay {
+        grid-column: 1 / -1;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        padding: 8px 12px;
+        background: #faf9f5;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .fxRateDisplay .auto {
+        color: var(--greenInk);
+      }
+      .fxRateDisplay .manual {
+        color: var(--orangeInk);
+      }
+      .fxRateDisplay .error {
+        color: var(--redInk);
+      }
+      .primary {
+        border: 0;
+        background: var(--yellow);
+        color: var(--ink);
+        border-radius: 10px;
+        padding: 12px 18px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .primary:hover {
+        background: #e8bf00;
+      }
+      .primary:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      .ghost {
+        border: 1px solid #d7d2c8;
+        background: #fff;
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-weight: 800;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .ghost:hover {
+        background: #faf9f5;
+      }
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 0 0 12px;
+      }
+      .toolbar .search {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #fff;
+        width: min(300px, 100%);
+        font: inherit;
+        font-size: 13px;
+      }
+      .expenseList {
+        display: grid;
+        gap: 9px;
+      }
+      .expenseRow {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 13px 14px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: start;
+      }
+      .expMain {
+        min-width: 0;
+      }
+      .expTop {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .expAmount {
+        font-size: 17px;
+        font-weight: 800;
+        margin-left: auto;
+        white-space: nowrap;
+      }
+      .expAmount small {
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 12px;
+        margin-left: 6px;
+      }
+      .expName {
+        font-weight: 800;
+        margin-top: 6px;
+      }
+      .expMeta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        line-height: 1;
+        padding: 4px 7px;
+        border-radius: 6px;
+        background: #efede8;
+        white-space: nowrap;
+      }
+      .badge.recurring {
+        background: var(--orange);
+        color: var(--orangeInk);
+        border: 1px solid #f1c889;
+      }
+      .badge.source {
+        background: var(--green);
+        color: var(--greenInk);
+        border: 1px solid #b9e4c8;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .actions button {
+        min-height: 34px;
+        border: 1px solid #d7d2c8;
+        background: #fff;
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-weight: 800;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .actions button:hover {
+        background: #faf9f5;
+      }
+      .actions .danger {
+        background: var(--red);
+        color: var(--redInk);
+        border-color: #efb8b3;
+      }
+      .empty {
+        background: #fff;
+        border: 1px dashed var(--line);
+        border-radius: 14px;
+        padding: 26px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .barBlock {
+        margin-top: 10px;
+      }
+      .barRow {
+        display: grid;
+        grid-template-columns: minmax(120px, 1.2fr) auto 1.6fr;
+        gap: 10px;
+        align-items: center;
+        padding: 7px 0;
+        font-size: 13px;
+      }
+      .barLabel {
+        font-weight: 700;
+        overflow-wrap: anywhere;
+        min-width: 0;
+      }
+      .barVal {
+        color: var(--muted);
+        font-weight: 700;
+        white-space: nowrap;
+        font-size: 12px;
+      }
+      .barBlock details.barRow { display: block; }
+      .barBlock summary { cursor: pointer; padding: 8px 0; display: block; }
+      .barTop {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .catSwatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 8px;
+      }
+      .barRow .barTrack {
+        margin-top: 7px;
+      }
+      .barTotal {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 2px solid var(--line);
+      }
+      .barTotal .barLabel {
+        font-weight: 800;
+        font-size: 14px;
+      }
+      .barTotal .barTrack {
+        margin-top: 8px;
+      }
+      .barBlock summary .barVal { float: right; }
+      .barBlock details .expenseList { margin: 10px 0 18px; }
+      .barTrack {
+        background: #f0ede6;
+        border-radius: 999px;
+        height: 10px;
+        overflow: hidden;
+      }
+      .barFill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--ink);
+        min-width: 2px;
+      }
+      .barFill.rev {
+        background: var(--greenInk);
+      }
+      .barFill.exp {
+        background: var(--yellow);
+      }
+      .barFill.mkt {
+        background: #d97706;
+      }
+      .barRight {
+        display: inline-flex;
+        gap: 14px;
+        align-items: baseline;
+        justify-content: flex-end;
+      }
+      .barPct {
+        color: var(--muted);
+        font-weight: 800;
+        font-size: 12px;
+        min-width: 52px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .donutWrap {
+        display: flex;
+        gap: 26px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+      .donut {
+        width: 190px;
+        height: 190px;
+        flex: 0 0 auto;
+      }
+      .donut circle {
+        transition: opacity 0.15s ease;
+      }
+      .donut circle:hover {
+        opacity: 0.82;
+      }
+      .donutTotal {
+        fill: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+      .donutTotalVal {
+        fill: var(--ink);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .donutLegend {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        flex: 1 1 240px;
+        min-width: 200px;
+        display: grid;
+        gap: 8px;
+      }
+      .donutLegend li {
+        display: grid;
+        grid-template-columns: 12px 1fr auto auto;
+        gap: 10px;
+        align-items: center;
+        font-size: 13px;
+      }
+      .donutDot {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+      }
+      .donutName {
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+      .donutPct {
+        color: var(--muted);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .donutAmt {
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .dualChart {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+        align-items: end;
+      }
+      .dualCol {
+        display: grid;
+        gap: 5px;
+        text-align: center;
+      }
+      .dualBars {
+        display: flex;
+        justify-content: center;
+        gap: 3px;
+        align-items: end;
+        height: 110px;
+      }
+      .dualBars i {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 6px;
+        max-width: 28px;
+        border-radius: 4px 4px 0 0;
+        background: var(--line);
+      }
+      .dualBars i.rev {
+        background: var(--greenInk);
+      }
+      .dualBars i.exp {
+        background: var(--yellow);
+      }
+      .dualCol .dLabel {
+        font-size: 10px;
+        color: var(--muted);
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .legend {
+        display: flex;
+        gap: 14px;
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 700;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .legend i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 5px;
+        vertical-align: -1px;
+      }
+      .legend i.rev {
+        background: var(--greenInk);
+      }
+      .legend i.exp {
+        background: var(--yellow);
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+      .tableWrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+      table.fin {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        min-width: 760px;
+      }
+      table.fin th {
+        text-align: right;
+        padding: 11px 10px 7px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+        font-weight: 800;
+      }
+      table.fin th:first-child {
+        text-align: left;
+        padding-left: 14px;
+      }
+      table.fin th .thSub {
+        display: block;
+        font-size: 9px;
+        letter-spacing: 0;
+        text-transform: none;
+        font-weight: 600;
+      }
+      table.fin td {
+        text-align: right;
+        padding: 9px 10px;
+        border-bottom: 1px solid #f1eee7;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      table.fin td:first-child {
+        text-align: left;
+        padding-left: 14px;
+        white-space: normal;
+      }
+      table.fin tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      table.fin tr.totalRow td {
+        border-top: 1px solid var(--line);
+        font-weight: 800;
+        background: #faf9f5;
+      }
+      .srcLabel {
+        font-weight: 800;
+      }
+      .srcLabel small {
+        display: block;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .note {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 10px 0 0;
+        line-height: 1.55;
+      }
+      .toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        padding: 13px 16px;
+        border-radius: 12px;
+        background: #171717;
+        color: #fff;
+        display: none;
+        font-size: 13px;
+        z-index: 10;
+      }
+      .toast.show {
+        display: block;
+      }
+      @media (max-width: 760px) {
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+        .form {
+          grid-template-columns: 1fr 1fr;
+        }
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+        .expenseRow {
+          grid-template-columns: 1fr;
+        }
+        .actions {
+          justify-content: flex-start;
+        }
+        .expAmount {
+          margin-left: 0;
+        }
+      }
+      @media (max-width: 520px) {
+        .form {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
+  </head>
+  <body>
+    <div class="shell">
+      <div class="top">
+        <div class="brand">
+          <img src="/assistara-logo.svg" /><span>Assistara Admin</span>
+        </div>
+        <div class="topLinks">
+          <a href="/admin">← Admin</a>
+          <a href="/admin/acquisition">Acquisition Tracker</a>
+        </div>
+      </div>
+      <div class="head">
+        <div>
+          <h1>Finance</h1>
+          <div class="sub">
+            Revenue, expenses and marketing ROI. Amounts are stored in PHP (₱); switch the
+            display currency to view them in PHP, USD or EUR.
+          </div>
+        </div>
+        <div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency">
+          <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
+          <button type="button" data-cur="USD" aria-pressed="false">USD</button>
+          <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
+        </div>
+      </div>
+
+      <div class="fnav" id="fnav">
+        <button class="active" data-tab="overview">Overview</button>
+        <button data-tab="expenses">Expenses</button>
+        <button data-tab="marketing">Marketing</button>
+        <button data-tab="revenue">Revenue</button>
+      </div>
+
+      <div class="rangeRow" id="rangeRow">
+        <select id="rangePreset">
+          <option value="thisMonth">This month</option>
+          <option value="lastMonth">Last month</option>
+          <option value="all">All time</option>
+          <option value="custom">Custom range</option>
+        </select>
+        <input type="date" id="rangeStart" class="rangeDate hidden" />
+        <span class="rangeTo hidden" id="rangeTo">→</span>
+        <input type="date" id="rangeEnd" class="rangeDate hidden" />
+        <span class="rangeLabel" id="rangeLabel"></span>
+      </div>
+
+      <div class="banner" id="banner"></div>
+      <div id="content"></div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <script src="/attribution.js"></script>
+    <script>
+      /* ---------------------------------------------------------------- *
+       * Assistara Finance
+       *
+       * Sources of truth (reused, never duplicated):
+       *   - Revenue  -> academy_applications (payment_status = paid,
+       *                 purchase_amount / checkout_amount_php)
+       *   - Leads    -> masterclass_signups + b2b_leads via the Acquisition
+       *                 Tracker (admin-acquisition) for link structure/labels
+       *   - Expenses -> NEW finance_expenses table via admin-finance
+       * ---------------------------------------------------------------- */
+      const FIN =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-finance",
+        APP =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-applications",
+        ACQ =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition";
+      const CATEGORIES = [
+        "Advertising",
+        "Website / Hosting",
+        "Software",
+        "Email",
+        "Domain",
+        "Contractors",
+        "Payment / Banking Fees",
+        "Content",
+        "Legal / Admin",
+        "Other",
+      ];
+      const MARKETING_CATEGORY = "Advertising";
+      // Existing category that provider processing fees are represented under.
+      const FEE_CATEGORY = "Payment / Banking Fees";
+      const FREQ_LABEL = { monthly: "Monthly", quarterly: "Quarterly", yearly: "Yearly" };
+      const STEP = { monthly: 1, quarterly: 3, yearly: 12 };
+      const METHOD_LABEL = {
+        gcash: "GCash",
+        stripe: "Card",
+        paymongo_qrph: "QR Ph",
+      };
+      const CURRENCY_SYMBOL = { PHP: "₱", USD: "$", EUR: "€" };
+      const DEFAULT_USD_RATE = 56;
+      const DEFAULT_EUR_RATE = 60;
+
+      /* ---------------------------------------------------------------- *
+       * Display currency (client-only preference)
+       *
+        * Expenses retain original amount/currency and entry-time PHP rate.
+        * Same-currency display uses the original directly. Cross-currency
+        * display uses original * recorded PHP rate / session reporting rate.
+        * Reporting rates share one date; missing rates never default to 1.
+        * Round each displayed transaction to cents, then sum those cents.
+        * This preference never writes financial data.
+       * ---------------------------------------------------------------- */
+      const DISPLAY_CURRENCIES = ["PHP", "USD", "EUR"];
+      const DISPLAY_KEY = "assistara_finance_display_currency";
+      const displayRates = { PHP: 1 }; // PHP per 1 unit of the display currency
+      const displayRateDate = new Date().toISOString().slice(0, 10);
+      let displayCurrency = (() => {
+        try {
+          const saved = localStorage.getItem(DISPLAY_KEY);
+          return DISPLAY_CURRENCIES.includes(saved) ? saved : "PHP";
+        } catch {
+          return "PHP";
+        }
+      })();
+
+      const token = (() => {
+        try {
+          return (
+            localStorage.getItem("assistara_admin_token") ||
+            sessionStorage.getItem("assistara_admin_token") ||
+            ""
+          );
+        } catch {
+          return "";
+        }
+      })();
+      if (!token) location.href = "/admin";
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) =>
+        String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#039;",
+            })[c],
+        );
+      function toast(s) {
+        $("toast").textContent = s;
+        $("toast").className = "toast show";
+        setTimeout(() => ($("toast").className = "toast"), 2600);
+      }
+      async function req(api, action, p = {}) {
+        const r = await fetch(api, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: JSON.stringify({ action, ...p }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw Error(j.error || "Request failed");
+        return j;
+      }
+      async function loadAcquisitionLinks() {
+        try {
+          const r = await fetch(ACQ, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({ action: "list" }),
+          });
+          const j = await r.json().catch(() => ({}));
+          return r.ok ? j.links || [] : [];
+        } catch {
+          return [];
+        }
+      }
+
+      /* ---------------------------------------------------------------- *
+       * State
+       * ---------------------------------------------------------------- */
+      let apps = [],
+        signups = [],
+        links = [],
+        attributionVisits = [],
+        expenses = [],
+        fees = [],
+        expensesError = "";
+      let tab = "overview",
+        preset = "thisMonth",
+        customStart = "",
+        customEnd = "",
+        editingId = null,
+        searchQ = "";
+
+      /* ---------------------------------------------------------------- *
+       * Date ranges
+       * ---------------------------------------------------------------- */
+      function dayUTC(s) {
+        const [y, m, d] = String(s).split("-").map(Number);
+        return Date.UTC(y, m - 1, d);
+      }
+      /* Today's calendar date in the browser's LOCAL timezone. Never uses
+       * toISOString() (UTC), which can show yesterday/tomorrow in the
+       * Philippines around midnight. */
+      function todayLocalISO() {
+        const d = new Date();
+        return (
+          d.getFullYear() +
+          "-" +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(d.getDate()).padStart(2, "0")
+        );
+      }
+      function labelForRange(r) {
+        if (!r.start) return "All time";
+        const f = (ms) =>
+          new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        return f(r.start) + " – " + f(r.end);
+      }
+      function currentRange() {
+        const now = new Date();
+        if (preset === "all") return { start: null, end: null, label: "All time" };
+        if (preset === "custom") {
+          if (!customStart || !customEnd) return { start: null, end: null, label: "All time" };
+          return {
+            start: dayUTC(customStart),
+            end: dayUTC(customEnd) + 86399999,
+            label: labelForRange({ start: dayUTC(customStart), end: dayUTC(customEnd) + 86399999 }),
+          };
+        }
+        if (preset === "lastMonth") {
+          const y = now.getUTCFullYear(),
+            m = now.getUTCMonth();
+          const start = Date.UTC(y, m - 1, 1);
+          return { start, end: Date.UTC(y, m, 0, 23, 59, 59, 999), label: "Last month" };
+        }
+        const y = now.getUTCFullYear(),
+          m = now.getUTCMonth();
+        const start = Date.UTC(y, m, 1);
+        return { start, end: Date.UTC(y, m + 1, 0, 23, 59, 59, 999), label: "This month" };
+      }
+      function inRange(ms) {
+        const r = currentRange();
+        return !r.start || (ms >= r.start && ms <= r.end);
+      }
+      function rangeUI() {
+        $("rangeRow").style.display = tab === "expenses" ? "none" : "";
+        const custom = preset === "custom";
+        $("rangeStart").classList.toggle("hidden", !custom);
+        $("rangeEnd").classList.toggle("hidden", !custom);
+        $("rangeTo").classList.toggle("hidden", !custom);
+        $("rangeLabel").textContent = currentRange().label;
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Recurring expense occurrences
+       *
+       * A recurring expense stays ONE row. Occurrences are materialised into
+       * the selected range on the fly (monthly/quarterly/yearly from the
+       * expense date), so a monthly cost never has to be entered again.
+       * ---------------------------------------------------------------- */
+      function addMonthsUTC(ms, n) {
+        const d = new Date(ms);
+        return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, d.getUTCDate());
+      }
+      function occurrences(e, r) {
+        const base = dayUTC(e.expense_date);
+        // An optional end date stops future occurrences of a schedule while
+        // keeping everything on or before it. It caps the range from both
+        // sides, so cancelling a recurring expense never needs re-entry.
+        let end = r.end ?? null;
+        if (e.ends_on) {
+          const stop = dayUTC(e.ends_on);
+          end = end === null ? stop : Math.min(end, stop);
+        }
+        if (!e.recurring) {
+          if (r.start && base < r.start) return [];
+          if (end && base > end) return [];
+          return [base];
+        }
+        const step = STEP[e.recurrence_frequency] || 1;
+        if (end && base > end) return [];
+        const list = [];
+        for (let d = base; !end || d <= end; d = addMonthsUTC(d, step)) {
+          if (!r.start || d >= r.start) list.push(d);
+          if (end && d > end) break;
+        }
+        return list;
+      }
+      function materializedExpenses() {
+        const r = currentRange();
+        // Bounded ranges materialise recurring schedules into the range. "All
+        // time" has no end, so accrued occurrences run from the schedule
+        // start up to today instead of collapsing to the single base date.
+        const dates = (e) =>
+          r.start || r.end
+            ? occurrences(e, r)
+            : e.recurring
+              ? occurrences(e, { start: null, end: Date.now() })
+              : [dayUTC(e.expense_date)];
+        return expenses
+          .map((e) => ({ e, dates: dates(e) }))
+          .filter((x) => x.dates.length);
+      }
+      const isMarketingExpense = (e) => !!(e.link_id || e.category === MARKETING_CATEGORY);
+
+      /* ---------------------------------------------------------------- *
+       * Payment processing fees, represented as an expense category
+       *
+       * Provider fees live in the immutable `payment_processing_fees`
+       * ledger (one row per provider charge, unique on provider+charge).
+       * They are REPRESENTED here under the existing "Payment / Banking
+       * Fees" category so Total Expenses and the category breakdown include
+       * them — without writing new finance_expenses rows, so a fee can
+       * never be counted twice and no financial record is rewritten.
+       * ---------------------------------------------------------------- */
+      function feesInRange() {
+        const paid = paidAppsInRange();
+        const byId = new Map(paid.map((a) => [a.id, a]));
+        return (fees || [])
+          .filter((f) => byId.has(f.application_id) && f.gross_amount_php != null && Number.isFinite(Number(f.fee_amount_php)))
+          .map((f) => ({ f, app: byId.get(f.application_id) }));
+      }
+      function feeToExpense(f, app) {
+        const provider = String(f.provider || "").toLowerCase();
+        const label =
+          provider === "stripe" ? "Stripe (Card)" : provider === "paymongo" ? "PayMongo (QR Ph)" : f.provider || "Payment provider";
+        const det = f.fee_details || {};
+        const original =
+          det.original_currency && det.original_fee_amount != null
+            ? ` · Original ${det.original_fee_amount} ${String(det.original_currency).toUpperCase()}`
+            : "";
+        return {
+          id: "fee-" + f.id,
+          category: FEE_CATEGORY,
+          amount: Number(f.fee_amount_php || 0),
+          currency: "PHP",
+          fx_rate_php: 1,
+          expense_date: String((app && app.paid_at) || f.created_at || "").slice(0, 10),
+          vendor: label,
+          description: "Processing fee" + original,
+          recurring: false,
+          _fee: true,
+          reconciliation_status: f.reconciliation_status || "confirmed",
+        };
+      }
+      function feeExpenseEntries() {
+        return feesInRange().map(({ f, app }) => {
+          const e = feeToExpense(f, app);
+          const ms = Date.parse((app && app.paid_at) || f.created_at || "");
+          return { e, dates: [Number.isFinite(ms) ? ms : Date.now()] };
+        });
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Financial math
+       * ---------------------------------------------------------------- */
+      function cents(value) {
+        return Math.round((value + Number.EPSILON * Math.abs(value)) * 100);
+      }
+      function formatMoney(value, currency = displayCurrency) {
+        if (value == null || !Number.isFinite(value) || !DISPLAY_CURRENCIES.includes(currency)) return "—";
+        return (CURRENCY_SYMBOL[currency] || "") + value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function phpDisplay(value) {
+        const rate = displayRates[displayCurrency];
+        return value == null || !Number.isFinite(Number(value)) || !(rate > 0) ? null : cents(Number(value) / rate) / 100;
+      }
+      function expenseDisplay(e) {
+        if (!DISPLAY_CURRENCIES.includes(e.currency) || e.amount == null || !Number.isFinite(Number(e.amount))) return null;
+        const amount = Number(e.amount);
+        if (displayCurrency === e.currency) return cents(amount) / 100;
+        const sourceRate = e.currency === "PHP" ? 1 : Number(e.fx_rate_php);
+        const targetRate = displayRates[displayCurrency];
+        if (!(sourceRate > 0) || !Number.isFinite(sourceRate) || !(targetRate > 0) || !Number.isFinite(targetRate)) return null;
+        return cents(amount * sourceRate / targetRate) / 100;
+      }
+      function expenseTotal(mat) {
+        let total = 0;
+        for (const { e, dates } of mat) {
+          const value = expenseDisplay(e);
+          if (value === null) return null; // Never silently omit unknown costs.
+          total += cents(value) * dates.length;
+        }
+        return total / 100;
+      }
+      function money(n, record) {
+        return formatMoney(record ? expenseDisplay(record) : phpDisplay(n));
+      }
+      function num(n, frac = 2) {
+        if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+        const v = Number(n);
+        if (v % 1 === 0) return v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+        return v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: frac });
+      }
+      /* Revenue must always be an actual known payment amount. The record
+       * carries the charged amount in `purchase_amount` (written by the
+       * Stripe / PayMongo / GCash flows on payment) with the quoted
+       * `checkout_amount_php` (standard price or promo-applied) as a real
+       * fallback. When neither is present the amount is genuinely UNKNOWN:
+       * the student still counts as paid, but no revenue is fabricated and
+       * the amount is shown as unavailable everywhere it would be summed. */
+      function knownRevenue(x) {
+        const p = Number(x.purchase_amount);
+        if (Number.isFinite(p) && p > 0) return p;
+        const c = Number(x.checkout_amount_php);
+        return Number.isFinite(c) && c > 0 ? c : null;
+      }
+      function revSum(xs) {
+        return xs.reduce((s, x) => s + (knownRevenue(x) || 0), 0);
+      }
+      function paidAppsInRange() {
+        return apps.filter(
+          (x) =>
+            !isTestApp(x) &&
+            !isDiagApp(x) &&
+            String(x.payment_status || "") === "paid" &&
+            x.paid_at &&
+            inRange(Date.parse(x.paid_at)),
+        );
+      }
+      function isTestApp(x) {
+        // Test payments are identified by concrete test markers (sandbox /
+        // internal-qa source, "test" name, the PayMongo QA address), NOT by
+        // payment method: QR Ph is a real payment channel in live mode and
+        // blanket-excluding it would hide genuine revenue.
+        return (
+          /^(internal_.*(qa|test)|sandbox)/i.test(String(x.source || "")) ||
+          /(^|\b)test(\b|$)/i.test(String(x.name || "")) ||
+          String(x.email || "").toLowerCase() === "paymongo-qa@getassistara.com"
+        );
+      }
+      const isDiagApp = (x) =>
+        /^diag(?:nostic)?[-_]/i.test(String(x.email || "")) ||
+        /diagnostic/i.test(String(x.name || "")) ||
+        /diagnostic/i.test(String(x.source || ""));
+      const isDiagSignup = (s) =>
+        /^diag(?:nostic)?[-_]/i.test(String(s.email || "")) ||
+        /diagnostic/i.test(String(s.name || "")) ||
+        /diagnostic/i.test(String(s.source || ""));
+
+      /* ---------------------------------------------------------------- *
+       * Sources: connect records to the Acquisition Tracker structure
+       * ---------------------------------------------------------------- */
+      function linkFor(token) {
+        const t = String(token || "").trim();
+        if (!t) return null;
+        return (
+          links.find((l) => String(l.token || "").trim() === t) ||
+          links.find((l) => String(l.id || "").trim() === t) ||
+          null
+        );
+      }
+      function sourceOf(x) {
+        // One shared resolver decides the source (attribution.js); a real
+        // acquisition-link visit is tracked even when every UTM field is null.
+        const r = window.AssistaraAttribution.resolve(x, {
+          kind: "application",
+          links,
+          visits: attributionVisits,
+          signups,
+        });
+        if (!r.tracked) return { id: "", label: "Direct / untracked", link: null };
+        const l = linkFor(r.token);
+        return l
+          ? { id: String(l.id), label: r.display, link: l }
+          : { id: "__unknown__", label: r.display, link: null };
+      }
+      function sourceLabelOfLink(l) {
+        if (!l) return "Direct / untracked";
+        const parts = [l.channel, l.placement, l.label].filter(Boolean);
+        return parts.length ? parts.join(" → ") : "Campaign (" + String(l.token || l.id || "").slice(0, 12) + "…)";
+      }
+      function buildAppByEmail() {
+        const m = new Map();
+        apps.forEach((a) => a.email && m.set(String(a.email).trim().toLowerCase(), a));
+        return m;
+      }
+      function acquisitionWeightFromReadiness(readiness) {
+        const r = String(readiness || "").trim().toLowerCase();
+        if (r === "willing to invest in myself") return 15;
+        if (r === "need payment plan") return 8;
+        return 1;
+      }
+      function acquisitionWeight(signup, byEmail) {
+        const app = byEmail.get(String(signup.email || "").trim().toLowerCase());
+        return acquisitionWeightFromReadiness(app?.payment_readiness);
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Marketing funnel rows (per Acquisition Tracker link)
+       * ---------------------------------------------------------------- */
+      function marketingRows() {
+        const byEmail = buildAppByEmail();
+        // Applications that no signup already represents earn their own
+        // acquisition points, so a direct applicant counts toward the funnel
+        // exactly like a webinar lead.
+        const signupIds = new Set(signups.map((s) => String(s.id)));
+        const signupEmails = new Set(signups.filter((s) => s.email).map((s) => String(s.email).trim().toLowerCase()));
+        const linkedAppIds = new Set(signups.filter((s) => s.application_id).map((s) => String(s.application_id)));
+        const isDirectApp = (a) =>
+          !linkedAppIds.has(String(a.id)) &&
+          !(a.masterclass_signup_id && signupIds.has(String(a.masterclass_signup_id))) &&
+          !(a.email && signupEmails.has(String(a.email).trim().toLowerCase()));
+        const rows = new Map();
+        const keyOf = (id) => (id === undefined || id === null || id === "" ? "" : String(id));
+        const ensure = (id, label, link, kind) => {
+          const k = keyOf(id);
+          if (!rows.has(k)) {
+            rows.set(k, {
+              id: k,
+              label,
+              link,
+              kind,
+              spend: 0,
+              leads: 0,
+              points: 0,
+              apps: 0,
+              paid: 0,
+              revenue: 0,
+              b2bLeads: 0,
+            });
+          }
+          return rows.get(k);
+        };
+
+        // One row per Acquisition Tracker link, plus the untracked bucket.
+        links
+          .filter((l) => String(l.destination) === "academy")
+          .forEach((l) => ensure(String(l.id), sourceLabelOfLink(l), l, "academy"));
+        links
+          .filter((l) => String(l.destination) === "b2b")
+          .forEach((l) => ensure(String(l.id), sourceLabelOfLink(l), l, "b2b"));
+        ensure("", "Direct / untracked", null, "academy");
+        ensure("__unknown__", "Unknown tracking source", null, "academy");
+
+        // Spend: marketing expenses linked to a campaign source. Occurrences
+        // within the selected range each count once.
+        let unattributedSpend = 0;
+        for (const { e, dates } of materializedExpenses()) {
+          if (!isMarketingExpense(e)) continue;
+          const value = expenseDisplay(e);
+          const total = value === null ? NaN : dates.length * value;
+          if (e.link_id) {
+            const linked = links.find((l) => String(l.id) === String(e.link_id));
+            ensure(String(e.link_id), linked ? sourceLabelOfLink(linked) : "Deleted campaign (" + String(e.link_id).slice(0, 8) + "…)", linked || null, "academy").spend += total;
+          } else unattributedSpend += total;
+        }
+
+        // Applications -> funnel. "Applications" counts submissions made in
+        // range; "paid" / "revenue" count payments received in range so a
+        // student who applied earlier but paid within the range still shows
+        // up under their source (matching the Overview's paid_at-based total).
+        // Student records carrying a B2B campaign token are never guessed
+        // into a B2B row (those rows report the Acquisition Tracker's own
+        // lead counter); they fall back to the Unknown bucket instead.
+        const studentSrc = (x) => {
+          const s = sourceOf(x);
+          return s.link && String(s.link.destination) === "b2b"
+            ? { id: "__unknown__", label: "Unknown tracking source", link: null }
+            : s;
+        };
+        for (const a of apps) {
+          if (isTestApp(a) || isDiagApp(a)) continue;
+          const src = studentSrc(a);
+          const row = ensure(src.id, src.label, src.link, "academy");
+          if (inRange(Date.parse(a.created_at || 0))) {
+            row.apps += 1;
+            // Direct applications (no linked signup) also earn acquisition points.
+            if (isDirectApp(a)) row.points += acquisitionWeightFromReadiness(a.payment_readiness);
+          }
+          if (String(a.payment_status || "") === "paid" && a.paid_at && inRange(Date.parse(a.paid_at))) {
+            row.paid += 1;
+            row.revenue += phpDisplay(knownRevenue(a) || 0) ?? NaN;
+          }
+        }
+        // Signups -> leads + acquisition points. B2B-token signups are not
+        // student-funnel leads; they stay out of academy sources too.
+        for (const s of signups) {
+          if (isDiagSignup(s)) continue;
+          if (!inRange(Date.parse(s.created_at || 0))) continue;
+          const src = studentSrc(s);
+          const row = ensure(src.id, src.label, src.link, "academy");
+          row.leads += 1;
+          row.points += acquisitionWeight(s, byEmail);
+        }
+        // B2B links reuse the Acquisition Tracker's own lead counter.
+        rows.forEach((row) => {
+          if (row.kind === "b2b" && row.link) row.b2bLeads = Number(row.link.b2b_leads || 0);
+        });
+
+        const list = [...rows.values()];
+        const hasData = (x) =>
+          x.spend > 0 || x.leads > 0 || x.points > 0 || x.apps > 0 || x.paid > 0 || x.b2bLeads > 0;
+        const tracked = list.filter((x) => x.id !== "" && x.id !== "__unknown__" && hasData(x)).sort(
+          (a, b) => b.spend - a.spend || b.paid - a.paid || b.revenue - a.revenue,
+        );
+        const extras = [
+          list.find((x) => x.id === "") || null,
+          list.find((x) => x.id === "__unknown__") || null,
+        ].filter(Boolean);
+        const unattributed = unattributedSpend > 0
+          ? [{ id: "__unattributed__", label: "Unattributed marketing spend", link: null, kind: "academy", spend: unattributedSpend, leads: 0, points: 0, apps: 0, paid: 0, revenue: 0, b2bLeads: 0 }]
+          : [];
+        return { rows: tracked.concat(unattributed, extras), unattributedSpend };
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Overview
+       * ---------------------------------------------------------------- */
+      function renderOverview() {
+        const paid = paidAppsInRange();
+        const revenue = revSum(paid);
+        const trackedPaidRevenue = revSum(
+          paid.filter((a) => sourceOf(a).id !== "" && sourceOf(a).id !== "__unknown__"),
+        );
+        const unknownAmountCount = paid.filter((a) => knownRevenue(a) === null).length;
+
+        const mat = materializedExpenses();
+        const feeMat = feeExpenseEntries();
+        const allMat = mat.concat(feeMat);
+        const nonFeeExpenses = expenseTotal(mat);
+        const processingFees = expenseTotal(feeMat);
+        const totalExpenses = nonFeeExpenses === null || processingFees === null ? null : nonFeeExpenses + processingFees;
+        const marketingMat = mat.filter((x) => isMarketingExpense(x.e));
+        const marketingSpend = expenseTotal(marketingMat);
+
+        // Accounting — one source of truth (all amounts in the display currency):
+        //   Gross Revenue   = known paid tuition in range
+        //   Processing Fees = provider fees from the immutable fee ledger (an expense)
+        //   Total Expenses  = manual expenses + processing fees
+        //   Net Revenue     = Gross Revenue − Processing Fees
+        //   Net Profit      = Gross Revenue − Total Expenses
+        // Net Profit = Net Revenue − (Total Expenses − Processing Fees), so fees
+        // are deducted exactly once and never double-counted.
+        const grossDisplayed = phpDisplay(revenue);
+        const netRevenue = grossDisplayed === null || processingFees === null ? null : grossDisplayed - processingFees;
+        const net = grossDisplayed === null || totalExpenses === null ? null : grossDisplayed - totalExpenses;
+        const cac = marketingSpend > 0 && paid.length ? marketingSpend / paid.length : null;
+        const roas = marketingSpend > 0 ? phpDisplay(trackedPaidRevenue) / marketingSpend : null;
+
+        const stats = [
+          [formatMoney(grossDisplayed), "Gross Revenue", "Known paid tuition within range" + (unknownAmountCount ? ` · ${unknownAmountCount} paid without a recorded amount` : "")],
+          [formatMoney(netRevenue), "Net Revenue", "Gross revenue minus processing fees"],
+          [formatMoney(totalExpenses), "Total Expenses", "Manual expenses + processing fees · FX reporting date " + displayRateDate],
+          [formatMoney(net), "Net Profit / Loss", net < 0 ? "Spending exceeds net revenue" : "Gross revenue minus total expenses"],
+          [formatMoney(marketingSpend), "Marketing Spend", "Advertising + expenses tied to a campaign"],
+          [num(paid.length), "Paid Students", "Tuition received within range"],
+          have(cac) ? [formatMoney(cac), "CAC", "Marketing spend ÷ paid students"] : ["—", "CAC", "No paid students in range"],
+          have(roas) ? [num(roas, 2) + "×", "ROAS", "Attributed revenue ÷ marketing spend"] : ["—", "ROAS", "No marketing spend in range"],
+        ];
+        $("content").innerHTML =
+          `<div class="stats">${stats.map(([v, t, s]) => `<div class="stat${t === "Net Profit / Loss" ? (net < 0 ? " negative" : net > 0 ? " positive" : "") : ""}"><b>${v}</b><span>${esc(t)}</span><span class="statSub">${esc(s)}</span></div>`).join("")}</div>` +
+          `<div class="financeChartWide">${revVsExpenseBlock()}</div>` +
+          `<div class="tool"><h2>Expenses by category</h2><div class="toolSub">All expenses in the selected range, including payment processing fees (recurring schedules counted per occurrence).</div>${categoryBlock(allMat)}</div>` +
+          `<div class="tool"><h2>Marketing performance by source</h2><div class="toolSub">Funnel within the selected range · spend from tied campaign expenses.</div>${marketingMiniTable()}</div>`;
+      }
+      function have(v) {
+        return v !== null && v !== undefined && Number.isFinite(Number(v));
+      }
+
+      function monthKey(ms) {
+        const d = new Date(ms);
+        return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0");
+      }
+      function yearKey(ms) {
+        return String(new Date(ms).getUTCFullYear());
+      }
+      function bucketKeys() {
+        const r = currentRange();
+        const paid = paidAppsInRange();
+        const mat = materializedExpenses();
+        let start = r.start,
+          end = r.end || Date.now();
+        if (!start) {
+          const events = [];
+          paid.forEach((a) => events.push(Date.parse(a.paid_at)));
+          mat.forEach((x) => x.dates.forEach((d) => events.push(d)));
+          apps.forEach((a) => events.push(Date.parse(a.created_at)));
+          start = events.length ? Math.min(...events) : end - 11 * 30 * 86400000;
+        }
+        const keys = [];
+        // Iterate whole months between start and end inclusive so a partial
+        // final month (e.g. today in "All time") still gets a bucket.
+        const s = new Date(start),
+          e = new Date(end);
+        let y = s.getUTCFullYear(),
+          m = s.getUTCMonth();
+        const sy = y,
+          ey = e.getUTCFullYear(),
+          em = e.getUTCMonth();
+        while (y < ey || (y === ey && m <= em)) {
+          keys.push(y + "-" + String(m + 1).padStart(2, "0"));
+          if (m === 11) {
+            m = 0;
+            y += 1;
+          } else {
+            m += 1;
+          }
+        }
+        if (keys.length > 24) {
+          const yk = [];
+          for (let yy = sy; yy <= ey; yy++) yk.push(String(yy));
+          return { keys: yk, granularity: "year" };
+        }
+        return { keys, granularity: "month" };
+      }
+      function revVsExpenseBlock() {
+        const paid = paidAppsInRange();
+        const mat = materializedExpenses().concat(feeExpenseEntries());
+        const { keys, granularity } = bucketKeys();
+        const bucket = (ms) => (granularity === "year" ? yearKey(ms) : monthKey(ms));
+        const map = new Map(keys.map((k) => [k, { rev: 0, exp: 0 }]));
+        paid.forEach((a) => map.get(bucket(Date.parse(a.paid_at))).rev += phpDisplay(knownRevenue(a) || 0) ?? NaN);
+        mat.forEach((x) => x.dates.forEach((d) => map.get(bucket(d)).exp += expenseDisplay(x.e) ?? NaN));
+        const max = Math.max(1, ...[...map.values()].flatMap((v) => [v.rev, v.exp]));
+        const cols = [...map.entries()]
+          .map(([k, v]) => ({
+            k,
+            rev: v.rev,
+            exp: v.exp,
+            rh: Math.max(2, Math.round((v.rev / max) * 100)),
+            eh: Math.max(2, Math.round((v.exp / max) * 100)),
+          }));
+        const label = (k) =>
+          granularity === "year"
+            ? k
+            : new Date(k + "-01T00:00:00Z").toLocaleDateString("en-US", { month: "short" });
+        return `<div class="tool"><h2>Revenue vs expenses</h2><div class="toolSub">Paid tuition vs total expenses per ${granularity === "year" ? "year" : "month"} in the selected range.</div>` +
+          `<div class="dualChart">${cols.map((c) => `<div class="dualCol"><div class="dualBars"><i class="rev" style="height:${c.rh}%" title="Revenue ${formatMoney(c.rev)}"></i><i class="exp" style="height:${c.eh}%" title="Expenses ${formatMoney(c.exp)}"></i></div><span class="dLabel">${esc(label(c.k))}</span></div>`).join("")}</div>` +
+          `<div class="legend"><span><i class="rev"></i>Revenue</span><span><i class="exp"></i>Expenses</span></div></div>`;
+      }
+      // Distinct, stable colour per category so the donut legend and chart agree
+      // across renders (hash → palette with linear probing to avoid collisions).
+      const DONUT_PALETTE = ["#171717", "#ffd51f", "#1d6a3b", "#8b2825", "#0878f9", "#d97706", "#5d3a9b", "#0f766e", "#b91c1c", "#4b5563", "#a16207", "#0369a1"];
+      function categoryColors(cats) {
+        const chosen = new Map();
+        return cats.map((c) => {
+          if (chosen.has(c)) return chosen.get(c);
+          let h = 0;
+          for (let i = 0; i < c.length; i++) h = (h * 31 + c.charCodeAt(i)) >>> 0;
+          let idx = h % DONUT_PALETTE.length;
+          let tries = 0;
+          while ([...chosen.values()].includes(DONUT_PALETTE[idx]) && tries < DONUT_PALETTE.length) {
+            idx = (idx + 1) % DONUT_PALETTE.length;
+            tries++;
+          }
+          chosen.set(c, DONUT_PALETTE[idx]);
+          return chosen.get(c);
+        });
+      }
+      function donutBlock(list, colorOf) {
+        const items = list.filter((x) => x.total != null && x.total > 0);
+        const total = items.reduce((s, x) => s + x.total, 0);
+        if (!items.length || !(total > 0)) return '<p class="note">No expenses to chart in this range yet.</p>';
+        const color = (c) => (colorOf && colorOf.get(c)) || "#171717";
+        const CX = 80, CY = 80, R = 58, C = 2 * Math.PI * R;
+        let offset = 0;
+        const segs = items.map((x) => {
+          const frac = x.total / total;
+          const len = frac * C;
+          const seg = `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${color(x.category)}" stroke-width="24" stroke-dasharray="${len.toFixed(3)} ${(C - len).toFixed(3)}" stroke-dashoffset="${(-offset).toFixed(3)}"><title>${esc(x.category)}: ${formatMoney(x.total)} (${(frac * 100).toFixed(1)}%)</title></circle>`;
+          offset += len;
+          return seg;
+        }).join("");
+        const legend = items.map((x) => `<li><span class="donutDot" style="background:${color(x.category)}"></span><span class="donutName">${esc(x.category)}</span><span class="donutPct">${(x.total / total * 100).toFixed(1)}%</span><span class="donutAmt">${formatMoney(x.total)}</span></li>`).join("");
+        const aria = items.map((x) => `${x.category} ${(x.total / total * 100).toFixed(1)} percent`).join(", ");
+        return `<div class="donutWrap"><svg class="donut" viewBox="0 0 160 160" role="img" aria-label="Expense distribution by category: ${esc(aria)}"><g transform="rotate(-90 ${CX} ${CY})">${segs}</g><text class="donutTotal" x="${CX}" y="${CY - 3}" text-anchor="middle">TOTAL</text><text class="donutTotalVal" x="${CX}" y="${CY + 14}" text-anchor="middle">${esc(formatMoney(total))}</text></svg><ul class="donutLegend">${legend}</ul></div>`;
+      }
+      // Expenses by category: name + converted amount + percentage + a
+      // proportional bar, then the matching donut, then Total Expenses (100%).
+      // Every value shares one calculation: `grand` = expenseTotal(allMat),
+      // which already includes processing fees exactly once. Bars and donut use
+      // the same per-category colour map.
+      function categoryBlock(mat) {
+        const groups = new Map();
+        mat.forEach((x) => {
+          const c = x.e.category || "Other";
+          if (!groups.has(c)) groups.set(c, []);
+          groups.get(c).push(x);
+        });
+        const list = [...groups.entries()].map(([category, entries]) => ({category, entries, total: expenseTotal(entries)})).sort((a, b) => (b.total || 0) - (a.total || 0));
+        if (!list.length) return '<p class="note">No expenses recorded in this range yet.</p>';
+        const grand = expenseTotal(mat);
+        const colors = categoryColors(list.map((x) => x.category));
+        const colorOf = new Map(list.map((x, i) => [x.category, colors[i]]));
+        const pctOf = (v) => (grand == null || !(grand > 0) || v == null ? null : (v / grand) * 100);
+        const pctText = (p) => (p == null ? "—" : p > 0 && p < 0.1 ? "<0.1%" : p.toFixed(1) + "%");
+        const barWidth = (p) => (p == null || p <= 0 ? 0 : Math.max(1.5, Math.min(100, p))).toFixed(2);
+        const rows = list.map(({ category, entries, total }) => {
+          const p = pctOf(total);
+          const color = colorOf.get(category);
+          return `<details class="barRow" data-category="${esc(category)}"><summary><div class="barTop"><span class="barLabel"><span class="catSwatch" style="background:${color}"></span>${esc(category)}</span><span class="barRight"><span class="barVal" data-category-total>${formatMoney(total)}</span><span class="barPct" data-category-pct>${pctText(p)}</span></span></div><div class="barTrack" role="img" aria-label="${esc(category)}: ${pctText(p)} of total expenses"><div class="barFill" data-category-bar style="width:${barWidth(p)}%;background:${color}"></div></div></summary><div class="expenseList">${entries.map(({e, dates}) => `<div class="expenseRow" data-expense-id="${esc(e.id)}"><div>${esc(e.vendor || e.description || "Expense")}<small> · ${dates.length} occurrence(s) · Original ${formatMoney(Number(e.amount), e.currency)}</small></div><span class="expAmount" data-expense-value>${formatMoney(expenseTotal([{e, dates}]))}</span></div>`).join("")}</div></details>`;
+        }).join("");
+        const totalRow = grand != null && grand > 0
+          ? `<div class="barTotal"><div class="barTop"><span class="barLabel">Total Expenses</span><span class="barRight"><span class="barVal" data-expense-grand>${formatMoney(grand)}</span><span class="barPct">100%</span></span></div><div class="barTrack"><div class="barFill" style="width:100%"></div></div></div>`
+          : `<div class="barTotal"><div class="barTop"><span class="barLabel">Total Expenses</span><span class="barRight"><span class="barVal" data-expense-grand>${formatMoney(grand)}</span><span class="barPct">—</span></span></div></div>`;
+        return `<div class="barBlock" data-finance-currency-version="original-v2">${rows}${totalRow}</div>` + donutBlock(list, colorOf);
+      }
+      function marketingMiniTable() {
+        // marketingRows values are already in the selected currency.
+        const money = formatMoney;
+        const { rows } = marketingRows();
+        const shown = rows.filter((x) => x.spend > 0 || x.paid > 0 || x.revenue > 0);
+        if (!shown.length) return '<p class="note">No campaign spend or paid students in this range yet. Link an expense to a campaign in the Expenses tab to start.</p>';
+        const isTrackedRow = (x) => x.id !== "" && x.id !== "__unknown__" && x.id !== "__unattributed__";
+        const totalSpend = shown.reduce((s, x) => s + x.spend, 0);
+        const totalPaid = shown.reduce((s, x) => s + x.paid, 0);
+        const attributedRev = shown.filter(isTrackedRow).reduce((s, x) => s + x.revenue, 0);
+        const untrackedRev = shown.filter((x) => !isTrackedRow(x)).reduce((s, x) => s + x.revenue, 0);
+        const roas = totalSpend > 0 ? attributedRev / totalSpend : null;
+        return `<div class="tableWrap"><table class="fin"><thead><tr><th>Source / Campaign</th><th>Spend</th><th>Paid</th><th>Attributed revenue</th><th>ROAS</th></tr></thead><tbody>` +
+          shown.map((x) => `<tr><td><div class="srcLabel">${esc(x.label)}</div></td><td>${money(x.spend)}</td><td>${num(x.paid)}</td><td>${isTrackedRow(x) ? money(x.revenue) : "—"}</td><td>${x.spend > 0 ? num(x.revenue / x.spend, 2) + "×" : "—"}</td></tr>`).join("") +
+          `<tr class="totalRow"><td>Total — ${esc(shown.length)} sources</td><td>${money(totalSpend)}</td><td>${num(totalPaid)}</td><td>${money(attributedRev)}</td><td>${have(roas) ? num(roas, 2) + "×" : "—"}</td></tr>` +
+          `</tbody></table></div><p class="note">ROAS = revenue attributed to tracked sources ÷ marketing spend; Direct / untracked payments are not attributed.${untrackedRev > 0 ? ` Untracked revenue in range: ${money(untrackedRev)} (see Marketing tab).` : ""} Full funnel metrics live in the Marketing tab.</p>`;
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Expenses (CRUD)
+       * ---------------------------------------------------------------- */
+      function renderExpenses() {
+        const totalAll = expenseTotal(expenses.map(e => ({ e, dates: [0] })));
+        const recurringCount = expenses.filter((e) => e.recurring).length;
+
+        $("content").innerHTML =
+          `<div class="stats"><div class="stat"><b>${formatMoney(totalAll)}</b><span>Total recorded</span><span class="statSub">One entry per schedule</span></div>` +
+          `<div class="stat"><b>${num(expenses.length)}</b><span>Expense records</span></div>` +
+          `<div class="stat"><b>${num(recurringCount)}</b><span>Recurring schedules</span><span class="statSub">Materialised per month automatically</span></div>` +
+          `<div class="stat"><b>${num(expenses.filter((e) => e.link_id).length)}</b><span>Campaign-linked</span><span class="statSub">Included in marketing spend</span></div></div>` +
+          `<div class="tool">${expenseFormHtml()}</div>` +
+          `<div class="toolbar"><h2 style="margin:0;font-size:18px">All expenses</h2><input id="expenseSearch" class="search" placeholder="Search vendor, category, reference…" value="${esc(searchQ)}" /></div>` +
+          `<div class="expenseList" id="expenseList"></div>`;
+        $("expenseSearch")?.addEventListener("input", () => {
+          searchQ = $("expenseSearch").value;
+          paintExpenseList();
+        });
+        paintExpenseList();
+        wireForm();
+        // The "Add expense" form is always on screen; initialise it with the
+        // defaults (today's LOCAL date, PHP) so the date is never blank.
+        resetForm();
+      }
+      function paintExpenseList() {
+        const q = searchQ.trim().toLowerCase();
+        const linkById = new Map(links.map((l) => [String(l.id), l]));
+        const qMatches = (x) => {
+          const link = linkById.get(String(x.link_id || ""));
+          const hay = [
+            x.vendor,
+            x.category,
+            x.description,
+            x.receipt_reference,
+            x.currency,
+            x.amount,
+            x.link_id,
+            link ? sourceLabelOfLink(link) : "",
+          ].join(" ").toLowerCase();
+          return !q || hay.includes(q);
+        };
+        const list = expenses.filter(qMatches);
+        const box = $("expenseList");
+        if (!box) return;
+        box.innerHTML = list.length
+          ? list.map((e) => expenseRowHtml(e)).join("")
+          : `<div class="empty">${q ? "No expenses match your search." : "No expenses yet. Add your first expense to start tracking costs."}</div>`;
+      }
+      function expenseRowHtml(e) {
+        const link = links.find((l) => String(l.id) === String(e.link_id || ""));
+        const currencyLabel = e.currency === "PHP" ? "" : ` ${e.currency}`;
+        // Original amount is authoritative; converted value shown secondarily.
+        // If displaying in the original currency, show exactly the original amount
+        // (never a rate-derived approximation that creates contradictions like $9.92 / $10).
+        const isSameCurrency = (e.currency === displayCurrency) || (e.currency === "PHP" && displayCurrency === "PHP");
+        const orig = formatMoney(Number(e.amount), e.currency) + currencyLabel;
+        const badges =
+          (e.recurring ? `<span class="badge recurring">↻ ${esc(FREQ_LABEL[e.recurrence_frequency] || "Recurring")}${e.ends_on ? " · until " + esc(new Date(e.ends_on + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })) : ""}</span>` : "") +
+          (link && e.link_id ? `<span class="badge source">Marketing · ${esc(sourceLabelOfLink(link))}</span>` : e.link_id ? `<span class="badge source">Marketing · deleted campaign</span>` : "");
+        const meta = [e.vendor, e.expense_date, e.description, e.receipt_reference ? "Ref: " + e.receipt_reference : ""].filter(Boolean).join(" · ");
+        const amountDisplay = isSameCurrency
+          ? `<span class="expAmount">${orig}</span>`
+          : `<span class="expAmount">${orig}<small>${money(e.amount_php, e)}</small></span>`;
+        return `<div class="expenseRow"><div class="expMain"><div class="expTop"><span class="badge">${esc(e.category)}</span>${badges}${amountDisplay}</div><div class="expName">${esc(e.vendor || "Expense")}</div><div class="expMeta">${esc(meta)}</div></div><div class="actions"><button onclick="editExpense('${esc(e.id)}')">Edit</button><button class="danger" onclick="deleteExpense('${esc(e.id)}')">Delete</button></div></div>`;
+      }
+      function expenseFormHtml() {
+        const linkOptions = (links || [])
+          .slice()
+          .sort((a, b) => String(a.destination).localeCompare(String(b.destination)) || String(a.channel).localeCompare(String(b.channel)))
+          .map((l) => `<option value="${esc(String(l.id))}">${l.destination === "b2b" ? "B2B · " : "Academy · "}${esc([l.channel, l.placement, l.label].filter(Boolean).join(" → "))} (${esc(String(l.token))})</option>`)
+          .join("");
+        return `<div class="formHead"><div><h2 id="formTitle">Add expense</h2><div class="toolSub">Original amount and currency are stored exactly as entered; reporting converts them to PHP, then to your display currency.</div></div><button class="ghost" id="formCancel" type="button" style="display:none">Cancel</button></div>
+          <div class="form" id="expenseForm">
+            <label class="field"><span>Amount</span><input id="f-amount" type="number" min="0" step="0.01" required /></label>
+            <label class="field"><span>Currency</span><select id="f-currency"><option value="PHP">PHP (₱)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option></select></label>
+            <label class="field" id="fxWrap" style="display:none"><span>PHP per 1 <span id="fxCurrencyLabel">USD</span> <span class="hint" id="fxHint">(automatic from Frankfurter)</span></span><input id="f-fx" type="number" min="0.000001" step="0.000001" /></label>
+            <div id="fxRateDisplay" class="fxRateDisplay" style="display:none"></div>
+            <label class="field" id="fxManualWrap" style="display:none"><span>Use custom exchange rate <span class="hint">(override automatic rate)</span></span><input id="f-fx-manual" type="number" min="0.000001" step="0.000001" placeholder="Enter custom rate" /></label>
+            <label class="field"><span>Date</span><input id="f-date" type="date" required /></label>
+            <label class="field"><span>Category</span><select id="f-category">${CATEGORIES.map((c) => `<option>${esc(c)}</option>`).join("")}</select></label>
+            <label class="field" id="otherWrap" style="display:none"><span>Custom category</span><input id="f-other" maxlength="80" placeholder="e.g. Freelance tools" /></label>
+            <label class="field"><span>Vendor</span><input id="f-vendor" maxlength="200" /></label>
+            <label class="field wide"><span>Description <span class="hint">(optional)</span></span><input id="f-description" maxlength="2000" /></label>
+            <label class="field"><span>Recurring?</span><select id="f-recurring"><option value="no">No</option><option value="yes">Yes</option></select></label>
+            <label class="field" id="freqWrap"><span>Repeats</span><select id="f-frequency"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select></label>
+            <label class="field" id="stopWrap"><span>Stops on <span class="hint">(optional — cancel / end date)</span></span><input id="f-ends" type="date" /></label>
+            <p class="fxNote" id="recNote" style="display:none">A recurring schedule counts once per period from its start date until the stop date — no monthly re-entry. Monthly or quarterly? Mark the last occurrence with the stop date and keep this row; add a new row when the price changes so past periods keep their original amounts.</p>
+            <label class="field wide"><span>Marketing source / campaign <span class="hint">(optional — ties into the Acquisition Tracker)</span></span><select id="f-link"><option value="">— Not linked —</option>${linkOptions}</select></label>
+            <label class="field wide"><span>Receipt / reference <span class="hint">(optional)</span></span><input id="f-receipt" maxlength="200" /></label>
+          </div>
+          <div class="formActions"><button class="primary" id="f-save">Save expense</button><span class="fxNote">Stored in the original currency. Reporting converts to PHP, then to your selected display currency.</span></div>`;
+      }
+      function openForm(expense) {
+        fxRequestVersion++;
+        editingId = expense?.id || null;
+        $("formTitle").textContent = expense ? "Edit expense" : "Add expense";
+        $("formCancel").style.display = "";
+        $("f-amount").value = expense ? expense.amount : "";
+        $("f-currency").value = expense?.currency || "PHP";
+        $("f-fx").value = expense ? expense.fx_rate_php || "" : "";
+        $("f-fx-manual").value = "";
+        $("f-date").value = expense?.expense_date || todayLocalISO();
+        setCategorySelect(expense?.category || "Advertising");
+        $("f-vendor").value = expense?.vendor || "";
+        $("f-description").value = expense?.description || "";
+        $("f-recurring").value = expense?.recurring ? "yes" : "no";
+        $("f-frequency").value = expense?.recurrence_frequency || "monthly";
+        $("f-ends").value = expense?.ends_on || "";
+        $("f-link").value = expense?.link_id || "";
+        if (expense?.link_id && !links.some((l) => String(l.id) === String(expense.link_id))) {
+          const opt = document.createElement("option");
+          opt.value = esc(String(expense.link_id));
+          opt.textContent = "Deleted campaign (" + String(expense.link_id).slice(0, 8) + "…)";
+          $("f-link").appendChild(opt);
+          $("f-link").value = String(expense.link_id);
+        }
+        $("f-receipt").value = expense?.receipt_reference || "";
+        syncFxVisibility(false);
+        // If editing an existing expense with a stored rate, show it as manual/custom
+        if (expense && (expense.currency === "USD" || expense.currency === "EUR")) {
+          const display = $("fxRateDisplay");
+          const currencySymbol = CURRENCY_SYMBOL[expense.currency];
+          const phpSymbol = CURRENCY_SYMBOL.PHP;
+          const rate = expense.fx_rate_php;
+          const amountPhp = Math.round(expense.amount * rate * 100) / 100;
+          display.innerHTML = `<span class="manual">Custom rate used: 1 ${currencySymbol}1 = ${phpSymbol}${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} · ${currencySymbol}${expense.amount.toLocaleString()} = ${phpSymbol}${amountPhp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+          display.className = "fxRateDisplay";
+        }
+        $("expenseForm").scrollIntoView({ behavior: "smooth", block: "start" });
+        $("f-amount").focus();
+      }
+
+      function resetForm() {
+        fxRequestVersion++;
+        editingId = null;
+        $("formTitle").textContent = "Add expense";
+        $("formCancel").style.display = "none";
+        $("f-amount").value = "";
+        $("f-currency").value = "PHP";
+        $("f-fx").value = "";
+        $("f-fx-manual").value = "";
+        $("f-date").value = todayLocalISO();
+        setCategorySelect("Advertising");
+        $("f-vendor").value = "";
+        $("f-description").value = "";
+        $("f-recurring").value = "no";
+        $("f-frequency").value = "monthly";
+        $("f-ends").value = "";
+        $("f-link").value = "";
+        $("f-receipt").value = "";
+        $("fxRateDisplay").innerHTML = "";
+        $("fxRateDisplay").className = "fxRateDisplay";
+        syncFxVisibility();
+      }
+      function setCategorySelect(cat) {
+        const known = CATEGORIES.includes(cat);
+        $("f-category").value = known ? cat : "Other";
+        $("f-other").value = known ? "" : cat;
+        $("otherWrap").style.display = cat === "Other" || !known ? "" : "none";
+      }
+      let fxRequestVersion = 0;
+      function syncFxVisibility(refreshRate = false) {
+        const currency = $("f-currency").value;
+        const isForeign = currency === "USD" || currency === "EUR";
+        const recurring = $("f-recurring").value === "yes";
+        $("fxWrap").style.display = isForeign ? "" : "none";
+        $("fxManualWrap").style.display = isForeign ? "" : "none";
+        $("fxRateDisplay").style.display = isForeign ? "" : "none";
+        $("freqWrap").style.display = recurring ? "" : "none";
+        $("stopWrap").style.display = recurring ? "" : "none";
+        $("recNote").style.display = recurring ? "" : "none";
+
+        // Update currency label in FX field
+        const label = currency === "EUR" ? "EUR" : "USD";
+        $("fxCurrencyLabel").textContent = label;
+        // Update placeholder for manual override
+        const placeholderRate = currency === "EUR" ? DEFAULT_EUR_RATE : DEFAULT_USD_RATE;
+        $("f-fx-manual").placeholder = `Enter custom rate (e.g. ${placeholderRate})`;
+
+        // Clear any previous rate display when currency changes
+        if (isForeign && refreshRate === true) {
+          fetchAutoFxRate();
+        } else if (!isForeign) {
+          $("fxRateDisplay").innerHTML = "";
+          $("f-fx").value = "";
+        }
+      }
+
+      async function fetchAutoFxRate() {
+        const requestVersion = ++fxRequestVersion;
+        const currency = $("f-currency").value;
+        const date = $("f-date").value;
+        if (!currency || !date || currency === "PHP") return;
+
+        const display = $("fxRateDisplay");
+        display.innerHTML = `<span class="hint">Fetching automatic rate from Frankfurter…</span>`;
+        display.className = "fxRateDisplay";
+
+        try {
+          const res = await req(FIN, "fx", { currency, date });
+          if (requestVersion !== fxRequestVersion || $("f-currency").value !== currency || $("f-date").value !== date) return;
+          if (res.ok && res.fx_rate_php) {
+            const rate = res.fx_rate_php;
+            const amount = Number($("f-amount").value) || 0;
+            const amountPhp = amount > 0 ? Math.round(amount * rate * 100) / 100 : 0;
+            const currencySymbol = CURRENCY_SYMBOL[currency];
+            const phpSymbol = CURRENCY_SYMBOL.PHP;
+            display.innerHTML = `<span class="auto">Automatic rate: 1 ${currencySymbol}1 = ${phpSymbol}${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` +
+              (amount > 0 ? ` · ${currencySymbol}${amount.toLocaleString()} ≈ ${phpSymbol}${amountPhp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "") +
+              ` <span class="hint">(Frankfurter, ${date})</span></span>`;
+            // Store the auto rate in the hidden input for form submission
+            $("f-fx").value = String(rate);
+          } else {
+            display.innerHTML = `<span class="error">Could not fetch automatic rate: ${res.error || "unknown error"}. You can enter a custom rate below.</span>`;
+            $("f-fx").value = "";
+          }
+        } catch (e) {
+          if (requestVersion !== fxRequestVersion) return;
+          display.innerHTML = `<span class="error">Failed to fetch rate: ${e.message}. You can enter a custom rate below.</span>`;
+          $("f-fx").value = "";
+        }
+      }
+      function wireForm() {
+        $("f-currency").addEventListener("change", () => { fxRequestVersion++; $("f-fx").value = ""; $("f-fx-manual").value = ""; syncFxVisibility(true); });
+        $("f-date").addEventListener("change", () => { const currency = $("f-currency").value; if (currency === "USD" || currency === "EUR") fetchAutoFxRate(); });
+        // Amount edits preserve the recorded rate. Explicit currency/date
+        // changes and the custom-rate input are the only rate-change paths.
+        $("f-recurring").addEventListener("change", syncFxVisibility);
+        $("f-category").addEventListener("change", () => {
+          const other = $("f-category").value === "Other";
+          $("otherWrap").style.display = other ? "" : "none";
+          if (!other) $("f-other").value = "";
+        });
+        $("formCancel").addEventListener("click", () => {
+          editingId = null;
+          $("formCancel").style.display = "none";
+          resetForm();
+          $("expenseForm").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        $("f-save").addEventListener("click", saveExpense);
+      }
+      function readForm() {
+        const amount = Number($("f-amount").value);
+        if (!Number.isFinite(amount) || amount < 0) throw Error("Enter a valid amount.");
+        const currency = $("f-currency").value;
+        if (!["PHP", "USD", "EUR"].includes(currency)) throw Error("Choose a currency.");
+
+        // Determine the FX rate: manual override takes precedence, then auto-fetched (in f-fx), then error
+        let fx = 1;
+        if (currency !== "PHP") {
+          const manualOverride = Number($("f-fx-manual").value);
+          if (Number.isFinite(manualOverride) && manualOverride > 0) {
+            fx = manualOverride;
+          } else {
+            const autoRate = Number($("f-fx").value);
+            if (Number.isFinite(autoRate) && autoRate > 0) {
+              fx = autoRate;
+            } else {
+              throw Error(`Enter a custom exchange rate for ${currency} or wait for automatic rate to load.`);
+            }
+          }
+          if (!Number.isFinite(fx) || fx <= 0 || fx > 100000) throw Error("Enter a valid PHP exchange rate.");
+        }
+
+        const recurring = $("f-recurring").value === "yes";
+        const category = $("f-category").value === "Other" ? ($("f-other").value || "Other").trim() : $("f-category").value;
+        if (!category) throw Error("Choose a category.");
+        const endsOn = recurring ? $("f-ends").value.trim() : "";
+        if (endsOn && endsOn < $("f-date").value) throw Error("The stop date must be on or after the expense date.");
+        return {
+          amount,
+          currency,
+          fx_rate_php: fx,
+          expense_date: $("f-date").value,
+          category,
+          vendor: $("f-vendor").value.trim(),
+          description: $("f-description").value.trim(),
+          recurring,
+          recurrence_frequency: recurring ? $("f-frequency").value : "",
+          ends_on: endsOn || "",
+          link_id: $("f-link").value || "",
+          receipt_reference: $("f-receipt").value.trim(),
+        };
+      }
+      window.saveExpense = async () => {
+        let expense;
+        try {
+          expense = readForm();
+        } catch (e) {
+          alert(e.message);
+          return;
+        }
+        const btn = $("f-save");
+        btn.disabled = true;
+        try {
+          if (editingId) {
+            await req(FIN, "update", { id: editingId, expense });
+            toast("Expense updated");
+          } else {
+            await req(FIN, "create", { expense });
+            toast("Expense added");
+          }
+          editingId = null;
+          $("formCancel").style.display = "none";
+          resetForm();
+          await loadAll(true);
+        } catch (e) {
+          alert(e.message);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+      window.editExpense = (id) => {
+        if (!id) return;
+        const e = expenses.find((x) => String(x.id) === String(id));
+        if (e) openForm(e);
+      };
+      window.deleteExpense = async (id) => {
+        const e = expenses.find((x) => String(x.id) === String(id));
+        const who = e ? [e.vendor, e.category, e.expense_date].filter(Boolean).join(" · ") : id;
+        if (!confirm(`Delete this expense?\n\n${who}\n\nThis cannot be undone.`)) return;
+        try {
+          await req(FIN, "delete", { id });
+          toast("Expense deleted");
+          await loadAll(true);
+        } catch (e2) {
+          alert(e2.message);
+        }
+      };
+
+      /* ---------------------------------------------------------------- *
+       * Marketing
+       * ---------------------------------------------------------------- */
+      function renderMarketing() {
+        const money = formatMoney;
+        const { rows } = marketingRows();
+        const hasRows = rows.some((x) => x.spend > 0 || x.leads > 0 || x.points > 0 || x.apps > 0 || x.paid > 0 || x.b2bLeads > 0);
+        if (!hasRows) {
+          $("content").innerHTML =
+            `<div class="tool"><h2>Marketing ROI</h2><div class="toolSub">Per-campaign funnel from the Acquisition Tracker, spend from linked expenses.</div><div class="empty">No campaign data in this range yet. Create tracking links in the Acquisition Tracker and tie expenses to a campaign in the Expenses tab.</div></div>`;
+          return;
+        }
+        const isTrackedRow = (x) => x.id !== "" && x.id !== "__unknown__" && x.id !== "__unattributed__";
+        const totals = rows.reduce(
+          (s, x) => ({
+            spend: s.spend + x.spend,
+            leads: s.leads + (x.kind === "b2b" ? x.b2bLeads : x.leads),
+            points: s.points + x.points,
+            apps: s.apps + x.apps,
+            paid: s.paid + x.paid,
+            revenue: s.revenue + (isTrackedRow(x) ? x.revenue : 0),
+          }),
+          { spend: 0, leads: 0, points: 0, apps: 0, paid: 0, revenue: 0 },
+        );
+        const rowHtml = (x) => `<tr>
+            <td><div class="srcLabel">${esc(x.label)}<small>${x.kind === "b2b" ? "B2B campaign" : x.spend > 0 ? "Campaign spend" : "No campaign spend"}</small></div></td>
+            <td>${money(x.spend)}</td>
+            <td>${x.kind === "b2b" ? num(x.b2bLeads) : num(x.leads)}</td>
+            <td>${x.kind === "b2b" ? "—" : num(x.points)}</td>
+            <td>${x.spend > 0 && (x.kind === "b2b" ? x.b2bLeads > 0 : x.leads > 0) ? money(x.spend / (x.kind === "b2b" ? x.b2bLeads : x.leads)) : "—"}</td>
+            <td>${x.spend > 0 && x.points > 0 ? money(x.spend / x.points) : "—"}</td>
+            <td>${x.kind === "b2b" ? "—" : num(x.apps)}</td>
+            <td>${x.kind !== "b2b" && x.spend > 0 && x.apps > 0 ? money(x.spend / x.apps) : "—"}</td>
+            <td>${x.kind === "b2b" ? "—" : num(x.paid)}</td>
+            <td>${x.kind !== "b2b" && x.spend > 0 && x.paid > 0 ? money(x.spend / x.paid) : "—"}</td>
+            <td>${isTrackedRow(x) ? money(x.revenue) : "—"}</td>
+          </tr>`;
+        $("content").innerHTML =
+          `<div class="tool"><h2>Marketing ROI</h2><div class="toolSub">Rows are Acquisition Tracker campaigns. Leads, acquisition points, applications, paid students and attributed revenue are computed from existing Academy data in the selected range; spend comes from expenses tied to the campaign.</div>
+            <div class="tableWrap"><table class="fin"><thead><tr>
+              <th>Source / Campaign</th>
+              <th>Spend</th>
+              <th>Leads<span class="thSub">Signups</span></th>
+              <th>Acq. points<span class="thSub">Weighted</span></th>
+              <th>Cost / lead</th>
+              <th>Cost / point</th>
+              <th>Applications</th>
+              <th>Cost / app</th>
+              <th>Paid students</th>
+              <th>CAC</th>
+              <th>Attributed<span class="thSub">Revenue</span></th>
+            </tr></thead><tbody>
+            ${rows.map(rowHtml).join("")}
+            <tr class="totalRow">
+              <td>Total — ${num(rows.length)} sources</td>
+              <td>${money(totals.spend)}</td>
+              <td>${num(totals.leads)}</td>
+              <td>${num(totals.points)}</td>
+              <td>${totals.spend > 0 && totals.leads > 0 ? money(totals.spend / totals.leads) : "—"}</td>
+              <td>${totals.spend > 0 && totals.points > 0 ? money(totals.spend / totals.points) : "—"}</td>
+              <td>${num(totals.apps)}</td>
+              <td>${totals.spend > 0 && totals.apps > 0 ? money(totals.spend / totals.apps) : "—"}</td>
+              <td>${num(totals.paid)}</td>
+              <td>${totals.spend > 0 && totals.paid > 0 ? money(totals.spend / totals.paid) : "—"}</td>
+              <td>${money(totals.revenue)}</td>
+            </tr></tbody></table></div>
+            <p class="note">Acquisition points reuse the Academy goal model: full-pay readiness = 15, payment plan = 8, other = 1. Cost per lead for B2B rows uses the Acquisition Tracker's own lead counter. Attributed revenue counts only known payment amounts from tracked sources — Direct / untracked payments are not attributed, and paid students without a recorded amount are counted but excluded from revenue (no amount is ever assumed). Test and diagnostic records are excluded.</p>
+          </div>`;
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Revenue
+       * ---------------------------------------------------------------- */
+      function renderRevenue() {
+        const paid = paidAppsInRange();
+        const known = paid.filter((a) => knownRevenue(a) !== null);
+        const revenue = revSum(paid);
+        const avg = known.length ? revSum(known) / known.length : null;
+        const unknownCount = paid.length - known.length;
+        const byMethod = new Map();
+        paid.forEach((a) => {
+          const m = METHOD_LABEL[String(a.payment_method || "").toLowerCase()] || "Other";
+          byMethod.set(m, (byMethod.get(m) || 0) + 1);
+        });
+        const methodText = [...byMethod.entries()].map(([m, n]) => `${n} ${m}`).join(" · ") || "—";
+
+        const bySource = new Map();
+        paid.forEach((a) => {
+          const s = sourceOf(a);
+          const key = s.id + "|" + s.label;
+          if (!bySource.has(key)) bySource.set(key, { label: s.label, count: 0, rev: 0 });
+          const row = bySource.get(key);
+          row.count += 1;
+          row.rev += knownRevenue(a) || 0;
+        });
+        const sourceRows = [...bySource.values()].sort((a, b) => b.rev - a.rev);
+
+        const recent = paid
+          .slice()
+          .sort((a, b) => Date.parse(b.paid_at) - Date.parse(a.paid_at))
+          .slice(0, 40);
+
+        const { keys, granularity } = bucketKeys();
+        const bucket = (ms) => (granularity === "year" ? yearKey(ms) : monthKey(ms));
+        const map = new Map(keys.map((k) => [k, 0]));
+        paid.forEach((a) => { const rv = knownRevenue(a); if (rv === null) return; const k = bucket(Date.parse(a.paid_at)); if (map.has(k)) map.set(k, map.get(k) + rv); });
+        const max = Math.max(1, ...[...map.values()]);
+        const labelOf = (k) => (granularity === "year" ? k : new Date(k + "-01T00:00:00Z").toLocaleDateString("en-US", { month: "short" }));
+
+        // Fee calculations
+        const feesInRange = (fees || []).filter((f) => {
+          const app = paid.find((a) => a.id === f.application_id);
+          return app && f.gross_amount_php != null;
+        });
+        const totalFees = feesInRange.reduce((s, f) => s + Number(f.fee_amount_php || 0), 0);
+        const netRevenue = revenue - totalFees;
+        const pendingFees = feesInRange.filter((f) => f.reconciliation_status === "pending");
+        const pendingFeeCount = pendingFees.length;
+
+        // Fee breakdown by provider
+        const feeByProvider = new Map();
+        feesInRange.forEach((f) => {
+          const p = f.provider || "unknown";
+          if (!feeByProvider.has(p)) feeByProvider.set(p, { count: 0, gross: 0, fee: 0, net: 0 });
+          const row = feeByProvider.get(p);
+          row.count += 1;
+          row.gross += Number(f.gross_amount_php || 0);
+          row.fee += Number(f.fee_amount_php || 0);
+          row.net += Number(f.net_amount_php || 0);
+        });
+        const providerRows = [...feeByProvider.entries()].sort((a, b) => b[1].fee - a[1].fee);
+
+        const unknownNote = unknownCount ? ` · ${unknownCount} paid without a recorded amount` : "";
+        const feeNote = pendingFeeCount ? ` · ${pendingFeeCount} pending reconciliation` : "";
+        $("content").innerHTML =
+          `<div class="stats">
+            <div class="stat"><b>${money(revenue)}</b><span>Gross Revenue</span><span class="statSub">Known paid tuition within range${unknownNote}</span></div>
+            <div class="stat negative"><b>${money(totalFees)}</b><span>Processing Fees</span><span class="statSub">Stripe + PayMongo${feeNote}</span></div>
+            <div class="stat positive"><b>${money(netRevenue)}</b><span>Net Revenue</span><span class="statSub">Gross minus processing fees</span></div>
+            <div class="stat"><b>${num(paid.length)}</b><span>Paid students</span><span class="statSub">${esc(methodText)}</span></div>
+            <div class="stat"><b>${have(avg) ? money(avg) : "—"}</b><span>Average ticket</span><span class="statSub">Known amounts only</span></div>
+            <div class="stat"><b>${num(paid.filter((a) => sourceOf(a).id !== "" && sourceOf(a).id !== "__unknown__").length)}</b><span>From tracked sources</span></div>
+          </div>` +
+          `<div class="tool"><h2>Revenue per ${granularity === "year" ? "year" : "month"}</h2><div class="toolSub">Known tuition received within the selected range; payments without a recorded amount are not charted.</div>
+            <div class="dualChart">${[...map.entries()].map(([k, v]) => `<div class="dualCol"><div class="dualBars"><i class="rev" style="height:${Math.max(2, Math.round((v / max) * 100))}%" title="${money(v)}"></i></div><span class="dLabel">${esc(labelOf(k))}</span></div>`).join("")}</div></div>` +
+          `<div class="grid2"><div class="tool"><h2>Revenue by source</h2><div class="toolSub">Attribution follows the Acquisition Tracker's campaign links.</div>` +
+          (sourceRows.length ? `<div class="tableWrap"><table class="fin"><thead><tr><th>Source</th><th>Revenue</th><th>Paid</th></tr></thead><tbody>${sourceRows.map((r) => `<tr><td><div class="srcLabel">${esc(r.label)}</div></td><td>${money(r.rev)}</td><td>${num(r.count)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="note">No paid applications in this range yet.</p>') +
+          `</div><div class="tool"><h2>Fee breakdown by provider</h2><div class="toolSub">Processing fees from Stripe and PayMongo QR Ph.</div>` +
+          (providerRows.length ? `<div class="tableWrap"><table class="fin"><thead><tr><th>Provider</th><th>Payments</th><th>Gross</th><th>Fees</th><th>Net</th></tr></thead><tbody>${providerRows.map(([p, r]) => `<tr><td><div class="srcLabel">${esc(p === "stripe" ? "Stripe (Card)" : p === "paymongo" ? "PayMongo (QR Ph)" : p)}</div></td><td>${num(r.count)}</td><td>${money(r.gross)}</td><td>${money(r.fee)}</td><td>${money(r.net)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="note">No fee data available yet.</p>') +
+          `</div></div>` +
+          `<div class="tool"><h2>Recent payments</h2><div class="toolSub">Most recent ${num(recent.length)} paid applications in range.</div>` +
+          (recent.length ? `<div class="tableWrap"><table class="fin"><thead><tr><th>Student</th><th>Paid date</th><th>Gross</th><th>Fee</th><th>Net</th><th>Method</th></tr></thead><tbody>${recent.map((a) => { const rv = knownRevenue(a); const fee = fees.find((f) => f.application_id === a.id); const feeAmt = fee ? Number(fee.fee_amount_php || 0) : 0; const netAmt = rv !== null ? rv - feeAmt : null; return `<tr><td><div class="srcLabel">${esc(a.name || "Student")}<small>${esc(a.email || "")}</small></div></td><td>${esc(new Date(a.paid_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))}</td><td>${rv === null ? '<span class="unknownAmt">Unknown</span>' : money(rv)}</td><td>${fee ? money(feeAmt) : "—"}</td><td>${netAmt !== null ? money(netAmt) : "—"}</td><td>${esc(METHOD_LABEL[String(a.payment_method || "").toLowerCase()] || "—")}</td></tr>`; }).join("")}</tbody></table></div>` : '<p class="note">No paid applications in this range yet.</p>') +
+          `</div>`;
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Display-currency switching
+       * ---------------------------------------------------------------- */
+      // Resolve PHP-per-1-unit for a display currency from the finance
+      // backend (Frankfurter). Cached per currency for the session.
+      async function ensureDisplayRate(cur) {
+        if (!DISPLAY_CURRENCIES.includes(cur)) return false;
+        if (cur === "PHP") return true;
+        if (Number.isFinite(displayRates[cur]) && displayRates[cur] > 0) return true;
+        try {
+          const res = await req(FIN, "fx", { currency: cur, date: displayRateDate });
+          if (res.ok && Number(res.fx_rate_php) > 0) {
+            displayRates[cur] = Number(res.fx_rate_php);
+            return true;
+          }
+        } catch (e) {
+          /* fall through to false */
+        }
+        return false;
+      }
+      function paintCurrencySwitch() {
+        document.querySelectorAll("#currencySwitch button").forEach((b) => {
+          const on = b.dataset.cur === displayCurrency;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      }
+      async function setDisplayCurrency(cur) {
+        if (!DISPLAY_CURRENCIES.includes(cur) || cur === displayCurrency) return;
+        const ready = await ensureDisplayRate(cur);
+        if (!ready) {
+          toast("Could not load the " + cur + " exchange rate.");
+          return;
+        }
+        displayCurrency = cur;
+        try {
+          localStorage.setItem(DISPLAY_KEY, cur);
+        } catch {}
+        paintCurrencySwitch();
+        render();
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Top-level render + load
+       * ---------------------------------------------------------------- */
+      function render() {
+        if (tab === "overview") renderOverview();
+        else if (tab === "expenses") renderExpenses();
+        else if (tab === "marketing") renderMarketing();
+        else renderRevenue();
+        rangeUI();
+        const banner = $("banner");
+        if (expensesError) {
+          banner.className = "banner show";
+          banner.innerHTML = `<b>Expense tracker unavailable.</b> ${esc(expensesError)} <br><span style="opacity:.8">Apply the finance_expenses migration and deploy the <b>admin-finance</b> Edge Function, then reload. Revenue and acquisition data still work.</span>`;
+        } else {
+          banner.className = "banner";
+        }
+      }
+      async function loadAll(silent = false) {
+        try {
+          const [core, acq, fin, feeRes] = await Promise.allSettled([
+            req(APP, "list"),
+            loadAcquisitionLinks(),
+            req(FIN, "list"),
+            req(FIN, "fee_list"),
+          ]);
+          if (core.status === "fulfilled") {
+            apps = core.value.applications || [];
+            signups = core.value.signups || [];
+            attributionVisits = core.value.visits || [];
+          } else {
+            if (!silent) throw core.reason;
+          }
+          links = acq.status === "fulfilled" ? acq.value : [];
+          if (fin.status === "fulfilled") {
+            expenses = fin.value.expenses || [];
+            expensesError = "";
+          } else {
+            expensesError = fin.reason?.message || "Could not load expenses.";
+          }
+          if (feeRes.status === "fulfilled") {
+            fees = feeRes.value.fees || [];
+          } else {
+            fees = [];
+          }
+          render();
+        } catch (e) {
+          if (/expired|session/i.test(e.message)) location.href = "/admin";
+          else if (!silent) alert(e.message);
+        }
+      }
+
+      /* ---------------------------------------------------------------- *
+       * Wiring
+       * ---------------------------------------------------------------- */
+      document.querySelectorAll("#fnav button").forEach((b) => {
+        b.addEventListener("click", () => {
+          tab = b.dataset.tab;
+          document.querySelectorAll("#fnav button").forEach((x) => x.classList.toggle("active", x === b));
+          render();
+        });
+      });
+      $("rangePreset").addEventListener("change", () => {
+        preset = $("rangePreset").value;
+        const custom = preset === "custom";
+        $("rangeStart").classList.toggle("hidden", !custom);
+        $("rangeEnd").classList.toggle("hidden", !custom);
+        $("rangeTo").classList.toggle("hidden", !custom);
+        if (custom && !customStart && !customEnd) {
+          const now = new Date();
+          $("rangeStart").value = customStart || new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString().slice(0, 10);
+          $("rangeEnd").value = customEnd || new Date().toISOString().slice(0, 10);
+        }
+        render();
+      });
+      $("rangeStart").addEventListener("change", () => { customStart = $("rangeStart").value; rangeUI(); render(); });
+      $("rangeEnd").addEventListener("change", () => { customEnd = $("rangeEnd").value; rangeUI(); render(); });
+
+      document.querySelectorAll("#currencySwitch button").forEach((b) => {
+        b.addEventListener("click", () => { setDisplayCurrency(b.dataset.cur); });
+      });
+      window.addEventListener("focus", () => {
+        if (!document.hidden) loadAll(true).catch(() => {});
+      });
+
+      rangeUI();
+      paintCurrencySwitch();
+      (async () => {
+        // Make sure the remembered display currency has a live rate before the
+        // first render, so numbers are never briefly mislabelled.
+        const ready = await ensureDisplayRate(displayCurrency);
+        if (!ready && displayCurrency !== "PHP") {
+          displayCurrency = "PHP";
+          try { localStorage.setItem(DISPLAY_KEY, "PHP"); } catch {}
+          paintCurrencySwitch();
+        }
+        await loadAll().catch((e) => alert(e.message));
+      })();
+    </script>
+  </body>
+</html>

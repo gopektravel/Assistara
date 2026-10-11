@@ -1,88 +1,767 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Masterclass Event | Assistara Admin</title><meta name="robots" content="noindex,nofollow" /><link rel="icon" href="/assistara-logo.svg" /><link rel="stylesheet" href="/manrope-lock.css" /><link rel="stylesheet" href="/admin-tokens.css" /><link rel="stylesheet" href="/admin-components.css" /><link rel="stylesheet" href="/admin-charts.css" /><link rel="stylesheet" href="/admin-layout.css" /><link rel="stylesheet" href="/admin-sidebar.css" /><link rel="stylesheet" href="/admin-header.css" /><style>:root{--ink:#171717;--cream:#f7f5ef;--line:#e2ded4;--muted:#746e65;--yellow:#ffd51f;--green:#e8f7ed;--greenInk:#1d6a3b;--red:#fde9e7;--redInk:#8b2825;--orange:#fff0db;--orangeInk:#8a4b00}</style></head>
-<body>
-<div class="app-shell">
-<aside class="sidebar" id="sidebar" aria-label="Admin"><div class="sidebar-header"><a class="sidebar-brand" href="/admin"><img src="/assistara-logo.svg" alt="Assistara" /><span>Assistara Admin</span></a><button class="sidebar-collapse" id="sidebarCollapse" type="button" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button></div>
-<nav class="sidebar-nav" aria-label="Admin sections">
-<div class="nav-group"><div class="nav-group-title">Overview</div><button class="nav-item" type="button" data-view="overview" data-tooltip="Dashboard"><span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="nav-item-label">Dashboard</span></button></div>
-<div class="nav-group"><div class="nav-group-title">Academy</div><button class="nav-item" type="button" data-tab="applicants" data-tooltip="Applications"><span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg></span><span class="nav-item-label">Applications</span></button><button class="nav-item" type="button" data-tab="students" data-tooltip="Students"><span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-item-label">Students</span></button></div>
-<div class="nav-group"><div class="nav-group-title">Marketing</div><button class="nav-item active" type="button" data-tool="masterclass" data-tooltip="Masterclass"><span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m10 15 5-3-5-3z"/></svg></span><span class="nav-item-label">Masterclass Event</span></button><button class="nav-item" type="button" data-tab="webinar" data-tooltip="Webinar"><span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/></svg></span><span class="nav-item-label">Webinar Signups</span></button></div>
-<div class="nav-group"><div class="nav-group-title">Business</div><button class="nav-item" type="button" data-tool="finance" data-tooltip="Finance"><span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></span><span class="nav-item-label">Finance</span></button><button class="nav-item" type="button" data-tab="b2b" data-tooltip="B2B"><span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span><span class="nav-item-label">B2B</span></button></div>
-</nav>
-<div class="sidebar-footer"><div class="sidebar-user"><div class="sidebar-user-avatar">A</div><div class="sidebar-user-info"><div class="sidebar-user-name">Administrator</div><div class="sidebar-user-role">Admin</div></div></div></div>
-</aside>
-<main class="workspace" id="workspace">
-<div class="workspace-top" id="workspaceTop"><button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
-<header class="page-header" id="pageHeader"><div class="page-header-main"><nav class="page-breadcrumbs" id="pageBreadcrumbs" aria-label="Breadcrumb"><a href="/admin">Admin</a> <span>/</span> <a href="/admin">Marketing</a> <span>/</span> <span>Masterclass Event</span></nav><h1 class="page-title" id="pageTitle">Masterclass Event</h1><div class="page-subtitle" id="pageSubtitle">Live event lifecycle, stream controls and attendance tracking.</div></div></header>
-<div class="toolRoot" id="toolRoot"><div class="card" style="margin-top:14px">
-<div class="statusRow"><div><div class="title" id="mcTitle">How to Land Your First Remote Client</div><div class="sub" id="mcKey">founding-masterclass-2026</div></div><span class="badge scheduled" id="mcBadge"><span class="dot"></span><span id="mcStatusText">Loading…</span></span></div>
-<div class="facts"><div class="fact"><div class="label">Scheduled start</div><div class="value" id="mcScheduled">—</div></div><div class="fact"><div class="label">Timezone</div><div class="value">Asia/Manila (PHT)</div></div><div class="fact"><div class="label">Actual start</div><div class="value" id="mcStarted">Not started yet</div></div><div class="fact"><div class="label">Ended</div><div class="value" id="mcEnded">Not ended</div></div></div>
-<div id="mcCountdownWrap"><div class="countdown" aria-live="polite"><div class="cd"><b id="cdDays">00</b><span>Days</span></div><div class="cd"><b id="cdHours">00</b><span>Hours</span></div><div class="cd"><b id="cdMins">00</b><span>Min</span></div><div class="cd"><b id="cdSecs">00</b><span>Sec</span></div></div><div class="countdownNote" id="mcCountdownNote">Countdown to the scheduled start.</div></div>
-<div class="actions"><button class="btn btn-danger hidden" id="mcEnd">End Masterclass</button><button class="btn btn-ghost" id="mcRefresh">Refresh</button></div><div class="feedback" id="mcFeedback"></div><div class="muted" id="mcMeta"></div>
-</div>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Masterclass Event | Assistara Admin</title>
+    <link rel="icon" href="/assistara-logo.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #171717;
+        --cream: #f7f5ef;
+        --line: #e2ded4;
+        --muted: #746e65;
+        --yellow: #ffd51f;
+        --green: #e8f7ed;
+        --greenInk: #1d6a3b;
+        --red: #fde9e7;
+        --redInk: #8b2825;
+        --orange: #fff0db;
+        --orangeInk: #8a4b00;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+      }
+      .shell { width: min(820px, calc(100% - 28px)); margin: auto; }
+      .top {
+        margin-top: 16px;
+        background: #171717;
+        color: #fff;
+        border-radius: 18px;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+      .brand img { width: 34px; }
+      .back {
+        color: #fff;
+        text-decoration: none;
+        border: 1px solid #3c3c3c;
+        background: #2a2a2a;
+        border-radius: 999px;
+        padding: 10px 15px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .head { margin: 28px 0 14px; }
+      .head h1 { margin: 0; font-size: 34px; letter-spacing: -0.02em; }
+      .head .sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px;
+        margin: 14px 0;
+      }
+      .statusRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 8px 13px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #f1efe9;
+      }
+      .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+      .badge.scheduled { background: #f1efe9; color: var(--muted); }
+      .badge.live { background: var(--green); color: var(--greenInk); border-color: #b9e4c8; }
+      .badge.live .dot { background: var(--greenInk); box-shadow: 0 0 0 4px rgba(29,106,59,.14); }
+      .badge.ended { background: var(--orange); color: var(--orangeInk); border-color: #f1c889; }
+      .title { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+      .facts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 18px; }
+      .fact { background: #faf9f5; border-radius: 12px; padding: 13px 15px; }
+      .fact .label {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 5px;
+      }
+      .fact .value { font-size: 15px; font-weight: 700; line-height: 1.4; }
+      .countdown { display: flex; gap: 10px; margin-top: 16px; }
+      .cd { flex: 1; background: #171717; color: #fff; border-radius: 12px; padding: 12px; text-align: center; }
+      .cd b { display: block; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+      .cd span { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: #b9b4ac; text-transform: uppercase; }
+      .countdownNote { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
-<div class="card" id="mcStatsCard"><div class="statusRow"><div><div class="title">Live Attendance</div></div></div>
-<div class="stat-grid"><div class="stat stat-watching"><div class="stat-num" id="mcStatWatching">—</div><div class="stat-label">Watching Now <span class="stat-hint">this session</span></div></div><div class="stat"><div class="stat-num" id="mcStatSession">—</div><div class="stat-label">Unique This Session</div></div><div class="stat"><div class="stat-num" id="mcStatUnique">—</div><div class="stat-label">Unique Attendees</div></div><div class="stat"><div class="stat-num" id="mcStatReg">—</div><div class="stat-label">Registrations</div></div><div class="stat"><div class="stat-num" id="mcStatNotJoined">—</div><div class="stat-label">Not Yet Joined</div></div></div>
-<div class="muted">Watching Now resets when you return to Waiting.</div></div>
+      /* Live attendance stats */
+      .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+      .stat { background: #faf9f5; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+      .stat-num { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+      .stat-label { margin-top: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+      .stat-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted); }
+      .stat-watching { background: #171717; border-color: #171717; }
+      .stat-watching .stat-num { color: #fff; font-size: 34px; }
+      .stat-watching .stat-label, .stat-watching .stat-hint { color: #b9b4ac; }
+      .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--greenInk); box-shadow: 0 0 0 4px rgba(29,106,59,0.14); margin-right: 4px; animation: mcPulse 1.6s infinite; }
+      @keyframes mcPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+      .stat-live { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+      button {
+        font-family: "DM Sans", sans-serif;
+        border: 0;
+        border-radius: 10px;
+        padding: 13px 20px;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.55; cursor: default; }
+      .end { background: var(--redInk); color: #fff; }
+      .refresh { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+      .feedback { margin-top: 14px; font-weight: 700; font-size: 14px; min-height: 20px; }
+      .feedback.ok { color: var(--greenInk); }
+      .feedback.err { color: var(--redInk); }
+      .muted { color: var(--muted); font-size: 12px; margin-top: 8px; }
+      .field .label {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .check input {
+        width: 17px;
+        height: 17px;
+        accent-color: #171717;
+        cursor: pointer;
+      }
+      .hidden { display: none !important; }
+      .state-badge { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: #f1efe9; color: var(--muted); }
+      .state-badge.waiting { background: #f1efe9; color: var(--muted); border-color: var(--line); }
+      .state-badge.live { background: var(--green); color: var(--greenInk); border-color: #b9e4c8; }
+      .state-badge.ended { background: var(--orange); color: var(--orangeInk); border-color: #f1c889; }
+      .stream-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+      .stream-controls button { padding: 10px 16px; font-size: 13px; }
+      .stream-controls .start { background: var(--greenInk); color: #fff; }
+      .stream-controls .end { background: var(--redInk); color: #fff; }
+      .stream-controls .reset { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+      .hostchat { display: inline-flex; align-items: center; gap: 8px; border: 0; background: var(--yellow); color: #151515; font-weight: 800; }
+      .hostchat:hover { background: #f0c800; }
+      .hostchat svg { margin-top: -1px; }
+      .configured-url { font-family: monospace; font-size: 12px; background: #faf9f5; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); word-break: break-all; margin-top: 8px; }
+      .presentation-wrap { margin-top: 24px; }
+      .presentation-frame { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--line); border-radius: 12px; background: #000; }
+      .presentation-actions { display: flex; gap: 8px; margin-top: 10px; }
+      .presentation-actions button { padding: 8px 14px; font-size: 12px; }
+      @media (max-width: 640px) { .facts { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: 1fr 1fr; } .stat-watching { grid-column: 1 / -1; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="top">
+        <div class="brand"><img src="/assistara-logo.svg" alt="Assistara" /><span>Assistara Admin</span></div>
+        <a class="back" href="/admin">&larr; Admin</a>
+      </div>
 
-<div class="card" id="mcYtCard"><div class="statusRow"><div><div class="title">YouTube Live stream</div><div class="sub">Paste the YouTube livestream link once.</div></div><span class="badge waiting" id="mcYtStateBadge">WAITING</span></div>
-<div class="field"><label class="field-label">YouTube stream URL or video ID</label><input class="field-input" id="mcYtUrl" type="text" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" spellcheck="false"></div>
-<div class="field"><label class="field-label">Chat Provider</label>
-<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="mcYtChatProvider" value="assistara" checked style="accent-color:#171717"><span style="font-weight:600">Assistara Chat</span></label><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="mcYtChatProvider" value="youtube" style="accent-color:#171717"><span style="font-weight:600">YouTube Chat</span></label><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="mcYtChatProvider" value="off" style="accent-color:#171717"><span style="font-weight:600">Chat Off</span></label></div></div>
-<div class="field" style="margin-top:16px"><label class="field-label">Live Chat</label><div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap"><span class="badge waiting" id="mcChatStateBadge">Closed</span><button class="btn btn-ghost" id="mcChatToggle">Open Chat</button><span class="muted" style="font-size:12px">Open any time.</span></div></div>
-<div id="mcYtConfiguredUrl" class="configured-url hidden"></div>
-<div class="stream-controls"><button class="btn btn-success hidden" id="mcYtStart">Start Stream</button><button class="btn btn-danger hidden" id="mcYtEnd">End Stream</button><button class="btn btn-ghost hidden" id="mcYtReset">Reset to Waiting</button></div>
-<div class="actions"><button class="btn btn-ghost" id="mcYtSave">Save YouTube stream</button><button class="btn btn-primary" id="mcOpenHostChat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Open Host Chat</button></div>
-<div class="feedback" id="mcYtFeedback"></div><div class="muted">Leave URL empty and save to remove stream.</div>
-</div>
+      <div class="head">
+        <h1>Masterclass Event</h1>
+        <div class="sub">The event goes live automatically at its scheduled start. You only need to end it.</div>
+      </div>
 
-<div class="card presentation-wrap" id="mcPresentationCard"><div class="statusRow"><div><div class="title">Masterclass Presentation</div></div></div><iframe class="presentation-frame" id="mcPresentationFrame" src="https://masterclass-presentation.vercel.app" allowfullscreen></iframe><div class="presentation-actions"><button class="btn btn-ghost" id="mcPresentationReload">Reload</button><button class="btn btn-ghost" id="mcPresentationNewTab">Open in New Tab</button><button class="btn btn-ghost" id="mcPresentationFullscreen">Fullscreen</button></div></div>
+      <div class="card">
+        <div class="statusRow">
+          <div>
+            <div class="title" id="mcTitle">How to Land Your First Remote Client</div>
+            <div class="sub" id="mcKey">founding-masterclass-2026</div>
+          </div>
+          <span class="badge scheduled" id="mcBadge"><span class="dot"></span><span id="mcStatusText">Loading…</span></span>
+        </div>
 
-</div></main></div>
-<script>
-const MC_ENDPOINT="https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status";
-const MC_EVENT_KEY=(new URLSearchParams(location.search).get("event_key")||"founding-masterclass-2026").slice(0,120);
-const MC_TZ="Asia/Manila";
-const ADMIN_TOKEN_KEY="assistara_admin_token";
-const adminSession={read(){try{return localStorage.getItem(ADMIN_TOKEN_KEY)||sessionStorage.getItem(ADMIN_TOKEN_KEY)||"";}catch{return"";}},clear(){try{localStorage.removeItem(ADMIN_TOKEN_KEY);}catch{}try{sessionStorage.removeItem(ADMIN_TOKEN_KEY);}catch{}}};
-const token=adminSession.read();if(!token)location.href="/admin";
-const $=(id)=>document.getElementById(id);
-let event=null,countdownTimer=null;
-function fmt(iso){if(!iso)return"—";const d=new Date(iso);if(Number.isNaN(d.getTime()))return"—";return d.toLocaleString("en-PH",{timeZone:MC_TZ,dateStyle:"full",timeStyle:"short"})+" PHT";}
-function setBadge(status){const b=$("mcBadge");b.className="badge "+status;$("mcStatusText").textContent=status==="live"?"Live":status==="ended"?"Ended":"Scheduled";}
-function renderCountdown(){if(!event||event.status!=="scheduled"){$("mcCountdownWrap").classList.add("hidden");return;}const target=event.scheduled_at?new Date(event.scheduled_at).getTime():NaN;if(!Number.isFinite(target)){$("mcCountdownWrap").classList.add("hidden");return;}const diff=target-Date.now();if(diff<=0){$("mcCountdownWrap").classList.add("hidden");return;}$("mcCountdownWrap").classList.remove("hidden");const sec=Math.floor(diff/1000);$("cdDays").textContent=String(Math.floor(sec/86400)).padStart(2,"0");$("cdHours").textContent=String(Math.floor((sec%86400)/3600)).padStart(2,"0");$("cdMins").textContent=String(Math.floor((sec%3600)/60)).padStart(2,"0");$("cdSecs").textContent=String(sec%60).padStart(2,"0");}
-function render(){if(!event){setBadge("scheduled");$("mcStatusText").textContent="Unavailable";return;}$("mcTitle").textContent=event.title||"Masterclass";$("mcKey").textContent=event.event_key||MC_EVENT_KEY;setBadge(event.status);$("mcScheduled").textContent=fmt(event.scheduled_at);$("mcStarted").textContent=event.started_at?fmt(event.started_at):"Not started yet";$("mcEnded").textContent=event.ended_at?fmt(event.ended_at)+(event.ended_by?" · by "+event.ended_by:""):"Not ended";$("mcEnd").classList.toggle("hidden",event.status!=="live");$("mcMeta").textContent=event.updated_at?"Last updated "+fmt(event.updated_at):"";renderCountdown();if(countdownTimer)clearInterval(countdownTimer);if(event.status==="scheduled")countdownTimer=setInterval(renderCountdown,1000);}
-async function load(){try{const r=await fetch(MC_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"read",event_key:MC_EVENT_KEY})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||"Could not load event");event=d.event;render();}catch(e){$("mcFeedback").textContent="Could not load event status. "+e.message;$("mcFeedback").className="feedback err";}}
-$("mcRefresh").onclick=()=>{$("mcFeedback").textContent="";load();};
-$("mcEnd").onclick=async()=>{if(!confirm("End the masterclass now?"))return;const btn=$("mcEnd");const fb=$("mcFeedback");btn.disabled=true;fb.textContent="Ending the masterclass…";fb.className="feedback";try{const r=await fetch(MC_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"end",event_key:MC_EVENT_KEY})});const d=await r.json().catch(()=>({}));if(r.status===401){adminSession.clear();fb.textContent="Your admin session expired. Please log in again.";fb.className="feedback err";return;}if(!r.ok||!d.ok)throw new Error(d.error||"Could not end the masterclass");fb.textContent=d.changed?"Masterclass ended.":"The masterclass was already ended.";fb.className="feedback ok";await load();}catch(e){fb.textContent="Could not end the masterclass. "+e.message;fb.className="feedback err";}finally{btn.disabled=false;}};
-const YT_ENDPOINT="/api/masterclass-youtube";let savedProvider="assistara",chatOpenState=null;
-function updateYoutubeUI(d){const hasUrl=!!d.video_id;$("mcYtUrl").value=d.youtube_url||"";const provider=d.chat_provider||"assistara";savedProvider=provider;document.querySelectorAll('input[name="mcYtChatProvider"]').forEach(r=>{r.checked=r.value===provider;});chatOpenState=d.chat_open===undefined||d.chat_open===null?null:d.chat_open;const chatOpen=chatOpenState===true;const chatBadge=$("mcChatStateBadge");if(chatBadge){chatBadge.textContent=chatOpenState===null?"Closed · opens at live":(chatOpen?"Open":"Closed");chatBadge.className="badge "+(chatOpen?"live":"waiting");}const chatToggleBtn=$("mcChatToggle");if(chatToggleBtn)chatToggleBtn.textContent=chatOpen?"Close Chat":"Open Chat";const stateBadge=$("mcYtStateBadge");const state=d.display_state||"waiting";stateBadge.textContent=state.toUpperCase();stateBadge.className="badge "+state;const urlEl=$("mcYtConfiguredUrl");if(hasUrl){urlEl.textContent="Configured: "+d.youtube_url;urlEl.classList.remove("hidden");}else{urlEl.classList.add("hidden");}const startBtn=$("mcYtStart"),endBtn=$("mcYtEnd"),resetBtn=$("mcYtReset");startBtn.classList.toggle("hidden",!hasUrl||state==="live");endBtn.classList.toggle("hidden",state!=="live");resetBtn.classList.toggle("hidden",state==="waiting");}
-async function loadYoutube(){try{const r=await fetch(YT_ENDPOINT,{cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||"Could not load the YouTube stream");updateYoutubeUI(d);}catch(e){const fb=$("mcYtFeedback");fb.className="feedback err";fb.textContent=e.message;}}
-async function loadStats(){try{const r=await fetch(YT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"stats",event_key:MC_EVENT_KEY}),cache:"no-store"});if(r.status===401){adminSession.clear();location.href="/admin";return;}const d=await r.json().catch(()=>({}));if(!d.ok)throw new Error(d.error||"Could not load attendance");$("mcStatWatching").textContent=d.watching_now;$("mcStatSession").textContent=d.session_unique;$("mcStatUnique").textContent=d.unique_attendees;$("mcStatReg").textContent=d.registrations;$("mcStatNotJoined").textContent=d.not_yet_joined;const t=d.generated_at?new Date(d.generated_at):new Date();$("mcStatsUpdated").textContent="Updated "+t.toLocaleTimeString("en-PH",{timeZone:MC_TZ,hour:"2-digit",minute:"2-digit",second:"2-digit"});}catch(e){$("mcStatsUpdated").textContent="Update failed";}}
-async function streamAction(action,confirmMsg,btnId,successMsg){if(!confirm(confirmMsg))return;const btn=$(btnId);const fb=$("mcYtFeedback");btn.disabled=true;fb.className="feedback";fb.textContent="Processing…";try{const r=await fetch(YT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action,event_key:MC_EVENT_KEY})});const d=await r.json().catch(()=>({}));if(r.status===401){adminSession.clear();fb.textContent="Your admin session expired.";fb.className="feedback err";return;}if(!r.ok||!d.ok)throw new Error(d.error||"Could not "+action.replace("_"," ")+" the stream");fb.className="feedback ok";fb.textContent=d.message||successMsg;await loadYoutube();}catch(e){fb.className="feedback err";fb.textContent="Could not "+action.replace("_"," ")+" the stream. "+e.message;}finally{btn.disabled=false;}}
-$("mcYtSave").onclick=async()=>{const btn=$("mcYtSave");const fb=$("mcYtFeedback");btn.disabled=true;fb.className="feedback";fb.textContent="Saving…";try{const r=await fetch(YT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"configure",event_key:MC_EVENT_KEY,youtube_url:$("mcYtUrl").value.trim(),replay_enabled:false,chat_provider:document.querySelector('input[name="mcYtChatProvider"]:checked')?.value||"assistara"})});const d=await r.json().catch(()=>({}));if(r.status===401){adminSession.clear();fb.textContent="Your admin session expired.";fb.className="feedback err";return;}if(!r.ok||!d.ok)throw new Error(d.error||"Could not save the YouTube stream");fb.className="feedback ok";fb.textContent=d.video_id?"Saved — the public page now uses "+d.youtube_url:"Saved — the stream was removed.";await loadYoutube();}catch(e){fb.className="feedback err";fb.textContent="Could not save the YouTube stream. "+e.message;}finally{btn.disabled=false;}};
-$("mcOpenHostChat").onclick=async()=>{const fb=$("mcYtFeedback");const win=window.open("about:blank","_blank");if(!win){fb.className="feedback err";fb.textContent="Please allow pop-ups.";return;}try{const r=await fetch(YT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"presenter_key",event_key:MC_EVENT_KEY}),cache:"no-store"});if(r.status===401){adminSession.clear();win.close();location.href="/admin";return;}const d=await r.json().catch(()=>({}));if(!d.ok||!d.hostToken)throw new Error(d.error||"Host Chat access unavailable");win.location.href="/live/chat?presenter="+encodeURIComponent(d.hostToken);}catch(e){win.close();fb.className="feedback err";fb.textContent="Could not open Host Chat. "+e.message;}};
-$("mcYtStart").onclick=()=>streamAction("start_stream","Start the livestream? Viewers will see the YouTube player immediately.","mcYtStart","Stream is now LIVE");
-$("mcYtEnd").onclick=()=>streamAction("end_stream","End the livestream? Viewers will see the thank-you message.","mcYtEnd","Stream ended");
-$("mcYtReset").onclick=()=>streamAction("reset_stream","Reset to waiting? The countdown and waiting screen will reappear.","mcYtReset","Reset to waiting");
-const providerRadios=document.querySelectorAll('input[name="mcYtChatProvider"]');providerRadios.forEach(radio=>{radio.addEventListener('change',async function(){const selected=this.value;if(selected===savedProvider)return;const fb=$("mcYtFeedback");fb.className="feedback";fb.textContent="Saving...";try{const r=await fetch(YT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"update_chat_provider",event_key:MC_EVENT_KEY,chat_provider:selected})});const d=await r.json().catch(()=>({}));if(r.status===401){adminSession.clear();fb.textContent="Your admin session expired.";fb.className="feedback err";this.checked=false;document.querySelector('input[name="mcYtChatProvider"][value="'+savedProvider+'"]').checked=true;return;}if(!r.ok||!d.ok)throw new Error(d.error||"Could not save chat provider");savedProvider=selected;fb.className="feedback ok";fb.textContent="Saved";await loadYoutube();}catch(e){fb.className="feedback err";fb.textContent="Could not save chat provider. "+e.message;this.checked=false;document.querySelector('input[name="mcYtChatProvider"][value="'+savedProvider+'"]').checked=true;}});});
-$("mcChatToggle").onclick=async()=>{const fb=$("mcYtFeedback");const btn=$("mcChatToggle");const next=chatOpenState!==true;btn.disabled=true;fb.className="feedback";fb.textContent="Saving…";try{const r=await fetch(YT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"set_chat_open",event_key:MC_EVENT_KEY,chat_open:next})});const d=await r.json().catch(()=>({}));if(r.status===401){adminSession.clear();fb.textContent="Your admin session expired.";fb.className="feedback err";return;}if(!r.ok||!d.ok)throw new Error(d.error||"Could not update chat");chatOpenState=next;fb.className="feedback ok";fb.textContent=next?"Chat is now Open — viewers can join.":"Chat closed and messages cleared.";const badge=$("mcChatStateBadge");if(badge){badge.textContent=next?"Open":"Closed";badge.className="badge "+(next?"live":"waiting");}btn.textContent=next?"Close Chat":"Open Chat";}catch(e){fb.className="feedback err";fb.textContent="Could not update chat. "+e.message;}finally{btn.disabled=false;}};
-$("mcPresentationReload").onclick=()=>{const f=$("mcPresentationFrame");f.src=f.src;};
-$("mcPresentationNewTab").onclick=()=>window.open("https://masterclass-presentation.vercel.app","_blank","noopener,noreferrer");
-$("mcPresentationFullscreen").onclick=()=>{const f=$("mcPresentationFrame");if(f.requestFullscreen)f.requestFullscreen();else if(f.webkitRequestFullscreen)f.webkitRequestFullscreen();else if(f.msRequestFullscreen)f.msRequestFullscreen();};
-load();loadYoutube();loadStats();setInterval(load,20000);setInterval(loadStats,12000);document.addEventListener("visibilitychange",()=>{if(!document.hidden){load();loadStats();}});window.addEventListener("focus",()=>load());
-// Sidebar state
-const SIDEBAR_KEY="assistara_admin_sidebar";
-function readSidebarCollapsed(){try{return localStorage.getItem(SIDEBAR_KEY)==="1";}catch{return false;}}
-function applySidebarState(){const c=readSidebarCollapsed();$("sidebar").classList.toggle("collapsed",c);$("sidebarCollapse").setAttribute("aria-label",c?"Expand sidebar":"Collapse sidebar");}
-function toggleSidebar(){const next=!$("sidebar").classList.contains("collapsed");$("sidebar").classList.toggle("collapsed",next);try{localStorage.setItem(SIDEBAR_KEY,next?"1":"0");}catch{}$("sidebarCollapse").setAttribute("aria-label",next?"Expand sidebar":"Collapse sidebar");}
-function openMobileSidebar(){$("sidebar").classList.add("open");document.getElementById("sidebarOverlay")?.classList.add("show");$("menuToggle").setAttribute("aria-expanded","true");}
-function closeMobileSidebar(){$("sidebar").classList.remove("open");document.getElementById("sidebarOverlay")?.classList.remove("show");$("menuToggle").setAttribute("aria-expanded","false");}
-$("sidebarCollapse").onclick=toggleSidebar;
-$("menuToggle").onclick=openMobileSidebar;
-document.getElementById("sidebarOverlay")?.addEventListener("click",closeMobileSidebar);
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMobileSidebar();});
-window.addEventListener("resize",()=>{if(window.innerWidth>=1024)closeMobileSidebar();});
-applySidebarState();
-</script>
-</body></html>
+        <div class="facts">
+          <div class="fact"><div class="label">Scheduled start</div><div class="value" id="mcScheduled">—</div></div>
+          <div class="fact"><div class="label">Timezone</div><div class="value">Asia/Manila (PHT)</div></div>
+          <div class="fact"><div class="label">Actual start</div><div class="value" id="mcStarted">Not started yet</div></div>
+          <div class="fact"><div class="label">Ended</div><div class="value" id="mcEnded">Not ended</div></div>
+        </div>
+
+        <div id="mcCountdownWrap">
+          <div class="countdown" aria-live="polite">
+            <div class="cd"><b id="cdDays">00</b><span>Days</span></div>
+            <div class="cd"><b id="cdHours">00</b><span>Hours</span></div>
+            <div class="cd"><b id="cdMins">00</b><span>Min</span></div>
+            <div class="cd"><b id="cdSecs">00</b><span>Sec</span></div>
+          </div>
+          <div class="countdownNote" id="mcCountdownNote">Countdown to the scheduled start (server schedule).</div>
+        </div>
+
+        <div class="actions">
+          <button class="end hidden" id="mcEnd">End Masterclass</button>
+          <button class="refresh" id="mcRefresh">Refresh</button>
+        </div>
+        <div class="feedback" id="mcFeedback"></div>
+        <div class="muted" id="mcMeta"></div>
+      </div>
+
+      <div class="card" id="mcStatsCard">
+        <div class="statusRow">
+          <div>
+            <div class="title">Live Attendance</div>
+            <div class="sub"><span class="live-dot"></span><span class="stat-live">Live</span> · <span id="mcStatsUpdated">Loading…</span></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat stat-watching"><div class="stat-num" id="mcStatWatching">—</div><div class="stat-label">Watching Now <span class="stat-hint">this session</span></div></div>
+          <div class="stat"><div class="stat-num" id="mcStatSession">—</div><div class="stat-label">Unique This Session</div></div>
+          <div class="stat"><div class="stat-num" id="mcStatUnique">—</div><div class="stat-label">Unique Attendees <span class="stat-hint">all-time</span></div></div>
+          <div class="stat"><div class="stat-num" id="mcStatReg">—</div><div class="stat-label">Registrations</div></div>
+          <div class="stat"><div class="stat-num" id="mcStatNotJoined">—</div><div class="stat-label">Not Yet Joined</div></div>
+        </div>
+        <div class="muted" style="margin-top:10px">Watching Now and Unique This Session count people on the page during the current livestream only; they reset to zero when you return the stream to Waiting and count again from zero on the next Start. Unique Attendees, Registrations and Not Yet Joined are all-time (Not Yet Joined matches the 6:07 PM reminder). This is active page presence, not confirmed video playback.</div>
+      </div>
+
+      <div class="card" id="mcYtCard">
+        <div class="statusRow">
+          <div>
+            <div class="title">YouTube Live stream</div>
+            <div class="sub">Paste the YouTube livestream link once — the public page uses it immediately. No redeploy, no code change.</div>
+          </div>
+          <span class="state-badge waiting" id="mcYtStateBadge">WAITING</span>
+        </div>
+
+        <div class="field">
+          <span class="label">YouTube stream URL or video ID</span>
+          <input id="mcYtUrl" type="text" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="field">
+          <span class="label">Chat Provider</span>
+          <div class="radio-group" style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;">
+            <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="mcYtChatProvider" value="assistara" checked style="accent-color: #171717;">
+              <span style="font-weight: 600;">Assistara Chat</span>
+            </label>
+            <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="mcYtChatProvider" value="youtube" style="accent-color: #171717;">
+              <span style="font-weight: 600;">YouTube Chat</span>
+            </label>
+            <label class="radio" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="mcYtChatProvider" value="off" style="accent-color: #171717;">
+              <span style="font-weight: 600;">Chat Off</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:16px">
+          <span class="label">Live Chat</span>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+            <span class="state-badge waiting" id="mcChatStateBadge">Closed</span>
+            <button class="refresh" id="mcChatToggle">Open Chat</button>
+            <span class="muted" style="font-size:12px">Open chat any time — even while Waiting. Viewers update within seconds; closing clears all messages.</span>
+          </div>
+        </div>
+
+        <div id="mcYtConfiguredUrl" class="configured-url hidden"></div>
+
+        <div class="stream-controls">
+          <button class="start hidden" id="mcYtStart">Start Stream</button>
+          <button class="end hidden" id="mcYtEnd">End Stream</button>
+          <button class="reset hidden" id="mcYtReset">Reset to Waiting</button>
+        </div>
+
+        <div class="actions">
+          <button class="refresh" id="mcYtSave">Save YouTube stream</button>
+          <button class="hostchat" id="mcOpenHostChat">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            Open Host Chat
+          </button>
+        </div>
+        <div class="feedback" id="mcYtFeedback"></div>
+        <div class="muted">Leave the URL empty and save to remove the stream. Playback starts muted when the browser blocks autoplay; viewers unmute with one tap.</div>
+      </div>
+
+      <div class="card presentation-wrap" id="mcPresentationCard">
+        <div class="statusRow">
+          <div>
+            <div class="title">Masterclass Presentation</div>
+          </div>
+        </div>
+        <iframe class="presentation-frame" id="mcPresentationFrame" src="https://masterclass-presentation.vercel.app" allowfullscreen></iframe>
+        <div class="presentation-actions">
+          <button class="refresh" id="mcPresentationReload">Reload Presentation</button>
+          <button class="refresh" id="mcPresentationNewTab">Open in New Tab <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-left:6px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></button>
+          <button class="refresh" id="mcPresentationFullscreen">Fullscreen</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const MC_ENDPOINT =
+        "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status";
+      // Defaults to the live event; an explicit event_key is used only for QA.
+      const MC_EVENT_KEY = (
+        new URLSearchParams(location.search).get("event_key") || "founding-masterclass-2026"
+      ).slice(0, 120);
+      const MC_TZ = "Asia/Manila";
+
+      const ADMIN_TOKEN_KEY = "assistara_admin_token";
+      const adminSession = {
+        read() {
+          try {
+            return (
+              localStorage.getItem(ADMIN_TOKEN_KEY) ||
+              sessionStorage.getItem(ADMIN_TOKEN_KEY) ||
+              ""
+            );
+          } catch {
+            return "";
+          }
+        },
+        clear() {
+          try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+          try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+        },
+      };
+
+      const token = adminSession.read();
+      if (!token) location.href = "/admin";
+
+      const $ = (id) => document.getElementById(id);
+      let event = null;
+      let countdownTimer = null;
+
+      function fmt(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return "—";
+        return d.toLocaleString("en-PH", {
+          timeZone: MC_TZ,
+          dateStyle: "full",
+          timeStyle: "short",
+        }) + " PHT";
+      }
+
+      function setBadge(status) {
+        const badge = $("mcBadge");
+        badge.className = "badge " + status;
+        $("mcStatusText").textContent =
+          status === "live" ? "Live" : status === "ended" ? "Ended" : "Scheduled";
+      }
+
+      function renderCountdown() {
+        if (!event || event.status !== "scheduled") {
+          $("mcCountdownWrap").classList.add("hidden");
+          return;
+        }
+        const target = event.scheduled_at ? new Date(event.scheduled_at).getTime() : NaN;
+        if (!Number.isFinite(target)) {
+          $("mcCountdownWrap").classList.add("hidden");
+          return;
+        }
+        const diff = target - Date.now();
+        if (diff <= 0) {
+          $("mcCountdownWrap").classList.add("hidden");
+          return;
+        }
+        $("mcCountdownWrap").classList.remove("hidden");
+        const sec = Math.floor(diff / 1000);
+        $("cdDays").textContent = String(Math.floor(sec / 86400)).padStart(2, "0");
+        $("cdHours").textContent = String(Math.floor((sec % 86400) / 3600)).padStart(2, "0");
+        $("cdMins").textContent = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+        $("cdSecs").textContent = String(sec % 60).padStart(2, "0");
+      }
+
+      function render() {
+        if (!event) {
+          setBadge("scheduled");
+          $("mcStatusText").textContent = "Unavailable";
+          return;
+        }
+        $("mcTitle").textContent = event.title || "Masterclass";
+        $("mcKey").textContent = event.event_key || MC_EVENT_KEY;
+        setBadge(event.status);
+        $("mcScheduled").textContent = fmt(event.scheduled_at);
+        $("mcStarted").textContent = event.started_at ? fmt(event.started_at) : "Not started yet";
+        $("mcEnded").textContent = event.ended_at
+          ? fmt(event.ended_at) + (event.ended_by ? " · by " + event.ended_by : "")
+          : "Not ended";
+        $("mcEnd").classList.toggle("hidden", event.status !== "live");
+        $("mcMeta").textContent = event.updated_at ? "Last updated " + fmt(event.updated_at) : "";
+        renderCountdown();
+        if (countdownTimer) clearInterval(countdownTimer);
+        if (event.status === "scheduled") countdownTimer = setInterval(renderCountdown, 1000);
+      }
+
+      async function load() {
+        try {
+          const r = await fetch(MC_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "read", event_key: MC_EVENT_KEY }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not load event");
+          event = d.event;
+          render();
+        } catch (e) {
+          $("mcFeedback").textContent = "Could not load event status. " + e.message;
+          $("mcFeedback").className = "feedback err";
+        }
+      }
+
+      $("mcRefresh").onclick = () => { $("mcFeedback").textContent = ""; load(); };
+
+      $("mcEnd").onclick = async () => {
+        if (!confirm("End the masterclass now? This stops the live event and cannot be undone.")) return;
+        const btn = $("mcEnd");
+        const fb = $("mcFeedback");
+        btn.disabled = true;
+        fb.textContent = "Ending the masterclass…";
+        fb.className = "feedback";
+        try {
+          const r = await fetch(MC_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "end", event_key: MC_EVENT_KEY }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.textContent = "Your admin session expired. Please log in again.";
+            fb.className = "feedback err";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not end the masterclass");
+          fb.textContent = d.changed
+            ? "Masterclass ended."
+            : "The masterclass was already ended.";
+          fb.className = "feedback ok";
+          await load();
+        } catch (e) {
+          fb.textContent = "Could not end the masterclass. " + e.message;
+          fb.className = "feedback err";
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      // YouTube Live stream configuration. The public page reads the same
+      // endpoint, so a save here is live within seconds — nothing to rebuild.
+      const YT_ENDPOINT = "/api/masterclass-youtube";
+      // The provider currently stored on the server. Auto-saving a new
+      // provider uses a dedicated API action that changes ONLY the
+      // provider, so the stream state and YouTube URL are preserved.
+      let savedProvider = "assistara";
+      let chatOpenState = null;
+
+      function updateYoutubeUI(d) {
+        const hasUrl = !!d.video_id;
+        $("mcYtUrl").value = d.youtube_url || "";
+        // Update chat provider radio buttons
+        const provider = d.chat_provider || "assistara";
+        savedProvider = provider;
+        const providerRadios = document.querySelectorAll('input[name="mcYtChatProvider"]');
+        providerRadios.forEach(radio => {
+          radio.checked = radio.value === provider;
+        });
+        // Chat open/closed toggle (independent of stream + provider)
+        chatOpenState = d.chat_open === undefined || d.chat_open === null ? null : d.chat_open;
+        const chatOpen = chatOpenState === true;
+        const chatBadge = $("mcChatStateBadge");
+        if (chatBadge) {
+          chatBadge.textContent = chatOpenState === null ? "Closed · opens at live" : (chatOpen ? "Open" : "Closed");
+          chatBadge.className = "state-badge " + (chatOpen ? "live" : "waiting");
+        }
+        const chatToggleBtn = $("mcChatToggle");
+        if (chatToggleBtn) chatToggleBtn.textContent = chatOpen ? "Close Chat" : "Open Chat";
+        // Update display state badge
+        const stateBadge = $("mcYtStateBadge");
+        const state = d.display_state || "waiting";
+        stateBadge.textContent = state.toUpperCase();
+        stateBadge.className = "state-badge " + state;
+        // Show/hide configured URL
+        const urlEl = $("mcYtConfiguredUrl");
+        if (hasUrl) {
+          urlEl.textContent = "Configured: " + d.youtube_url;
+          urlEl.classList.remove("hidden");
+        } else {
+          urlEl.classList.add("hidden");
+        }
+        // Show/hide stream control buttons based on state and URL
+        const startBtn = $("mcYtStart");
+        const endBtn = $("mcYtEnd");
+        const resetBtn = $("mcYtReset");
+        startBtn.classList.toggle("hidden", !hasUrl || state === "live");
+        endBtn.classList.toggle("hidden", state !== "live");
+        resetBtn.classList.toggle("hidden", state === "waiting");
+      }
+
+      async function loadYoutube() {
+        try {
+          const r = await fetch(YT_ENDPOINT, { cache: "no-store" });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not load the YouTube stream");
+          updateYoutubeUI(d);
+        } catch (e) {
+          const fb = $("mcYtFeedback");
+          fb.className = "feedback err";
+          fb.textContent = e.message;
+        }
+      }
+
+      async function loadStats() {
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "stats", event_key: MC_EVENT_KEY }),
+            cache: "no-store",
+          });
+          if (r.status === 401) { adminSession.clear(); location.href = "/admin"; return; }
+          const d = await r.json().catch(() => ({}));
+          if (!d.ok) throw new Error(d.error || "Could not load attendance");
+          $("mcStatWatching").textContent = d.watching_now;
+          $("mcStatSession").textContent = d.session_unique;
+          $("mcStatUnique").textContent = d.unique_attendees;
+          $("mcStatReg").textContent = d.registrations;
+          $("mcStatNotJoined").textContent = d.not_yet_joined;
+          const t = d.generated_at ? new Date(d.generated_at) : new Date();
+          $("mcStatsUpdated").textContent = "Updated " + t.toLocaleTimeString("en-PH", { timeZone: MC_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        } catch (e) {
+          $("mcStatsUpdated").textContent = "Update failed";
+        }
+      }
+
+      async function streamAction(action, confirmMsg, btnId, successMsg) {
+        if (!confirm(confirmMsg)) return;
+        const btn = $(btnId);
+        const fb = $("mcYtFeedback");
+        btn.disabled = true;
+        fb.className = "feedback";
+        fb.textContent = "Processing…";
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action, event_key: MC_EVENT_KEY }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.className = "feedback err";
+            fb.textContent = "Your admin session expired. Please log in again.";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not " + action.replace("_", " ") + " the stream");
+          fb.className = "feedback ok";
+          fb.textContent = d.message || successMsg;
+          await loadYoutube();
+        } catch (e) {
+          fb.className = "feedback err";
+          fb.textContent = "Could not " + action.replace("_", " ") + " the stream. " + e.message;
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      $("mcYtSave").onclick = async () => {
+        const btn = $("mcYtSave");
+        const fb = $("mcYtFeedback");
+        btn.disabled = true;
+        fb.className = "feedback";
+        fb.textContent = "Saving…";
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({
+              action: "configure",
+              event_key: MC_EVENT_KEY,
+              youtube_url: $("mcYtUrl").value.trim(),
+              replay_enabled: false,
+              chat_provider: document.querySelector('input[name="mcYtChatProvider"]:checked')?.value || "assistara",
+            }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.className = "feedback err";
+            fb.textContent = "Your admin session expired. Please log in again.";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not save the YouTube stream");
+          fb.className = "feedback ok";
+          fb.textContent = d.video_id
+            ? "Saved — the public page now uses " + d.youtube_url
+            : "Saved — the stream was removed.";
+          await loadYoutube();
+        } catch (e) {
+          fb.className = "feedback err";
+          fb.textContent = "Could not save the YouTube stream. " + e.message;
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      // Open the existing Host Chat (/live/chat) in a new tab, as HOST. The
+      // presenter secret is fetched via the admin-only presenter_key action
+      // (never hardcoded), so auth stays secure and the shortcut works whether
+      // or not the livestream has started.
+      $("mcOpenHostChat").onclick = async () => {
+        const fb = $("mcYtFeedback");
+        const win = window.open("about:blank", "_blank"); // on the user gesture -> no popup block
+        if (!win) {
+          fb.className = "feedback err";
+          fb.textContent = "Please allow pop-ups to open Host Chat in a new tab.";
+          return;
+        }
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "presenter_key", event_key: MC_EVENT_KEY }),
+            cache: "no-store",
+          });
+          if (r.status === 401) {
+            adminSession.clear();
+            win.close();
+            location.href = "/admin";
+            return;
+          }
+          const d = await r.json().catch(() => ({}));
+          if (!d.ok || !d.hostToken) throw new Error(d.error || "Host Chat access unavailable");
+          win.location.href = "/live/chat?presenter=" + encodeURIComponent(d.hostToken);
+        } catch (e) {
+          win.close();
+          fb.className = "feedback err";
+          fb.textContent = "Could not open Host Chat. " + e.message;
+        }
+      };
+
+      $("mcYtStart").onclick = () =>
+        streamAction("start_stream", "Start the livestream on the public page? Viewers will see the YouTube player immediately.", "mcYtStart", "Stream is now LIVE");
+      $("mcYtEnd").onclick = () =>
+        streamAction("end_stream", "End the livestream? Viewers will see the thank-you message.", "mcYtEnd", "Stream ended");
+      $("mcYtReset").onclick = () =>
+        streamAction("reset_stream", "Reset to waiting? The countdown and waiting screen will reappear for viewers.", "mcYtReset", "Reset to waiting");
+
+      // Auto-save chat provider selection. Uses a dedicated API action
+      // that changes ONLY the provider, so the stream state (LIVE/WAITING/
+      // ENDED) and the YouTube URL are never reset by a provider switch.
+      const providerRadios = document.querySelectorAll('input[name="mcYtChatProvider"]');
+      providerRadios.forEach(radio => {
+        radio.addEventListener('change', async function() {
+          const selected = this.value;
+          if (selected === savedProvider) return;
+          const fb = $("mcYtFeedback");
+          fb.className = "feedback";
+          fb.textContent = "Saving...";
+          try {
+            const r = await fetch(YT_ENDPOINT, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+              body: JSON.stringify({
+                action: "update_chat_provider",
+                event_key: MC_EVENT_KEY,
+                chat_provider: selected,
+              }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (r.status === 401) {
+              adminSession.clear();
+              fb.className = "feedback err";
+              fb.textContent = "Your admin session expired. Please log in again.";
+              this.checked = false;
+              document.querySelector('input[name="mcYtChatProvider"][value="' + savedProvider + '"]').checked = true;
+              return;
+            }
+            if (!r.ok || !d.ok) throw new Error(d.error || "Could not save chat provider");
+            savedProvider = selected;
+            fb.className = "feedback ok";
+            fb.textContent = "Saved";
+            await loadYoutube();
+          } catch (e) {
+            fb.className = "feedback err";
+            fb.textContent = "Could not save chat provider. " + e.message;
+            this.checked = false;
+            document.querySelector('input[name="mcYtChatProvider"][value="' + savedProvider + '"]').checked = true;
+          }
+        });
+      });
+
+      // Open/Close live chat (independent of the stream). Changes ONLY chat_open;
+      // never resets the livestream, viewers or attendance.
+      $("mcChatToggle").onclick = async () => {
+        const fb = $("mcYtFeedback");
+        const btn = $("mcChatToggle");
+        const next = chatOpenState !== true; // toggle to the opposite of the current state
+        btn.disabled = true;
+        fb.className = "feedback";
+        fb.textContent = "Saving…";
+        try {
+          const r = await fetch(YT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ action: "set_chat_open", event_key: MC_EVENT_KEY, chat_open: next }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            adminSession.clear();
+            fb.className = "feedback err";
+            fb.textContent = "Your admin session expired. Please log in again.";
+            return;
+          }
+          if (!r.ok || !d.ok) throw new Error(d.error || "Could not update chat");
+          chatOpenState = next;
+          fb.className = "feedback ok";
+          fb.textContent = next ? "Chat is now Open — viewers can join." : "Chat closed and messages cleared.";
+          const badge = $("mcChatStateBadge");
+          if (badge) { badge.textContent = next ? "Open" : "Closed"; badge.className = "state-badge " + (next ? "live" : "waiting"); }
+          btn.textContent = next ? "Close Chat" : "Open Chat";
+        } catch (e) {
+          fb.className = "feedback err";
+          fb.textContent = "Could not update chat. " + e.message;
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      // Presentation embed controls
+      $("mcPresentationReload").onclick = () => {
+        const frame = $("mcPresentationFrame");
+        frame.src = frame.src;
+      };
+      $("mcPresentationNewTab").onclick = () => {
+        window.open("https://masterclass-presentation.vercel.app", "_blank", "noopener,noreferrer");
+      };
+      $("mcPresentationFullscreen").onclick = () => {
+        const frame = $("mcPresentationFrame");
+        if (frame.requestFullscreen) frame.requestFullscreen();
+        else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+        else if (frame.msRequestFullscreen) frame.msRequestFullscreen();
+      };
+
+      load();
+      loadYoutube();
+      loadStats();
+      setInterval(load, 20000);
+      setInterval(loadStats, 12000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) { load(); loadStats(); } });
+      window.addEventListener("focus", () => load());
+    </script>
+  </body>
+</html>
