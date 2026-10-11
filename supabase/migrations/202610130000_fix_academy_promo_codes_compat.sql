@@ -16,6 +16,9 @@ begin
     -- Generate IDs for existing rows
     update public.academy_promo_codes set id = gen_random_uuid() where id is null;
     
+    -- Set default for future inserts
+    alter table public.academy_promo_codes alter column id set default gen_random_uuid();
+    
     -- Make id the primary key
     alter table public.academy_promo_codes add primary key (id);
   end if;
