@@ -229,7 +229,7 @@ async function renderOverview() {
       ${metricCard("Unique opens", av.openTracking ? num(m.uniqueOpens) : null, av.openTracking ? `Open rate ${pct(r.openRate)} of delivered` : "Open tracking not configured", av.openTracking)}
       ${metricCard("Unique clicks", av.clickTracking ? num(m.uniqueClicks) : null, av.clickTracking ? `CTR ${pct(r.clickThroughRate)} of delivered` : "Click tracking not configured", av.clickTracking)}
       ${metricCard("Bounces", av.deliveryEvents ? num(m.bounced) : null, av.deliveryEvents ? `Bounce rate ${pct(r.bounceRate)} of accepted` : "Provider webhooks not configured", av.deliveryEvents)}
-      ${metricCard("Unsubscribes", av.unsubscribeEvents ? num(m.unsubscribes) : (j.suppressions === null ? null : 0), `${num(j.suppressions)} on the global suppression list`, true)}
+      ${metricCard("Suppressed addresses", num(j.suppressions), av.unsubscribeEvents ? `${num(m.unsubscribes)} unsubscribe event(s) reported` : "Unsubscribe events not yet reported", j.suppressions !== null)}
     </div>
 
     <div class="card" style="margin-top:14px">
@@ -259,7 +259,6 @@ async function renderOverview() {
 async function renderCampaigns() {
   const j = await req("campaigns", rangeParams());
   const rows = j.campaigns || [];
-  window.__campaigns = rows;
   $("view").innerHTML = `
     <div class="card">
       <div class="head" style="margin:0 0 10px"><div><h1 style="font-size:20px">Campaigns &amp; automated email</h1>

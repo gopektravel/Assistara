@@ -36,7 +36,7 @@ import {
 // ----------------------------------------------------------------------------
 
 const URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_KEY = Deno.env.get("SUPABASE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SITE = "https://www.getassistara.com";
 const allowed = new Set([
   "https://getassistara.com",
@@ -431,7 +431,7 @@ async function acquisitionSnapshot(db: any, from: string, to: string): Promise<a
     paidEnrollments: { total: null, last30d: null, note: "Unavailable — no enrolled-payments view is wired yet" },
     attribution: {
       note: "Attribution is owned by the Acquisition Tracker (admin-acquisition). This section only summarises counts and never blends email opens/clicks with advertising data.",
-      tracker: "/admin-acquisition.html",
+      tracker: "/admin/acquisition",
     },
   };
 }
