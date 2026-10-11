@@ -15,7 +15,7 @@ create table if not exists public.academy_coupon_redemptions (
   payment_intent_id text, -- Stripe payment_intent or PayMongo payment_intent
   redeemed_at timestamp with time zone not null default now(),
   confirmed_at timestamp with time zone, -- Set when payment is confirmed (webhook)
-  status text not null default 'pending' check (status in ('pending', 'confirmed', 'failed', 'refunded')),
+  status text not null default 'pending' check (status in ('pending', 'confirmed', 'failed', 'refunded', 'limit_exceeded')),
   metadata jsonb default '{}' -- Additional context (coupon type, discount breakdown, etc.)
 );
 
@@ -36,7 +36,7 @@ create index if not exists academy_coupon_redemptions_confirmed_at_idx on public
 -- Unique constraint to prevent duplicate redemptions for same application+coupon
 create unique index if not exists academy_coupon_redemptions_app_coupon_unique
   on public.academy_coupon_redemptions (application_id, coupon_id)
-  where status in ('pending', 'confirmed');
+  where status in ('pending', 'confirmed', 'limit_exceeded');
 
 -- RLS: Service role only
 alter table public.academy_coupon_redemptions enable row level security;
@@ -58,21 +58,22 @@ select
   c.active,
   c.created_at,
   -- Redemption counts
-  count(r.id) filter (where r.status = 'confirmed') as confirmed_redemptions,
+  count(r.id) filter (where r.status = 'confirmed' or r.status = 'limit_exceeded') as confirmed_redemptions,
   count(r.id) filter (where r.status = 'pending') as pending_redemptions,
   count(r.id) filter (where r.status = 'failed') as failed_redemptions,
   count(r.id) filter (where r.status = 'refunded') as refunded_redemptions,
+  count(r.id) filter (where r.status = 'limit_exceeded') as limit_exceeded_redemptions,
   -- Revenue metrics
-  coalesce(sum(r.final_price_php) filter (where r.status = 'confirmed'), 0) as revenue_php,
-  coalesce(sum(r.discount_amount_php) filter (where r.status = 'confirmed'), 0) as total_discounts_php,
+  coalesce(sum(r.final_price_php) filter (where r.status in ('confirmed','limit_exceeded')), 0) as revenue_php,
+  coalesce(sum(r.discount_amount_php) filter (where r.status in ('confirmed','limit_exceeded')), 0) as total_discounts_php,
   -- Per-customer limit check
   c.max_redemptions_per_customer,
   -- Most recent redemption
-  max(r.confirmed_at) filter (where r.status = 'confirmed') as last_redemption_at,
-  -- Remaining redemptions
+  max(r.confirmed_at) filter (where r.status in ('confirmed','limit_exceeded')) as last_redemption_at,
+  -- Remaining redemptions (confirmed + limit_exceeded both consume limit)
   case
     when c.max_redemptions is not null
-    then c.max_redemptions - count(r.id) filter (where r.status = 'confirmed')
+    then c.max_redemptions - count(r.id) filter (where r.status in ('confirmed','limit_exceeded'))
     else null
   end as remaining_redemptions
 from public.academy_promo_codes c

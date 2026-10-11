@@ -38,16 +38,17 @@ begin
     c.max_redemptions_per_customer,
     c.active,
     c.created_at,
-    count(r.id) filter (where r.status = 'confirmed') as confirmed_redemptions,
+    count(r.id) filter (where r.status in ('confirmed','limit_exceeded')) as confirmed_redemptions,
     count(r.id) filter (where r.status = 'pending') as pending_redemptions,
     count(r.id) filter (where r.status = 'failed') as failed_redemptions,
     count(r.id) filter (where r.status = 'refunded') as refunded_redemptions,
-    coalesce(sum(r.final_price_php) filter (where r.status = 'confirmed'), 0) as revenue_php,
-    coalesce(sum(r.discount_amount_php) filter (where r.status = 'confirmed'), 0) as total_discounts_php,
-    max(r.confirmed_at) filter (where r.status = 'confirmed') as last_redemption_at,
+    count(r.id) filter (where r.status = 'limit_exceeded') as limit_exceeded_redemptions,
+    coalesce(sum(r.final_price_php) filter (where r.status in ('confirmed','limit_exceeded')), 0) as revenue_php,
+    coalesce(sum(r.discount_amount_php) filter (where r.status in ('confirmed','limit_exceeded')), 0) as total_discounts_php,
+    max(r.confirmed_at) filter (where r.status in ('confirmed','limit_exceeded')) as last_redemption_at,
     case
       when c.max_redemptions is not null
-      then c.max_redemptions - count(r.id) filter (where r.status = 'confirmed')
+      then c.max_redemptions - count(r.id) filter (where r.status in ('confirmed','limit_exceeded'))
       else null
     end as remaining_redemptions
   from public.academy_promo_codes c
@@ -119,7 +120,7 @@ begin
   if v_coupon.max_redemptions is not null then
     select count(*) into v_existing_redemptions
     from public.academy_coupon_redemptions
-    where coupon_id = v_coupon.id and status = 'confirmed';
+    where coupon_id = v_coupon.id and status in ('confirmed', 'limit_exceeded');
 
     if v_existing_redemptions >= v_coupon.max_redemptions then
       return query select gen_random_uuid()::uuid as id, 'limit_exceeded'::text as status, 'Coupon redemption limit reached'::text as error;
@@ -131,7 +132,7 @@ begin
   if v_coupon.max_redemptions_per_customer is not null then
     select count(*) into v_customer_redemptions
     from public.academy_coupon_redemptions
-    where coupon_id = v_coupon.id and customer_email = p_customer_email and status = 'confirmed';
+    where coupon_id = v_coupon.id and customer_email = p_customer_email and status in ('confirmed', 'limit_exceeded');
 
     if v_customer_redemptions >= v_coupon.max_redemptions_per_customer then
       return query select gen_random_uuid()::uuid as id, 'customer_limit_exceeded'::text as status, 'Customer has already used this coupon the maximum number of times'::text as error;
@@ -154,7 +155,7 @@ begin
       p_payment_method, p_payment_reference, p_payment_intent_id,
       'pending', p_metadata, v_now
     )
-    on conflict (application_id, coupon_id) where status in ('pending', 'confirmed')
+    on conflict (application_id, coupon_id) where status in ('pending', 'confirmed', 'limit_exceeded')
     do update set
       payment_reference = excluded.payment_reference,
       payment_intent_id = excluded.payment_intent_id,
@@ -169,7 +170,7 @@ begin
     select id, status, null::text
     into v_inserted_id, v_inserted_status, v_error
     from public.academy_coupon_redemptions
-    where application_id = p_application_id and coupon_id = v_coupon.id and status in ('pending', 'confirmed')
+    where application_id = p_application_id and coupon_id = v_coupon.id and status in ('pending', 'confirmed', 'limit_exceeded')
     limit 1;
   end;
 
@@ -245,7 +246,7 @@ begin
     if v_coupon.max_redemptions is not null then
       select count(*) into v_existing_redemptions
       from public.academy_coupon_redemptions
-      where coupon_id = v_coupon.id and status = 'confirmed';
+      where coupon_id = v_coupon.id and status in ('confirmed', 'limit_exceeded');
 
       if v_existing_redemptions >= v_coupon.max_redemptions then
         -- Limit exceeded: PAYMENT SUCCEEDED but coupon limit reached
@@ -258,7 +259,7 @@ begin
     if v_final_status = 'confirmed' and v_coupon.max_redemptions_per_customer is not null then
       select count(*) into v_customer_redemptions
       from public.academy_coupon_redemptions
-      where coupon_id = v_coupon.id and customer_email = v_customer_email and status = 'confirmed';
+      where coupon_id = v_coupon.id and customer_email = v_customer_email and status in ('confirmed', 'limit_exceeded');
 
       if v_customer_redemptions >= v_coupon.max_redemptions_per_customer then
         v_final_status := 'limit_exceeded';
