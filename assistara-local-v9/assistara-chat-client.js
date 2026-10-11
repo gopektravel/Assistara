@@ -45,6 +45,9 @@ var AssistaraChatClient = (() => {
     connectionStatus = "disconnected";
     sessionId = 0;
     // current chat session (reset bumps this)
+    hasAnnouncedJoin = false;
+    // true once this page session has announced its join (prevents duplicate
+    // "X joined" notifications when the socket reconnects after a drop)
     atBottom = true;
     // viewer is at the newest message
     unseen = 0;
@@ -377,6 +380,7 @@ var AssistaraChatClient = (() => {
       this.updateIdentityUI();
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.send({ type: "join", userId: this.userIdentity.userId, name: first, role: "attendee" });
+        this.hasAnnouncedJoin = true;
         this.elements.input?.focus();
       }
     }
@@ -405,13 +409,16 @@ var AssistaraChatClient = (() => {
           this.reconnectAttempts = 0;
           this.updateConnectionStatus("connected");
           if (this.userIdentity) {
-            this.send({
-              type: "join",
-              userId: this.userIdentity.userId,
-              name: this.userIdentity.name,
-              role: this.userIdentity.isHost ? "host" : "attendee",
-              hostToken: this.options.hostToken || void 0
-            });
+            if (!this.hasAnnouncedJoin) {
+              this.send({
+                type: "join",
+                userId: this.userIdentity.userId,
+                name: this.userIdentity.name,
+                role: this.userIdentity.isHost ? "host" : "attendee",
+                hostToken: this.options.hostToken || void 0
+              });
+              this.hasAnnouncedJoin = true;
+            }
             this.enableInput();
           } else {
             this.updateIdentityUI();
@@ -488,7 +495,9 @@ var AssistaraChatClient = (() => {
         case "welcome":
           if (msg.userId && this.userIdentity) this.userIdentity.userId = msg.userId;
           this.sessionId = msg.sessionId || 0;
-          this.messages = Array.isArray(msg.messages) ? msg.messages : [];
+          this.messages = (Array.isArray(msg.messages) ? msg.messages : []).filter(
+            (m) => !(m && m.role === "system" && this.isLeaveNotification(m.content))
+          );
           this.sendEnabled = msg.sendEnabled;
           this.renderMessages();
           this.scrollToBottom(false);
@@ -500,7 +509,9 @@ var AssistaraChatClient = (() => {
           break;
         case "history":
           if (typeof msg.sessionId === "number") this.sessionId = msg.sessionId;
-          this.messages = Array.isArray(msg.messages) ? msg.messages : [];
+          this.messages = (Array.isArray(msg.messages) ? msg.messages : []).filter(
+            (m) => !(m && m.role === "system" && this.isLeaveNotification(m.content))
+          );
           this.renderMessages();
           this.scrollToBottom(false);
           break;
@@ -515,9 +526,6 @@ var AssistaraChatClient = (() => {
           break;
         case "user_joined":
           this.addSystemMessage(`${msg.name} joined`);
-          break;
-        case "user_left":
-          this.addSystemMessage("Someone left");
           break;
         case "message_deleted":
           this.removeMessage(msg.messageId);
@@ -556,6 +564,7 @@ var AssistaraChatClient = (() => {
       }
     }
     addMessage(message) {
+      if (message && message.role === "system" && this.isLeaveNotification(message.content)) return;
       const existingIndex = this.messages.findIndex((m) => m.id === message.id);
       if (existingIndex >= 0) {
         this.messages[existingIndex] = message;
@@ -591,6 +600,12 @@ var AssistaraChatClient = (() => {
         timestamp: Date.now()
       };
       this.addMessage(systemMsg);
+    }
+    // True for system messages that are departure announcements.
+    // These are never shown to attendees (requirement: remove leave notifications).
+    isLeaveNotification(content) {
+      const c = String(content || "").trim().toLowerCase();
+      return c.endsWith(" left") || c.endsWith(" disconnected");
     }
     renderMessages() {
       if (!this.elements.messagesContainer) return;
