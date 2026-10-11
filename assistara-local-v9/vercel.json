@@ -30,6 +30,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-email.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "academy-apply.html",
       "use": "@vercel/static"
     },
@@ -587,6 +591,14 @@
       "dest": "/admin.html"
     },
     {
+      "src": "/admin/email",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/admin/email/",
+      "dest": "/admin.html"
+    },
+    {
       "src": "/admin-finance.html",
       "dest": "/admin-finance.html"
     },
@@ -597,6 +609,10 @@
     {
       "src": "/admin-masterclass-event.html",
       "dest": "/admin-masterclass-event.html"
+    },
+    {
+      "src": "/admin-email.html",
+      "dest": "/admin-email.html"
     },
     {
       "src": "/academy/beta-account",

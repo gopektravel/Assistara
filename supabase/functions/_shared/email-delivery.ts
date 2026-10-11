@@ -32,6 +32,8 @@ export interface EmailDeliveryOptions {
   maxAttempts?: number;
   forceProvider?: 'resend' | 'brevo' | 'sender'; // test-only: pin a single provider
   fromName?: string; // sender display-name override (per email identity)
+  campaignKey?: string; // campaign grouping used by the Email Command Center
+  recipientId?: string; // recipient ref (e.g. masterclass signup id) for the timeline
 }
 
 export interface EmailDeliveryResult {
@@ -198,6 +200,33 @@ export class EmailDelivery {
     }
 
     try {
+      // Email Command Center bookkeeping (all best-effort; never blocks a send).
+      const logRow = await this.getDeliveryLog(idempotencyKey);
+      const logId: string | null = logRow?.id ?? null;
+
+      // Global suppression (unsubscribe / hard bounce / complaint) shared by all
+      // three providers. Fail-open: if the lookup itself fails we still send.
+      if (await this.isSuppressed(to)) {
+        await this.updateDeliveryLog(idempotencyKey, {
+          status: 'suppressed',
+          last_error: 'Recipient is on the global suppression list',
+          last_error_category: 'unknown'
+        });
+        return { success: false, provider: null, providerMessageId: null, status: 'suppressed', error: 'Recipient suppressed', errorCategory: 'unknown', attempts: 0 };
+      }
+
+      if (logId) {
+        if (options.campaignKey || options.recipientId) {
+          await this.updateDeliveryLog(idempotencyKey, {
+            ...(options.campaignKey ? { campaign_key: options.campaignKey } : {}),
+            ...(options.recipientId ? { recipient_id: options.recipientId } : {}),
+          });
+        }
+        // Capture the exact rendered copy so the Command Center can show a true
+        // preview of what recipients actually received.
+        await this.captureRender(logId, options);
+      }
+
       // Get available providers in priority order
       let providers = await this.getAvailableProviders(1);
       // Test-only: pin a single provider (still respects enabled/cooldown/quota)
@@ -213,6 +242,7 @@ export class EmailDelivery {
 
       let lastError: Error | null = null;
       let lastCategory: EmailDeliveryResult['errorCategory'] = 'unknown';
+      let attemptNo = 0;
 
       for (const provider of providers) {
         // Reserve quota
@@ -226,8 +256,10 @@ export class EmailDelivery {
         await this.rateLimiters.get(provider.provider)?.take(1);
 
         try {
+          attemptNo++;
           const result = await this.sendViaProvider(provider, options);
-          
+          await this.recordAttempt(logId, idempotencyKey, provider.provider, attemptNo, result);
+
           if (result.success) {
             // Record success
             await this.recordProviderSuccess(provider.provider);
@@ -295,8 +327,10 @@ export class EmailDelivery {
         } catch (e) {
           lastError = e instanceof Error ? e : new Error(String(e));
           await this.releaseQuota(provider.provider, 1);
-          
-          // Check if it's a definitive error we should not retry
+          await this.recordAttempt(logId, idempotencyKey, provider.provider, attemptNo, {
+            success: false, provider: provider.provider as any, providerMessageId: null,
+            status: 'failed', error: lastError, errorCategory: 'unknown', attempts: 1
+          });
           const errMsg = lastError.message.toLowerCase();
           if (errMsg.includes('401') || errMsg.includes('403') || errMsg.includes('invalid') || errMsg.includes('unauthorized')) {
             await this.recordProviderFailure(provider.provider, 'provider_auth');
@@ -598,6 +632,79 @@ export class EmailDelivery {
     });
     const data = await response.json().catch(() => []);
     return data[0] || null;
+  }
+
+  // ---- Email Command Center bookkeeping (best-effort; never throws) ---------
+
+  private async isSuppressed(email: string): Promise<boolean> {
+    try {
+      const response = await fetch(
+        `${this.supabaseUrl}/rest/v1/email_suppressions?email=eq.${encodeURIComponent(String(email || '').toLowerCase())}&select=reason&limit=1`,
+        { headers: { apikey: this.supabaseKey, Authorization: `Bearer ${this.supabaseKey}` } }
+      );
+      if (!response.ok) return false;
+      const data = await response.json().catch(() => []);
+      return Array.isArray(data) && data.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  private async captureRender(logId: string, options: EmailDeliveryOptions): Promise<void> {
+    try {
+      await fetch(`${this.supabaseUrl}/rest/v1/email_renders?on_conflict=delivery_log_id`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          Authorization: `Bearer ${this.supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify([{
+          delivery_log_id: logId,
+          idempotency_key: options.idempotencyKey,
+          campaign_key: options.campaignKey || options.emailType,
+          email_type: options.emailType,
+          subject: options.subject,
+          html: options.html,
+          text_content: options.text
+        }])
+      });
+    } catch {
+      // never block a send on preview capture
+    }
+  }
+
+  private async recordAttempt(
+    logId: string | null,
+    idempotencyKey: string,
+    provider: string,
+    attemptNumber: number,
+    result: EmailDeliveryResult
+  ): Promise<void> {
+    try {
+      await fetch(`${this.supabaseUrl}/rest/v1/email_delivery_attempts`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          Authorization: `Bearer ${this.supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify([{
+          delivery_log_id: logId,
+          idempotency_key: idempotencyKey,
+          provider,
+          attempt_number: attemptNumber,
+          provider_message_id: result.providerMessageId,
+          status: result.success ? 'accepted' : (result.status || 'failed'),
+          error_category: result.errorCategory || null,
+          error: result.error ? String((result.error as Error).message || result.error) : null
+        }])
+      });
+    } catch {
+      // attempts are diagnostic only
+    }
   }
 }
 
