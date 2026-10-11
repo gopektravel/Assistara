@@ -2333,12 +2333,12 @@
             <div class="capacityCard"><div class="capacityLabel">Cohort</div><div class="capacityValue">${esc(cohort_name||'Founding Cohort')}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Status</div><div class="capacityValue">${is_open?badge('Open','var(--green)'):badge('Closed','#982b2b')}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Capacity</div><div class="capacityValue">${capacity||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Paid Enrollments</div><div class="capacityValue" style="color:var(--green);font-size:28px">${paid||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Active Reservations (30 min)</div><div class="capacityValue" style="color:#0878f9;font-size:28px">${reservations||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Paid Enrollments</div><div class="capacityValue" style="color:#16734a;font-size:28px">${paid||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Active Reservations (30 min)</div><div class="capacityValue" style="color:#0a58b0;font-size:28px">${reservations||0}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Stale Pending (>31 min)</div><div class="capacityValue" style="color:#982b2b;font-size:28px">${stale_pending||0}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Available Seats</div><div class="capacityValue" style="font-size:28px;font-weight:800">${available||0}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Waitlisted (waiting)</div><div class="capacityValue" style="color:#5d3a9b;font-size:28px">${waitlist_waiting||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Waitlisted (invited)</div><div class="capacityValue" style="color:#0878f9;font-size:28px">${waitlist_invited||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Waitlisted (invited)</div><div class="capacityValue" style="color:#0a58b0;font-size:28px">${waitlist_invited||0}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Payment Exceptions (open)</div><div class="capacityValue" style="color:#982b2b;font-size:28px">${exceptions_open||0}</div></div>
           `;
           $("capacityGrid").innerHTML = grid;
