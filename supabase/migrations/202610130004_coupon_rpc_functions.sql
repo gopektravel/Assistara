@@ -71,9 +71,9 @@ create or replace function public.create_coupon_redemption_pending(
   p_original_price_php integer,
   p_discount_amount_php integer,
   p_final_price_php integer,
-  p_payment_method text,
-  p_payment_reference text,
-  p_payment_intent_id text,
+  p_payment_method text default null,
+  p_payment_reference text default null,
+  p_payment_intent_id text default null,
   p_metadata jsonb default '{}'
 ) returns table (
   id uuid,

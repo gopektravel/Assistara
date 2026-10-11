@@ -12,7 +12,7 @@ const SITE="https://www.getassistara.com",SELF_URL="https://jhmmwleejgidrxavzdlq
 const json=(x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{"Content-Type":"application/json"}});
 const hex=(b:ArrayBuffer)=>Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 const safeEqual=(a:string,b:string)=>{if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0};
-const esc=(s:any)=>String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+const esc=(s:any)=>String(s||"").replaceAll("&","&").replaceAll("<","<").replaceAll(">",">").replaceAll('"',""");
 const money=(n:any)=>"PHP "+Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
 const paymongo=async(path:string)=>{const r=await fetch("https://api.paymongo.com/v1/"+path,{headers:{Authorization:"Basic "+btoa(SECRET+":")}});return {ok:r.ok,data:await r.json().catch(()=>({}))}};
 
@@ -105,6 +105,7 @@ Deno.serve(async req=>{
       console.log("paymongo-payment-capacity-exception",JSON.stringify({event_id:eventId,application_id:app.id,payment_intent_id:piId}));
       return json({ok:true,exception:true});
     }
+    if(app.promo_code){await db.rpc("confirm_coupon_redemption",{p_application_id:app.id,p_coupon_code:app.promo_code,p_status:"confirmed",p_confirmed_at:new Date().toISOString()})}
     const finished=await db.from("academy_applications").update({paymongo_payment_id:paymentId,receipt_number:receipt,receipt_generated_at:new Date().toISOString(),payment_method_brand:"QR Ph"}).eq("id",app.id).select("id");
     if(finished.error)throw new Error("application_update_failed");
     await db.from("masterclass_signups").update({purchased:true,purchased_at:paidAt,purchase_amount:amount,purchase_currency:"PHP",status:"purchased"}).eq("application_id",app.id);

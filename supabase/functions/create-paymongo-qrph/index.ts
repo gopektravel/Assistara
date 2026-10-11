@@ -67,6 +67,27 @@ Deno.serve(async req=>{
   }).eq("id",app.id).neq("payment_status","paid").select("id");
   if(saved.error||!saved.data?.length)return reply({ok:false,error:"QR was created, but enrollment could not be reserved. Please refresh before paying."},409,origin);
 
+  // Create pending coupon redemption record if a promo code was applied
+  if (app.promo_code) {
+    const originalPrice = 690000; // ₱6,900 in centavos
+    const finalPrice = amountPhp * 100; // amountPhp is in PHP, convert to centavos
+    const discountAmount = originalPrice - finalPrice;
+
+    await db.rpc("create_coupon_redemption_pending", {
+      p_coupon_code: app.promo_code,
+      p_application_id: app.id,
+      p_enrollment_token: app.enrollment_token,
+      p_customer_email: app.email,
+      p_original_price_php: originalPrice,
+      p_discount_amount_php: discountAmount,
+      p_final_price_php: finalPrice,
+      p_payment_method: "paymongo_qrph",
+      p_payment_reference: pi.id,
+      p_payment_intent_id: pi.id,
+      p_metadata: { paymongo_payment_intent_id: pi.id },
+    });
+  }
+
   await db.from("admin_activity_log").insert({entity_type:"application",entity_id:app.id,action:"paymongo_qr_created",details:{payment_intent_id:pi.id,amount_php:amountPhp,test_mode:SECRET.includes("_test_")}});
   return reply({ok:true,payment_intent_id:pi.id,image_url:image,test_url:SECRET.includes("_test_")?testUrl:null,amount_php:amountPhp,currency:"PHP",expires_at:expiresAt,test_mode:SECRET.includes("_test_")},200,origin);
 });

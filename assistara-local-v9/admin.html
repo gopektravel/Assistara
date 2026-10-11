@@ -1039,14 +1039,11 @@
             <button class="nav-item" type="button" data-tab="applicants" data-tooltip="Applications">
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg></span>
               <span class="nav-item-label">Applications</span>
+              <span class="nav-item-count" id="navAppCount" hidden></span>
             </button>
             <button class="nav-item" type="button" data-tab="students" data-tooltip="Students">
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
               <span class="nav-item-label">Students</span>
-            </button>
-            <button class="nav-item" type="button" data-tab="cohorts" data-tooltip="Cohorts & Enrollment">
-              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 4.9-9 4.9-9-4.9z"/><path d="m3 11.9 9 4.9 9-4.9"/><path d="m3 16.9 9 4.9 9-4.9"/></svg></span>
-              <span class="nav-item-label">Cohorts</span>
             </button>
             <button class="nav-item" type="button" data-tab="coupons" data-tooltip="Coupons">
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg></span>
@@ -1450,7 +1447,7 @@
       }
       function applyUiState(s) {
         if (!s) return;
-        if (["applicants", "students", "webinar", "b2b", "coupons", "cohorts"].includes(s.tab)) tab = s.tab;
+        if (["applicants", "students", "webinar", "b2b", "coupons"].includes(s.tab)) tab = s.tab;
         if ($("search") && typeof s.q === "string") $("search").value = s.q;
         if ($("studentFilter") && typeof s.studentFilter === "string") $("studentFilter").value = s.studentFilter;
         if ($("studentSort") && typeof s.studentSort === "string") $("studentSort").value = s.studentSort;
@@ -1460,7 +1457,7 @@
         if (Array.isArray(s.openStudents)) s.openStudents.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openStudents.add(String(id)); });
         if (Array.isArray(s.openCoupons)) s.openCoupons.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openCoupons.add(String(id)); });
         document.querySelectorAll(".sidebar-nav .nav-item[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
-        if (tab === "applicants" || tab === "cohorts") capacityDirty = true;
+        if (tab === "applicants") capacityDirty = true;
       }
       // Applied after the first render so expanded student cards and scroll work.
       function applyRestoredView(s) {
@@ -1655,7 +1652,11 @@
       }
       function drawPending() {
         const p = actionablePending();
-        $("payCount").textContent = p.length ? "🔔 " + p.length : "";
+        const navCount = $("navAppCount");
+        if (navCount) {
+          navCount.hidden = !p.length;
+          navCount.textContent = p.length ? "🔔 " + p.length : "";
+        }
         $("pendingBox").innerHTML =
           p.length && tab === "applicants"
             ? `<div class="alert"><h2>🔔 PAYMENT PENDING VERIFICATION (${p.length})</h2><div class="sub">Only payments that still need an action appear here. After the final no-response follow-up, the record is archived below as Unverified payment.</div>${p.map(paymentRow).join("")}</div>`
@@ -2244,16 +2245,6 @@
           if (capacityDirty) { capacityDirty = false; renderCapacity(); }
           return;
         }
-        // Cohorts & Enrollment reuses the existing capacity management
-        // (cohort overview, priority waitlist, payment exceptions) rather
-        // than introducing a duplicate system.
-        if (tab === "cohorts") {
-          $("stats").innerHTML = "";
-          $("cards").innerHTML = "";
-          $("capacityPanel").style.display = "block";
-          if (capacityDirty) { capacityDirty = false; renderCapacity(); }
-          return;
-        }
         if (tab === "students") {
           const s = students.filter(match);
           // Apply status filter
@@ -2387,6 +2378,7 @@
           coupons = [];
         }
         render();
+        if (agentView === "overview") renderOverview(true);
       }
       window.toggleStudent = (id) => {
         const key = String(id);
@@ -3104,6 +3096,23 @@
         "</div>";
       const ovSkeleton = () =>
         '<div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text-sm" style="margin-top:8px"></div>';
+      const ovEnsureSkeleton = () => {
+        const view = $("overviewView");
+        if (!view || $("ovKpis")) return;
+        view.innerHTML =
+          '<div class="grid-stats-4" id="ovKpis"></div>' +
+          '<div class="grid" style="margin-top:16px">' +
+          '<div class="col-8"><div class="card" id="ovFunnel"></div></div>' +
+          '<div class="col-4"><div class="card" id="ovUrgent"></div></div>' +
+          "</div>" +
+          '<div class="grid" style="margin-top:16px">' +
+          '<div class="col-7"><div class="card" id="ovActivity"></div></div>' +
+          '<div class="col-5"><div class="card" id="ovEmail"></div></div>' +
+          "</div>" +
+          '<div class="grid" style="margin-top:16px">' +
+          '<div class="col-12"><div class="card" id="ovFinance"></div></div>' +
+          "</div>";
+      };
       let overviewCache = null;
       let overviewLoading = false;
       const OVERVIEW_TTL = 60000;
@@ -3345,6 +3354,7 @@
       async function renderOverview(force = false) {
         const view = $("overviewView");
         if (!view) return;
+        ovEnsureSkeleton();
         const now = Date.now();
         if (!force && overviewCache && now - overviewCache.at < OVERVIEW_TTL) {
           paintOverview(overviewCache.data);
@@ -3354,11 +3364,7 @@
         // from already-loaded data; async widgets paint as skeletons
         // and fill once their endpoints resolve.
         if (!overviewCache) {
-          paintOverview({
-            capacity: null,
-            expenses: null,
-            email: null,
-          });
+          paintOverview({ capacity: null, expenses: null, email: null });
         }
         if (overviewLoading) return;
         overviewLoading = true;
@@ -3615,13 +3621,15 @@
             calls = [];
           }
           if (tab === "b2b") render();
+          if (agentView === "overview") renderOverview(true);
         };
         render = () => {
           if (tab !== "b2b") return previousRender();
           // Same central isolation as the base render, so the Capacity panel,
           // attribution/points block and student filters never leak into B2B.
           resetTabScaffold();
-          $("payCount").textContent = "";
+          const navCount = $("navAppCount");
+          if (navCount) navCount.hidden = true;
           const list = calls.filter(match),
             up = list.filter(
               (x) =>
@@ -3791,6 +3799,27 @@
           .replace(/(^|[}{,])\s*(?:html|body)\s*(?=[,{])/g, "$1 :host ");
       }
 
+      /* Shared brand tokens — injected into every tool shadow root AFTER the
+         tool's own CSS so the canonical Assistara tokens win. This is the
+         first step of the migration: every tool immediately uses the real
+         brand tokens (colors, font, spacing) without touching its own
+         component styles. Component/header/chart CSS is injected later,
+         per tool, as each is migrated off its duplicated inline styles. */
+      let sharedTokensCss = null;
+      async function loadSharedTokens() {
+        if (sharedTokensCss != null) return sharedTokensCss;
+        try {
+          const res = await fetch("/admin-tokens.css", { credentials: "same-origin" });
+          if (!res.ok) throw new Error("tokens " + res.status);
+          const css = await res.text();
+          // Scope :root -> :host so the tokens land on the shadow host.
+          sharedTokensCss = scopeToolCss(css);
+        } catch {
+          sharedTokensCss = "";
+        }
+        return sharedTokensCss;
+      }
+
       async function mountTool(name) {
         if (mountedTool === name) return;
         let src;
@@ -3809,6 +3838,10 @@
         // Hide the tool's own brand/back bar — the shell provides that chrome.
         style.textContent = scopeToolCss(src.css) + "\n.top{display:none !important}\n";
         shadow.appendChild(style);
+        // Shared brand tokens — after the tool CSS so they win.
+        const tokens = document.createElement("style");
+        tokens.textContent = await loadSharedTokens();
+        shadow.appendChild(tokens);
         const root = document.createElement("div");
         root.className = "toolRoot";
         root.innerHTML = src.markup;

@@ -1,7 +1,93 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-const STRIPE=Deno.env.get("STRIPE_SECRET_KEY")||"",U=Deno.env.get("SUPABASE_URL")!,K=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,SITE="https://www.getassistara.com",LIMIT=15;
-const allowed=new Set(["https://getassistara.com","https://www.getassistara.com","http://localhost:3000","http://localhost:3001","http://127.0.0.1:3000","http://127.0.0.1:3001"]);const good=(o:string|null)=>!!o&&(allowed.has(o)||o.endsWith(".vercel.app"));const cors=(o:string|null)=>({"Content-Type":"application/json","Access-Control-Allow-Origin":good(o)?o!:SITE,"Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"});const rep=(x:any,s:number,h:HeadersInit)=>new Response(JSON.stringify(x),{status:s,headers:h});
-Deno.serve(async req=>{const o=req.headers.get("origin"),h=cors(o);if(req.method==="OPTIONS")return new Response(null,{status:204,headers:h});if(req.method!=="POST"||(o&&!good(o)))return rep({ok:false,error:"Forbidden"},403,h);if(!STRIPE)return rep({ok:false,error:"Payment service is not configured"},500,h);let b:any={};try{b=await req.json()}catch{}const token=String(b.token||"").trim();if(!/^[0-9a-f-]{36}$/i.test(token))return rep({ok:false,error:"This enrollment link is invalid."},400,h);const db=createClient(U,K,{auth:{persistSession:false}});const {data:app}=await db.from("academy_applications").select("id,name,email,decision,status,payment_status,enrollment_token,promo_code,checkout_amount_php").eq("enrollment_token",token).maybeSingle();if(!app)return rep({ok:false,error:"We could not find this enrollment invitation."},404,h);if(app.decision!=="accepted"&&app.status!=="accepted"&&app.status!=="waitlisted")return rep({ok:false,error:"This enrollment invitation is not active yet."},403,h);if(app.payment_status==="paid")return rep({ok:false,error:"This enrollment has already been paid."},409,h);
-const {data:reservation,error:reservationError}=await db.rpc("reserve_academy_seat",{p_application_id:app.id});if(reservationError)return rep({ok:false,error:"Could not reserve your Academy place. Please try again."},500,h);if(!reservation?.ok){return rep({ok:false,full:true,error:"This cohort is currently full. You have been added to the waitlist. We’ll let you know if a place opens or when the next cohort opens."},409,h)}const used=Number(reservation.used||0);
-const params=new URLSearchParams();params.set("mode","payment");params.set("success_url",`${SITE}/academy/payment-success?session_id={CHECKOUT_SESSION_ID}`);params.set("cancel_url",`${SITE}/academy/checkout?token=${encodeURIComponent(token)}&cancelled=1`);params.set("expires_at",String(Math.floor(Date.now()/1000)+30*60));params.set("line_items[0][price_data][currency]","php");const amount=(app.checkout_amount_php&&app.checkout_amount_php>0)?app.checkout_amount_php:6900;params.set("line_items[0][price_data][unit_amount]",String(amount*100));params.set("line_items[0][price_data][product_data][name]","Assistara Academy Founding Cohort");params.set("line_items[0][quantity]","1");params.set("payment_method_types[0]","card");params.set("customer_email",app.email);params.set("client_reference_id",app.id);params.set("metadata[source]","assistara_academy");params.set("metadata[application_id]",app.id);params.set("metadata[enrollment_token]",token);params.set("metadata[amount_php]",String(amount));if(app.promo_code)params.set("metadata[promo_code]",app.promo_code);const sr=await fetch("https://api.stripe.com/v1/checkout/sessions",{method:"POST",headers:{Authorization:`Bearer ${STRIPE}`,"Content-Type":"application/x-www-form-urlencoded"},body:params.toString()});const data=await sr.json();if(!sr.ok){await db.from("academy_applications").update({payment_status:"not_requested",payment_requested_at:null}).eq("id",app.id).eq("payment_status","pending");return rep({ok:false,error:"Unable to open secure checkout. Please try again."},502,h)}await db.from("academy_applications").update({stripe_checkout_session_id:data.id}).eq("id",app.id);return rep({ok:true,url:data.url,spots_left:Number(reservation.spots_left||0)},200,h)});
+
+const STRIPE = Deno.env.get("STRIPE_SECRET_KEY") || "";
+const U = Deno.env.get("SUPABASE_URL")!;
+const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SITE = "https://www.getassistara.com";
+const LIMIT = 15;
+
+const allowed = new Set(["https://getassistara.com", "https://www.getassistara.com", "http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]);
+const good = (o: string | null) => !!o && (allowed.has(o) || o.endsWith(".vercel.app"));
+const cors = (o: string | null) => ({ "Content-Type": "application/json", "Access-Control-Allow-Origin": good(o) ? o! : SITE, "Access-Control-Allow-Headers": "content-type", "Access-Control-Allow-Methods": "POST, OPTIONS", Vary: "Origin" });
+const rep = (x: any, s: number, h: HeadersInit) => new Response(JSON.stringify(x), { status: s, headers: h });
+
+Deno.serve(async (req) => {
+  const o = req.headers.get("origin");
+  const h = cors(o);
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: h });
+  if (req.method !== "POST" || (o && !good(o))) return rep({ ok: false, error: "Forbidden" }, 403, h);
+  if (!STRIPE) return rep({ ok: false, error: "Payment service is not configured" }, 500, h);
+
+  let b: any = {};
+  try { b = await req.json() } catch {}
+  const token = String(b.token || "").trim();
+  if (!/^[0-9a-f-]{36}$/i.test(token)) return rep({ ok: false, error: "This enrollment link is invalid." }, 400, h);
+
+  const db = createClient(U, K, { auth: { persistSession: false } });
+  const { data: app } = await db.from("academy_applications").select("id,name,email,decision,status,payment_status,enrollment_token,promo_code,checkout_amount_php").eq("enrollment_token", token).maybeSingle();
+  if (!app) return rep({ ok: false, error: "We could not find this enrollment invitation." }, 404, h);
+  if (app.decision !== "accepted" && app.status !== "accepted" && app.status !== "waitlisted") return rep({ ok: false, error: "This enrollment invitation is not active yet." }, 403, h);
+  if (app.payment_status === "paid") return rep({ ok: false, error: "This enrollment has already been paid." }, 409, h);
+
+  const { data: reservation, error: reservationError } = await db.rpc("reserve_academy_seat", { p_application_id: app.id });
+  if (reservationError) return rep({ ok: false, error: "Could not reserve your Academy place. Please try again." }, 500, h);
+  if (!reservation?.ok) {
+    return rep({ ok: false, full: true, error: "This cohort is currently full. You have been added to the waitlist. We'll let you know if a place opens or when the next cohort opens." }, 409, h);
+  }
+
+  const params = new URLSearchParams();
+  params.set("mode", "payment");
+  params.set("success_url", `${SITE}/academy/payment-success?session_id={CHECKOUT_SESSION_ID}`);
+  params.set("cancel_url", `${SITE}/academy/checkout?token=${encodeURIComponent(token)}&cancelled=1`);
+  params.set("expires_at", String(Math.floor(Date.now() / 1000) + 30 * 60));
+  params.set("line_items[0][price_data][currency]", "php");
+  const amount = (app.checkout_amount_php && app.checkout_amount_php > 0) ? app.checkout_amount_php : 6900;
+  params.set("line_items[0][price_data][unit_amount]", String(amount * 100));
+  params.set("line_items[0][price_data][product_data][name]", "Assistara Academy Founding Cohort");
+  params.set("line_items[0][quantity]", "1");
+  params.set("payment_method_types[0]", "card");
+  params.set("customer_email", app.email);
+  params.set("client_reference_id", app.id);
+  params.set("metadata[source]", "assistara_academy");
+  params.set("metadata[application_id]", app.id);
+  params.set("metadata[enrollment_token]", token);
+  params.set("metadata[amount_php]", String(amount));
+  if (app.promo_code) params.set("metadata[promo_code]", app.promo_code);
+
+  const sr = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${STRIPE}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
+  });
+  const data = await sr.json();
+  if (!sr.ok) {
+    await db.from("academy_applications").update({ payment_status: "not_requested", payment_requested_at: null }).eq("id", app.id).eq("payment_status", "pending");
+    return rep({ ok: false, error: "Unable to open secure checkout. Please try again." }, 502, h);
+  }
+
+  await db.from("academy_applications").update({ stripe_checkout_session_id: data.id }).eq("id", app.id);
+
+  // Create pending coupon redemption record if a promo code was applied
+  if (app.promo_code) {
+    const originalPrice = 690000; // ₱6,900 in centavos
+    const finalPrice = amount * 100; // amount is in PHP, convert to centavos
+    const discountAmount = originalPrice - finalPrice;
+
+    await db.rpc("create_coupon_redemption_pending", {
+      p_coupon_code: app.promo_code,
+      p_application_id: app.id,
+      p_enrollment_token: app.enrollment_token,
+      p_customer_email: app.email,
+      p_original_price_php: originalPrice,
+      p_discount_amount_php: discountAmount,
+      p_final_price_php: finalPrice,
+      p_payment_method: "stripe",
+      p_payment_reference: data.id,
+      p_payment_intent_id: null, // Will be filled in payment-complete
+      p_metadata: { stripe_checkout_session_id: data.id },
+    });
+  }
+
+  return rep({ ok: true, url: data.url, spots_left: Number(reservation.spots_left || 0) }, 200, h);
+});
