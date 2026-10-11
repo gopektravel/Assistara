@@ -523,9 +523,11 @@ async function updateChatProviderAction(cfg, claims, body) {
   };
 }
 
-// Admin opens/closes the live chat independently of the stream. Changes ONLY
-// chat_open; preserves the URL, video id, provider, viewer session and display
-// state, so it never resets the livestream, viewers or attendance.
+// Admin opens/closes the live chat independently of the stream.
+// Closing the chat ALSO clears the current chat session on the Railway server
+// so old messages are permanently removed and cannot be restored by reconnecting,
+// refreshing, or opening another browser. Opening the chat starts a fresh empty
+// session. The stream, viewers and attendance are never touched.
 async function setChatOpenAction(cfg, claims, body) {
   const key = eventKey(body.event_key);
   if (typeof body.chat_open !== "boolean") {
@@ -557,9 +559,24 @@ async function setChatOpenAction(cfg, claims, body) {
     }
   );
   if (!response.ok) return { status: 500, body: { ok: false, error: "Could not update chat status" } };
+
+  // Closing the chat clears the current chat session permanently.
+  // This is atomic with the DB update: the config is saved first, then the
+  // chat reset is attempted. The Railway reset endpoint is idempotent by epoch,
+  // so retries cannot erase a newer session's messages.
+  if (!open) {
+    await resetChatSession("close");
+  }
+
   return {
     status: 200,
-    body: { ok: true, event_key: key, chat_open: open, display_state: current.display_state, message: open ? "Chat is now Open" : "Chat is now Closed" },
+    body: {
+      ok: true,
+      event_key: key,
+      chat_open: open,
+      display_state: current.display_state,
+      message: open ? "Chat is now Open" : "Chat closed and messages cleared."
+    },
   };
 }
 

@@ -271,7 +271,7 @@
           <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
             <span class="state-badge waiting" id="mcChatStateBadge">Closed</span>
             <button class="refresh" id="mcChatToggle">Open Chat</button>
-            <span class="muted" style="font-size:12px">Open chat any time — even while Waiting. Viewers update within seconds; closing keeps existing messages.</span>
+            <span class="muted" style="font-size:12px">Open chat any time — even while Waiting. Viewers update within seconds; closing clears all messages.</span>
           </div>
         </div>
 
@@ -728,7 +728,7 @@
           if (!r.ok || !d.ok) throw new Error(d.error || "Could not update chat");
           chatOpenState = next;
           fb.className = "feedback ok";
-          fb.textContent = next ? "Chat is now Open — viewers can join." : "Chat is now Closed — existing messages are kept.";
+          fb.textContent = next ? "Chat is now Open — viewers can join." : "Chat closed and messages cleared.";
           const badge = $("mcChatStateBadge");
           if (badge) { badge.textContent = next ? "Open" : "Closed"; badge.className = "state-badge " + (next ? "live" : "waiting"); }
           btn.textContent = next ? "Close Chat" : "Open Chat";
