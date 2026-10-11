@@ -189,19 +189,24 @@ revoke execute on function public.create_coupon_redemption_pending(
 -- Only transitions from 'pending' to 'confirmed'/'failed'/'refunded'
 -- Never allows overwriting a confirmed redemption
 -- Re-validates limits atomically at confirmation time
+-- Returns: confirmed = true if coupon was confirmed, false if limit exceeded / failed / refunded
 
 create or replace function public.confirm_coupon_redemption(
   p_application_id uuid,
   p_coupon_code text,
   p_status text,
   p_confirmed_at timestamptz default now()
-) returns boolean language plpgsql security definer set search_path = public as $$
+) returns table (
+  success boolean,
+  final_status text
+) language plpgsql security definer set search_path = public as $$
 declare
   v_count integer;
   v_coupon public.academy_promo_codes%rowtype;
   v_existing_redemptions integer;
   v_customer_redemptions integer;
   v_final_status text;
+  v_customer_email text;
 begin
   -- Validate p_status
   if p_status not in ('confirmed', 'failed', 'refunded') then
@@ -212,11 +217,25 @@ begin
   -- Fetch coupon for limit re-validation
   select * into v_coupon from public.academy_promo_codes where code = upper(p_coupon_code);
   if not found then
-    return false;
+    return query select false as success, 'invalid_coupon'::text as final_status;
+    return;
   end if;
 
   -- Acquire advisory lock for atomic limit re-validation
   perform pg_advisory_xact_lock(hashtext(upper(p_coupon_code)));
+
+  -- Get customer email from pending redemption
+  select customer_email into v_customer_email
+  from public.academy_coupon_redemptions
+  where application_id = p_application_id
+    and coupon_id = v_coupon.id
+    and status = 'pending'
+  limit 1;
+
+  if v_customer_email is null then
+    return query select false as success, 'no_pending_redemption'::text as final_status;
+    return;
+  end if;
 
   -- Only transition from 'pending' to confirmed/failed/refunded
   -- Never overwrite confirmed, failed, or refunded status
@@ -229,8 +248,9 @@ begin
       where coupon_id = v_coupon.id and status = 'confirmed';
 
       if v_existing_redemptions >= v_coupon.max_redemptions then
-        -- Limit exceeded, mark as failed instead
-        v_final_status := 'failed';
+        -- Limit exceeded: PAYMENT SUCCEEDED but coupon limit reached
+        -- Mark as 'limit_exceeded' so payment handlers know enrollment proceeds at full price
+        v_final_status := 'limit_exceeded';
       end if;
     end if;
 
@@ -238,41 +258,42 @@ begin
     if v_final_status = 'confirmed' and v_coupon.max_redemptions_per_customer is not null then
       select count(*) into v_customer_redemptions
       from public.academy_coupon_redemptions
-      where coupon_id = v_coupon.id and customer_email = (
-        select customer_email from public.academy_coupon_redemptions
-        where application_id = p_application_id and coupon_id = v_coupon.id and status = 'pending'
-        limit 1
-      ) and status = 'confirmed';
+      where coupon_id = v_coupon.id and customer_email = v_customer_email and status = 'confirmed';
 
       if v_customer_redemptions >= v_coupon.max_redemptions_per_customer then
-        v_final_status := 'failed';
+        v_final_status := 'limit_exceeded';
       end if;
     end if;
   end if;
 
-  -- Only transition from 'pending' to confirmed/failed/refunded
-  -- Never overwrite confirmed, failed, or refunded status
+  -- Only transition from 'pending' to confirmed/failed/refunded/limit_exceeded
+  -- Never overwrite confirmed, failed, refunded, or limit_exceeded status
   update public.academy_coupon_redemptions
   set status = v_final_status,
-      confirmed_at = case when v_final_status = 'confirmed' then p_confirmed_at else confirmed_at end
+      confirmed_at = case when v_final_status in ('confirmed', 'limit_exceeded') then p_confirmed_at else confirmed_at end
   where application_id = p_application_id
-    and coupon_id = (select id from public.academy_promo_codes where code = upper(p_coupon_code))
+    and coupon_id = v_coupon.id
     and status = 'pending';
 
   get diagnostics v_count = row_count;
-  return v_count > 0;
+
+  -- Return true ONLY if coupon was actually confirmed
+  -- Return false if limit_exceeded, failed, refunded, or no row updated
+  return query select (v_count > 0 and v_final_status = 'confirmed') as success, v_final_status as final_status;
+
+  return;
 end $$;
 
 grant execute on function public.confirm_coupon_redemption(uuid, text, text, timestamptz) to service_role;
 revoke execute on function public.confirm_coupon_redemption(uuid, text, text, timestamptz) from public, anon, authenticated;
 
--- Also ensure the redemption table has a partial unique index that prevents
--- confirmed redemptions from being duplicated, and prevents pending->confirmed
--- from creating duplicates
+-- Partial unique index to prevent duplicate confirmed redemptions
 create unique index if not exists academy_coupon_redemptions_app_coupon_confirmed_unique
   on public.academy_coupon_redemptions (application_id, coupon_id)
   where status = 'confirmed';
 
-create index if not exists academy_coupon_redemptions_app_coupon_pending_unique
+-- Partial unique index to prevent duplicate pending redemptions
+-- (complements ON CONFLICT in create_coupon_redemption_pending)
+create unique index if not exists academy_coupon_redemptions_app_coupon_pending_unique
   on public.academy_coupon_redemptions (application_id, coupon_id)
   where status = 'pending';
