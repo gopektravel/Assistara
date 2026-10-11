@@ -300,7 +300,7 @@ test("source guards", async (t) => {
 
   await t.test("the command center UI never rewrites links and labels unavailable data", () => {
     const page = read(path.join(ROOT, "assistara-local-v9", "admin-email.html"));
-    assert.match(page, /Manrope/, "uses the admin dashboard brand font");
+    assert.match(page, /DM Sans/, "uses the admin dashboard brand font (DM Sans per AGENTS.md)");
     assert.match(page, /Unavailable/);
     assert.ok(!/onclick\s*=/.test(page), "no inline handlers");
     assert.ok(!/document\.write/.test(page));
