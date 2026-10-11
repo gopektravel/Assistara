@@ -1,12 +1,35 @@
 -- Fix academy_promo_codes table for backward compatibility
--- Production has the old schema: code, amount_php (final price), starts_at, expires_at, active
--- New schema needs: discount_type, discount_value, campaign_name, description, max_redemptions, etc.
--- This migration ALTERs the existing table to add new columns and makes amount_php a generated column
+-- Production has the old schema: code, amount_php (final price in PHP), starts_at, expires_at, active
+-- New schema adds: discount_type, discount_value, campaign_name, description, max_redemptions, max_redemptions_per_customer, id, created_at, updated_at, created_by, updated_by
+-- amount_php remains a regular column (final price in PHP) for backward compatibility with existing functions
 
--- First, check if table exists with old schema and add new columns
+-- Step 1: Add new columns if they don't exist
 do $$
 begin
-  -- Add new columns if they don't exist
+  -- Add id column if missing
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'academy_promo_codes' and column_name = 'id'
+  ) then
+    alter table public.academy_promo_codes add column id uuid;
+    
+    -- Generate IDs for existing rows
+    update public.academy_promo_codes set id = gen_random_uuid() where id is null;
+    
+    -- Make id the primary key
+    alter table public.academy_promo_codes add primary key (id);
+  end if;
+
+  -- Add unique constraint on code if missing
+  if not exists (
+    select 1 from information_schema.table_constraints
+    where table_schema = 'public' and table_name = 'academy_promo_codes' 
+    and constraint_name = 'academy_promo_codes_code_key'
+  ) then
+    alter table public.academy_promo_codes add constraint academy_promo_codes_code_key unique (code);
+  end if;
+
+  -- Add new columns
   if not exists (
     select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'academy_promo_codes' and column_name = 'discount_type'
@@ -21,58 +44,52 @@ begin
       add column created_at timestamp with time zone not null default now(),
       add column updated_at timestamp with time zone not null default now(),
       add column created_by uuid references auth.users(id),
-      add column updated_by uuid references auth.users(id),
-      add column id uuid;
-
-    -- Generate IDs for existing rows
-    update public.academy_promo_codes set id = gen_random_uuid() where id is null;
-    
-    -- Make id the primary key
-    alter table public.academy_promo_codes add primary key (id);
-    
-    -- Add unique constraint on code
-    alter table public.academy_promo_codes add constraint academy_promo_codes_code_key unique (code);
+      add column updated_by uuid references auth.users(id);
   end if;
 end $$;
 
--- Backfill discount_type and discount_value from existing amount_php (final price)
--- Regular price is ₱6,900 = 690000 centavos
--- Old amount_php was in PHP (e.g., 4900 = ₱4,900 final price)
--- New discount_value for fixed_php = discount amount in centavos = (690000 - amount_php * 100)
+-- Step 2: Backfill new columns from existing data
+-- amount_php is the FINAL price in PHP (e.g., 4900 = ₱4,900, 3900 = ₱3,900)
+-- Regular price is ₱6,900 = 6900 PHP
+-- For fixed_php discount: discount_value = (regular_price - final_price) * 100 centavos
 update public.academy_promo_codes
 set
   discount_type = 'fixed_php',
-  discount_value = (690000 - (amount_php * 100)),
-  campaign_name = case code when 'XYRA' then 'XYRA Promotional Campaign' else code || ' Campaign' end,
-  description = case code when 'XYRA' then 'Fixed ₱3,000 discount on Assistara Academy founding cohort enrollment' else 'Migrated from legacy coupon' end,
+  discount_value = (6900 - amount_php) * 100,  -- discount in centavos
+  campaign_name = case 
+    when code = 'XYRA' then 'XYRA Promotional Campaign'
+    when code = 'MASTERCLASS' then 'Masterclass Campaign'
+    else code || ' Campaign' 
+  end,
+  description = case 
+    when code = 'XYRA' then 'Fixed ₱3,000 discount on Assistara Academy founding cohort enrollment'
+    when code = 'MASTERCLASS' then 'Masterclass discount'
+    else 'Migrated from legacy coupon' 
+  end,
   max_redemptions = null,
-  max_redemptions_per_customer = 1,
+  max_redemptions_per_customer = coalesce(max_redemptions_per_customer, 1),
   created_at = coalesce(created_at, now()),
   updated_at = now()
 where discount_type is null;
 
--- Add check constraint for discount_type
-alter table public.academy_promo_codes
-  add constraint academy_promo_codes_discount_type_check
-  check (discount_type in ('fixed_php', 'percentage', 'target_price'));
+-- Step 3: Add check constraint for discount_type (idempotent)
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.table_constraints
+    where table_schema = 'public' and table_name = 'academy_promo_codes' 
+    and constraint_name = 'academy_promo_codes_discount_type_check'
+  ) then
+    alter table public.academy_promo_codes
+      add constraint academy_promo_codes_discount_type_check
+      check (discount_type in ('fixed_php', 'percentage', 'target_price'));
+  end if;
+end $$;
 
--- Drop the old amount_php column and recreate as GENERATED column
--- This computes final price in PHP from discount config
-alter table public.academy_promo_codes
-  drop column if exists amount_php;
+-- Step 4: amount_php REMAINS a regular column (final price in PHP) for backward compatibility
+-- DO NOT make it GENERATED - existing functions depend on it being the final price directly
 
-alter table public.academy_promo_codes
-  add column amount_php integer
-  generated always as (
-    case discount_type
-      when 'fixed_php' then (690000 - discount_value) / 100
-      when 'percentage' then (690000 * (10000 - discount_value) / 10000) / 100
-      when 'target_price' then discount_value / 100
-      else 6900
-    end
-  ) stored;
-
--- Recreate updated_at trigger
+-- Step 5: Recreate updated_at trigger
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
 begin
@@ -85,12 +102,12 @@ create trigger academy_promo_codes_updated_at
   before update on public.academy_promo_codes
   for each row execute function public.set_updated_at();
 
--- Recreate indexes
+-- Step 6: Recreate indexes (idempotent)
 create index if not exists academy_promo_codes_code_idx on public.academy_promo_codes (code);
 create index if not exists academy_promo_codes_active_idx on public.academy_promo_codes (active);
 create index if not exists academy_promo_codes_dates_idx on public.academy_promo_codes (starts_at, expires_at);
 
--- Enable RLS and policies
+-- Step 7: Enable RLS and policies
 alter table public.academy_promo_codes enable row level security;
 
 drop policy if exists "Service role full access" on public.academy_promo_codes;

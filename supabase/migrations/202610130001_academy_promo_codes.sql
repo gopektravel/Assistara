@@ -8,6 +8,7 @@ create table if not exists public.academy_promo_codes (
   description text,
   discount_type text not null check (discount_type in ('fixed_php', 'percentage', 'target_price')),
   discount_value integer not null, -- For fixed_php: amount in PHP centavos (e.g., 300000 = ₱3,000). For percentage: basis points (e.g., 2500 = 25%). For target_price: final price in PHP centavos.
+  amount_php integer not null, -- Final price in PHP (e.g., 3900 = ₱3,900). Kept as regular column for backward compatibility.
   starts_at timestamp with time zone,
   expires_at timestamp with time zone,
   max_redemptions integer, -- null = unlimited
@@ -22,6 +23,7 @@ create table if not exists public.academy_promo_codes (
 comment on table public.academy_promo_codes is 'Academy coupon codes with flexible discount types and redemption limits';
 comment on column public.academy_promo_codes.discount_type is 'Type of discount: fixed_php (absolute PHP amount), percentage (percentage off), target_price (fixed final price)';
 comment on column public.academy_promo_codes.discount_value is 'Discount value: fixed_php=centavos, percentage=basis_points (10000=100%), target_price=centavos';
+comment on column public.academy_promo_codes.amount_php is 'Final price in PHP (e.g., 3900 = ₱3,900). Kept as regular column for backward compatibility with existing functions.';
 comment on column public.academy_promo_codes.max_redemptions is 'Maximum total redemptions across all customers (null = unlimited)';
 comment on column public.academy_promo_codes.max_redemptions_per_customer is 'Maximum redemptions per customer (default 1)';
 

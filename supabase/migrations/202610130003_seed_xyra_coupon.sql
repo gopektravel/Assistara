@@ -1,16 +1,17 @@
 -- Seed the XYRA coupon into academy_promo_codes
--- Regular price: ₱6,900 (690000 centavos)
--- Discount: ₱3,000 (300000 centavos)
--- Final price: ₱3,900 (390000 centavos)
+-- Regular price: ₱6,900
+-- Discount: ₱3,000
+-- Final price: ₱3,900
 -- Using fixed_php discount type with value 300000 (₱3,000 in centavos)
 
-insert into public.academy_promo_codes (code, campaign_name, description, discount_type, discount_value, starts_at, expires_at, max_redemptions, max_redemptions_per_customer, active)
+insert into public.academy_promo_codes (code, campaign_name, description, discount_type, discount_value, amount_php, starts_at, expires_at, max_redemptions, max_redemptions_per_customer, active)
 values (
   'XYRA',
   'XYRA Promotional Campaign',
   'Fixed ₱3,000 discount on Assistara Academy founding cohort enrollment',
   'fixed_php',
   300000, -- ₱3,000 in centavos
+  3900,   -- Final price in PHP
   null,   -- No start date restriction
   null,   -- No expiration
   null,   -- Unlimited redemptions
@@ -22,6 +23,7 @@ on conflict (code) do update set
   description = excluded.description,
   discount_type = excluded.discount_type,
   discount_value = excluded.discount_value,
+  amount_php = excluded.amount_php,
   starts_at = excluded.starts_at,
   expires_at = excluded.expires_at,
   max_redemptions = excluded.max_redemptions,
