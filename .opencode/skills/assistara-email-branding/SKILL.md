@@ -174,9 +174,18 @@ footer, but the copy, components and CTA are chosen per email.
 
 ## Campaign registry (current)
 
+<<<<<<< HEAD
 | Campaign | Action | Key | Template | Sender | Signature |
 |----------|--------|-----|----------|--------|-----------|
 | 24h reminder | `run` | `founding-masterclass-2026:<id>` | plain personal | Assistara Academy | Xyra Mendoza |
 | Academy follow-up | `followup` | `academy-followup-2026-10-12:<id>` | plain personal | Xyra (approved) | Xyra 💛 |
 | 30-min reminder | `reminder30` | `reminder30-2026-10-11:<id>` | branded (visual reference) | Assistara Academy | The Assistara Team 💛 |
 | 7-min reminder | `reminder7` | `reminder7-2026-10-11:<id>` | branded | Assistara Academy | The Assistara Team 💛 |
+=======
+| Campaign | Action | Key | Template |
+|----------|--------|-----|----------|
+| 24h reminder | `run` | `founding-masterclass-2026:<id>` | plain personal |
+| Academy follow-up | `followup` | `academy-followup-2026-10-12:<id>` | plain personal |
+| 30-min reminder | `reminder30` | `reminder30-2026-10-11:<id>` | branded |
+| 7-min reminder | `reminder7` | `reminder7-2026-10-11:<id>` | branded |
+>>>>>>> origin/main
