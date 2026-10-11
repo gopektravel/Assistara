@@ -19,6 +19,7 @@ returns table (
   pending_redemptions bigint,
   failed_redemptions bigint,
   refunded_redemptions bigint,
+  limit_exceeded_redemptions bigint,
   revenue_php bigint,
   total_discounts_php bigint,
   last_redemption_at timestamp with time zone,
