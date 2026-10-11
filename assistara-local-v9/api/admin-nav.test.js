@@ -134,13 +134,30 @@ test("every shared Admin stylesheet is built and routed before the catch-all", (
   }
 });
 
-test("Admin pages use DM Sans without a Manrope override", () => {
+test("Admin pages use Manrope as the only font", () => {
   const files = ["admin.html", "admin-finance.html", "admin-email.html", "admin-acquisition.html", "admin-masterclass-event.html"];
   for (const file of files) {
     const source = read(`assistara-local-v9/${file}`);
-    assert.doesNotMatch(source, /manrope/i, `${file} must not load Manrope`);
+    assert.match(source, /Manrope/i, `${file} must reference Manrope`);
+    assert.doesNotMatch(source, /DM Sans|\bInter\b|\bArial\b|system-ui|-apple-system|Segoe UI|\bRoboto\b|\bHelvetica\b|\bmonospace\b/i, `${file} must not declare a competing font`);
+    assert.match(source, /manrope-lock\.css/, `${file} must load the canonical Manrope lock`);
   }
-  assert.doesNotMatch(read("assistara-local-v9/admin-tokens.css"), /manrope/i);
+  const tokens = read("assistara-local-v9/admin-tokens.css");
+  assert.match(tokens, /--font-family:\s*"Manrope",\s*sans-serif/);
+  assert.doesNotMatch(tokens, /DM Sans|\bInter\b|\bArial\b|system-ui|-apple-system|Segoe UI|\bRoboto\b|\bHelvetica\b|\bmonospace\b/i);
+  const lock = read("assistara-local-v9/manrope-lock.css");
+  assert.match(lock, /family=Manrope:wght@400;500;600;700;800/);
+  assert.match(lock, /font-family:"Manrope",sans-serif!important/);
+  assert.match(admin, /\.toolRoot \*,button,input,select,textarea,table,canvas\{font-family:"Manrope",sans-serif!important\}/);
+});
+
+test("embedded tools use one shared page title and Live Events UI naming", () => {
+  assert.match(admin, /\.top,\.shell>\.head\{display:none!important\}/);
+  assert.doesNotMatch(admin, /:host \.shell > \.head/);
+  assert.match(admin, /data-tooltip="Live Events"/);
+  assert.match(admin, /<span class="nav-item-label">Live Events<\/span>/);
+  assert.match(admin, /crumb: \[\["Marketing", "Live Events"\]\]/);
+  assert.match(admin, /title: "Live Events"/);
 });
 
 test("standalone admin pages validate the shared session and never flash login", () => {
