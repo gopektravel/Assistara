@@ -43,6 +43,25 @@ async function log(db: any, type: string, id: string | null, action: string, det
   await db.from("admin_activity_log").insert({ entity_type: type, entity_id: id, action, details });
 }
 
+// Calculate final price (amount_php) based on coupon settings and current Academy price
+function calculateAmountPhp(discountType: string, discountValue: number, regularPricePhp: number): number {
+  let finalPrice = regularPricePhp;
+
+  switch (discountType) {
+    case "fixed_php":
+      finalPrice = regularPricePhp - Math.min(discountValue, regularPricePhp);
+      break;
+    case "percentage":
+      finalPrice = regularPricePhp - Math.floor((regularPricePhp * discountValue) / 10000);
+      break;
+    case "target_price":
+      finalPrice = Math.min(discountValue, regularPricePhp);
+      break;
+  }
+
+  return Math.max(0, finalPrice);
+}
+
 // Calculate discount preview based on coupon settings and current Academy price
 function calculateDiscountPreview(discountType: string, discountValue: number, regularPricePhp: number) {
   let discountAmount = 0;
@@ -237,6 +256,7 @@ Deno.serve(async (req) => {
         description: b.description?.trim() || null,
         discount_type: b.discount_type || "fixed_php",
         discount_value: Number(b.discount_value),
+        amount_php: calculateAmountPhp(b.discount_type || "fixed_php", Number(b.discount_value), REGULAR_PRICE_PHP),
         starts_at: b.starts_at || null,
         expires_at: b.expires_at || null,
         max_redemptions: b.max_redemptions ?? null,
@@ -314,6 +334,13 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Recalculate amount_php if discount_type or discount_value changed
+      const newDiscountType = updates.discount_type ?? existing.discount_type;
+      const newDiscountValue = updates.discount_value ?? existing.discount_value;
+      if (updates.discount_type !== undefined || updates.discount_value !== undefined) {
+        updates.amount_php = calculateAmountPhp(newDiscountType, newDiscountValue, REGULAR_PRICE_PHP);
+      }
+
       const { data: coupon, error } = await db.from("academy_promo_codes").update(updates).eq("id", id).select().single();
       if (error) throw error;
 
@@ -359,6 +386,7 @@ Deno.serve(async (req) => {
         description: existing.description,
         discount_type: existing.discount_type,
         discount_value: existing.discount_value,
+        amount_php: calculateAmountPhp(existing.discount_type, existing.discount_value, REGULAR_PRICE_PHP),
         starts_at: null, // New coupon starts fresh
         expires_at: null,
         max_redemptions: existing.max_redemptions,
