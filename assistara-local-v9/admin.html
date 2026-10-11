@@ -271,37 +271,6 @@
       .signupGoalFill { height:100%; background:var(--yellow); border-radius:999px; }
       .signupSource { cursor:pointer; }
       .signupSource .studentBody { font-size:12px; }
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 14px;
-      }
-      .stat {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 14px;
-      }
-      .stat b {
-        display: block;
-        font-size: 26px;
-      }
-      .stat span,
-      .sub {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .stat small {
-        display: block;
-        font-size: 11px;
-        color: var(--muted);
-        margin-top: 2px;
-      }
-      .cards {
-        display: grid;
-        gap: 10px;
-      }
       .cardtop,
       .studentHead {
         display: flex;
@@ -1185,7 +1154,7 @@
             <option value="revenue">Highest Revenue</option>
           </select>
         </div>
-        <div id="signupGoal"></div><div id="stats" class="stats"></div>
+        <div id="signupGoal"></div><div id="stats" class="grid-stats-4"></div>
         <div id="capacityPanel" style="display:none">
           <div class="capacity-section">
             <h3>Cohort Capacity</h3>
@@ -1202,7 +1171,7 @@
             <div id="exceptionsTable"></div>
           </div>
         </div>
-        <div id="cards" class="cards"></div>
+        <div id="cards" class="grid-cards"></div>
         </div>
         </div>
       </section>
@@ -1463,11 +1432,10 @@
       function applyRestoredView(s) {
         if (!s) return;
         openStudents.forEach((id) => {
-          const card = $("student-" + id);
-          if (card) card.classList.add("open");
+          const panel = $("student-detail-" + id);
+          if (panel) panel.classList.add("open");
           const student = students.find((x) => String(x.id) === String(id));
-          const detail = $("student-detail-" + id);
-          if (student && detail) detail.innerHTML = renderStudentDetail(student);
+          if (student && panel) panel.innerHTML = renderStudentDetail(student);
         });
         openCoupons.forEach((id) => {
           const card = $("coupon-" + id);
@@ -2278,12 +2246,11 @@
           // Re-apply expanded student cards so a re-render (search, filter, or
           // returning from a tool) never collapses the record being reviewed.
           openStudents.forEach((id) => {
-            const card = $("student-" + id);
-            if (!card) return;
-            card.classList.add("open");
+            const panel = $("student-detail-" + id);
+            if (!panel) return;
+            panel.classList.add("open");
             const student = students.find((x) => String(x.id) === String(id));
-            const detail = $("student-detail-" + id);
-            if (student && detail) detail.innerHTML = renderStudentDetail(student);
+            if (student) panel.innerHTML = renderStudentDetail(student);
           });
           return;
         }
@@ -2382,15 +2349,14 @@
       }
       window.toggleStudent = (id) => {
         const key = String(id);
-        const e = $("student-" + key);
-        if (e) e.classList.toggle("open");
-        const isOpen = !!e && e.classList.contains("open");
+        const panel = $("student-detail-" + key);
+        if (panel) panel.classList.toggle("open");
+        const isOpen = !!panel && panel.classList.contains("open");
         if (isOpen) openStudents.add(key); else openStudents.delete(key);
         // Render detail view when opened
-        const detail = $("student-detail-" + key);
-        if (detail && isOpen) {
+        if (isOpen) {
           const student = students.find(s => String(s.id) === key);
-          if (student) detail.innerHTML = renderStudentDetail(student);
+          if (student) panel.innerHTML = renderStudentDetail(student);
         }
         saveUiState();
       };

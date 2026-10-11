@@ -18,6 +18,30 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-tokens.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin-components.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin-charts.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin-layout.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin-sidebar.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin-header.css",
+      "use": "@vercel/static"
+    },
+    {
       "src": "admin-acquisition.html",
       "use": "@vercel/static"
     },

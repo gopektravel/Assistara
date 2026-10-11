@@ -1,1 +1,408 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Acquisition Tracker | Assistara Admin</title><link rel="icon" href="/assistara-logo.svg"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"><style>:root{--ink:#171717;--cream:#f7f5ef;--line:#e2ded4;--muted:#746e65;--yellow:#ffd51f;--green:#eaf8ee}*{box-sizing:border-box}body,button,input,select{font-family:"DM Sans",sans-serif}body{margin:0;background:var(--cream);color:var(--ink)}.shell{width:min(1120px,calc(100% - 28px));margin:auto}.top{margin-top:16px;background:#171717;color:#fff;border-radius:18px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:10px;font-weight:700}.brand img{width:34px}.back{color:#fff;text-decoration:none;border:1px solid #3c3c3c;background:#2a2a2a;border-radius:999px;padding:10px 15px;font-size:13px;font-weight:700}.head{margin:28px 0 14px}.head h1{margin:0;font-size:34px}.sub{font-size:12px;color:var(--muted);margin-top:5px}.tool{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0}.tool h2{margin:0;font-size:22px}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.field{display:grid;gap:6px;font-size:12px;font-weight:700}.field input,.field select{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;background:#fff;font:inherit}.primary{border:0;background:var(--yellow);color:var(--ink);border-radius:10px;padding:13px 18px;font-weight:800;cursor:pointer}.wide{grid-column:1/-1}.result{display:none;margin-top:16px;padding:15px;background:var(--green);border:1px solid #c9e8d1;border-radius:12px}.result.show{display:block}.resultLabel{font-size:11px;text-transform:uppercase;font-weight:800;color:#46634d;margin-bottom:7px}.resultLine{display:grid;grid-template-columns:1fr auto;gap:8px}.result input{min-width:0;border:1px solid #bddbc5;background:#fff;border-radius:9px;padding:12px;font:inherit}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:18px 0 12px}.stat,.row{background:#fff;border:1px solid var(--line);border-radius:14px}.stat{padding:14px}.stat b{display:block;font-size:26px}.stat span{font-size:12px;color:var(--muted)}.historyHead{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}.historyHead h2{margin:0;font-size:20px}.search{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;width:min(280px,50%)}.list{display:grid;gap:9px;padding-bottom:30px}.row{padding:14px;display:grid;grid-template-columns:minmax(210px,1.35fr) repeat(6,minmax(72px,.55fr)) auto;align-items:center;gap:12px}.route{font-weight:800}.route small{display:block;color:var(--muted);font-weight:500;margin-top:3px}.metric b{display:block}.metric span{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:800}.actions{display:flex;gap:6px}.edit,.copy,.delete{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}.edit{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}.delete{color:#a32626}.view{border:0;background:#171717;color:#fff;border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}.panel{display:none;grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px}.panel.show{display:block}.visitor{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #eeeae1}.visitor:last-child{border:0}.who{font-size:12px;font-weight:800}.who small{display:block;font-weight:500;color:var(--muted);margin-top:2px}.path{font-size:11px;color:var(--muted);text-align:right}.empty{padding:28px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:14px}.visitor{cursor:pointer}.visitorDetail{display:none;padding:0 0 12px 14px;font-size:11px;color:var(--muted)}.visitor.open+.visitorDetail{display:block}.toast{position:fixed;right:20px;bottom:20px;background:#171717;color:#fff;padding:12px 15px;border-radius:10px;display:none}.toast.show{display:block}@media(max-width:950px){.stats{grid-template-columns:repeat(3,1fr)}.row{grid-template-columns:1fr 1fr 1fr}.row .route{grid-column:1/-1}.actions{grid-column:1/-1}}@media(max-width:700px){.form{grid-template-columns:1fr}.wide{grid-column:auto}.stats{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr 1fr}.row .route{grid-column:1/-1}.historyHead{align-items:stretch;flex-direction:column}.search{width:100%}.resultLine{grid-template-columns:1fr}}</style><link rel="stylesheet" href="/manrope-lock.css?v=20260917-3"></head><body><div class="shell"><div class="top"><div class="brand"><img src="/assistara-logo.svg"><span>Assistara Admin</span></div><a class="back" href="/admin">← Admin</a></div><div class="head"><h1>Acquisition Tracker</h1><div class="sub">Create short campaign links and track which channels turn into real Academy or B2B results.</div></div><section class="tool"><h2>Generate tracking link</h2><div class="sub">Short branded links. Academy uses /a/CODE and B2B uses /b/CODE.</div><div class="form"><label class="field"><span>Campaign</span><select id="destination"><option value="academy">Academy</option><option value="b2b">B2B</option></select></label><label class="field"><span>Channel</span><select id="channel"><option>Reddit</option><option>Facebook</option><option>Instagram</option><option>TikTok</option><option>LinkedIn</option><option>Meta Ads</option><option>Google Ads</option><option>Email</option><option>Partner / Creator</option><option>Other</option></select></label><label class="field"><span>Placement / group</span><input id="placement" placeholder="e.g. r/buhaydigital or Filipino VA Group"></label><label class="field"><span>Post / creative label <span style="font-weight:500;color:var(--muted)">(optional)</span></span><input id="label" placeholder="e.g. Beginner post #1"></label><div class="wide"><button class="primary" id="create">Generate unique link</button></div></div><div class="result" id="result"><div class="resultLabel">Your short tracking link</div><div class="resultLine"><input id="resultUrl" readonly><button class="primary" id="copyGenerated">Copy link</button></div></div></section><div class="stats" id="stats"></div><div class="historyHead"><div><h2>Acquisition overview</h2><div class="sub">See each source and the different paths visitors take. Detailed statistics can come later.</div></div><input class="search" id="search" placeholder="Search channel, group or label"></div><div class="list" id="list"></div></div><div class="toast" id="toast"></div><script src="/attribution.js"></script><script>const API="https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition",token=(()=>{try{return localStorage.getItem("assistara_admin_token")||sessionStorage.getItem("assistara_admin_token")||""}catch{return""}})(),$=x=>document.getElementById(x),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));if(!token)location.href="/admin";async function req(action,p={}){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action,...p})}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||"Request failed");return j}function toast(s){$("toast").textContent=s;$("toast").className="toast show";setTimeout(()=>$("toast").className="toast",2200)}let links=[],attrByLink=new Map(),attrStatus=null;function destinationName(d){return d==="academy"?"Academy":"B2B"}function urlFor(x){const base="https://www.getassistara.com";return base+(x.destination==="academy"?"/a/":"/b/")+encodeURIComponent(x.token)}function filtered(){const q=$("search").value.trim().toLowerCase();return q?links.filter(x=>[x.channel,x.placement,x.label,x.token,x.destination].some(v=>String(v||"").toLowerCase().includes(q))):links}function render(){const visits=links.reduce((n,x)=>n+Number(x.visits||0),0),masterclass=links.reduce((n,x)=>n+Number(attrByLink.has(String(x.id))?attrByLink.get(String(x.id)):x.masterclass_signups||0),0),applications=links.reduce((n,x)=>n+Number(x.applications||0),0),accepted=links.reduce((n,x)=>n+Number(x.accepted||0),0),paid=links.reduce((n,x)=>n+Number(x.paid||0),0),revenue=links.reduce((n,x)=>n+Number(x.revenue||0),0);$("stats").innerHTML=[[visits,"Visits"],[masterclass,"Masterclass"],[applications,"Applications"],[accepted,"Accepted"],[paid,"Paid"],["$"+revenue.toLocaleString("en-US",{maximumFractionDigits:0}),"Revenue"]].map(x=>`<div class="stat"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("")+(attrStatus?`<div class="sub" style="grid-column:1/-1;margin-top:2px">Attribution · Tracked ${attrStatus.Tracked} · Recovered ${attrStatus.Recovered}${attrStatus.UTM?" · UTM "+attrStatus.UTM:""}${attrStatus.Direct?" · Direct "+attrStatus.Direct:""} · Untracked ${attrStatus.Untracked}</div>`:"");const shown=filtered();$("list").innerHTML=shown.length?shown.map(x=>{const academy=x.destination==="academy";const metrics=academy?[[x.visits,"Visitors"],[attrByLink.has(String(x.id))?attrByLink.get(String(x.id)):x.masterclass_signups,"Masterclass"],[x.applications,"Applied"],[x.accepted,"Accepted"],[x.paid,"Paid"],["$"+Number(x.revenue||0).toLocaleString("en-US",{maximumFractionDigits:0}),"Revenue"]]:[[x.visits,"Visitors"],[x.b2b_leads,"B2B leads"],["—","Applied"],["—","Accepted"],["—","Paid"],["—","Revenue"]];const journey='';return `<div class="row"><div class="route">${esc(x.channel)} → ${esc(x.placement)}<small>${esc(x.label||"No label")} · ${destinationName(x.destination)}</small>${journey}</div>${metrics.map(m=>`<div class="metric"><b>${m[0]??0}</b><span>${m[1]}</span></div>`).join("")}<div class="actions"><button class="edit" onclick="editLabel('${esc(x.id)}')">Edit label</button><button class="view" onclick="toggleVisitors('${esc(x.id)}')">Visitors</button><button class="copy" onclick="copyLink('${esc(x.token)}','${esc(x.destination)}')">Copy</button><button class="delete" onclick="deleteLink('${esc(x.id)}','${esc(x.channel)} → ${esc(x.placement)}')">Delete</button></div><div class="panel" id="panel-${esc(x.id)}"></div></div>`}).join(""):'<div class="empty">No tracking links yet. Generate your first link above.</div>'}async function load(){links=(await req("list")).links||[];try{const r=await fetch("https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-applications",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"list"})});const d=r.ok?await r.json():{};const ctx={links:d.links||links,visits:d.visits||[],signups:d.signups||[]};attrByLink=new Map();attrStatus={Tracked:0,Recovered:0,UTM:0,Direct:0,Untracked:0};const byTok=new Map((d.links||links).map(l=>[String(l.token||"").toUpperCase(),String(l.id)]));const diag=s=>/^diag(?:nostic)?[-_]/i.test(String(s&&s.email||""))||/diagnostic/i.test(String(s&&s.name||""))||/diagnostic/i.test(String(s&&s.source||""));for(const s of ctx.signups){if(diag(s))continue;const a=window.AssistaraAttribution.resolve(s,{...ctx,kind:"signup"});attrStatus[a.status]=(attrStatus[a.status]||0)+1;if(a.tracked&&a.token){const lid=byTok.get(String(a.token).toUpperCase());if(lid)attrByLink.set(lid,(attrByLink.get(lid)||0)+1)}}}catch(e){attrByLink=new Map();attrStatus=null}render()}window.toggleVisitors=async id=>{const p=$("panel-"+id);if(p.classList.contains("show")){p.classList.remove("show");return}p.classList.add("show");p.innerHTML='<div class="sub">Loading visitors…</div>';try{const j=await req("visitors",{link_id:id}),vs=j.visitors||[];p.innerHTML=vs.length?vs.map(v=>{const person=v.application||v.masterclass||v.b2b,name=person?.name||person?.email||"Anonymous visitor",email=person?.email&&person?.name?person.email:"",steps=[];if(v.masterclass)steps.push("Masterclass signup");if(v.application)steps.push("Applied"+(v.application.status?" · "+v.application.status:""));if(v.b2b)steps.push("B2B lead");if(!steps.length)steps.push("Visited only");const link=links.find(x=>String(x.id)===String(v.link_id))||{},source=link.id?(link.channel+" → "+link.placement+(link.label?" · "+link.label:"")):"Website visitor",displayName=person?.name||person?.email||("Website visitor "+String(v.visitor_id||"").slice(0,6));return `<div class="visitor" onclick="this.classList.toggle('open')"><div class="who">${esc(displayName)}<small>${new Date(v.created_at).toLocaleString()}</small></div><div class="path">${esc(source)}<br>${esc(steps.join(" → "))}</div></div><div class="visitorDetail"><b>Source:</b> ${esc(source)}${link.token?"<br><b>Tracking link:</b> "+esc(urlFor(link)):"<br><b>Tracking:</b> No tracking link — direct website visitor"}${email?"<br><b>Email:</b> "+esc(email):""}</div>`}).join(""):'<div class="sub">No visitors yet.</div>'}catch(e){p.innerHTML='<div class="sub">Could not load visitors.</div>'}};window.editLabel=async id=>{const x=links.find(v=>String(v.id)===String(id));if(!x)return;const label=prompt('Edit label',x.label||'');if(label===null)return;try{await req('update_label',{id,label:label.trim()});await load();toast('Label updated')}catch(e){alert(e.message)}};window.copyLink=async(t,d)=>{await navigator.clipboard.writeText(urlFor({token:t,destination:d}));toast("Tracking link copied")};window.deleteLink=async(id,name)=>{if(!confirm(`Delete ${name}?\n\nThis removes this campaign link and its associated tracking visits. This cannot be undone.`))return;try{await req('delete',{id});await load();toast('Tracking link deleted')}catch(e){alert(e.message)}};$("search").oninput=render;$("copyGenerated").onclick=async()=>{await navigator.clipboard.writeText($("resultUrl").value);toast("Tracking link copied")};$("create").onclick=async()=>{const channel=$("channel").value,placement=$("placement").value.trim(),label=$("label").value.trim(),destination=$("destination").value;if(!placement){toast("Enter the placement or group");return}$("create").disabled=true;try{const created=await req("create",{channel,placement,label,destination});const x=created.link;if(!x?.token)throw Error("Link was created but no tracking token was returned");$("resultUrl").value=urlFor(x);$("result").classList.add("show");$("placement").value="";$("label").value="";await load();toast("Unique tracking link created")}catch(e){alert(e.message)}finally{$("create").disabled=false}};load().catch(e=>{if(/expired/i.test(e.message))location.href="/admin";else alert(e.message)});setInterval(()=>{if(!document.hidden)load().catch(()=>{})},10000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)load().catch(()=>{})});window.addEventListener("focus",()=>load().catch(()=>{}));</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Acquisition Tracker | Assistara Admin</title>
+  <link rel="icon" href="/assistara-logo.svg" />
+  <link rel="stylesheet" href="/manrope-lock.css" />
+  <link rel="stylesheet" href="/admin-tokens.css" />
+  <link rel="stylesheet" href="/admin-components.css" />
+  <link rel="stylesheet" href="/admin-charts.css" />
+  <link rel="stylesheet" href="/admin-layout.css" />
+  <link rel="stylesheet" href="/admin-sidebar.css" />
+  <link rel="stylesheet" href="/admin-header.css" />
+  <style>
+    :root {
+      --ink: #171717;
+      --cream: #f7f5ef;
+      --line: #e2ded4;
+      --muted: #746e65;
+      --yellow: #ffd51f;
+      --green: #eaf8ee;
+      --greenInk: #1d6a3b;
+      --red: #fde9e7;
+      --redInk: #8b2825;
+      --orange: #fff0db;
+      --orangeInk: #8a4b00;
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to content</a>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
+      <div class="sidebar-header">
+        <a class="sidebar-brand" href="/admin"><img src="/assistara-logo.svg" alt="Assistara" /><span>Assistara Admin</span></a>
+        <button class="sidebar-collapse" id="sidebarCollapse" type="button" aria-label="Collapse sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+        </button>
+      </div>
+      <nav class="sidebar-nav" aria-label="Admin sections">
+        <div class="nav-group">
+          <div class="nav-group-title">Overview</div>
+          <button class="nav-item" type="button" data-view="overview" data-tooltip="Dashboard">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+            <span class="nav-item-label">Dashboard</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">Academy</div>
+          <button class="nav-item" type="button" data-tab="applicants" data-tooltip="Applications">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg></span>
+            <span class="nav-item-label">Applications</span>
+          </button>
+          <button class="nav-item" type="button" data-tab="students" data-tooltip="Students">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span class="nav-item-label">Students</span>
+          </button>
+          <button class="nav-item" type="button" data-tab="coupons" data-tooltip="Coupons">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg></span>
+            <span class="nav-item-label">Coupons</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">Marketing</div>
+          <button class="nav-item active" type="button" data-tool="acquisition" data-tooltip="Acquisition Tracker">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
+            <span class="nav-item-label">Acquisition Tracker</span>
+          </button>
+          <button class="nav-item" type="button" data-tab="webinar" data-tooltip="Webinar Signups">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/></svg></span>
+            <span class="nav-item-label">Webinar Signups</span>
+          </button>
+          <button class="nav-item" type="button" data-tool="masterclass" data-tooltip="Masterclass Event">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m10 15 5-3-5-3z"/></svg></span>
+            <span class="nav-item-label">Masterclass Event</span>
+          </button>
+          <button class="nav-item" type="button" data-tool="email" data-tooltip="Email Command Center">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <span class="nav-item-label">Email Command Center</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">Business</div>
+          <button class="nav-item" type="button" data-tool="finance" data-tooltip="Finance">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></span>
+            <span class="nav-item-label">Finance</span>
+          </button>
+          <button class="nav-item" type="button" data-tab="b2b" data-tooltip="B2B Discovery">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>
+            <span class="nav-item-label">B2B</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">Quick tools</div>
+          <a class="nav-item nav-external" href="https://mail.nameslink.com/" target="_blank" rel="noopener" data-tooltip="Email">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <span class="nav-item-label">Email</span>
+          </a>
+          <a class="nav-item nav-external" href="https://app.clickup.com/1300450000003242/v/s/1300450000016533" target="_blank" rel="noopener" data-tooltip="ClickUp">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7 7 7 7-7"/><path d="m8 12 4 4 4-4"/><path d="m11 17 1 1 1-1"/></svg></span>
+            <span class="nav-item-label">ClickUp</span>
+          </a>
+          <a class="nav-item nav-external" href="https://supabase.com/dashboard/project/jhmmwleejgidrxavzdlq" target="_blank" rel="noopener" data-tooltip="Database">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="3"/><path d="M5 5.5v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/><path d="M5 12.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span>
+            <span class="nav-item-label">Database</span>
+          </a>
+          <a class="nav-item nav-external" href="https://drive.google.com/drive/folders/1JoAQPRC9PsPw3ccEgZ7GXRtXt72ahIwQ" target="_blank" rel="noopener" data-tooltip="Drive">
+            <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5h6l1.8 2H20a1.5 1.5 0 0 1 1.5 1.5v6.5A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5V9A1.5 1.5 0 0 1 4 7.5Z"/><path d="M3 10h18"/></svg></span>
+            <span class="nav-item-label">Drive</span>
+          </a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" aria-hidden="true">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name">Administrator</div>
+            <div class="sidebar-user-role">Admin</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button class="sidebar-action primary" id="testPortal" type="button" style="display:none">Test portal</button>
+          <button class="sidebar-action" id="logout" type="button" style="display:none">Log out</button>
+        </div>
+      </div>
+    </aside>
+    <main class="workspace" id="workspace">
+      <div class="workspace-top" id="workspaceTop">
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="workspace-search" id="searchWrap" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search" placeholder="Search..." aria-label="Search applications, students and signups" />
+        </div>
+      </div>
+      <header class="page-header" id="pageHeader">
+        <div class="page-header-main">
+          <div>
+            <nav class="page-breadcrumbs" id="pageBreadcrumbs" aria-label="Breadcrumb"></nav>
+            <h1 class="page-title" id="pageTitle">Acquisition Tracker</h1>
+            <div class="page-subtitle" id="pageSubtitle">Tracked links, visits, signups and campaign attribution.</div>
+          </div>
+        </div>
+        <div class="page-actions" id="pageActions"></div>
+      </header>
+      <div class="toolRoot" id="toolRoot">
+        <div class="tool" id="toolContainer">
+          <div class="tool-header">
+            <h2>Acquisition Tracker</h2>
+            <div class="tool-sub">Create tracked links, monitor visits and signups, and measure campaign attribution.</div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-header">
+              <h3 class="card-title">Create tracked link</h3>
+            </div>
+            <div class="form-grid form-grid-2" style="margin-top:18px">
+              <div class="field">
+                <label class="field-label">Label</label>
+                <input class="field-input" id="acq-label" type="text" placeholder="e.g. Twitter ads, Newsletter, Partner blog" />
+              </div>
+              <div class="field">
+                <label class="field-label">Destination URL</label>
+                <input class="field-input" id="acq-dest" type="url" placeholder="https://assistara.com/..." />
+              </div>
+              <div class="field field-span-full">
+                <label class="field-label">Kind</label>
+                <select class="field-select" id="acq-kind">
+                  <option value="academy">Academy</option>
+                  <option value="masterclass">Masterclass</option>
+                  <option value="b2b">B2B</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions" style="margin-top:16px">
+              <button class="btn btn-primary" id="acq-create">Create link</button>
+            </div>
+            <div id="acq-result" class="result"></div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <div class="card-header">
+              <h3 class="card-title">Tracked links</h3>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Label</th>
+                    <th>Kind</th>
+                    <th>Visits</th>
+                    <th>Signups</th>
+                    <th>Points</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="acq-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px" id="acq-visitor-panel" hidden>
+            <div class="card-header">
+              <h3 class="card-title">Visitor details</h3>
+            </div>
+            <div class="panel" id="acq-visitor-detail"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="/attribution.js"></script>
+  <script>
+    const ACQ = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition";
+    const ADMIN_TOKEN_KEY = "assistara_admin_token";
+
+    const adminSession = {
+      read() {
+        try {
+          return localStorage.getItem(ADMIN_TOKEN_KEY) || sessionStorage.getItem(ADMIN_TOKEN_KEY) || "";
+        } catch { return ""; }
+      },
+      write(value) {
+        try { localStorage.setItem(ADMIN_TOKEN_KEY, value); } catch {}
+        try { sessionStorage.setItem(ADMIN_TOKEN_KEY, value); } catch {}
+      },
+      clear() {
+        try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+        try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch {}
+      }
+    };
+
+    const token = adminSession.read();
+    if (!token) location.href = "/admin";
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#039;" }[c]));
+    const n = (v) => (v === null || v === undefined || Number.isNaN(v) ? "Unavailable" : Number(v).toLocaleString());
+    const dt = (v) => (v ? new Date(v).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
+
+    let links = [];
+
+    async function req(action, p = {}) {
+      const r = await fetch(ACQ, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ action, ...p })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw Error(j.error || "Request failed");
+      return j;
+    }
+
+    function toast(s) {
+      const t = $("toast");
+      t.textContent = s;
+      t.className = "toast show";
+      setTimeout(() => (t.className = "toast"), 2200);
+    }
+
+    function renderLinks() {
+      const body = $("acq-body");
+      if (!links.length) {
+        body.innerHTML = '<tr><td colspan="7" class="muted">No tracked links yet.</td></tr>';
+        return;
+      }
+      body.innerHTML = links.map(l => `
+        <tr>
+          <td><strong>${esc(l.label)}</strong></td>
+          <td><span class="badge badge-neutral">${esc(l.kind)}</span></td>
+          <td class="num">${n(l.visits)}</td>
+          <td class="num">${n(l.signups)}</td>
+          <td class="num">${n(l.points)}</td>
+          <td>${dt(l.created_at)}</td>
+          <td class="col-actions">
+            <button class="btn btn-ghost btn-sm" onclick="showVisitors('${l.id}')">Visitors</button>
+            <button class="btn btn-ghost btn-sm" onclick="copyLink('${l.tracking_url}')">Copy</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteLink('${l.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    async function load() {
+      try {
+        const j = await req("list");
+        links = j.links || [];
+        renderLinks();
+      } catch (e) {
+        toast("Could not load links: " + e.message);
+      }
+    }
+
+    $("acq-create").onclick = async () => {
+      const btn = $("acq-create");
+      const label = $("acq-label").value.trim();
+      const destination = $("acq-dest").value.trim();
+      const kind = $("acq-kind").value;
+      if (!label || !destination) { toast("Label and destination are required"); return; }
+      btn.disabled = true; btn.textContent = "Creating...";
+      try {
+        const j = await req("create", { label, destination, kind });
+        if (!j.ok) throw Error(j.error);
+        toast("Link created: " + j.tracking_url);
+        $("acq-label").value = ""; $("acq-dest").value = "";
+        await load();
+      } catch (e) { toast(e.message); }
+      finally { btn.disabled = false; btn.textContent = "Create link"; }
+    };
+
+    window.copyLink = async (url) => {
+      try { await navigator.clipboard.writeText(url); toast("Copied to clipboard"); }
+      catch { toast("Copy failed"); }
+    };
+
+    window.deleteLink = async (id) => {
+      if (!confirm("Delete this tracked link?")) return;
+      try {
+        const j = await req("delete", { id });
+        if (!j.ok) throw Error(j.error);
+        toast("Link deleted");
+        await load();
+      } catch (e) { toast(e.message); }
+    };
+
+    window.showVisitors = async (linkId) => {
+      const panel = $("acq-visitor-panel");
+      const detail = $("acq-visitor-detail");
+      panel.hidden = false;
+      detail.innerHTML = `<div class="empty">Loading visitors…</div>`;
+      try {
+        const j = await req("visitors", { link_id: linkId });
+        const visits = j.visits || [];
+        if (!visits.length) {
+          detail.innerHTML = `<div class="empty">No visitors for this link.</div>`;
+          return;
+        }
+        detail.innerHTML = `
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th>Visited</th><th>Referrer</th><th>UTM</th><th>Country</th><th>Device</th><th>Converted</th></tr>
+              </thead>
+              <tbody>${visits.map(v => `
+                <tr>
+                  <td>${dt(v.visited_at)}</td>
+                  <td>${esc(v.referrer || "—")}</td>
+                  <td><code>${esc(v.utm_source || "—")} / ${esc(v.utm_medium || "—")} / ${esc(v.utm_campaign || "—")}</code></td>
+                  <td>${esc(v.country || "—")}</td>
+                  <td>${esc(v.device || "—")}</td>
+                  <td>${v.converted ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-neutral">No</span>'}</td>
+                </tr>
+              `).join("")}</tbody>
+            </table>
+          </div>
+        `;
+      } catch (e) { detail.innerHTML = `<div class="alert alert-danger">Could not load visitors: ${esc(e.message)}</div>`; }
+    };
+
+    // Sidebar collapse / expand (persisted) and the mobile drawer.
+    const SIDEBAR_KEY = "assistara_admin_sidebar";
+    function readSidebarCollapsed() { try { return localStorage.getItem(SIDEBAR_KEY) === "1"; } catch { return false; } }
+    function applySidebarState() {
+      const collapsed = readSidebarCollapsed();
+      $("sidebar").classList.toggle("collapsed", collapsed);
+      $("sidebarCollapse").setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    }
+    function toggleSidebar() {
+      const next = !$("sidebar").classList.contains("collapsed");
+      $("sidebar").classList.toggle("collapsed", next);
+      try { localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0"); } catch {}
+      $("sidebarCollapse").setAttribute("aria-label", next ? "Expand sidebar" : "Collapse sidebar");
+    }
+    function openMobileSidebar() {
+      $("sidebar").classList.add("open");
+      $("sidebarOverlay").classList.add("show");
+      $("menuToggle").setAttribute("aria-expanded", "true");
+      const first = $("sidebar").querySelector(".nav-item");
+      if (first) first.focus();
+    }
+    function closeMobileSidebar() {
+      if (!$("sidebar").classList.contains("open")) return;
+      $("sidebar").classList.remove("open");
+      $("sidebarOverlay").classList.remove("show");
+      $("menuToggle").setAttribute("aria-expanded", "false");
+    }
+
+    $("sidebarCollapse").onclick = toggleSidebar;
+    $("menuToggle").onclick = openMobileSidebar;
+    $("sidebarOverlay").onclick = closeMobileSidebar;
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMobileSidebar(); });
+    window.addEventListener("resize", () => { if (window.innerWidth >= 1024) closeMobileSidebar(); });
+    applySidebarState();
+
+    // Active nav highlight
+    document.querySelectorAll('.sidebar-nav .nav-item[data-tool="acquisition"]').forEach(b => b.classList.add("active"));
+
+    load();
+  </script>
+</body>
+</html>
