@@ -273,35 +273,59 @@ jobs:
         DO $$
         DECLARE
           v_coupon_id uuid;
-          v_app_id uuid := '22222222-2222-2222-2222-222222222222';
+          v_app1 uuid := '22222222-2222-2222-2222-222222222222';
+          v_app2 uuid := '33333333-3333-3333-3333-333333333333';
           v_result record;
           v_success boolean;
           v_final_status text;
+          v_final_price integer;
         BEGIN
           -- Set max_redemptions to 1 for MASTERCLASS
           UPDATE public.academy_promo_codes SET max_redemptions = 1 WHERE code = 'MASTERCLASS';
           SELECT id INTO v_coupon_id FROM public.academy_promo_codes WHERE code = 'MASTERCLASS';
           
-          -- Create and confirm first redemption
+          -- Step 1: Create TWO pending checkouts while capacity is available
           SELECT * INTO v_result FROM public.create_coupon_redemption_pending(
-            'MASTERCLASS', v_app_id, gen_random_uuid(), 'test2@example.com',
+            'MASTERCLASS', v_app1, gen_random_uuid(), 'test2@example.com',
             690000, 200000, 490000, 'paymongo_qrph', 'pi_test_123', null, '{}'
           );
-          PERFORM public.confirm_coupon_redemption(v_app_id, 'MASTERCLASS', 'confirmed');
+          IF v_result.status != 'pending' THEN
+            RAISE EXCEPTION 'TEST 4a FAILED: Expected pending for app1, got %', v_result.status;
+          END IF;
           
-          -- Try to confirm another redemption (should return limit_exceeded)
           SELECT * INTO v_result FROM public.create_coupon_redemption_pending(
-            'MASTERCLASS', '33333333-3333-3333-3333-333333333333', gen_random_uuid(), 'test3@example.com',
+            'MASTERCLASS', v_app2, gen_random_uuid(), 'test3@example.com',
             690000, 200000, 490000, 'paymongo_qrph', 'pi_test_456', null, '{}'
           );
+          IF v_result.status != 'pending' THEN
+            RAISE EXCEPTION 'TEST 4b FAILED: Expected pending for app2, got %', v_result.status;
+          END IF;
           
+          RAISE NOTICE 'TEST 4a/4b PASSED: Two pending checkouts created while capacity available';
+          
+          -- Step 2: Confirm first payment (succeeds, consumes the 1 slot)
           SELECT success, final_status INTO v_success, v_final_status
-          FROM public.confirm_coupon_redemption('33333333-3333-3333-3333-333333333333', 'MASTERCLASS', 'confirmed');
+          FROM public.confirm_coupon_redemption(v_app1, 'MASTERCLASS', 'confirmed');
           
-          IF v_final_status = 'limit_exceeded' AND v_success = false THEN
-            RAISE NOTICE 'TEST 4 PASSED: limit_exceeded returned correctly, success=false';
+          IF v_final_status != 'confirmed' OR v_success != true THEN
+            RAISE EXCEPTION 'TEST 4c FAILED: Expected confirmed for app1, got %/%', v_final_status, v_success;
+          END IF;
+          
+          RAISE NOTICE 'TEST 4c PASSED: First payment confirmed';
+          
+          -- Step 3: Confirm second payment after limit reached (should return limit_exceeded)
+          SELECT success, final_status INTO v_success, v_final_status
+          FROM public.confirm_coupon_redemption(v_app2, 'MASTERCLASS', 'confirmed');
+          
+          -- Step 4: Verify second returns limit_exceeded, retains actual paid price
+          SELECT final_price_php INTO v_final_price
+          FROM public.academy_coupon_redemptions
+          WHERE application_id = v_app2 AND coupon_id = v_coupon_id;
+          
+          IF v_final_status = 'limit_exceeded' AND v_success = false AND v_final_price = 490000 THEN
+            RAISE NOTICE 'TEST 4 PASSED: limit_exceeded returned, success=false, final_price_php=490000 preserved';
           ELSE
-            RAISE EXCEPTION 'TEST 4 FAILED: Expected limit_exceeded with success=false, got %/%', v_final_status, v_success;
+            RAISE EXCEPTION 'TEST 4 FAILED: Expected limit_exceeded/success=false/price=490000, got %/%/%', v_final_status, v_success, v_final_price;
           END IF;
         END $$;
         
