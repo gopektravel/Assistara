@@ -48,9 +48,9 @@
   --neutral-border: #dedbd3;
 
   /* ---------------------------------------------------------------- *
-   * Typography — Manrope everywhere
+   * Typography — Assistara's single web font
    * ---------------------------------------------------------------- */
-  --font-family: "Manrope", "DM Sans", sans-serif;
+  --font-family: "DM Sans", sans-serif;
 
   --text-display-xl: 800 40px/1.1 var(--font-family);
   --text-display-lg: 800 32px/1.15 var(--font-family);

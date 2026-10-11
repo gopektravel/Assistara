@@ -59,7 +59,7 @@ test("logout clears the session and the saved UI state without a pagehide re-sav
 
 test("admin tools are mounted by client-side routing, never by loading another document", () => {
   // The tool buttons are data-driven switches in the sidebar, not hard navigations.
-  // Check that the sidebar contains the three tool nav-items in the Marketing group.
+  // Check that the sidebar contains the restored tool nav-items.
   assert.match(
     admin,
     /data-tool="acquisition"[\s\S]*data-tool="masterclass"[\s\S]*data-tool="email"/,
@@ -67,7 +67,7 @@ test("admin tools are mounted by client-side routing, never by loading another d
   assert.doesNotMatch(admin, /location\.href\s*=\s*"\/admin\/finance"/);
   assert.doesNotMatch(admin, /location\.href\s*=\s*"\/admin\/acquisition"/);
   assert.doesNotMatch(admin, /location\.href\s*=\s*"\/admin\/masterclass-event"/);
-  // One router maps the three routes to their sources and pushes history.
+  // One router maps the routes to their sources and pushes history.
   assert.match(admin, /const TOOLS = \{/);
   assert.match(admin, /function openTool\(name, opts = \{\}\)/);
   assert.match(admin, /history\.pushState\(\{ view: name \}, "", t\.path\)/);
@@ -95,11 +95,11 @@ test("each mounted tool is disposed cleanly (timers and listeners) when left", (
   assert.match(admin, /if \(mountedTool\) disposeTool\(\)/); // showDashboard leaves the tool
 });
 
-test("the three tool routes serve the shell while the tool sources stay fetchable", () => {
+test("the tool routes serve the shell while the tool sources stay fetchable", () => {
   const vercel = JSON.parse(read("assistara-local-v9/vercel.json"));
   const routes = vercel.routes;
   const dest = (src) => (routes.find((r) => r.src === src) || {}).dest;
-  for (const p of ["/admin/acquisition", "/admin/finance", "/admin/masterclass-event"]) {
+  for (const p of ["/admin/acquisition", "/admin/finance", "/admin/masterclass-event", "/admin/email"]) {
     assert.equal(dest(p), "/admin.html", `${p} must render the shared shell`);
     assert.equal(dest(p + "/"), "/admin.html", `${p}/ must render the shared shell`);
   }
@@ -107,6 +107,7 @@ test("the three tool routes serve the shell while the tool sources stay fetchabl
     "/admin-finance.html",
     "/admin-acquisition.html",
     "/admin-masterclass-event.html",
+    "/admin-email.html",
   ]) {
     assert.ok(
       routes.some((r) => r.src === f),
@@ -115,8 +116,35 @@ test("the three tool routes serve the shell while the tool sources stay fetchabl
   }
 });
 
+test("every shared Admin stylesheet is built and routed before the catch-all", () => {
+  const vercel = JSON.parse(read("assistara-local-v9/vercel.json"));
+  const files = [
+    "admin-tokens.css",
+    "admin-components.css",
+    "admin-charts.css",
+    "admin-layout.css",
+    "admin-sidebar.css",
+    "admin-header.css",
+  ];
+  const catchAll = vercel.routes.findIndex((r) => r.src === "/(.*)");
+  for (const file of files) {
+    assert.ok(vercel.builds.some((b) => b.src === file), `${file} must be built`);
+    const route = vercel.routes.findIndex((r) => r.src === `/${file}` && r.dest === `/${file}`);
+    assert.ok(route >= 0 && route < catchAll, `${file} must be routed before the catch-all`);
+  }
+});
+
+test("Admin pages use DM Sans without a Manrope override", () => {
+  const files = ["admin.html", "admin-finance.html", "admin-email.html", "admin-acquisition.html", "admin-masterclass-event.html"];
+  for (const file of files) {
+    const source = read(`assistara-local-v9/${file}`);
+    assert.doesNotMatch(source, /manrope/i, `${file} must not load Manrope`);
+  }
+  assert.doesNotMatch(read("assistara-local-v9/admin-tokens.css"), /manrope/i);
+});
+
 test("standalone admin pages validate the shared session and never flash login", () => {
-  for (const p of ["admin-finance.html", "admin-acquisition.html", "admin-masterclass-event.html"]) {
+  for (const p of ["admin-finance.html", "admin-acquisition.html", "admin-masterclass-event.html", "admin-email.html"]) {
     const s = read("assistara-local-v9/" + p);
     assert.match(s, /if\s*\(!token\)\s*location\.href\s*=\s*"\/admin"/, `${p} must guard on the shared token`);
   }

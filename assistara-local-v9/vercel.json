@@ -519,6 +519,30 @@
       "dest": "/styles.css"
     },
     {
+      "src": "/admin-tokens.css",
+      "dest": "/admin-tokens.css"
+    },
+    {
+      "src": "/admin-components.css",
+      "dest": "/admin-components.css"
+    },
+    {
+      "src": "/admin-charts.css",
+      "dest": "/admin-charts.css"
+    },
+    {
+      "src": "/admin-layout.css",
+      "dest": "/admin-layout.css"
+    },
+    {
+      "src": "/admin-sidebar.css",
+      "dest": "/admin-sidebar.css"
+    },
+    {
+      "src": "/admin-header.css",
+      "dest": "/admin-header.css"
+    },
+    {
       "src": "/mobile-polish.css",
       "dest": "/mobile-polish.css"
     },
