@@ -12,6 +12,15 @@ import {
   type TrackableLink,
 } from './email-tracking.ts';
 
+// Utility: base64 encode Uint8Array
+function b64(bytes: Uint8Array): string {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    out += String.fromCharCode(...bytes.subarray(i, Math.min(i + 0x8000, bytes.length)));
+  }
+  return btoa(out);
+}
+
 // Shared types
 export interface EmailProviderConfig {
   provider: 'resend' | 'brevo' | 'sender';
@@ -24,6 +33,14 @@ export interface EmailProviderConfig {
   monthlyLimit: number;
   rateLimitPerSec: number;
   rateLimitPerMin: number;
+}
+
+export interface EmailAttachment {
+  filename: string;
+  content: Uint8Array | string; // Uint8Array for binary, base64 string for pre-encoded
+  contentType?: string; // optional, inferred from filename if not provided
+  disposition?: 'attachment' | 'inline';
+  contentId?: string; // for inline/CID references
 }
 
 export interface EmailDeliveryOptions {
@@ -42,6 +59,7 @@ export interface EmailDeliveryOptions {
   fromName?: string; // sender display-name override (per email identity)
   campaignKey?: string; // campaign grouping used by the Email Command Center
   recipientId?: string; // recipient ref (e.g. masterclass signup id) for the timeline
+  attachments?: EmailAttachment[]; // optional attachments (PDF receipts, inline images, etc.)
 }
 
 export interface EmailDeliveryResult {
@@ -375,10 +393,61 @@ export class EmailDelivery {
   }
 
   private async sendViaProvider(provider: EmailProviderConfig, options: EmailDeliveryOptions): Promise<EmailDeliveryResult> {
-    const { to, toName, subject, html, text, replyTo, idempotencyKey } = options;
+    const { to, toName, subject, html, text, replyTo, idempotencyKey, attachments } = options;
     const fromName = options.fromName || provider.fromName;
     
-    const payload = {
+    // Helper to convert attachments to base64
+    const encodeAttachments = (atts: EmailAttachment[]): string[] => {
+      return atts.map(a => {
+        const content = a.content instanceof Uint8Array 
+          ? b64(a.content) 
+          : String(a.content); // assume already base64
+        return content;
+      });
+    };
+
+    // Helper to guess content type from filename
+    function guessContentType(filename: string): string {
+      if (filename.endsWith('.pdf')) return 'application/pdf';
+      const m = filename.match(/\.(png|jpg|jpeg|gif)$/i);
+      if (m) return `image/${m[1].toLowerCase()}`;
+      return 'application/octet-stream';
+    }
+
+    // Helper to convert attachments to Resend format
+    const toResendAttachments = (atts: EmailAttachment[]) => {
+      return atts.map(a => {
+        return {
+          filename: a.filename,
+          content: a.content instanceof Uint8Array ? b64(a.content) : String(a.content),
+          contentType: a.contentType || guessContentType(a.filename),
+          disposition: a.disposition || 'attachment',
+          contentId: a.contentId,
+        };
+      });
+    }; // line 428 should be just };
+
+    // Helper to convert attachments to Brevo format
+    const toBrevoAttachments = (atts: EmailAttachment[]) => {
+      return atts.map(a => {
+        return {
+          name: a.filename,
+          content: a.content instanceof Uint8Array ? b64(a.content) : String(a.content),
+          contentType: a.contentType || guessContentType(a.filename),
+          disposition: a.disposition || 'attachment',
+        };
+      });
+    };
+
+    // Helper to convert attachments to Sender format (Sender doesn't officially support attachments in API)
+    const toSenderAttachments = (atts: EmailAttachment[]) => {
+      console.warn('Sender.net does not support attachments via transactional API; omitting');
+      return [];
+    };
+
+    const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+
+    const payload: Record<string, any> = {
       from: `${fromName} <${provider.fromEmail}>`,
       to: [toName ? `${toName} <${to}>` : to],
       reply_to: replyTo || provider.replyToEmail,
@@ -387,12 +456,27 @@ export class EmailDelivery {
       text,
     };
 
+    if (hasAttachments) {
+      payload.attachments = toResendAttachments(options.attachments!);
+    }
+
     let response: Response;
     let providerMessageId: string | null = null;
 
     try {
       switch (provider.provider) {
         case 'resend': {
+          const resendPayload: Record<string, any> = {
+            from: `${fromName} <${provider.fromEmail}>`,
+            to: [options.toName ? `${options.toName} <${options.to}>` : options.to],
+            reply_to: replyTo || provider.replyToEmail,
+            subject,
+            html,
+            text,
+          };
+          if (hasAttachments) {
+            resendPayload.attachments = toResendAttachments(options.attachments!);
+          }
           response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -400,7 +484,7 @@ export class EmailDelivery {
               'Authorization': `Bearer ${provider.apiKey}`,
               'Idempotency-Key': idempotencyKey,
             },
-            body: JSON.stringify(payload),
+            body: JSON.stringify(resendPayload),
           });
           if (response.ok) {
             const data = await response.json().catch(() => ({}));
@@ -409,20 +493,29 @@ export class EmailDelivery {
           break;
         }
         case 'brevo': {
+          const brevoPayload: Record<string, any> = {
+            sender: { name: fromName, email: provider.fromEmail },
+            to: [{ email: options.to, name: toName }],
+            replyTo: { email: replyTo || provider.replyToEmail },
+            subject,
+            htmlContent: html,
+            textContent: text,
+          };
+          if (hasAttachments) {
+            brevoPayload.attachment = options.attachments!.map(a => ({
+              name: a.filename,
+              content: a.content instanceof Uint8Array ? b64(a.content) : String(a.content),
+              contentType: a.contentType || (a.filename.endsWith('.pdf') ? 'application/pdf' : 
+                a.filename.match(/\.(png|jpg|jpeg|gif)$/i) ? `image/${a.filename.split('.').pop()}` : 'application/octet-stream'),
+            }));
+          }
           response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'api-key': provider.apiKey,
             },
-            body: JSON.stringify({
-              sender: { name: fromName, email: provider.fromEmail },
-              to: [{ email: to, name: toName }],
-              replyTo: { email: replyTo || provider.replyToEmail },
-              subject,
-              htmlContent: html,
-              textContent: text,
-            }),
+            body: JSON.stringify(brevoPayload),
           });
           if (response.ok) {
             const data = await response.json().catch(() => ({}));
@@ -437,14 +530,18 @@ export class EmailDelivery {
           // Accept: application/json
           // Content-Type: application/json
           // Required: from {email, name}, to {email, name?}, subject, html and/or text
-          const senderPayload = {
+          const senderPayload: Record<string, any> = {
             from: { email: provider.fromEmail, name: fromName },
-            to: { email: to, name: toName || '' },
+            to: { email: options.to, name: toName || '' },
             subject,
             html,
             text,
           };
           // reply_to not in official spec; omit to avoid 422
+          // Sender doesn't support attachments in transactional API
+          if (hasAttachments) {
+            console.warn('Sender.net does not support attachments via transactional API; omitting');
+          }
           response = await fetch('https://api.sender.net/v2/message/send', {
             method: 'POST',
             headers: {

@@ -1,23 +1,24 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createEmailDelivery, EmailDeliveryOptions } from "../_shared/email-delivery.ts";
 
 // Admin cohort-capacity panel backend.
 // Mirrors the admin-applications auth (HMAC-signed Bearer token over the
 // service-role key), actions:
 //   overview        -> academy_capacity_overview()   (capacity/paid/reservations/waitlist/exceptions)
 //   waitlist        -> admin_waitlist_list()
-//   invite_next     -> admin_invite_next_waitlisted() + invite email (Resend) + notification history
+//   invite_next     -> admin_invite_next_waitlisted() + invite email (via shared gateway) + notification history
 //   exceptions      -> open + resolved payment exceptions
 //   exception_resolve -> mark an exception refunded/voided/manual_enrollment/ignored
 // No action here can enroll an applicant automatically: inviting returns them
 // to the standard 'accepted' state so the checkout flow re-verifies a seat.
 
-const U = Deno.env.get("SUPABASE_URL")!, K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, R = Deno.env.get("RESEND_API_KEY") || "", SITE = "https://www.getassistara.com", USER = "admin";
+const U = Deno.env.get("SUPABASE_URL")!, K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, SITE = "https://www.getassistara.com", USER = "admin";
 const allowed = new Set(["https://getassistara.com", "https://www.getassistara.com", "http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]);
 const ok = (o: string | null) => !!o && (allowed.has(o) || o.endsWith(".vercel.app"));
 const enc = new TextEncoder();
 const b64 = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
-const esc = (s: any) => String(s || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+const esc = (s: any) => String(s || "").replaceAll("&", "&").replaceAll("<", "<").replaceAll(">", ">");
 
 async function sign(p: string) {
   const k = await crypto.subtle.importKey("raw", enc.encode(K), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -32,12 +33,13 @@ async function auth(t: string) {
     return !!d.v && d.v === (Deno.env.get("ADMIN_TOKEN_VERSION") || "") && d.u === USER && Date.now() < d.exp;
   } catch { return false }
 }
-async function mail(to: string, subject: string, html: string) {
-  if (!R) return false;
-  return (await fetch("https://api.resend.com/emails", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${R}` }, body: JSON.stringify({ from: "Assistara <forms@getassistara.com>", to: [to], reply_to: "academy@getassistara.com", subject, html }) })).ok;
-}
+
 function shell(title: string, body: string, cta?: { label: string, href: string }) {
   return `<!doctype html><html><body style="margin:0;background:#f4f3ef;font-family:Arial,sans-serif;color:#151515"><table width="100%" style="padding:28px 12px"><tr><td align="center"><table width="100%" style="max-width:600px;background:#fff;border-radius:24px;overflow:hidden"><tr><td style="background:#171717;padding:20px 32px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td width="42" height="42" align="center" valign="middle" style="width:42px;height:42px;background:#FFD51F;border-radius:12px;color:#151515;font-family:Arial,sans-serif;font-size:27px;font-weight:900;line-height:42px">A</td><td style="padding-left:12px"><b style="color:#fff;font-size:23px">Assistara</b></td></tr></table></td></tr><tr><td style="padding:34px 32px 8px"><h1>${title}</h1></td></tr><tr><td style="padding:12px 32px 26px;font-size:16px;line-height:1.65">${body}</td></tr>${cta ? `<tr><td style="padding:0 32px 32px"><a href="${cta.href}" target="_blank" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-weight:700;padding:15px 21px;border-radius:12px">${cta.label}</a><p style="margin:18px 0 6px;color:#77716a;font-size:12px;line-height:1.5">Button not working? Copy and paste this link into your browser:</p><a href="${cta.href}" target="_blank" style="color:#5b574f;font-size:12px;line-height:1.5;word-break:break-all">${cta.href}</a></td></tr>` : ""}</table></td></tr></table></body></html>`;
+}
+
+function textShell(title: string, body: string, cta?: { label: string, href: string }) {
+  return `${title}\n\n${body.replace(/<[^>]+>/g, "")}\n${cta ? `${cta.label}: ${cta.href}` : ""}`;
 }
 
 Deno.serve(async req => {
@@ -72,12 +74,34 @@ Deno.serve(async req => {
     let emailSent = false, emailError = "";
     if (data.application_id && token) {
       const html = shell("A seat just opened in the Academy cohort 🎉", `<p>Hi ${first},</p><p>Good news — a spot just opened up in the Assistara Academy founding cohort, and you're next on the priority waitlist.</p><p>Your invite is time-sensitive: seats are confirmed in payment order.</p><p><strong>This link is private — please don't share it.</strong></p>`, { label: "Secure my spot →", href: url });
-      emailSent = await mail(data.email, `A seat just opened in the Academy cohort 🎉 | Assistara Academy`, html);
-      if (!emailSent) emailError = "resend_failed";
+      const text = textShell("A seat just opened in the Academy cohort 🎉", `Hi ${first},\n\nGood news — a spot just opened up in the Assistara Academy founding cohort, and you're next on the priority waitlist.\n\nYour invite is time-sensitive: seats are confirmed in payment order.\n\nThis link is private — please don't share it.\n\n${url}`, { label: "Secure my spot", href: url });
+      
+      // Send via shared gateway (universal tracking, provider fallback, idempotency)
+      const idempotencyKey = `waitlist-invite-${data.waitlist_id}-${Date.now()}`;
+      try {
+        const delivery = await createEmailDelivery("admin-academy-capacity");
+        const result = await delivery.send({
+          idempotencyKey,
+          emailType: "academy_waitlist_invite",
+          to: data.email,
+          toName: data.name,
+          subject: `A seat just opened in the Academy cohort 🎉 | Assistara Academy`,
+          html,
+          text,
+          replyTo: "academy@getassistara.com",
+          campaignKey: "academy_waitlist",
+          recipientId: data.waitlist_id,
+        } as import("../_shared/email-delivery.ts").EmailDeliveryOptions);
+        emailSent = result.success;
+        if (!emailSent) emailError = result.error?.message || "delivery_failed";
+      } catch (e) {
+        emailError = String(e);
+      }
+
+      await db.from("academy_waitlist_notifications").insert({ waitlist_id: data.waitlist_id, channel: "email", template: "invite", status: emailSent ? "sent" : "failed", error: emailError || null }).select("id").maybeSingle();
+      await db.from("admin_activity_log").insert({ entity_type: "waitlist", entity_id: data.waitlist_id, action: "waitlist_invite_email", details: { email_sent: emailSent, error: emailError || null } });
+      return out({ ...data, enrollment_url: url, email_sent: emailSent });
     }
-    await db.from("academy_waitlist_notifications").insert({ waitlist_id: data.waitlist_id, channel: "email", template: "invite", status: emailSent ? "sent" : "failed", error: emailError || null }).select("id").maybeSingle();
-    await db.from("admin_activity_log").insert({ entity_type: "waitlist", entity_id: data.waitlist_id, action: "waitlist_invite_email", details: { email_sent: emailSent, error: emailError || null } });
-    return out({ ...data, enrollment_url: url, email_sent: emailSent });
   }
   if (action === "exceptions") {
     const { data, error } = await db.from("academy_payment_exceptions").select("id,application_id,cohort_code,amount_php,currency,payment_provider,provider_reference,payment_intent_id,reason,resolved,resolution,notes,created_at,resolved_at,resolved_by").order("created_at", { ascending: false }).limit(200);
