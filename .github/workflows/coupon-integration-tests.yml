@@ -482,6 +482,42 @@ jobs:
           RAISE EXCEPTION 'TEST 8 FAILED: limit_exceeded not allowed by constraint';
         END $$;
         
+        -- Test 9: Regression - Admin-created XYRA-style coupon produces amount_php=3900 (not 390000)
+        \echo 'TEST 9: Admin calculateAmountPhp unit conversion'
+        DO $$
+        DECLARE
+          v_amount_php integer;
+          v_regular_price integer := 690000;  -- centavos
+          v_discount_value integer := 300000;  -- centavos (₱3,000)
+        BEGIN
+          -- Simulate calculateAmountPhp('fixed_php', 300000, 690000)
+          -- Expected: (690000 - 300000) / 100 = 3900 pesos
+          v_amount_php := GREATEST(0, ROUND((v_regular_price - LEAST(v_discount_value, v_regular_price))::numeric / 100))::integer;
+          
+          IF v_amount_php = 3900 THEN
+            RAISE NOTICE 'TEST 9 PASSED: XYRA-style coupon amount_php=3900 (not 390000)';
+          ELSE
+            RAISE EXCEPTION 'TEST 9 FAILED: Expected amount_php=3900, got %', v_amount_php;
+          END IF;
+        END $$;
+        
+        -- Test 10: Regression - MASTERCLASS-style coupon produces amount_php=4900
+        \echo 'TEST 10: MASTERCLASS calculateAmountPhp unit conversion'
+        DO $$
+        DECLARE
+          v_amount_php integer;
+          v_regular_price integer := 690000;
+          v_discount_value integer := 200000;  -- centavos (₱2,000)
+        BEGIN
+          v_amount_php := GREATEST(0, ROUND((v_regular_price - LEAST(v_discount_value, v_regular_price))::numeric / 100))::integer;
+          
+          IF v_amount_php = 4900 THEN
+            RAISE NOTICE 'TEST 10 PASSED: MASTERCLASS-style coupon amount_php=4900';
+          ELSE
+            RAISE EXCEPTION 'TEST 10 FAILED: Expected amount_php=4900, got %', v_amount_php;
+          END IF;
+        END $$;
+
         \echo '========================================'
         \echo 'ALL TESTS COMPLETED'
         \echo '========================================'

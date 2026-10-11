@@ -43,23 +43,25 @@ async function log(db: any, type: string, id: string | null, action: string, det
   await db.from("admin_activity_log").insert({ entity_type: type, entity_id: id, action, details });
 }
 
-// Calculate final price (amount_php) based on coupon settings and current Academy price
+// Calculate final price (amount_php) in whole pesos based on coupon settings and current Academy price
+// REGULAR_PRICE_PHP and discountValue are in centavos; amount_php column stores whole pesos
 function calculateAmountPhp(discountType: string, discountValue: number, regularPricePhp: number): number {
-  let finalPrice = regularPricePhp;
+  let finalPriceCentavos = regularPricePhp;
 
   switch (discountType) {
     case "fixed_php":
-      finalPrice = regularPricePhp - Math.min(discountValue, regularPricePhp);
+      finalPriceCentavos = regularPricePhp - Math.min(discountValue, regularPricePhp);
       break;
     case "percentage":
-      finalPrice = regularPricePhp - Math.floor((regularPricePhp * discountValue) / 10000);
+      finalPriceCentavos = regularPricePhp - Math.floor((regularPricePhp * discountValue) / 10000);
       break;
     case "target_price":
-      finalPrice = Math.min(discountValue, regularPricePhp);
+      finalPriceCentavos = Math.min(discountValue, regularPricePhp);
       break;
   }
 
-  return Math.max(0, finalPrice);
+  // Convert centavos to whole pesos for amount_php column
+  return Math.max(0, Math.round(finalPriceCentavos / 100));
 }
 
 // Calculate discount preview based on coupon settings and current Academy price
