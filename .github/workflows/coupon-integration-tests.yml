@@ -53,6 +53,11 @@ jobs:
         PGPASSWORD: test
       run: |
         psql -h localhost -U test -d coupon_test -v ON_ERROR_STOP=1 <<'EOSQL'
+        -- Create Supabase roles (required for GRANT/REVOKE in migrations)
+        CREATE ROLE anon NOLOGIN;
+        CREATE ROLE authenticated NOLOGIN;
+        CREATE ROLE service_role NOLOGIN;
+
         -- Create auth schema and users table (required for foreign key references)
         CREATE SCHEMA IF NOT EXISTS auth;
         CREATE TABLE IF NOT EXISTS auth.users (
