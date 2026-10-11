@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { calculateAmountPhp, calculateDiscountPreview, REGULAR_PRICE_CENTAVOS } from "../_shared/coupon-pricing.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!;
 const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -43,54 +44,7 @@ async function log(db: any, type: string, id: string | null, action: string, det
   await db.from("admin_activity_log").insert({ entity_type: type, entity_id: id, action, details });
 }
 
-// Calculate final price (amount_php) in whole pesos based on coupon settings and current Academy price
-// REGULAR_PRICE_PHP and discountValue are in centavos; amount_php column stores whole pesos
-function calculateAmountPhp(discountType: string, discountValue: number, regularPricePhp: number): number {
-  let finalPriceCentavos = regularPricePhp;
-
-  switch (discountType) {
-    case "fixed_php":
-      finalPriceCentavos = regularPricePhp - Math.min(discountValue, regularPricePhp);
-      break;
-    case "percentage":
-      finalPriceCentavos = regularPricePhp - Math.floor((regularPricePhp * discountValue) / 10000);
-      break;
-    case "target_price":
-      finalPriceCentavos = Math.min(discountValue, regularPricePhp);
-      break;
-  }
-
-  // Convert centavos to whole pesos for amount_php column
-  return Math.max(0, Math.round(finalPriceCentavos / 100));
-}
-
-// Calculate discount preview based on coupon settings and current Academy price
-function calculateDiscountPreview(discountType: string, discountValue: number, regularPricePhp: number) {
-  let discountAmount = 0;
-  let finalPrice = regularPricePhp;
-
-  switch (discountType) {
-    case "fixed_php":
-      discountAmount = Math.min(discountValue, regularPricePhp);
-      finalPrice = regularPricePhp - discountAmount;
-      break;
-    case "percentage":
-      discountAmount = Math.floor((regularPricePhp * discountValue) / 10000);
-      finalPrice = regularPricePhp - discountAmount;
-      break;
-    case "target_price":
-      finalPrice = Math.min(discountValue, regularPricePhp);
-      discountAmount = regularPricePhp - finalPrice;
-      break;
-  }
-
-  return {
-    regular_price_php: regularPricePhp,
-    discount_amount_php: discountAmount,
-    final_price_php: finalPrice,
-    discount_percent: regularPricePhp > 0 ? Math.round((discountAmount / regularPricePhp) * 10000) / 100 : 0,
-  };
-}
+// Pricing functions imported from shared module (see _shared/coupon-pricing.ts)
 
 // Validate coupon data
 function validateCouponData(data: any, isUpdate = false) {
@@ -165,7 +119,7 @@ Deno.serve(async (req) => {
 
   // Get current Academy regular price from a reference application or config
   // For now, use ₱6,900 (690000 centavos) as the standard price
-  const REGULAR_PRICE_PHP = 690000;
+  const REGULAR_PRICE_PHP = REGULAR_PRICE_CENTAVOS;
 
   // LIST - Get all coupons with analytics
   if (action === "list") {
