@@ -38,7 +38,7 @@ begin
     c.max_redemptions_per_customer,
     c.active,
     c.created_at,
-    count(r.id) filter (where r.status in ('confirmed','limit_exceeded')) as confirmed_redemptions,
+    count(r.id) filter (where r.status = 'confirmed') as confirmed_redemptions,
     count(r.id) filter (where r.status = 'pending') as pending_redemptions,
     count(r.id) filter (where r.status = 'failed') as failed_redemptions,
     count(r.id) filter (where r.status = 'refunded') as refunded_redemptions,
