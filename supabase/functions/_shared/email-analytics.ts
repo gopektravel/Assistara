@@ -98,6 +98,8 @@ export interface Rates {
 
 export interface Availability {
   webhookReady: boolean;
+  /** Opens/clicks are measured first-party by Assistara (pixel + signed redirect). */
+  firstPartyTracking: boolean;
   deliveryEvents: boolean;
   openTracking: boolean;
   clickTracking: boolean;
@@ -320,12 +322,18 @@ export function summarize(
   const anyOpenEvent = events.some((e) => e.event_type === "opened");
   const anyClickEvent = events.some((e) => e.event_type === "clicked");
   const anyUnsubEvent = events.some((e) => e.event_type === "unsubscribed");
+  // First-party tracking is the primary source: it is "configured" as soon as a
+  // message was sent with the pixel, even before the first open arrives.
+  const firstPartyTracking =
+    logs.some((l) => l.has_first_party_tracking === true) ||
+    events.some((e) => e.source === "first_party" || e.measurement === "first_party");
 
   const availability: Availability = {
     webhookReady,
+    firstPartyTracking,
     deliveryEvents: webhookReady || anyDeliveryEvent,
-    openTracking: anyOpenEvent || (webhookReady && enabled.some((c) => c.tracking_open)),
-    clickTracking: anyClickEvent || (webhookReady && enabled.some((c) => c.tracking_click)),
+    openTracking: anyOpenEvent || firstPartyTracking || (webhookReady && enabled.some((c) => c.tracking_open)),
+    clickTracking: anyClickEvent || firstPartyTracking || (webhookReady && enabled.some((c) => c.tracking_click)),
     unsubscribeEvents: anyUnsubEvent,
     providersReporting: [...new Set(events.map((e) => String(e.provider)))].sort(),
   };

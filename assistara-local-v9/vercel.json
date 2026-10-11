@@ -615,6 +615,14 @@
       "dest": "/admin-email.html"
     },
     {
+      "src": "/t/o",
+      "dest": "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/email-track/o"
+    },
+    {
+      "src": "/t/c",
+      "dest": "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/email-track/c"
+    },
+    {
       "src": "/academy/beta-account",
       "dest": "/beta-account.html"
     },
