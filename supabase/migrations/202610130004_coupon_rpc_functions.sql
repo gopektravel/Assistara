@@ -119,8 +119,8 @@ begin
   -- Check global redemption limit (atomic with advisory lock)
   if v_coupon.max_redemptions is not null then
     select count(*) into v_existing_redemptions
-    from public.academy_coupon_redemptions
-    where coupon_id = v_coupon.id and status in ('confirmed', 'limit_exceeded');
+    from public.academy_coupon_redemptions acr
+    where acr.coupon_id = v_coupon.id and acr.status in ('confirmed', 'limit_exceeded');
 
     if v_existing_redemptions >= v_coupon.max_redemptions then
       return query select gen_random_uuid()::uuid as id, 'limit_exceeded'::text as status, 'Coupon redemption limit reached'::text as error;
@@ -131,8 +131,8 @@ begin
   -- Check per-customer redemption limit
   if v_coupon.max_redemptions_per_customer is not null then
     select count(*) into v_customer_redemptions
-    from public.academy_coupon_redemptions
-    where coupon_id = v_coupon.id and customer_email = p_customer_email and status in ('confirmed', 'limit_exceeded');
+    from public.academy_coupon_redemptions acr
+    where acr.coupon_id = v_coupon.id and acr.customer_email = p_customer_email and acr.status in ('confirmed', 'limit_exceeded');
 
     if v_customer_redemptions >= v_coupon.max_redemptions_per_customer then
       return query select gen_random_uuid()::uuid as id, 'customer_limit_exceeded'::text as status, 'Customer has already used this coupon the maximum number of times'::text as error;
@@ -155,7 +155,7 @@ begin
       p_payment_method, p_payment_reference, p_payment_intent_id,
       'pending', p_metadata, v_now
     )
-    on conflict (application_id, coupon_id) where status in ('pending', 'confirmed', 'limit_exceeded')
+    on conflict (application_id, coupon_id) where academy_coupon_redemptions.status in ('pending', 'confirmed', 'limit_exceeded')
     do update set
       payment_reference = excluded.payment_reference,
       payment_intent_id = excluded.payment_intent_id,
@@ -163,14 +163,14 @@ begin
       metadata = excluded.metadata,
       redeemed_at = excluded.redeemed_at
     where academy_coupon_redemptions.status = 'pending'
-    returning id, status, null::text as error
+    returning academy_coupon_redemptions.id, academy_coupon_redemptions.status, null::text as error
     into v_inserted_id, v_inserted_status, v_error;
   exception when unique_violation then
     -- Another concurrent request created it (should be rare with advisory lock)
-    select id, status, null::text
+    select academy_coupon_redemptions.id, academy_coupon_redemptions.status, null::text
     into v_inserted_id, v_inserted_status, v_error
     from public.academy_coupon_redemptions
-    where application_id = p_application_id and coupon_id = v_coupon.id and status in ('pending', 'confirmed', 'limit_exceeded')
+    where academy_coupon_redemptions.application_id = p_application_id and academy_coupon_redemptions.coupon_id = v_coupon.id and academy_coupon_redemptions.status in ('pending', 'confirmed', 'limit_exceeded')
     limit 1;
   end;
 
@@ -226,11 +226,11 @@ begin
   perform pg_advisory_xact_lock(hashtext(upper(p_coupon_code)));
 
   -- Get customer email from pending redemption
-  select customer_email into v_customer_email
-  from public.academy_coupon_redemptions
-  where application_id = p_application_id
-    and coupon_id = v_coupon.id
-    and status = 'pending'
+  select acr.customer_email into v_customer_email
+  from public.academy_coupon_redemptions acr
+  where acr.application_id = p_application_id
+    and acr.coupon_id = v_coupon.id
+    and acr.status = 'pending'
   limit 1;
 
   if v_customer_email is null then
@@ -245,8 +245,8 @@ begin
     -- Re-validate global redemption limit
     if v_coupon.max_redemptions is not null then
       select count(*) into v_existing_redemptions
-      from public.academy_coupon_redemptions
-      where coupon_id = v_coupon.id and status in ('confirmed', 'limit_exceeded');
+      from public.academy_coupon_redemptions acr
+      where acr.coupon_id = v_coupon.id and acr.status in ('confirmed', 'limit_exceeded');
 
       if v_existing_redemptions >= v_coupon.max_redemptions then
         -- Limit exceeded: PAYMENT SUCCEEDED but coupon limit reached
@@ -258,8 +258,8 @@ begin
     -- Re-validate per-customer redemption limit
     if v_final_status = 'confirmed' and v_coupon.max_redemptions_per_customer is not null then
       select count(*) into v_customer_redemptions
-      from public.academy_coupon_redemptions
-      where coupon_id = v_coupon.id and customer_email = v_customer_email and status in ('confirmed', 'limit_exceeded');
+      from public.academy_coupon_redemptions acr
+      where acr.coupon_id = v_coupon.id and acr.customer_email = v_customer_email and acr.status in ('confirmed', 'limit_exceeded');
 
       if v_customer_redemptions >= v_coupon.max_redemptions_per_customer then
         v_final_status := 'limit_exceeded';
@@ -269,12 +269,12 @@ begin
 
   -- Only transition from 'pending' to confirmed/failed/refunded/limit_exceeded
   -- Never overwrite confirmed, failed, refunded, or limit_exceeded status
-  update public.academy_coupon_redemptions
+  update public.academy_coupon_redemptions acr
   set status = v_final_status,
-      confirmed_at = case when v_final_status in ('confirmed', 'limit_exceeded') then p_confirmed_at else confirmed_at end
-  where application_id = p_application_id
-    and coupon_id = v_coupon.id
-    and status = 'pending';
+      confirmed_at = case when v_final_status in ('confirmed', 'limit_exceeded') then p_confirmed_at else acr.confirmed_at end
+  where acr.application_id = p_application_id
+    and acr.coupon_id = v_coupon.id
+    and acr.status = 'pending';
 
   get diagnostics v_count = row_count;
 
