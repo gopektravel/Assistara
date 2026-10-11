@@ -584,31 +584,34 @@ test("POST update_chat_provider rejects an unknown provider", async () => {
   assert.equal(body.ok, false);
 });
 
-test("start_stream continues the chat (no reset) and preserves the admin chat toggle", async () => {
+test("start_stream auto-opens chat (sets chat_open=true) and does not reset", async () => {
   const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
-  // Chat opened while Waiting; starting must carry it into Live unchanged.
-  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting", chat_open: true, viewer_session: 50 });
-  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
-  global.fetch = fetchImpl;
-  const res = mockRes();
-  await H2(
-    mockReq({
-      method: "POST",
-      url: "/api/masterclass-youtube",
-      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
-      body: JSON.stringify({ action: "start_stream", event_key: "founding-masterclass-2026" }),
-    }),
-    res
-  );
-  assert.equal(res.statusCode, 200);
-  // Starting must NOT reset the chat (a Waiting chat continues into Live).
-  assert.equal(calls.some((c) => String(c.url).includes("/internal/reset")), false, "start must not reset chat");
-  // The admin chat toggle + viewer session are preserved through the transition.
-  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
-  const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
-  assert.equal(stored.display_state, "live");
-  assert.equal(stored.chat_open, true);
-  assert.equal(stored.viewer_session, 50);
+  // Chat was closed (or unset) while Waiting; starting must auto-open it.
+  for (const priorOpen of [null, false, true]) {
+    const prior = priorOpen === null ? {} : { chat_open: priorOpen };
+    const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "waiting", viewer_session: 50, ...prior });
+    const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+    global.fetch = fetchImpl;
+    const res = mockRes();
+    await H2(
+      mockReq({
+        method: "POST",
+        url: "/api/masterclass-youtube",
+        headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+        body: JSON.stringify({ action: "start_stream", event_key: "founding-masterclass-2026" }),
+      }),
+      res
+    );
+    assert.equal(res.statusCode, 200);
+    // Starting must NOT reset the chat (a Waiting chat continues into Live).
+    assert.equal(calls.some((c) => String(c.url).includes("/internal/reset")), false, "start must not reset chat");
+    // Auto-open: chat_open must be true regardless of prior state.
+    const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+    const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
+    assert.equal(stored.display_state, "live");
+    assert.equal(stored.chat_open, true, "start_stream must auto-open chat (prior=" + priorOpen + ")");
+    assert.equal(stored.viewer_session, 50);
+  }
 });
 
 test("end_stream and reset_stream also clear the chat session", async () => {
@@ -636,6 +639,57 @@ test("end_stream and reset_stream also clear the chat session", async () => {
     assert.ok(reset, action + " must reset chat");
     assert.equal(JSON.parse(reset.options.body).reason, action === "end_stream" ? "end" : "reset");
   }
+});
+
+test("end_stream auto-closes chat (sets chat_open=false) even if manually opened", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
+  // Chat was manually opened during the live stream; ending must auto-close it.
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "live", chat_open: true, viewer_session: 99 });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "end_stream", event_key: "founding-masterclass-2026" }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
+  assert.equal(stored.display_state, "ended");
+  assert.equal(stored.chat_open, false, "end_stream must auto-close chat");
+  // Chat session is reset (messages cleared)
+  const reset = calls.find((c) => String(c.url).includes("/internal/reset") && c.options.method === "POST");
+  assert.ok(reset, "end_stream must reset chat");
+});
+
+test("manual chat toggle during live stream is preserved (not overwritten by auto-sync)", async () => {
+  const H2 = loadHandler({ CHAT_SECRET: "chat-secret-123" });
+  // Stream is live, chat is open. Admin manually closes it.
+  const existingConfig = JSON.stringify({ youtube_url: "aqz-KE-bpKQ", display_state: "live", chat_open: true, viewer_session: 50 });
+  const { fetchImpl, calls } = mockFetch({ row: { event_key: "k", title: "T", live_destination_url: existingConfig } });
+  global.fetch = fetchImpl;
+  const res = mockRes();
+  await H2(
+    mockReq({
+      method: "POST",
+      url: "/api/masterclass-youtube",
+      headers: { origin: "https://www.getassistara.com", "content-type": "application/json", authorization: "Bearer " + adminToken() },
+      body: JSON.stringify({ action: "set_chat_open", event_key: "founding-masterclass-2026", chat_open: false }),
+    }),
+    res
+  );
+  assert.equal(res.statusCode, 200);
+  const write = calls.find((c) => String(c.url).includes("masterclass_events") && c.options.method === "POST");
+  const stored = JSON.parse(JSON.parse(write.options.body).live_destination_url);
+  assert.equal(stored.chat_open, false, "manual close must be preserved");
+  assert.equal(stored.display_state, "live", "stream state untouched");
+  // No auto-sync overwrite: chat_open stays false until admin changes it or stream ends
+  assert.equal(stored.chat_open, false);
 });
 
 test("POST set_chat_open opens/closes chat without touching the stream, URL or viewers", async () => {

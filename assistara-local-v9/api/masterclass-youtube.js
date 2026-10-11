@@ -394,7 +394,9 @@ async function startStreamAction(cfg, claims, body) {
   if (!current.video_id) {
     return { status: 400, body: { ok: false, error: "No YouTube stream configured. Save a URL first." } };
   }
-  const next = { ...current, display_state: "live" };
+  // Starting the stream auto-opens the chat (resets any manual override) and
+  // resets the chat session so viewers start with a fresh empty chat.
+  const next = { ...current, display_state: "live", chat_open: true };
   const { response } = await requestJSON(
     cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
     {
@@ -414,7 +416,7 @@ async function startStreamAction(cfg, claims, body) {
   // are unaffected). Chat/Viewer resets only happen on End/Reset below.
   return {
     status: 200,
-    body: { ok: true, event_key: key, display_state: "live", message: "Stream is now LIVE" },
+    body: { ok: true, event_key: key, display_state: "live", chat_open: true, message: "Stream is now LIVE — chat opened" },
   };
 }
 
@@ -422,7 +424,9 @@ async function endStreamAction(cfg, claims, body) {
   const key = eventKey(body.event_key);
   const row = await readEventRow(cfg, key);
   const current = parseConfig(row ? row.live_destination_url : null);
-  const next = { ...current, display_state: "ended" };
+  // Ending the stream auto-closes the chat (sets chat_open=false) and clears
+  // the chat session so old messages are permanently removed.
+  const next = { ...current, display_state: "ended", chat_open: false };
   const { response } = await requestJSON(
     cfg.url + "/rest/v1/masterclass_events?on_conflict=event_key",
     {
