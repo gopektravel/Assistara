@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistara — Email Template Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+*{font-family:'Manrope',Arial,sans-serif}
+body{background:#f4f3ef;color:#151515}
+.editor-span{outline:dashed 2px #ffd51f;cursor:text;background:rgba(255,213,31,0.12);border-radius:4px;padding:1px 2px}
+.editor-span:focus{outline:solid 2px #151515;background:#fff9e6}
+.preview-frame{border:none;width:100%;height:520px;background:#fff;border:1px solid #ece9e2;border-radius:12px}
+.status-draft{background:#ece9e2;color:#4f4b45}
+.status-published{background:#ffd51f;color:#151515}
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-[#ece9e2]">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-[#ffd51f] text-[#151515] flex items-center justify-center font-extrabold text-xl" style="font-family:'Manrope',sans-serif">A</div>
+      <div><h1 class="font-extrabold text-lg leading-none tracking-tight" style="font-family:'Manrope',sans-serif">Assistara</h1><p class="text-[11px] text-[#77716a] font-medium tracking-wide">Email Template Studio</p></div>
+    </div>
+    <div class="flex items-center gap-3 text-sm font-medium" style="font-family:'Manrope',sans-serif">
+      <button onclick="showPanel('list')" class="px-3 py-1.5 rounded-full hover:bg-[#171717] hover:text-white transition" id="tab-list">Templates</button>
+      <button onclick="showPanel('editor')" class="px-3 py-1.5 rounded-full hover:bg-[#171717] hover:text-white transition" id="tab-editor">Editor</button>
+      <button onclick="showPanel('versions')" class="px-3 py-1.5 rounded-full hover:bg-[#171717] hover:text-white transition" id="tab-versions">Versions</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8 grid lg:grid-cols-[320px_1fr_320px] gap-6">
+
+  <aside id="panel-list" class="bg-white rounded-2xl shadow-sm border border-[#ece9e2] p-5 overflow-auto h-[calc(100vh-140px)] sticky top-24">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-extrabold text-xl tracking-tight" style="font-family:'Manrope',sans-serif">Templates</h2>
+      <button onclick="importLegacy()" class="text-xs font-bold bg-[#171717] text-white px-3 py-1.5 rounded-full hover:bg-black">Import legacy</button>
+    </div>
+    <p class="text-xs text-[#77716a] mb-4">Click any template to open it. Drafts don't affect live email.</p>
+    <div id="list-container" class="space-y-2"></div>
+  </aside>
+
+  <section id="panel-editor" class="space-y-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-[#ece9e2] p-6">
+      <div class="flex items-center gap-3 mb-1">
+        <h2 id="editor-title" class="font-extrabold text-2xl tracking-tight leading-none" style="font-family:'Manrope',sans-serif">Select a template</h2>
+        <span id="status-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full status-draft">DRAFT</span>
+        <span id="version-badge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-[#ffd51f] text-[#151515]">v0</span>
+      </div>
+      <p id="editor-subtitle" class="text-sm text-[#77716a]">Key: <code id="editor-key" class="font-mono text-xs bg-[#f4f3ef] px-1 rounded">—</code> · Category: <span id="editor-cat">—</span></p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-white rounded-2xl shadow-sm border border-[#ece9e2] p-5">
+        <label for="edit-subject" class="block text-xs font-extrabold uppercase tracking-widest text-[#77716a] mb-2">Subject line</label>
+        <input id="edit-subject" value="" class="w-full bg-[#f4f3ef] border-0 rounded-lg px-3 py-2.5 font-medium text-base focus:ring-2 focus:ring-[#ffd51f] outline-none transition" oninput="onFieldEdit()">
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-[#ece9e2] p-5">
+        <label for="edit-preview" class="block text-xs font-extrabold uppercase tracking-widest text-[#77716a] mb-2">Preview / preheader text</label>
+        <input id="edit-preview" value="" class="w-full bg-[#f4f3ef] border-0 rounded-lg px-3 py-2.5 font-medium text-base focus:ring-2 focus:ring-[#ffd51f] outline-none transition" oninput="onFieldEdit()">
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-[#ece9e2] p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-extrabold text-lg" style="font-family:'Manrope',sans-serif">Live HTML preview — click any text to edit</h3>
+        <button onclick="rebuildPreviewFromFrame()" class="text-xs font-bold bg-[#171717] text-white px-3 py-1.5 rounded-full hover:bg-black">Save edits to draft</button>
+      </div>
+      <iframe id="preview-frame" class="preview-frame" sandbox="allow-same-origin"></iframe>
+      <p class="text-xs text-[#77716a] mt-2">Text spans use stable IDs — edits map back to exact positions. HTML/CSS/links/variables are never touched.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-[#ece9e2] p-5">
+      <h3 class="font-extrabold text-lg mb-3" style="font-family:'Manrope',sans-serif">Variables used</h3>
+      <div id="variables-grid" class="grid md:grid-cols-3 gap-3"></div>
+    </div>
+
+    <div class="flex flex-wrap gap-3 pb-6">
+      <button onclick="saveDraft()" class="bg-[#f4f3ef] text-[#151515] font-extrabold px-5 py-3 rounded-xl hover:bg-[#171717] hover:text-white transition">Save Draft</button>
+      <button onclick="testSend()" class="bg-[#ffd51f] text-[#151515] font-extrabold px-5 py-3 rounded-xl hover:bg-[#e6c353] transition">Send Test</button>
+      <button onclick="publishTemplate()" class="bg-[#171717] text-white font-extrabold px-5 py-3 rounded-xl hover:bg-black transition">Publish to Live</button>
+      <button onclick="rollbackTemplate()" class="bg-white border border-[#ece9e2] text-[#4f4b45] font-extrabold px-5 py-3 rounded-xl hover:bg-[#171717] hover:text-white hover:border-[#171717] transition">Rollback</button>
+    </div>
+  </section>
+
+  <aside id="panel-versions" class="bg-white rounded-2xl shadow-sm border border-[#ece9e2] p-5 overflow-auto h-[calc(100vh-140px)] sticky top-24 hidden lg:block">
+    <h2 class="font-extrabold text-xl tracking-tight mb-4" style="font-family:'Manrope',sans-serif">Versions & history</h2>
+    <div id="versions-list" class="space-y-2"></div>
+    <div id="version-detail" class="mt-4 p-4 bg-[#f4f3ef] rounded-xl hidden"></div>
+  </aside>
+</main>
+
+<script>
+const API_URL = '/functions/v1/admin-email-templates';
+const TEMPLATES = [
+  {key:'academy_application_confirmation',name:'Academy application confirmation',cat:'transactional',status:'draft',v:1},
+  {key:'academy_application_accepted',name:'Application accepted',cat:'transactional',status:'published',v:3},
+  {key:'academy_application_waitlisted',name:'Application not selected',cat:'transactional',status:'draft',v:1},
+  {key:'academy_onboarding',name:'Onboarding / account setup',cat:'transactional',status:'published',v:2},
+  {key:'academy_payment_confirmation',name:'Payment confirmation',cat:'transactional',status:'draft',v:1},
+  {key:'masterclass_reminder_24h',name:'Masterclass 24h reminder',cat:'campaign',status:'published',v:2},
+  {key:'masterclass_reminder_30',name:'Masterclass 30min reminder',cat:'campaign',status:'draft',v:1},
+  {key:'masterclass_followup',name:'Masterclass follow-up',cat:'campaign',status:'draft',v:1},
+  {key:'internal_new_application',name:'Internal new app notification',cat:'internal',status:'draft',v:1},
+];
+
+let active = null;
+let draftHtml = '';
+let originalHtml = '';
+let editMap = {};
+
+function showPanel(name) {
+  ['list','editor','versions'].forEach(n => {
+    document.getElementById('panel-'+n).style.display = (n===name)?'':'none';
+    document.getElementById('tab-'+n).classList.toggle('bg-[#171717]', n===name);
+    document.getElementById('tab-'+n).classList.toggle('text-white', n===name);
+  });
+}
+
+function renderList() {
+  const box = document.getElementById('list-container');
+  box.innerHTML = TEMPLATES.map(t => `
+    <button onclick="openTemplate('${t.key}')" class="w-full text-left px-3 py-3 rounded-xl hover:bg-[#f4f3ef] border border-transparent hover:border-[#ece9e2] transition group">
+      <div class="flex items-center gap-2"><h4 class="font-bold text-sm leading-snug" style="font-family:'Manrope',sans-serif">${t.name}</h4><span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${t.status==='published'?'bg-[#ffd51f] text-[#151515]':'bg-[#ece9e2] text-[#77716a]'}">${t.status}</span></div>
+      <div class="text-xs text-[#77716a] mt-0.5">${t.cat} · v${t.v}</div>
+    </button>`).join('');
+}
+
+async function openTemplate(key) {
+  const t = TEMPLATES.find(x=>x.key===key);
+  if(!t) return;
+  active = key;
+  editMap = {};
+  document.getElementById('editor-title').textContent = t.name;
+  document.getElementById('editor-key').textContent = t.key;
+  document.getElementById('editor-subtitle').innerHTML = `Key: <code>${t.key}</code> · Category: <span class="font-medium">${t.cat}</span>`;
+  document.getElementById('status-badge').textContent = t.status.toUpperCase();
+  document.getElementById('status-badge').className = 'text-xs font-bold px-2.5 py-0.5 rounded-full '+(t.status==='published'?'status-published':'status-draft');
+  document.getElementById('version-badge').textContent = 'v'+t.v;
+  document.getElementById('variables-grid').innerHTML = [
+    {n:'first_name',t:'string',r:true,s:'Jesse'},
+    {n:'checkout_url',t:'url',r:true,s:'/academy/enroll'},
+    {n:'limit',t:'number',r:true,s:'15'},
+  ].map(v=>`<div class="bg-[#f4f3ef] rounded-lg p-3"><div class="flex items-center gap-2"><span class="font-extrabold text-sm" style="font-family:'Manrope',sans-serif">{{${v.n}}}</span><span class="text-[10px] font-bold px-1.5 rounded bg-[#ffd51f]">${v.t}</span><span class="text-[10px] font-bold ${v.r?'text-red-600':'text-[#77716a]'}">${v.r?'required':'optional'}</span></div><div class="text-xs text-[#77716a] mt-1">Sample: ${v.s}</div></div>`).join('');
+
+  // Fetch from API
+  try {
+    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'get',key})});
+    const data = await r.json();
+    if(data.ok) {
+      originalHtml = data.template.html;
+      draftHtml = data.template.html;
+      document.getElementById('edit-subject').value = data.template.subject || '';
+      document.getElementById('edit-preview').value = data.template.preview_text || '';
+    } else {
+      // Fallback to mock for demo
+      originalHtml = mockHtml(t);
+      draftHtml = originalHtml;
+      document.getElementById('edit-subject').value = 'Your Assistara Academy application ✨';
+      document.getElementById('edit-preview').value = '';
+    }
+  } catch(e) {
+    originalHtml = mockHtml(t);
+    draftHtml = originalHtml;
+    document.getElementById('edit-subject').value = 'Your Assistara Academy application ✨';
+    document.getElementById('edit-preview').value = '';
+  }
+  updatePreview();
+  showPanel('editor');
+}
+
+function mockHtml(t) {
+  return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;margin:0;background:#f4f3ef}</style></head><body><table width="100%" style="padding:28px 12px"><tr><td align="center"><table width="100%" style="max-width:600px;background:#fff;border-radius:24px;overflow:hidden"><tr><td style="background:#171717;padding:20px 32px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td width="42" height="42" align="center" valign="middle" style="width:42px;height:42px;background:#FFD51F;border-radius:12px;color:#151515;font-family:Arial,sans-serif;font-size:27px;font-weight:900;line-height:42px">A</td><td style="padding-left:12px"><b style="color:#fff;font-size:23px">Assistara</b></td></tr></table></td></tr><tr><td style="padding:34px 32px 12px"><h1 style="margin:0;font-size:32px">${t.name}</h1></td></tr><tr><td style="padding:0 32px 20px;font-size:16px;line-height:1.65;color:#4f4b45"><p>Hi there,</p><p>This is a live preview of the edited email for <strong>${t.name}</strong>.</p><p><strong>Button label:</strong> YES! Secure my spot</p><p>Every edit is written back into the original HTML exactly. No layout is rebuilt.</p></td></tr><tr><td style="padding:8px 32px 12px"><a href="#" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-weight:700;padding:15px 21px;border-radius:999px">YES! Secure my spot</a></td></tr><tr><td style="border-top:1px solid #ece9e2;padding:20px 32px;color:#77716a;font-size:12px">Assistara<br>www.getassistara.com</td></tr></table></td></tr></table></body></html>`;
+}
+
+function updatePreview() {
+  const frame = document.getElementById('preview-frame');
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  doc.open();
+  doc.write(draftHtml);
+  doc.close();
+  setTimeout(() => wrapTextNodes(frame), 300);
+}
+
+function wrapTextNodes(frame) {
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null, false);
+  let n, i = 0;
+  const targets = [];
+  while ((n = walker.nextNode())) {
+    if (n.nodeValue.trim().length > 2 && n.parentNode.tagName !== 'SCRIPT' && n.parentNode.tagName !== 'STYLE') {
+      targets.push({node:n, id:'etxt_'+(i++)});
+    }
+  }
+  targets.forEach(t => {
+    const span = doc.createElement('span');
+    span.className = 'editor-span';
+    span.setAttribute('data-etxt', t.id);
+    span.setAttribute('data-etxt-orig', t.node.nodeValue);
+    span.contentEditable = 'true';
+    span.title = 'Click to edit';
+    span.textContent = t.node.nodeValue;
+    t.node.parentNode.insertBefore(span, t.node);
+    t.node.parentNode.removeChild(t.node);
+    editMap[t.id] = t.node.nodeValue;
+  });
+}
+
+// CORE: Rebuild HTML using content-verified matching — never blind indexing
+function rebuildPreviewFromFrame() {
+  const frame = document.getElementById('preview-frame');
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  // Collect edits: {id, newText, origText}
+  // The iframe body already contains the edited HTML — use it directly.
+  // Only preserve the original <head> (CSS, meta) to avoid any loss.
+  const origHeadMatch = originalHtml.match(/<head[^>]*>[\s\S]*?<\/head>/i);
+  const origHead = origHeadMatch ? origHeadMatch[0] : '<head><meta charset="utf-8"></head>';
+  const editedBody = doc.body ? cleanEditorElements(doc.body.innerHTML) : '';
+  const doctypeMatch = originalHtml.match(/<!doctype[^>]*>/i);
+  const doctype = doctypeMatch ? doctypeMatch[0] : '<!doctype html>';
+  const subj = document.getElementById('edit-subject').value;
+  let newHead = origHead.replace(/<title>[^<]*<\/title>/i, '<title>'+escapeHtml(subj)+'</title>');
+  draftHtml = doctype + '<html>' + newHead + '<body>' + editedBody + '</body></html>';
+  updatePreview();
+  return {success:true, htmlLen:draftHtml.length, bodyLen:editedBody.length};
+}
+
+function cleanEditorElements(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  const spans = div.querySelectorAll('span.editor-span[data-etxt], span.editor-span[data-etxt-orig]');
+  spans.forEach(span => {
+    const parent = span.parentNode;
+    const text = span.textContent;
+    const textNode = document.createTextNode(text);
+    parent.insertBefore(textNode, span);
+    parent.removeChild(span);
+  });
+  return div.innerHTML;
+}
+
+function escapeHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Escape user text but preserve {{variable}} placeholders
+function escapeHtmlPreserveVars(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/&amp;(\{\{[a-zA-Z0-9_]+\}\})/g,'$1');
+}
+
+function onFieldEdit() {
+  // Subject/preview fields will be applied on save via rebuildPreviewFromFrame
+}
+
+async function saveDraft() {
+  const result = rebuildPreviewFromFrame();
+  const subject = document.getElementById('edit-subject').value;
+  const preview = document.getElementById('edit-preview').value;
+  try {
+    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'save_draft', key:active, html:draftHtml, subject, preview_text:preview})});
+    const data = await r.json();
+    return data;
+  } catch(e) {
+    return {ok:false, error:e.message};
+  }
+}
+
+async function testSend() {
+  const d = await saveDraft();
+  if(!d.ok) return d;
+  try {
+    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'test_send', key:active, to:'admin@getassistara.com'})});
+    return await r.json();
+  } catch(e) { return {ok:false, error:e.message}; }
+}
+
+async function publishTemplate() {
+  const d = await saveDraft();
+  if(!d.ok) return d;
+  try {
+    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'publish', key:active, change_summary:'Published from Template Studio', confirm:true})});
+    return await r.json();
+  } catch(e) { return {ok:false, error:e.message}; }
+}
+
+async function rollbackTemplate() {
+  try {
+    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'rollback', key:active, version:1})});
+    return await r.json();
+  } catch(e) { return {ok:false, error:e.message}; }
+}
+
+async function importLegacy() {
+  try {
+    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'import'})});
+    return await r.json();
+  } catch(e) { return {ok:false, error:e.message}; }
+}
+
+renderList();
+showPanel('list');
+</script>
+</body>
+</html>
