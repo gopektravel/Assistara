@@ -41,6 +41,7 @@ create unique index if not exists academy_coupon_redemptions_app_coupon_unique
 -- RLS: Service role only
 alter table public.academy_coupon_redemptions enable row level security;
 
+drop policy if exists "Service role full access" on public.academy_coupon_redemptions;
 create policy "Service role full access" on public.academy_coupon_redemptions
   for all using (auth.role() = 'service_role');
 

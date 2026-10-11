@@ -49,6 +49,8 @@ create trigger academy_promo_codes_updated_at
 alter table public.academy_promo_codes enable row level security;
 
 -- Admin can do everything via service role
+-- Drop first if migration 0000 already created it (idempotent)
+drop policy if exists "Service role full access" on public.academy_promo_codes;
 create policy "Service role full access" on public.academy_promo_codes
   for all using (auth.role() = 'service_role');
 
