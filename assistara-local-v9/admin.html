@@ -32,13 +32,13 @@
       input,
       select,
       textarea {
-        font-family: "DM Sans", sans-serif;
+        font-family: "Manrope", sans-serif;
       }
       body {
         margin: 0;
         background: var(--cream);
         color: var(--ink);
-        font-family: "DM Sans", sans-serif;
+        font-family: "Manrope", sans-serif;
       }
       /* App shell — sidebar + full-width workspace (see admin-*.css) */
       .shell {
@@ -3776,6 +3776,8 @@
           .replace(/(^|[}{,])\s*(?:html|body)\s*(?=[,{])/g, "$1 :host ");
       }
 
+      /* Hide embedded standalone page header inside mounted tools */
+      :host .shell > .head { display:none; }
       /* Shared brand tokens — injected into every tool shadow root AFTER the
          tool's own CSS so the canonical Assistara tokens win. This is the
          first step of the migration: every tool immediately uses the real
