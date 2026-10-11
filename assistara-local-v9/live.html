@@ -18,13 +18,28 @@
   .live-grid.chat-off{grid-template-columns:minmax(0,1fr)}
 }
 /* Waiting room: personalized quote + cinematic countdown accents */
-.prelive-quote{max-width:660px;margin:8px auto 2px;padding:0 clamp(6px,2vw,18px);text-align:center;color:#fff;animation:mcFadeUp .6s cubic-bezier(.2,.7,.2,1) both}
+/* Personalized quote — part of the centered countdown composition (inside the
+   16:9 panel), not a footer below it. Comfortable spacing, stays centered. */
+.prelive-quote{max-width:640px;margin:clamp(16px,2.8vh,30px) auto 0;padding:0 clamp(6px,2vw,18px);text-align:center;color:#fff;animation:mcFadeUp .6s cubic-bezier(.2,.7,.2,1) both}
 .prelive-quote-hi{font-weight:700;font-size:clamp(12.5px,1.5vw,15px);color:#eae7df;letter-spacing:-.01em}
 .prelive-quote-hi .prelive-quote-heart{color:var(--yellow)}
 .prelive-quote-text{font-weight:600;font-size:clamp(15px,2vw,20px);line-height:1.5;letter-spacing:-.015em;margin:9px 0 0;color:#fff;position:relative;display:inline-block}
 .prelive-quote-text::before{content:"";position:absolute;left:50%;top:-13px;transform:translateX(-50%);width:32px;height:2px;border-radius:2px;background:var(--yellow);opacity:.9}
 .prelive-kicker{animation:mcFadeUp .5s ease both}
-.prelive-countdown strong{text-shadow:0 0 34px rgba(255,213,31,.16);animation:mcFadeUp .5s ease both}
+/* Stronger, tasteful golden glow around the countdown digits (digits stay white) */
+.prelive-countdown{position:relative}
+.prelive-countdown strong{text-shadow:0 0 16px rgba(255,213,31,.55), 0 0 42px rgba(255,213,31,.34), 0 0 80px rgba(255,213,31,.2);animation:mcFadeUp .5s ease both}
+/* Soft diffused golden halo behind the countdown for depth */
+.prelive-countdown::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:150%;height:230%;background:radial-gradient(ellipse 42% 42% at 50% 50%, rgba(255,213,31,.5), rgba(255,213,31,.16) 42%, rgba(255,213,31,0) 72%);filter:blur(26px);z-index:0;pointer-events:none}
+.prelive-countdown>div,.prelive-countdown>span{position:relative;z-index:1}
+/* Keep the whole composition (incl. quote) inside the 16:9 panel on phones */
+@media (max-width:899px){
+  .prelive-quote{margin-top:14px;max-width:560px}
+  .prelive-quote-hi{font-size:clamp(11.5px,3vw,13px)}
+  .prelive-quote-text{font-size:clamp(13px,3.4vw,16px);margin-top:7px}
+  .prelive-date{margin-top:12px}
+  .prelive-note{margin-top:5px}
+}
 .prelive-countdown small{animation:mcFadeUp .6s ease both}
 .digit-tick{animation:mcDigitIn .3s cubic-bezier(.2,.7,.2,1)}
 @keyframes mcDigitIn{from{opacity:0;transform:translateY(-0.14em)}to{opacity:1;transform:none}}
@@ -48,7 +63,7 @@
 <body>
 <header class="header"><div class="shell"><div class="nav"><div class="brand"><img class="mark" src="/assistara-logo.svg" alt="Assistara"/>Assistara Academy</div><div class="live-pill"><span class="live-dot"></span> <span id="livePillLabel">FREE LIVE MASTERCLASS</span></div></div></div></header>
 <main><section class="hero"><div class="shell"><h1>How to Land Your <span>First Remote Client</span></h1></div></section>
-<section class="stage"><div class="shell"><div class="live-grid"><div class="video-shell"><div class="video prelive-video" id="preliveVideo"><div class="prelive-wrap"><div class="prelive-kicker">WE GO LIVE IN</div><div class="prelive-countdown" aria-live="polite"><div><strong id="liveDays">05</strong><small>DAYS</small></div><span>:</span><div><strong id="liveHours">10</strong><small>HOURS</small></div><span>:</span><div><strong id="liveMinutes">45</strong><small>MIN</small></div><span>:</span><div><strong id="liveSeconds">00</strong><small>SEC</small></div></div><div class="prelive-date">SUNDAY, OCTOBER 11 · 6:00 PM PHT</div><div class="prelive-note">Your masterclass will play here when we go live.</div></div></div><div class="prelive-quote" id="mcQuote" hidden></div><div class="youtube-note"><span>Streamed through YouTube Live · Stay on Assistara</span></div></div><aside class="chat"><div class="chat-head"><span>LIVE CHAT</span><span>COMING SOON</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">Live chat opens with the masterclass.</strong><span>Join the conversation here when we go live.</span></div></div></aside></div>
+<section class="stage"><div class="shell"><div class="live-grid"><div class="video-shell"><div class="video prelive-video" id="preliveVideo"><div class="prelive-wrap"><div class="prelive-kicker">WE GO LIVE IN</div><div class="prelive-countdown" aria-live="polite"><div><strong id="liveDays">05</strong><small>DAYS</small></div><span>:</span><div><strong id="liveHours">10</strong><small>HOURS</small></div><span>:</span><div><strong id="liveMinutes">45</strong><small>MIN</small></div><span>:</span><div><strong id="liveSeconds">00</strong><small>SEC</small></div></div><div class="prelive-date">SUNDAY, OCTOBER 11 · 6:00 PM PHT</div><div class="prelive-note">Your masterclass will play here when we go live.</div><div class="prelive-quote" id="mcQuote" hidden></div></div></div><div class="youtube-note"><span>Streamed through YouTube Live · Stay on Assistara</span></div></div><aside class="chat"><div class="chat-head"><span>LIVE CHAT</span><span>COMING SOON</span></div><div class="chat-placeholder"><div><strong style="display:block;color:#171717;font-size:16px;margin-bottom:7px">Live chat opens with the masterclass.</strong><span>Join the conversation here when we go live.</span></div></div></aside></div>
 <div class="bottom"><div class="info"><div class="info-row"><div class="info-copy"><div class="label">TODAY'S SESSION</div><h2>Build your path into remote work.</h2><p><span class="promise">Turn the skills you already have into something valuable and take the first step toward landing a real client.</span> Learn what clients pay for, how to position your skills, and the simplest path from beginner to getting paid.</p></div><div class="meta"><span>≈ 90 min</span><span>Live</span><span>Beginner friendly</span><span>Free</span></div></div></div><aside class="cta"><div class="label">FOUNDING COHORT</div><h3>Ready to get your first client?</h3><div class="scarcity"><span class="scarcity-dot"></span>Only 15 spots available</div><a class="btn" href="/academy/apply" target="_blank" rel="noopener noreferrer">Apply for Assistara Academy →</a></aside></div></div></section></main>
 <script id="prelive-countdown-js">(()=>{
   const ENDPOINT='https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/masterclass-status';
@@ -219,6 +234,7 @@
     if(!videoShowingPrelive){
       videoEl.innerHTML=preliveOriginal;
       videoShowingPrelive=true;
+      renderQuote(); // #mcQuote is inside the box, so repopulate after a restore
     }
   }
 

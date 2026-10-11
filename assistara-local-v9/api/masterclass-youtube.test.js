@@ -965,6 +965,23 @@ test("the public page shows a personalized waiting-room quote and an animated co
   assert.match(liveHtml, /2026-10-11T18:00:00\+08:00/);
 });
 
+test("the waiting-room quote sits inside the panel with a visible golden countdown glow", () => {
+  // Quote is part of the countdown composition (inside the 16:9 panel), not a footer.
+  assert.match(liveHtml, /prelive-note">[^<]*<\/div><div class="prelive-quote" id="mcQuote"/);
+  assert.match(liveHtml, /prelive-quote" id="mcQuote" hidden><\/div><\/div><\/div><div class="youtube-note">/);
+  // Comfortable spacing, centered.
+  assert.match(liveHtml, /\.prelive-quote\{max-width:640px;margin:clamp\(16px,2\.8vh,30px\) auto 0/);
+  // Stronger layered golden glow on the digits; digits stay white.
+  assert.match(liveHtml, /text-shadow:0 0 16px rgba\(255,213,31,\.55\), 0 0 42px rgba\(255,213,31,\.34\), 0 0 80px rgba\(255,213,31,\.2\)/);
+  // Soft diffused golden halo behind the countdown for depth.
+  assert.match(liveHtml, /\.prelive-countdown::before\{[\s\S]*radial-gradient/);
+  assert.match(liveHtml, /filter:blur\(26px\)/);
+  // Mobile compaction keeps the composition inside the panel on phones.
+  assert.match(liveHtml, /max-width:899px\)\{[\s\S]*\.prelive-quote\{margin-top:14px/);
+  // Quote is repopulated after a live->waiting restore (it now lives in the box).
+  assert.match(liveHtml, /renderQuote\(\); \/\/ #mcQuote is inside the box/);
+});
+
 test("the public page shows a premium ending when the stream Ends", () => {
   assert.match(liveHtml, /class="mc-ending"/);
   assert.match(liveHtml, /Your journey starts here/);
