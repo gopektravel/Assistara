@@ -393,42 +393,74 @@ jobs:
         "
         
         # Launch two concurrent sessions that both try to create pending redemptions
-        # Session 1: Creates pending redemption for user 1
         psql -h localhost -U test -d coupon_test -v ON_ERROR_STOP=1 -c "
           SELECT * FROM public.create_coupon_redemption_pending(
             'CONCURRENT', '44444444-4444-4444-4444-444444444444', gen_random_uuid(), 'concurrent1@example.com',
             690000, 300000, 390000, 'stripe', 'cs_concurrent_1', null, '{}'
           );
-        " &
+        " > /tmp/concurrent1.txt 2>&1 &
         PID1=$!
         
-        # Session 2: Creates pending redemption for user 2 (overlaps with session 1)
         psql -h localhost -U test -d coupon_test -v ON_ERROR_STOP=1 -c "
           SELECT * FROM public.create_coupon_redemption_pending(
             'CONCURRENT', '55555555-5555-5555-5555-555555555555', gen_random_uuid(), 'concurrent2@example.com',
             690000, 300000, 390000, 'stripe', 'cs_concurrent_2', null, '{}'
           );
-        " &
+        " > /tmp/concurrent2.txt 2>&1 &
         PID2=$!
         
-        # Wait for both to complete
         wait $PID1
         EXIT1=$?
         wait $PID2
         EXIT2=$?
         
-        if [ $EXIT1 -eq 0 ] && [ $EXIT2 -eq 0 ]; then
-          echo "TEST 7 PASSED: Both concurrent sessions completed successfully"
-        else
+        echo "=== Session 1 output ==="
+        cat /tmp/concurrent1.txt
+        echo "=== Session 2 output ==="
+        cat /tmp/concurrent2.txt
+        
+        # Verify both sessions completed without error
+        if [ $EXIT1 -ne 0 ] || [ $EXIT2 -ne 0 ]; then
           echo "TEST 7 FAILED: Session 1 exit=$EXIT1, Session 2 exit=$EXIT2"
           exit 1
         fi
         
-        -- Test 8: Verify status constraint includes limit_exceeded
+        # Verify database state: both redemptions should exist with status 'pending'
+        psql -h localhost -U test -d coupon_test -v ON_ERROR_STOP=1 -c "
+          DO \$\$
+          DECLARE
+            v_count1 integer;
+            v_count2 integer;
+          BEGIN
+            SELECT count(*) INTO v_count1 FROM public.academy_coupon_redemptions 
+            WHERE application_id = '44444444-4444-4444-4444-444444444444' AND status = 'pending';
+            
+            SELECT count(*) INTO v_count2 FROM public.academy_coupon_redemptions 
+            WHERE application_id = '55555555-5555-5555-5555-555555555555' AND status = 'pending';
+            
+            IF v_count1 = 1 AND v_count2 = 1 THEN
+              RAISE NOTICE 'TEST 7 PASSED: Both concurrent pending redemptions exist in database';
+            ELSE
+              RAISE EXCEPTION 'TEST 7 FAILED: Expected 2 pending redemptions, got app1=% app2=%', v_count1, v_count2;
+            END IF;
+          END \$\$;
+        "
+        
+        if [ $? -eq 0 ]; then
+          echo "TEST 7 PASSED: Database state verified"
+        else
+          echo "TEST 7 FAILED: Database state verification failed"
+          exit 1
+        fi
+
+    - name: Run Test 8 - Status constraint verification
+      env:
+        PGPASSWORD: test
+      run: |
+        psql -h localhost -U test -d coupon_test -v ON_ERROR_STOP=1 <<'EOSQL'
         \echo 'TEST 8: Status constraint'
         DO $$
         BEGIN
-          -- This should succeed
           INSERT INTO public.academy_coupon_redemptions (
             coupon_id, application_id, enrollment_token, customer_email,
             original_price_php, discount_amount_php, final_price_php,
