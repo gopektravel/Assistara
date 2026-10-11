@@ -1,5 +1,6 @@
 -- RPC function to get coupon analytics with aggregated redemption data
 -- Used by admin-coupons edge function for the coupon list view
+-- SECURITY DEFINER with restricted search_path, EXECUTE granted ONLY to service_role
 
 create or replace function public.get_coupon_analytics()
 returns table (
@@ -58,10 +59,11 @@ begin
 end $$;
 
 grant execute on function public.get_coupon_analytics() to service_role;
-grant execute on function public.get_coupon_analytics() to authenticated;
+revoke execute on function public.get_coupon_analytics() from public, anon, authenticated;
 
 -- Also add a function to atomically create a redemption record when a coupon is applied at checkout
 -- This prevents race conditions on redemption limits
+-- Uses FOR SHARE on coupon row and advisory lock for atomic limit checking
 
 create or replace function public.create_coupon_redemption_pending(
   p_coupon_code text,
@@ -88,9 +90,15 @@ declare
   v_starts_at_ok boolean;
   v_expires_at_ok boolean;
   v_active_ok boolean;
+  v_inserted_id uuid;
+  v_inserted_status text;
 begin
-  -- Fetch coupon
-  select * into v_coupon from public.academy_promo_codes where code = upper(p_coupon_code);
+  -- Acquire advisory lock for this coupon code to serialize concurrent limit checks
+  -- This prevents race conditions between limit checks and insert
+  perform pg_advisory_xact_lock(hashtext(upper(p_coupon_code)));
+
+  -- Fetch coupon with FOR SHARE to prevent concurrent modification during check
+  select * into v_coupon from public.academy_promo_codes where code = upper(p_coupon_code) for share;
   if not found then
     return query select gen_random_uuid()::uuid as id, 'invalid'::text as status, 'Coupon not found'::text as error;
     return;
@@ -106,7 +114,7 @@ begin
     return;
   end if;
 
-  -- Check global redemption limit
+  -- Check global redemption limit (atomic with advisory lock)
   if v_coupon.max_redemptions is not null then
     select count(*) into v_existing_redemptions
     from public.academy_coupon_redemptions
@@ -132,6 +140,7 @@ begin
 
   -- Check for existing pending redemption for this application+coupon
   -- (prevent duplicate pending records from concurrent checkout attempts)
+  -- Use INSERT ... ON CONFLICT with explicit RETURNING
   begin
     insert into public.academy_coupon_redemptions (
       coupon_id, application_id, enrollment_token, customer_email,
@@ -151,16 +160,18 @@ begin
       payment_method = excluded.payment_method,
       metadata = excluded.metadata,
       redeemed_at = excluded.redeemed_at
-    returning id, status, null::text as error;
+    returning id, status, null::text as error
+    into v_inserted_id, v_inserted_status, v_error;
   exception when unique_violation then
-    -- Another concurrent request created it
-    select id, status, null::text into v_coupon_id, v_status, v_error
+    -- Another concurrent request created it (should be rare with advisory lock)
+    select id, status, null::text
+    into v_inserted_id, v_inserted_status, v_error
     from public.academy_coupon_redemptions
     where application_id = p_application_id and coupon_id = v_coupon.id and status in ('pending', 'confirmed')
     limit 1;
-    return query select v_coupon_id as id, v_status as status, null::text as error;
-    return;
   end;
+
+  return query select v_inserted_id as id, v_inserted_status as status, null::text as error;
 
   return;
 end $$;
@@ -168,8 +179,14 @@ end $$;
 grant execute on function public.create_coupon_redemption_pending(
   text, uuid, uuid, text, integer, integer, integer, text, text, text, jsonb
 ) to service_role;
+revoke execute on function public.create_coupon_redemption_pending(
+  text, uuid, uuid, text, integer, integer, integer, text, text, text, jsonb
+) from public, anon, authenticated;
 
 -- Function to confirm a redemption when payment is verified
+-- Only transitions from 'pending' to 'confirmed'/'failed'/'refunded'
+-- Never allows overwriting a confirmed redemption
+
 create or replace function public.confirm_coupon_redemption(
   p_application_id uuid,
   p_coupon_code text,
@@ -179,6 +196,8 @@ create or replace function public.confirm_coupon_redemption(
 declare
   v_count integer;
 begin
+  -- Only transition from 'pending' to confirmed/failed/refunded
+  -- Never overwrite confirmed, failed, or refunded status
   update public.academy_coupon_redemptions
   set status = p_status,
       confirmed_at = case when p_status = 'confirmed' then p_confirmed_at else confirmed_at end
@@ -191,3 +210,4 @@ begin
 end $$;
 
 grant execute on function public.confirm_coupon_redemption(uuid, text, text, timestamptz) to service_role;
+revoke execute on function public.confirm_coupon_redemption(uuid, text, text, timestamptz) from public, anon, authenticated;
