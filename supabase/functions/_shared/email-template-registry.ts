@@ -230,10 +230,10 @@ export const TEMPLATES: TemplateDef[] = [
     },
   },
 
-  // 8. GCash payment approved (review-gcash-payment)
+  // 8. GCash payment confirmed (admin-gcash-payment approve action — no receipt)
   {
-    key: "gcash_payment_approved",
-    name: "GCash payment approved",
+    key: "gcash_payment_confirmed",
+    name: "GCash payment confirmed",
     category: "transactional",
     subject: "GCash payment confirmed 🎉",
     previewText: "",
@@ -504,7 +504,7 @@ export const TEMPLATES: TemplateDef[] = [
     }),
   },
 
-  // 19. GCash payment approved (review-gcash-payment send site)
+  // 19. GCash payment approved with receipt (review-gcash-payment send site)
   {
     key: "gcash_payment_approved",
     name: "GCash payment approved",

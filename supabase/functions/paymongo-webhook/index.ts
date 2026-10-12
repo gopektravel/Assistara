@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { resolveEmailTemplate } from "../_shared/email-templates.ts";
+import { createEmailDelivery, EmailAttachment } from "../_shared/email-delivery.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildReceiptPdf } from "../_shared/receipt-pdf.ts";
 declare const EdgeRuntime:{waitUntil:(p:Promise<any>)=>void};
@@ -40,16 +41,45 @@ const logo=`<table role="presentation" cellspacing="0" cellpadding="0"><tr><td w
 function shell(title:string,body:string,cta:{label:string,href:string}){return `<!doctype html><html><body style="margin:0;background:#f4f3ef;font-family:Arial,Helvetica,sans-serif;color:#151515"><table width="100%" role="presentation" cellspacing="0" cellpadding="0" style="padding:28px 12px"><tr><td align="center"><table width="100%" role="presentation" cellspacing="0" cellpadding="0" style="max-width:620px;background:#fff;border:1px solid #e2dfd7;border-radius:24px;overflow:hidden"><tr><td style="background:#171717;padding:20px 30px">${logo}</td></tr><tr><td style="padding:34px 30px 8px"><h1 style="margin:0;font-size:30px;line-height:1.15">${title}</h1></td></tr><tr><td style="padding:12px 30px 24px;font-size:16px;line-height:1.6;color:#4f4b45">${body}</td></tr><tr><td style="padding:0 30px 18px"><a href="${cta.href}" style="display:inline-block;background:#ffd51f;color:#151515;text-decoration:none;font-weight:700;padding:15px 21px;border-radius:999px">${cta.label}</a></td></tr><tr><td style="padding:0 30px 34px;color:#77716a;font-size:12px;line-height:1.55">If the button does not work, copy and paste this link into your browser:<br><a href="${cta.href}" style="color:#4f4b45;word-break:break-all">${cta.href}</a></td></tr></table></td></tr></table></body></html>`}
 function b64(bytes:Uint8Array){let s="";for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(s)}
 async function sendConfirmation(app:any,receipt:string,amount:number,paymentId:string,paidAt:string){
-  if(!RESEND)return false;
   const url=`${SITE}/academy/onboarding?token=${encodeURIComponent(app.enrollment_token||"")}`,first=esc((app.name||"there").split(/\s+/)[0]);
   const date=new Date(paidAt).toLocaleString("en-PH",{dateStyle:"long",timeStyle:"short",timeZone:"Asia/Manila"});
   let pdf:Uint8Array|undefined;try{pdf=await buildReceiptPdf({receipt,name:app.name,email:app.email,date,amount,method:"QR Ph via PayMongo",reference:paymentId,promo:app.promo_code||null})}catch(e){console.error("paymongo_receipt_pdf_failed",e)}
-  const body=`<p>Hi ${first},</p><p>We received your payment and your place in Assistara Academy is secured. 🎉</p><table width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0;border-collapse:collapse;background:#faf9f5;border-radius:14px"><tr><td style="padding:16px 18px"><strong>Purchase</strong><br>Assistara Academy - Founding Cohort</td><td align="right" style="padding:16px 18px"><strong>${esc(money(amount))}</strong></td></tr><tr><td style="padding:0 18px 12px;color:#777">Receipt</td><td align="right" style="padding:0 18px 12px">${esc(receipt)}</td></tr><tr><td style="padding:0 18px 12px;color:#777">Payment method</td><td align="right" style="padding:0 18px 12px">QR Ph via PayMongo</td></tr><tr><td style="padding:0 18px 16px;color:#777">Status</td><td align="right" style="padding:0 18px 16px"><strong>PAID</strong></td></tr></table><p>${pdf?"Your branded payment receipt is attached as a PDF for your records.":""}</p><p>Your next step is to set up your Academy account.</p>`;
-  const payload:any={from:FROM,to:[app.email],reply_to:"academy@getassistara.com",subject:`Payment received 🎉 ${receipt} | Assistara Academy`,html:shell("Payment received 🎉",body,{label:"Set up my Academy account",href:url})};
-  if(pdf)payload.attachments=[{filename:`Assistara-Payment-Receipt-${receipt}.pdf`,content:b64(pdf)}];
-  const r=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${RESEND}`,"Idempotency-Key":`academy-paymongo-${app.id}-v1`},body:JSON.stringify(payload)});
-  if(r.ok){const db=createClient(U,K,{auth:{persistSession:false}});await db.from("academy_applications").update({payment_confirmation_sent_at:new Date().toISOString()}).eq("id",app.id)}
-  return r.ok;
+  const paymentMethod = "QR Ph via PayMongo";
+  const moneyStr = "PHP " + Number(amount).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const details = `<p>Hi ${first},</p><p>We received your payment and your place in Assistara Academy is secured. 🎉</p><table width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0;border-collapse:collapse;background:#faf9f5;border-radius:14px"><tr><td style="padding:16px 18px"><strong>Purchase</strong><br>Assistara Academy - Founding Cohort</td><td align="right" style="padding:16px 18px"><strong>${esc(moneyStr)}</strong></td></tr><tr><td style="padding:0 18px 12px;color:#777">Receipt</td><td align="right" style="padding:0 18px 12px">${esc(receipt)}</td></tr><tr><td style="padding:0 18px 12px;color:#777">Payment method</td><td align="right" style="padding:0 18px 12px">${esc(paymentMethod)}</td></tr><tr><td style="padding:0 18px 16px;color:#777">Status</td><td align="right" style="padding:0 18px 16px"><strong>PAID</strong></td></tr></table><p>${pdf?"Your branded payment receipt is attached as a PDF for your records.":""}</p><p>Your next step is to set up your Academy account.</p>`;
+  const fallback = () => ({
+    subject: `Payment received 🎉 ${receipt} | Assistara Academy`,
+    html: shell("Payment received 🎉", details, {label:"Set up my Academy account",href:url}),
+    senderName: "Assistara Academy",
+  });
+  const payTpl = await resolveEmailTemplate('academy_payment_confirmation',{
+    first_name: first,
+    name: app.name,
+    receipt_number: receipt,
+    amount: moneyStr,
+    currency: "PHP",
+    payment_method: paymentMethod,
+    date: date,
+    onboarding_url: url
+  }, fallback);
+  const delivery = await createEmailDelivery('paymongo-webhook');
+  const attachments: EmailAttachment[] = pdf ? [{filename:`Assistara-Payment-Receipt-${receipt}.pdf`,content:pdf,contentType:'application/pdf'}] : [];
+  const result = await delivery.send({
+    idempotencyKey: `academy-paymongo-${app.id}-v1`,
+    emailType: 'academy_payment_receipt',
+    to: app.email,
+    subject: payTpl.subject,
+    html: payTpl.html,
+    text: payTpl.text,
+    replyTo: "academy@getassistara.com",
+    campaignKey: 'academy_payment_receipts',
+    attachments
+  } as import("../_shared/email-delivery.ts").EmailDeliveryOptions);
+  if(result.success){
+    const db=createClient(U,K,{auth:{persistSession:false}});
+    await db.from("academy_applications").update({payment_confirmation_sent_at:new Date().toISOString()}).eq("id",app.id)
+  }
+  return result.success;
 }
 
 Deno.serve(async req=>{

@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createEmailDelivery, EmailDeliveryOptions } from "../_shared/email-delivery.ts";
+import { resolveEmailTemplate } from "../_shared/email-templates.ts";
 
 // Admin cohort-capacity panel backend.
 // Mirrors the admin-applications auth (HMAC-signed Bearer token over the
@@ -73,9 +74,16 @@ Deno.serve(async req => {
     const first = esc((data.name || "there").split(/\s+/)[0]);
     let emailSent = false, emailError = "";
     if (data.application_id && token) {
-      const html = shell("A seat just opened in the Academy cohort 🎉", `<p>Hi ${first},</p><p>Good news — a spot just opened up in the Assistara Academy founding cohort, and you're next on the priority waitlist.</p><p>Your invite is time-sensitive: seats are confirmed in payment order.</p><p><strong>This link is private — please don't share it.</strong></p>`, { label: "Secure my spot →", href: url });
-      const text = textShell("A seat just opened in the Academy cohort 🎉", `Hi ${first},\n\nGood news — a spot just opened up in the Assistara Academy founding cohort, and you're next on the priority waitlist.\n\nYour invite is time-sensitive: seats are confirmed in payment order.\n\nThis link is private — please don't share it.\n\n${url}`, { label: "Secure my spot", href: url });
-      
+      // Published dashboard template (if any) wins; otherwise the code-built HTML below.
+      const capTpl = await resolveEmailTemplate('academy_waitlist_seat_opened', { first_name: first, name: data.name, waitlist_url: url }, () => ({
+        subject: `A seat just opened in the Academy cohort 🎉 | Assistara Academy`,
+        html: shell("A seat just opened in the Academy cohort 🎉", `<p>Hi ${first},</p><p>Good news — a spot just opened up in the Assistara Academy founding cohort, and you're next on the priority waitlist.</p><p>Your invite is time-sensitive: seats are confirmed in payment order.</p><p><strong>This link is private — please don't share it.</strong></p>`, { label: "Secure my spot →", href: url }),
+        text: textShell("A seat just opened in the Academy cohort 🎉", `Hi ${first},\n\nGood news — a spot just opened up in the Assistara Academy founding cohort, and you're next on the priority waitlist.\n\nYour invite is time-sensitive: seats are confirmed in payment order.\n\nThis link is private — please don't share it.\n\n${url}`, { label: "Secure my spot", href: url }),
+        senderName: 'Assistara Academy',
+      }));
+      const html = capTpl.html;
+      const text = capTpl.text;
+
       // Send via shared gateway (universal tracking, provider fallback, idempotency)
       const idempotencyKey = `waitlist-invite-${data.waitlist_id}-${Date.now()}`;
       try {
@@ -85,12 +93,13 @@ Deno.serve(async req => {
           emailType: "academy_waitlist_invite",
           to: data.email,
           toName: data.name,
-          subject: `A seat just opened in the Academy cohort 🎉 | Assistara Academy`,
+          subject: capTpl.subject,
           html,
           text,
           replyTo: "academy@getassistara.com",
           campaignKey: "academy_waitlist",
           recipientId: data.waitlist_id,
+          metadata: { template_key: capTpl.key, template_version: capTpl.version, template_source: capTpl.source },
         } as import("../_shared/email-delivery.ts").EmailDeliveryOptions);
         emailSent = result.success;
         if (!emailSent) emailError = result.error?.message || "delivery_failed";

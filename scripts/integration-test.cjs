@@ -43,7 +43,7 @@ async function run() {
 
   // 1. Apply email_templates schema
   try {
-    const sql = fs.readFileSync(path.join(__dirname, '../supabase/migrations/202610110006_email_templates.sql'), 'utf8');
+    const sql = fs.readFileSync(path.join(__dirname, '../supabase/migrations/202610150000_email_templates.sql'), 'utf8');
     await client.query(sql);
     log('Migration: email_templates schema applied', 'PASS');
   } catch(e) {
@@ -131,13 +131,13 @@ async function run() {
     log('Fallback', 'FAIL', e.message);
   }
 
-  // 9. All 17 keys present
+  // 9. All 18 keys present (17 original + gcash_payment_confirmed)
   try {
     const r = await client.query('SELECT COUNT(DISTINCT key) FROM email_templates');
-    if (parseInt(r.rows[0].count) === 17) log('All 17 template keys present', 'PASS');
-    else log('All 17 template keys present', 'FAIL', 'found ' + r.rows[0].count);
+    if (parseInt(r.rows[0].count) === 18) log('All 18 template keys present', 'PASS');
+    else log('All 18 template keys present', 'FAIL', 'found ' + r.rows[0].count);
   } catch(e) {
-    log('All 17 template keys present', 'FAIL', e.message);
+    log('All 18 template keys present', 'FAIL', e.message);
   }
 
   await client.end();

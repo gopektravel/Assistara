@@ -21,6 +21,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createEmailDelivery, EmailDeliveryOptions } from "../_shared/email-delivery.ts";
 import { brandedEmail, brandedText, brandEsc, countdownBand, LOGO_URL } from "../_shared/email-brand.ts";
+import { resolveEmailTemplate } from "../_shared/email-templates.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!;
 const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -291,9 +292,20 @@ async function sendReminder(
   const dayWord = relativeDay(event.scheduled_at);
   const subject = `${first}, your Assistara masterclass is ${dayWord} — here's your join link`;
   const finalSubject = extra?.subjectOverride ? extra.subjectOverride : (extra?.prefixSubject ? `[TEST] ${subject}` : subject);
-  const html = renderHtml({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
-  const text = renderText({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl });
-  
+  // Published dashboard template (if any) wins; otherwise the code-built HTML below.
+  const vars = { first, event_date: dateLabel, event_time: timeLabel, day_word: dayWord, join_url: joinUrl, unsubscribe_url: unsubUrl, calendar_url: calendarUrl, ics_url: icsUrl };
+  const tpl = await resolveEmailTemplate("masterclass_reminder_24h", vars, () => ({
+    subject,
+    html: renderHtml({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl }),
+    text: renderText({ first, eventDate: dateLabel, eventTime: timeLabel, dayWord, joinUrl, apps, limit: INTAKE_LIMIT, unsubscribeUrl: unsubUrl, calendarUrl, icsUrl }),
+    replyTo: REPLY,
+  }));
+  const html = tpl.html;
+  const text = tpl.text;
+  const finalResolvedSubject = tpl.source === "published" && !extra?.subjectOverride
+    ? (extra?.prefixSubject ? `[TEST] ${tpl.subject}` : tpl.subject)
+    : finalSubject;
+
   const idem = extra?.uniqueIdem || `${EVENT_KEY}:${signup.id}`;
   const deadline = new Date(event.scheduled_at); // Hard deadline: event start time
 
@@ -303,7 +315,7 @@ async function sendReminder(
     email_type: "masterclass_reminder",
     recipient_email: signup.email,
     recipient_name: signup.name,
-    subject: finalSubject,
+    subject: finalResolvedSubject,
     deadline: deadline.toISOString(),
     metadata: { signup_id: signup.id, event_key: EVENT_KEY },
     max_attempts: 3,
@@ -328,17 +340,17 @@ async function sendReminder(
     emailType: "masterclass_reminder",
     to: signup.email,
     toName: signup.name,
-    subject: finalSubject,
+    subject: finalResolvedSubject,
     html,
     text,
     replyTo: REPLY,
     deadline,
     maxAttempts: 3,
-    metadata: { signup_id: signup.id, event_key: EVENT_KEY },
+    metadata: { ...(extra?.metadata || {}), signup_id: signup.id, event_key: EVENT_KEY, template_key: tpl.key, template_version: tpl.version, template_source: tpl.source },
     forceProvider: extra?.forceProvider,
   });
 
-  return { event, apps, joinUrl, unsubUrl, calendarUrl, icsUrl, subject: finalSubject, result, defaults: { date: dateLabel, time: timeLabel, dayWord }, academyUrl: ACADEMY_URL };
+  return { event, apps, joinUrl, unsubUrl, calendarUrl, icsUrl, subject: finalResolvedSubject, result, defaults: { date: dateLabel, time: timeLabel, dayWord }, academyUrl: ACADEMY_URL };
 }
 
 // ----------------------------------------------------------------------------
@@ -403,15 +415,23 @@ async function sendFollowup(signup: { id: string; name: string; email: string; a
   const unsubUrl = `${SITE}/unsubscribe?t=${encodeURIComponent(token)}`;
   const first = (signup.name || "there").split(/\s+/)[0];
   const finalSubject = extra?.prefixSubject ? `[TEST] ${FOLLOWUP_SUBJECT}` : FOLLOWUP_SUBJECT;
-  const html = renderFollowupHtml({ first, appsCount, seats: INTAKE_LIMIT, unsubscribeUrl: unsubUrl });
-  const text = renderFollowupText({ first, appsCount, seats: INTAKE_LIMIT, unsubscribeUrl: unsubUrl });
+  // Published dashboard template (if any) wins; otherwise the code-built HTML below.
+  const tpl = await resolveEmailTemplate("masterclass_followup", { first, apps_count: appsCount, seats: INTAKE_LIMIT, unsubscribe_url: unsubUrl, academy_url: ACADEMY_URL }, () => ({
+    subject: FOLLOWUP_SUBJECT,
+    html: renderFollowupHtml({ first, appsCount, seats: INTAKE_LIMIT, unsubscribeUrl: unsubUrl }),
+    text: renderFollowupText({ first, appsCount, seats: INTAKE_LIMIT, unsubscribeUrl: unsubUrl }),
+    replyTo: REPLY,
+  }));
+  const html = tpl.html;
+  const text = tpl.text;
+  const finalResolvedSubject = tpl.source === "published" ? (extra?.prefixSubject ? `[TEST] ${tpl.subject}` : tpl.subject) : finalSubject;
   const idem = extra?.uniqueIdem || `${FOLLOWUP_KEY}:${signup.id}`;
   const deadline = event?.scheduled_at ? new Date(event.scheduled_at) : undefined;
 
   const logRes = await api("rest/v1/email_delivery_log?select=id", {
     method: "POST",
     headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
-    body: JSON.stringify([{ idempotency_key: idem, email_type: "academy_followup", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: FOLLOWUP_KEY }, max_attempts: 3 }]),
+    body: JSON.stringify([{ idempotency_key: idem, email_type: "academy_followup", recipient_email: signup.email, recipient_name: signup.name, subject: finalResolvedSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: FOLLOWUP_KEY }, max_attempts: 3 }]),
   });
   if (!logRes.ok) {
     const t = await logRes.text().catch(() => "");
@@ -424,16 +444,16 @@ async function sendFollowup(signup: { id: string; name: string; email: string; a
     emailType: "academy_followup",
     to: signup.email,
     toName: signup.name,
-    subject: finalSubject,
+    subject: finalResolvedSubject,
     html,
     text,
     replyTo: REPLY,
     deadline,
     maxAttempts: 3,
-    metadata: { signup_id: signup.id, campaign: FOLLOWUP_KEY },
+    metadata: { signup_id: signup.id, campaign: FOLLOWUP_KEY, template_key: tpl.key, template_version: tpl.version, template_source: tpl.source },
     forceProvider: extra?.forceProvider,
   });
-  return { apps: appsCount, seats: INTAKE_LIMIT, subject: finalSubject, result, unsubscribeUrl: unsubUrl };
+  return { apps: appsCount, seats: INTAKE_LIMIT, subject: finalResolvedSubject, result, unsubscribeUrl: unsubUrl };
 }
 
 async function handleFollowup(body: any) {
@@ -568,16 +588,24 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
   const first = (signup.name || "there").split(/\s+/)[0];
   const baseSubject = which === "30" ? REMINDER30_SUBJECT : REMINDER7_SUBJECT;
   const finalSubject = extra?.prefixSubject ? `[TEST] ${baseSubject}` : baseSubject;
-  const { html, text } = which === "30" ? reminder30Content(first, joinUrl, unsubUrl) : reminder7Content(first, joinUrl, unsubUrl);
-  const key = which === "30" ? REMINDER30_KEY : REMINDER7_KEY;
-  const idem = extra?.uniqueIdem || `${key}:${signup.id}`;
+  const vars = { first, join_url: joinUrl, unsubscribe_url: unsubUrl };
+  const key = which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_5";
+  // Published dashboard template (if any) wins; otherwise the branded content below.
+  const tpl = await resolveEmailTemplate(key, vars, () => {
+    const built = which === "30" ? reminder30Content(first, joinUrl, unsubUrl) : reminder7Content(first, joinUrl, unsubUrl);
+    return { subject: baseSubject, html: built.html, text: built.text, replyTo: REPLY };
+  });
+  const { html, text } = tpl;
+  const finalResolvedSubject = tpl.source === "published" ? (extra?.prefixSubject ? `[TEST] ${tpl.subject}` : tpl.subject) : finalSubject;
+  const campaignKey = which === "30" ? REMINDER30_KEY : REMINDER7_KEY;
+  const idem = extra?.uniqueIdem || `${campaignKey}:${signup.id}`;
   const event = await eventRow();
   const deadline = event?.scheduled_at ? new Date(new Date(event.scheduled_at).getTime() + 3 * 3600e3) : undefined; // +3h after start
 
   const logRes = await api("rest/v1/email_delivery_log?select=id", {
     method: "POST",
     headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
-    body: JSON.stringify([{ idempotency_key: idem, email_type: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7", recipient_email: signup.email, recipient_name: signup.name, subject: finalSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: key, html_len: html.length, text_len: text.length }, max_attempts: 3 }]),
+    body: JSON.stringify([{ idempotency_key: idem, email_type: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7", recipient_email: signup.email, recipient_name: signup.name, subject: finalResolvedSubject, deadline: deadline?.toISOString(), metadata: { signup_id: signup.id, campaign: campaignKey, html_len: html.length, text_len: text.length }, max_attempts: 3 }]),
   });
   if (!logRes.ok) console.error("timed reminder log insert failed", logRes.status, (await logRes.text().catch(() => "")).slice(0, 300));
 
@@ -585,13 +613,13 @@ async function sendTimed(signup: { id: string; name: string; email: string; atte
   const result = await delivery.send({
     idempotencyKey: idem,
     emailType: which === "30" ? "masterclass_reminder_30" : "masterclass_reminder_7",
-    to: signup.email, toName: signup.name, subject: finalSubject, html, text,
+    to: signup.email, toName: signup.name, subject: finalResolvedSubject, html, text,
     replyTo: REPLY, deadline, maxAttempts: 3,
     fromName: "Assistara Academy",
-    metadata: { signup_id: signup.id, campaign: key, html_len: html.length, text_len: text.length },
+    metadata: { signup_id: signup.id, campaign: campaignKey, html_len: html.length, text_len: text.length, template_key: tpl.key, template_version: tpl.version, template_source: tpl.source },
     forceProvider: extra?.forceProvider,
   });
-  return { subject: finalSubject, joinUrl, unsubscribeUrl: unsubUrl, result };
+  return { subject: finalResolvedSubject, joinUrl, unsubscribeUrl: unsubUrl, result };
 }
 
 async function handleTimed(which: "30" | "7", body: any) {
