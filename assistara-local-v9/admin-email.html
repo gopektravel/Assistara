@@ -163,7 +163,7 @@ const dayKey = (v) => (v ? new Date(v).toISOString().slice(0, 10) : "");
 const state = { tab: "overview", provider: "", campaign: "", live: false, liveTimer: null, since: new Date(Date.now() - 300000).toISOString(), prevTab: "" };
 
 const TABS = [
-  ["overview", "Overview"], ["reminder30", "30-Min Reminder"], ["campaigns", "Campaigns"], ["recipients", "Recipients"],
+  ["overview", "Overview"], ["campaigns", "Campaigns"], ["recipients", "Recipients"],
   ["providers", "Providers"], ["activity", "Live activity"], ["setup", "Setup Required"], ["acquisition", "Acquisition"],
   ["template-studio", "Template Studio"],
 ];
@@ -277,7 +277,7 @@ async function renderCampaigns() {
     <div class="card">
       <div class="head" style="margin:0 0 10px"><div><h1 style="font-size:20px">Campaigns &amp; automated email</h1>
       <div class="sub">Grouped by the campaign key each sender already records. "Campaign" = audience sends (masterclass, Academy follow-up); "automated" = one-to-one transactional email.</div></div>
-      <div class="controls"><select class="btn" id="kindfilter"><option value="">All kinds</option><option value="campaign">Campaigns</option><option value="automated">Automated</option></select></div></div>
+      <div class="controls"><button class="btn" id="open-reminder30">30-Min Reminder</button><select class="btn" id="kindfilter"><option value="">All kinds</option><option value="campaign">Campaigns</option><option value="automated">Automated</option></select></div></div>
       <div class="scroll"><table>
         <thead><tr><th>Campaign</th><th>Kind</th><th>Recipients</th><th>Accepted</th><th>Failed</th><th>Delivered</th><th>Unique opens</th><th>Unique clicks</th><th>Bounces</th><th>Providers</th><th>Last sent</th><th>Preview</th></tr></thead>
         <tbody id="campbody"></tbody>
@@ -302,6 +302,8 @@ async function renderCampaigns() {
       : `<tr><td colspan="12" class="muted">No campaigns in this range.</td></tr>`;
   };
   $("kindfilter").addEventListener("change", draw);
+  const r30 = $("open-reminder30");
+  if (r30) r30.addEventListener("click", () => { state.prevTab = state.tab; state.tab = "reminder30"; renderReminder30(); });
   draw();
 }
 
