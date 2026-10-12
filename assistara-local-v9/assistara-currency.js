@@ -1,6 +1,7 @@
 /* Shared Assistara currency display — display-only, never writes DB */
 const DISP_CURS = ["PHP","USD","EUR"];
 const DISP_SYM = {PHP:"₱",USD:"$",EUR:"€"};
+const dispRates = {PHP: 1};
 let dispRateDate = new Date().toISOString().slice(0,10);
 async function fetchRate(cur){
   if(cur==="PHP"||dispRates[cur]>0) return true;
@@ -24,3 +25,5 @@ function displayValue(php,cur){
   return (!rate||!(rate>0)) ? null : Number(php||0)/rate;
 }
 window.AssistaraCurrency = { DISP_CURS, DISP_SYM, DISP_KEY, dispCur, dispRates, dispRateDate, fetchRate, fmtMoney, fmtPHP, displayValue, setDisplay: (c)=>{ if(DISP_CURS.includes(c)){ dispCur=c; try{localStorage.setItem(DISP_KEY,c);}catch{} } }, getDisplay: ()=>dispCur };
+/* Auto-fetch rates for non-PHP currencies */
+(async () => { try { await fetchRate("USD"); await fetchRate("EUR"); } catch(e){} })();

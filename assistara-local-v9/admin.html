@@ -1118,11 +1118,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             <input id="search" placeholder="Search..." aria-label="Search applications, students and signups" />
           </div>
-          <div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency" style="margin-left:auto;flex-shrink:0;">
-            <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
-            <button type="button" data-cur="USD" aria-pressed="false">USD</button>
-            <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
-          </div>
         </div>
         <header class="page-header" id="pageHeader">
           <div class="page-header-main">
@@ -3330,7 +3325,7 @@
         (sub ? '<div class="stat-sublabel">' + sub + "</div>" : "") +
         "</div>";
       const ovSkeleton = () =>
-        '<div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text-sm" style="margin-top:8px"></div>';
+        '<div class="currency-switch-bar" style="display:flex;justify-content:flex-end;margin-bottom:12px;"><div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency" style="display:inline-flex;gap:2px;padding:3px;background:#fff;border:1px solid #eae5df;border-radius:999px;font-family:var(--font-family);"><button type="button" data-cur="PHP" aria-pressed="true" style="border:0;background:#171717;color:#fff;border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;">PHP</button><button type="button" data-cur="USD" aria-pressed="false" style="border:0;background:none;color:#777;border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;">USD</button><button type="button" data-cur="EUR" aria-pressed="false" style="border:0;background:none;color:#777;border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;">EUR</button></div></div><div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text-sm" style="margin-top:8px"></div>';
       const ovEnsureSkeleton = () => {
         const view = $("overviewView");
         if (!view || $("ovKpis")) return;
