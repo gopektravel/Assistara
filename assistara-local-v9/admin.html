@@ -3501,19 +3501,6 @@
           toast("Signed in. Some data could not be loaded: " + e.message);
         }
       }
-      if (token) {
-        restoreSession().catch((e) => {
-          console.error("restoreSession failed", e);
-          toast("Session restored but data load failed: " + e.message);
-        });
-        // Fallback: if Overview doesn't appear within 3s, force enterApp
-        setTimeout(() => {
-          if (document.getElementById("overviewView")?.hidden) {
-            console.warn("Overview not visible after restoreSession, forcing enterApp");
-            enterApp().catch((e) => console.error("fallback enterApp failed", e));
-          }
-        }, 3000);
-      }
       (() => {
         const B =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-b2b-calls";
@@ -4024,6 +4011,15 @@
           Object.keys(TOOLS).forEach((n) => loadToolSource(n).catch(() => {}));
         if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 2000 });
         else setTimeout(warm, 1200);
+      }
+      // Boot only after every dashboard extension, router and render wrapper has
+      // been initialized. Starting restoreSession earlier races the B2B load/render
+      // wrapper and the tool router, leaving an authenticated shell with no view.
+      if (token) {
+        restoreSession().catch((e) => {
+          console.error("Admin initialization failed", e);
+          toast("Signed in. Data could not be loaded: " + e.message);
+        });
       }
     </script>
   </body>

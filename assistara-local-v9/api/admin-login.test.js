@@ -31,7 +31,7 @@ test("admin session is shared across pages and survives data errors", () => {
   assert.match(admin, /adminSession\.write\(token\)/);
   assert.match(admin, /adminSession\.clear\(\)/);
   // A data-loading failure must not clear a valid session.
-  const restore = admin.slice(admin.indexOf("async function restoreSession()"), admin.indexOf("if (token) restoreSession();"));
+  const restore = admin.slice(admin.indexOf("async function restoreSession()"), admin.indexOf("(() => {", admin.indexOf("async function restoreSession()")));
   assert.match(restore, /await req\("session-check", \{\}, LOGIN\)/);
   assert.match(restore, /catch \{\s*token = "";\s*adminSession\.clear\(\);/);
   // The shell is shown first, then the session is validated in place, then the
@@ -42,6 +42,15 @@ test("admin session is shared across pages and survives data errors", () => {
     admin.indexOf("</script>", admin.indexOf("async function enterApp()")),
   );
   assert.match(enter, /await load\(\)/);
+
+  // Session boot must run exactly once, after every load/render wrapper and the
+  // router have initialized. An earlier fire-and-forget boot left a visible but
+  // empty shell and the old timer fallback created duplicate initialization.
+  const boot = admin.lastIndexOf("restoreSession().catch");
+  assert.ok(boot > admin.indexOf("load = async () =>"), "boot must follow the B2B load wrapper");
+  assert.ok(boot > admin.indexOf("async function enterApp()"), "boot must follow enterApp initialization");
+  assert.equal(admin.match(/restoreSession\(\)\.catch/g)?.length, 1, "session restore must boot exactly once");
+  assert.doesNotMatch(admin, /Overview not visible after restoreSession|forcing enterApp/);
 
   for (const page of ["admin-finance.html", "admin-acquisition.html"]) {
     const source = fs.readFileSync(path.join(root, "assistara-local-v9", page), "utf8");
