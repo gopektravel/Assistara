@@ -96,6 +96,14 @@
   .empty{padding:26px;text-align:center;color:var(--muted);font-size:13px}
   .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#171717;color:#fff;padding:11px 16px;border-radius:999px;font-size:12.5px;font-weight:700;opacity:0;transition:.2s;z-index:60}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* Template Studio native styles */
+  .studio-field{display:block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .studio-input{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font-size:13px;font-family:inherit;color:var(--ink)}
+  .studio-input:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
+  .studio-textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font-size:13px;font-family:monospace;color:var(--ink);min-height:320px;resize:vertical}
+  .studio-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;transition:border-color .15s}
+  .studio-item:hover{border-color:#c9c4ba}
+  .studio-item .pill{flex-shrink:0}
     </style>
 </head>
 <body>
@@ -149,7 +157,7 @@ const pct = (v) => (v === null || v === undefined ? "Unavailable" : (Number(v) *
 const dt = (v) => (v ? new Date(v).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
 const dayKey = (v) => (v ? new Date(v).toISOString().slice(0, 10) : "");
 
-const state = { tab: "overview", provider: "", campaign: "", live: false, liveTimer: null, since: new Date(Date.now() - 300000).toISOString() };
+const state = { tab: "overview", provider: "", campaign: "", live: false, liveTimer: null, since: new Date(Date.now() - 300000).toISOString(), prevTab: "" };
 
 const TABS = [
   ["overview", "Overview"], ["reminder30", "30-Min Reminder"], ["campaigns", "Campaigns"], ["recipients", "Recipients"],
@@ -649,18 +657,262 @@ async function previewMessage(id) {
     }
   } catch (e) { $("modal-body").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
 }
-function renderTemplateStudio() {
-  // Embed the full Template Studio as a same-origin iframe. The iframe shares the
-  // Admin session (assistara_admin_token lives in localStorage/sessionStorage,
-  // accessible across same-origin frames) so no second login is required.
-  $("view").innerHTML = `<div id="ts-frame-wrap" style="margin:-16px -16px -22px"><iframe id="ts-frame" src="/admin-template-studio.html" style="width:100%;height:calc(100vh - 110px);border:0;border-radius:12px;display:block;background:#f4f3ef"></iframe></div>`;
-}
+  // ==================== Template Studio (native integration) ====================
+  // Studio state — lives in the same shadow root, uses the same design system
+  // classes (.card, .btn, .pill, .field) and the same admin session token.
+  const STUDIO_API = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-email-templates";
+  const studio = {
+    list: null,          // null = not loaded yet; [] = loaded
+    view: "list",        // list | editor | versions
+    active: null,        // active template key
+    draftHtml: "",
+    originalHtml: "",
+    subject: "",
+    previewText: "",
+    vars: [],
+    saving: false,
+  };
+
+  // Studio API call — same Bearer token as the rest of the Email Command Center.
+  async function studioReq(action, body = {}) {
+    const r = await fetch(STUDIO_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ action, ...body }),
+    });
+    if (r.status === 401) { location.href = "/admin"; throw new Error("Admin session expired — redirecting to login"); }
+    const j = await r.json().catch(() => ({}));
+    if (j && j.ok === false && j.error) throw Error(j.error);
+    return j;
+  }
+
+  function studioRenderList() {
+    const list = studio.list || [];
+    const rows = list.map((t) => `
+      <div class="studio-item" data-studio-open="${esc(t.key)}">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:13px">${esc(t.name)}</div>
+          <div class="small muted" style="margin-top:2px">${esc(t.key)} · ${esc(t.category)} · v${t.version || 0}</div>
+        </div>
+        <span class="pill ${t.status === "published" ? "good" : "warn"}">${esc(t.status)}</span>
+      </div>`).join("");
+    $("view").innerHTML = `
+      <div class="card">
+        <div class="head" style="margin:0 0 10px">
+          <div>
+            <h2 style="font-size:16px;margin:0 0 4px">Templates</h2>
+            <div class="sub" style="font-size:12px;color:var(--muted);margin:0">Select a template to edit. Drafts don't affect live email until published.</div>
+          </div>
+          <button class="btn" id="studio-import">Import legacy</button>
+        </div>
+        ${rows || '<div class="empty">No templates yet. Import the legacy set to begin.</div>'}
+      </div>`;
+    $("studio-import").addEventListener("click", studioImport);
+  }
+
+  async function studioLoadList() {
+    try {
+      const j = await studioReq("list");
+      studio.list = (j.templates || []).map((t) => ({
+        key: t.key, name: t.name, category: t.category,
+        status: t.status, version: t.version || 0,
+      }));
+    } catch (e) { /* keep empty list */ }
+    studioRenderList();
+  }
+
+  async function studioOpen(key) {
+    const t = (studio.list || []).find((x) => x.key === key);
+    if (!t) return;
+    studio.active = key;
+    studio.view = "editor";
+    try {
+      const j = await studioReq("get", { key });
+      const tpl = j.template || {};
+      studio.originalHtml = tpl.html || "";
+      studio.draftHtml = tpl.html || "";
+      studio.subject = tpl.subject || "";
+      studio.previewText = tpl.preview_text || "";
+      studio.vars = tpl.variables || [];
+    } catch (e) {
+      studio.originalHtml = studio.draftHtml = "";
+      studio.vars = [];
+    }
+    studioRenderEditor();
+  }
+
+  function studioRenderEditor() {
+    const t = (studio.list || []).find((x) => x.key === studio.active);
+    const vars = (studio.vars.length ? studio.vars : [
+      { n: "first_name", t: "string", r: true, s: "Jesse" },
+      { n: "checkout_url", t: "url", r: true, s: "/academy/enroll" },
+      { n: "limit", t: "number", r: true, s: "15" },
+    ]).map((v) => `
+      <div class="card" style="padding:10px 12px">
+        <div style="font-weight:800;font-size:12px">{{${esc(v.n)}}}<span class="pill" style="margin-left:6px">${esc(v.t || "")}</span></div>
+        <div class="small muted" style="margin-top:2px">Sample: ${esc(v.s || "")}</div>
+      </div>`).join("");
+    $("view").innerHTML = `
+      <button class="btn ghost" id="studio-back" style="margin-bottom:12px">← All templates</button>
+      <div class="card" style="margin-bottom:14px">
+        <div class="head" style="margin:0 0 10px">
+          <div>
+            <h2 style="font-size:16px;margin:0 0 4px">${esc(t ? t.name : studio.active)}</h2>
+            <div class="sub" style="font-size:12px;color:var(--muted);margin:0">${esc(studio.active)}</div>
+          </div>
+          <span class="pill ${t && t.status === "published" ? "good" : "warn"}">${t ? esc(t.status) : ""}</span>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr">
+          <div><label class="studio-field">Subject line</label><input class="studio-input" id="studio-subject" value="${esc(studio.subject)}" /></div>
+          <div><label class="studio-field">Preview / preheader text</label><input class="studio-input" id="studio-preview-text" value="${esc(studio.previewText)}" /></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="head" style="margin:0 0 8px">
+          <div>
+            <h2 style="font-size:14px;margin:0 0 4px">HTML editor</h2>
+            <div class="sub" style="font-size:12px;color:var(--muted);margin:0">HTML/CSS/links/variables are preserved exactly.</div>
+          </div>
+          <button class="btn" id="studio-reload">Reload original</button>
+        </div>
+        <textarea id="studio-html" class="studio-textarea">${esc(studio.draftHtml)}</textarea>
+        <div class="small muted" style="margin-top:6px">Raw HTML editing — changes apply on Save Draft.</div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <h3 style="margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Variables used</h3>
+        <div class="grid" style="grid-template-columns:repeat(3,1fr)">${vars}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="studio-versions-btn">Versions</button>
+        <button class="btn primary" id="studio-save">Save Draft</button>
+        <button class="btn" id="studio-test">Send Test</button>
+        <button class="btn primary" id="studio-publish">Publish to Live</button>
+      </div>`;
+    $("studio-back").addEventListener("click", () => { studio.view = "list"; studioLoadList(); });
+    $("studio-reload").addEventListener("click", async () => {
+      try {
+        const j = await studioReq("get", { key: studio.active });
+        studio.draftHtml = (j.template && j.template.html) || studio.originalHtml;
+        $("studio-html").value = studio.draftHtml;
+        toast("Original HTML reloaded.");
+      } catch (e) { toast("Reload failed: " + e.message); }
+    });
+    $("studio-save").addEventListener("click", studioSaveDraft);
+    $("studio-test").addEventListener("click", studioTestSend);
+    $("studio-publish").addEventListener("click", studioPublish);
+    $("studio-versions-btn").addEventListener("click", studioRenderVersions);
+  }
+
+  function studioRenderVersions() {
+    studio.view = "versions";
+    const t = (studio.list || []).find((x) => x.key === studio.active);
+    $("view").innerHTML = `
+      <button class="btn ghost" id="studio-back2" style="margin-bottom:12px">← Back to editor</button>
+      <div class="card">
+        <div class="head" style="margin:0 0 10px">
+          <div>
+            <h2 style="font-size:16px;margin:0 0 4px">Versions &amp; history</h2>
+            <div class="sub" style="font-size:12px;color:var(--muted);margin:0">${esc(studio.active)}</div>
+          </div>
+          <span class="pill ${t && t.status === "published" ? "good" : "warn"}">${t ? esc(t.status) : ""}</span>
+        </div>
+        <div id="studio-versions-list"><div class="empty">Loading versions…</div></div>
+      </div>`;
+    $("studio-back2").addEventListener("click", () => { studio.view = "editor"; studioRenderEditor(); });
+    studioLoadVersions();
+  }
+
+  async function studioLoadVersions() {
+    try {
+      const j = await studioReq("get", { key: studio.active });
+      const versions = (j.template && j.template.versions) || [];
+      const box = $("studio-versions-list");
+      if (!versions.length) {
+        box.innerHTML = '<div class="empty">No version history yet.</div>';
+        return;
+      }
+      box.innerHTML = versions.map((v) => `
+        <div class="card" style="padding:12px 14px;margin-bottom:8px">
+          <div style="font-weight:800;font-size:13px">v${esc(v.version || 1)} <span class="pill" style="margin-left:6px">${esc(v.status || "")}</span></div>
+          <div class="small muted" style="margin-top:2px">${esc(v.created_at || "")}${v.change_summary ? " · " + esc(v.change_summary) : ""}</div>
+        </div>`).join("");
+    } catch (e) {
+      $("studio-versions-list").innerHTML = '<div class="empty">Could not load versions.</div>';
+    }
+  }
+
+  async function studioSaveDraft() {
+    if (studio.saving) return;
+    studio.saving = true;
+    try {
+      const html = $("studio-html").value;
+      studio.draftHtml = html;
+      const j = await studioReq("save_draft", {
+        key: studio.active,
+        html,
+        subject: $("studio-subject").value,
+        preview_text: $("studio-preview-text").value,
+      });
+      if (j.ok) { toast("Draft saved."); studio.list = null; }
+      else toast("Save failed: " + (j.error || "unknown"));
+    } catch (e) { toast("Save failed: " + e.message); }
+    studio.saving = false;
+  }
+
+  async function studioTestSend() {
+    const d = await studioSaveDraft();
+    if (d && d.ok === false) return;
+    try {
+      const j = await studioReq("test_send", { key: studio.active, to: "admin@getassistara.com" });
+      if (j.ok) toast("Test email sent to admin@getassistara.com.");
+      else toast("Test send failed: " + (j.error || "unknown"));
+    } catch (e) { toast("Test send failed: " + e.message); }
+  }
+
+  async function studioPublish() {
+    const d = await studioSaveDraft();
+    if (d && d.ok === false) return;
+    try {
+      const j = await studioReq("publish", {
+        key: studio.active,
+        change_summary: "Published from Email Command Center",
+        confirm: true,
+      });
+      if (j.ok) { toast("Template published."); studio.list = null; studioLoadList(); }
+      else toast("Publish failed: " + (j.error || "unknown"));
+    } catch (e) { toast("Publish failed: " + e.message); }
+  }
+
+  async function studioImport() {
+    const keys = [
+      "academy_application_confirmation", "internal_new_application",
+      "academy_application_accepted", "academy_application_waitlisted",
+      "academy_onboarding", "academy_payment_confirmation",
+      "academy_waitlist_seat_opened", "masterclass_reminder_24h",
+      "masterclass_followup", "masterclass_reminder_30", "masterclass_reminder_5",
+      "masterclass_registration_confirmation",
+    ];
+    try {
+      const j = await studioReq("import", { keys });
+      if (j.ok) { toast("Imported " + (j.imported || keys.length) + " templates as drafts."); studio.list = null; studioLoadList(); }
+      else toast("Import failed: " + (j.error || "unknown"));
+    } catch (e) { toast("Import failed: " + e.message); }
+  }
+
+  // Entry point — native tab render, no iframe, no external file fetch.
+  async function renderTemplateStudio() {
+    if (studio.view === "editor" && studio.active) { studioRenderEditor(); return; }
+    if (studio.view === "versions" && studio.active) { studioRenderVersions(); return; }
+    await studioLoadList();
+  }
 
 const RENDER = { overview: renderOverview, reminder30: renderReminder30, campaigns: renderCampaigns, recipients: renderRecipients, providers: () => renderProviders(false), activity: renderActivity, setup: renderSetup, acquisition: renderAcquisition, "template-studio": renderTemplateStudio };;
 
 async function draw() {
   renderTabs();
   $("view").innerHTML = `<div class="empty">Loading…</div>`;
+  if (state.tab === "template-studio" && state.prevTab !== "template-studio") { studio.view = "list"; studio.active = null; }
+  state.prevTab = state.tab;
   try { await RENDER[state.tab](); }
   catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
 }
@@ -677,6 +929,8 @@ $("view").addEventListener("click", (e) => {
   if (pc) return previewCampaign(pc.dataset.previewCampaign);
   const pm = e.target.closest("[data-preview-message]");
   if (pm) return previewMessage(pm.dataset.previewMessage);
+  const so = e.target.closest("[data-studio-open]");
+  if (so) return studioOpen(so.dataset.studioOpen);
 });
 $("refresh").addEventListener("click", draw);
 $("range").addEventListener("change", draw);
