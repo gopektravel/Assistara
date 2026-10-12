@@ -1,5 +1,5 @@
-/* ==========================================================================
-   Assistara Admin — Components
+﻿/* ==========================================================================
+   Assistara Admin â€” Components
    Cards, buttons, badges, forms, tables, panels, toasts, modals,
    skeletons, empty states.
    ========================================================================== */
@@ -778,4 +778,268 @@ textarea:focus-visible,
 
 .skip-link:focus {
   top: 16px;
+}
+
+/* ---------------------------------------------------------------- *
+ * Applicant row (single-column list)
+ * ---------------------------------------------------------------- */
+.applicantRow {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-card);
+  margin-bottom: var(--space-card-gap);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.applicantRow:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #c9c4ba;
+}
+
+.applicantRow.open {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--ink);
+}
+
+.applicantRowMain {
+  display: grid;
+  grid-template-columns: 1fr auto auto 40px;
+  align-items: center;
+  gap: var(--space-component);
+}
+
+.applicantIdentity {
+  min-width: 0;
+}
+
+.applicantName {
+  font: var(--text-h4);
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.applicantSub {
+  font: var(--text-caption);
+  color: var(--muted);
+}
+
+.applicantStage {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font: var(--text-label);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.stage-new { background: var(--info-light); color: var(--info-dark); border: 1px solid var(--info-border); }
+.stage-awaiting-payment { background: var(--warning-light); color: var(--warning-dark); border: 1px solid var(--warning-border); }
+.stage-payment-pending { background: var(--warning-light); color: var(--warning-dark); border: 1px solid var(--warning-border); }
+.stage-onboarding { background: var(--info-light); color: var(--info-dark); border: 1px solid var(--info-border); }
+.stage-enrolled { background: var(--success-light); color: var(--success-dark); border: 1px solid var(--success-border); }
+.stage-declined { background: var(--neutral-light); color: var(--neutral-dark); border: 1px solid var(--neutral-border); }
+.stage-suspended { background: var(--danger-light); color: var(--danger-dark); border: 1px solid var(--danger-border); }
+
+.applicantNextAction {
+  min-width: 200px;
+  text-align: right;
+}
+
+.actionLabel {
+  font: var(--text-caption);
+  color: var(--muted);
+}
+
+.action-admin .actionLabel { color: var(--warning-dark); font-weight: 600; }
+.action-applicant .actionLabel { color: var(--info-dark); font-weight: 600; }
+.action-none .actionLabel { color: var(--muted); }
+.action-closed .actionLabel { color: var(--muted); }
+
+.applicantActions {
+  grid-column: 1 / -1;
+  margin-top: var(--space-component);
+  padding-top: var(--space-component);
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.applicantPanel {
+  display: none;
+  margin-top: var(--space-card);
+  padding-top: var(--space-card);
+  border-top: 1px solid var(--line);
+  animation: panel-open var(--transition-slow);
+}
+
+.applicantPanel.open {
+  display: block;
+}
+
+.expandArrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  font: 700 18px/1 var(--font-family);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.expandArrow:hover {
+  background: var(--cream);
+  border-color: #c9c4ba;
+}
+
+.expandArrow[aria-expanded=\"true\"] {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 639px) {
+  .applicantRowMain {
+    grid-template-columns: 1fr;
+    gap: var(--space-element);
+  }
+  .applicantStage,
+  .applicantNextAction {
+    min-width: 0;
+    text-align: left;
+  }
+  .applicantActions {
+    grid-column: 1;
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ * Filter bar (Applicants)
+ * ---------------------------------------------------------------- */
+.filterBar {
+  display: flex;
+  gap: var(--space-component);
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: var(--space-component);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-card-gap);
+}
+
+.filterBar[hidden] { display: none; }
+
+.filter-group {
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.filter-group .field-label {
+  font: var(--text-label);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- *
+ * Academy Enrollment pipeline
+ * ---------------------------------------------------------------- */
+.enrollment {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.enrollmentMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.enrollmentTile {
+  display: block;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  background: #faf9f5;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  transition: transform var(--transition), border-color var(--transition);
+}
+
+.enrollmentTile:hover {
+  border-color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.enrollmentTile b { display: block; font-size: 24px; font-weight: 800; line-height: 1.1; }
+.enrollmentTile span { display: block; font-size: 12px; font-weight: 700; margin-top: 4px; }
+.enrollmentTile small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.seatProgress { margin-top: 10px; }
+.seatProgressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.enrollmentIndicators {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.enrollmentIndicators:empty { display: none; }
+
+.enrollmentIndicator {
+  border: 1px solid #e5d9b8;
+  background: #fff8e6;
+  color: #7a5b00;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 7px 12px;
+  text-decoration: none;
+}
+
+.enrollmentFootnote { margin-top: 10px; font-size: 12px; }
+
+/* Capacity Details expandable */
+.capacityToggle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 2px 0 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.capacityToggleTitle { font-size: 14px; font-weight: 800; }
+.capacityToggleSub { font-size: 12px; color: var(--muted); }
+.capacityToggleChevron { margin-left: auto; color: var(--muted); transition: transform var(--transition); }
+.capacityToggle[aria-expanded="true"] .capacityToggleChevron { transform: rotate(180deg); }
+
+@media (max-width: 900px) {
+  .enrollmentMetrics { grid-template-columns: repeat(2, 1fr); }
 }
