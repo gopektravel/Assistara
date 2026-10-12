@@ -135,7 +135,7 @@ test("every shared Admin stylesheet is built and routed before the catch-all", (
 });
 
 test("Admin pages use Manrope as the only font", () => {
-  const files = ["admin.html", "admin-finance.html", "admin-email.html", "admin-acquisition.html", "admin-masterclass-event.html"];
+  const files = ["admin.html", "admin-finance.html", "admin-email.html", "admin-acquisition.html", "admin-masterclass-event.html", "admin-template-studio.html"];
   for (const file of files) {
     const source = read(`assistara-local-v9/${file}`);
     assert.match(source, /Manrope/i, `${file} must reference Manrope`);
