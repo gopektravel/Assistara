@@ -28,3 +28,72 @@ For ANY Assistara email work — creating, editing, rendering, previewing, testi
 - Emails must not load remote images; use the email-safe brand mark. `node --test scripts/email-branding.test.js` must pass before deploy.
 - Masterclass registration is **not** marketing consent. Promotional emails require a recorded consent basis; when none exists, do not send.
 
+# Assistara browser automation rule
+
+All Assistara browser automation — in every current and future OpenCode session, for every
+agent — MUST use **one shared persistent browser profile**. Never create a temporary,
+isolated, incognito or per-session profile.
+
+1. **Profile directory (single source of truth)**
+   `%USERPROFILE%\.cache\opencode\playwright-profile` (on this machine:
+   `C:\Users\jesse\.cache\opencode\playwright-profile`).
+
+   It lives **outside** the Git repository on purpose and must never be committed, copied to
+   the repository, reset, or deleted.
+
+2. **Canonical configuration** — `%USERPROFILE%\.config\opencode\opencode.jsonc`, under the
+   top-level `mcp` key (server names are keys **directly** under `mcp`; there is no `servers`
+   wrapper). This is the one and only place the browser profile is declared:
+
+   ```jsonc
+   "mcp": {
+     "playwright": {
+       "type": "local",
+       "command": [
+         "npx",
+         "@playwright/mcp@0.0.83",
+         "--executable-path",
+         "C:\\Users\\jesse\\AppData\\Local\\ms-playwright\\chromium-1248\\chrome-win64\\chrome.exe",
+         "--user-data-dir",
+         "C:\\Users\\jesse\\.cache\\opencode\\playwright-profile",
+         "--headed"
+       ]
+     }
+   }
+   ```
+
+   The explicit absolute `--user-data-dir` is what makes every session and every working
+   directory reuse the same profile. Without it `@playwright/mcp` defaults to
+   `%USERPROFILE%\AppData\Local\ms-playwright\mcp-{channel}-{sha256(cwd)[0:7]}`, which
+   produces a **different profile per project**.
+
+3. **Required rules for every session**
+   - Reuse `C:\Users\jesse\.cache\opencode\playwright-profile`. Never point automation at a
+     different, new, or per-session directory.
+   - NEVER pass `--isolated` (it keeps the profile in memory and creates a throwaway profile).
+   - NEVER use incognito/temporary profiles or `%TEMP%\playwright_chromiumdev_profile-*`.
+   - NEVER delete, reset, clear or "clean" the profile directory.
+   - Only ONE browser instance may hold the profile at a time. If it is already in use,
+     reuse the running browser (`--cdp-endpoint`) instead of launching a competing instance.
+   - NEVER copy cookies, sessions or credentials between profiles. Sign in again instead.
+   - Never write credentials, cookies or tokens into source, config or documentation.
+
+4. **Desktop app browser is not the persistent profile.** The `browser.*` tools in the
+   OpenCode desktop app drive the app's own embedded Electron browser, which uses
+   `%APPDATA%\ai.opencode.desktop` and keeps page storage **in memory** (its on-disk cookie
+   store is not written). Logins there do not survive an app restart. Durable provider
+   logins belong in the Playwright profile above.
+
+5. **Verification** — the authentication health check:
+
+   ```
+   node scripts/browser-auth-health.mjs            # report, exit 0
+   node scripts/browser-auth-health.mjs --strict   # exit 1 when a provider is signed out
+   node scripts/browser-auth-health.mjs --json     # machine readable
+   ```
+
+   It is read-only: it loads each dashboard and reports the sign-in status. It never signs
+   in, never signs out, never changes settings, never clears cookies or storage, and never
+   prints credentials. Run it before provider-facing work, and after any OpenCode restart.
+
+

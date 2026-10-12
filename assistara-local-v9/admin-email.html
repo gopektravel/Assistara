@@ -702,7 +702,7 @@ async function previewMessage(id) {
           <div class="small muted" style="margin-top:2px">${esc(t.key)} · ${esc(t.category)} · v${t.version || 0}</div>
         </div>
         <span class="pill ${t.status === "published" ? "good" : t.status === "deleted" ? "warn" : "warn"}">${esc(t.status)}</span>
-        ${isDeleted ? `<button class="btn" onclick="event.stopPropagation(); studioRestore('${esc(t.key)}')" style="margin-left:6px;color:#b3261e;border-color:#b3261e;background:transparent">Restore</button>` : ''}
+        ${isDeleted ? `<button class="btn" data-studio-restore="${esc(t.key)}" style="margin-left:6px;color:#b3261e;border-color:#b3261e;background:transparent">Restore</button>` : ''}
       </div>`;
     }).join("");
     $("view").innerHTML = `
@@ -714,9 +714,9 @@ async function previewMessage(id) {
           </div>
           <button class="btn" id="studio-import">Import legacy</button>
           <div style="display:flex;gap:6px;margin-left:auto">
-            <button class="btn ghost" onclick="studio.filter='active';studioRenderList()">Active</button>
-            <button class="btn ghost" onclick="studio.filter='deleted';studioRenderList()">Deleted</button>
-            <button class="btn ghost" onclick="studio.filter='all';studioRenderList()">All</button>
+            <button class="btn ghost" data-studio-filter="active">Active</button>
+            <button class="btn ghost" data-studio-filter="deleted">Deleted</button>
+            <button class="btn ghost" data-studio-filter="all">All</button>
           </div>
         </div>
         ${rows || '<div class="empty">No templates yet. Import the legacy set to begin.</div>'}
@@ -820,8 +820,8 @@ async function previewMessage(id) {
           <button class="btn" id="studio-reload">Reload original</button>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button class="btn" id="studio-mode-visual" onclick="setStudioMode('visual')">Visual</button>
-          <button class="btn ghost" id="studio-mode-html" onclick="setStudioMode('html')">HTML</button>
+          <button class="btn" id="studio-mode-visual" data-studio-mode="visual">Visual</button>
+          <button class="btn ghost" id="studio-mode-html" data-studio-mode="html">HTML</button>
         </div>
         <div id="studio-preview-panel" style="border:1px solid #ece9e2;border-radius:10px;padding:12px;background:#fff;min-height:260px;margin-bottom:10px;font-family:'Manrope',sans-serif">
           <iframe id="studio-preview-frame" style="width:100%;height:280px;border:none;background:#fff" srcdoc="${esc(studio.draftHtml)}"></iframe>
@@ -994,6 +994,12 @@ $("view").addEventListener("click", (e) => {
   if (pc) return previewCampaign(pc.dataset.previewCampaign);
   const pm = e.target.closest("[data-preview-message]");
   if (pm) return previewMessage(pm.dataset.previewMessage);
+  const sr = e.target.closest("[data-studio-restore]");
+  if (sr) return studioRestore(sr.dataset.studioRestore);
+  const sf = e.target.closest("[data-studio-filter]");
+  if (sf) { studio.filter = sf.dataset.studioFilter; return studioRenderList(); }
+  const sm = e.target.closest("[data-studio-mode]");
+  if (sm) return setStudioMode(sm.dataset.studioMode);
   const so = e.target.closest("[data-studio-open]");
   if (so) return studioOpen(so.dataset.studioOpen);
 });

@@ -17,8 +17,8 @@ select,
 textarea,
 table,
 canvas {
-  font-family: "Manrope", sans-serif !important;
+  font-family:"Manrope",sans-serif!important;
 }
 
-/* IF ANY UI COMPONENT or inline style sets font-family to Arial, Inter, DM Sans, or system-ui, this test FAILS. */
+/* IF ANY UI COMPONENT or inline style sets font-family to a competing webfont, this test FAILS. */
 /* No exceptions – all text, buttons, inputs, tables, charts, modals, navigation and embedded tools must render in Manrope. */

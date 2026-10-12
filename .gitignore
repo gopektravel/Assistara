@@ -1,3 +1,10 @@
 .vercel
 .env*
 supabase/.temp/
+
+# Browser automation profile — must NEVER be committed.
+# The shared profile lives outside the repo at %USERPROFILE%\.cache\opencode\playwright-profile;
+# these entries are a safety net if it is ever copied into the working tree.
+playwright-profile/
+**/playwright-profile/
+.cache/opencode/
