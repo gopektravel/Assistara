@@ -744,13 +744,36 @@ async function previewMessage(id) {
     studioRenderEditor();
   }
 
+  window.setStudioMode = function(mode) {
+    const visual = document.getElementById("studio-preview-panel");
+    const html = document.getElementById("studio-html");
+    const btnV = document.getElementById("studio-mode-visual");
+    const btnH = document.getElementById("studio-mode-html");
+    if (visual) visual.style.display = mode === "visual" ? "block" : "none";
+    if (html) html.style.display = mode === "html" ? "block" : "none";
+    if (btnV) btnV.className = mode === "visual" ? "btn" : "btn ghost";
+    if (btnH) btnH.className = mode === "html" ? "btn" : "btn ghost";
+    // Refresh preview when switching back to visual
+    if (mode === "visual") {
+      const f = document.getElementById("studio-preview-frame");
+      if (f && document.getElementById("studio-html")) f.srcdoc = document.getElementById("studio-html").value || "";
+    }
+  };
   function studioRenderEditor() {
     const t = (studio.list || []).find((x) => x.key === studio.active);
-    const vars = (studio.vars.length ? studio.vars : [
+    // Extract variables from current draft HTML rather than hardcoded list
+    let varsFromHtml = [];
+    try {
+      const draftHtml = studio.draftHtml || "";
+      const matches = draftHtml.match(/\{\{([^{}]+?)\}\}/g) || [];
+      const unique = [...new Set(matches.map(m => m.replace(/\{\{/g,"").replace(/\}\}/g,"").trim()))];
+      varsFromHtml = unique.map((n) => ({ n, t: "string", r: false, s: "" }));
+    } catch (e) { varsFromHtml = []; }
+    const vars = (varsFromHtml.length ? varsFromHtml : (studio.vars && studio.vars.length ? studio.vars : [
       { n: "first_name", t: "string", r: true, s: "Jesse" },
       { n: "checkout_url", t: "url", r: true, s: "/academy/enroll" },
       { n: "limit", t: "number", r: true, s: "15" },
-    ]).map((v) => `
+    ])).map((v) => `
       <div class="card" style="padding:10px 12px">
         <div style="font-weight:800;font-size:12px">{{${esc(v.n)}}}<span class="pill" style="margin-left:6px">${esc(v.t || "")}</span></div>
         <div class="small muted" style="margin-top:2px">Sample: ${esc(v.s || "")}</div>
@@ -778,8 +801,15 @@ async function previewMessage(id) {
           </div>
           <button class="btn" id="studio-reload">Reload original</button>
         </div>
-        <textarea id="studio-html" class="studio-textarea">${esc(studio.draftHtml)}</textarea>
-        <div class="small muted" style="margin-top:6px">Raw HTML editing — changes apply on Save Draft.</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="btn" id="studio-mode-visual" onclick="setStudioMode('visual')">Visual</button>
+          <button class="btn ghost" id="studio-mode-html" onclick="setStudioMode('html')">HTML</button>
+        </div>
+        <div id="studio-preview-panel" style="border:1px solid #ece9e2;border-radius:10px;padding:12px;background:#fff;min-height:260px;margin-bottom:10px;font-family:'Manrope',sans-serif">
+          <iframe id="studio-preview-frame" style="width:100%;height:280px;border:none;background:#fff" srcdoc="${esc(studio.draftHtml)}"></iframe>
+        </div>
+        <textarea id="studio-html" class="studio-textarea" style="display:none">${esc(studio.draftHtml)}</textarea>
+        <div class="small muted" style="margin-top:6px">Toggle Visual / HTML. Changes apply on Save Draft. Legacy HTML preserved exactly.</div>
       </div>
       <div class="card" style="margin-bottom:14px">
         <h3 style="margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Variables used</h3>
