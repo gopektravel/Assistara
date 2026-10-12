@@ -1,0 +1,5 @@
+/* Currency selector — compact, Manrope, minimal */
+.currencySwitch { display: inline-flex; gap: 2px; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-family: var(--font-family); }
+.currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 6px 10px; font: var(--font-family); font-size: 11px; font-weight: 700; line-height: 1; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.currencySwitch button:not(.active):hover { background: #f1eee5; color: var(--ink); }
+.currencySwitch button.active { background: #171717; color: #fff; }

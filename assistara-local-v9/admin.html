@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="/admin-layout.css" />
     <link rel="stylesheet" href="/admin-sidebar.css" />
     <link rel="stylesheet" href="/admin-header.css" />
+    <script src="/assistara-currency.js"></script>
+    <link rel="stylesheet" href="/admin-currency.css" />
     <link rel="stylesheet" href="/manrope-lock.css?v=20261012-1" />
     <style>
       :root {
@@ -1115,6 +1117,12 @@
           <div class="workspace-search" id="searchWrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             <input id="search" placeholder="Search..." aria-label="Search applications, students and signups" />
+          </div>
+          <div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency" style="margin-left:auto;flex-shrink:0;">
+            <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
+            <button type="button" data-cur="USD" aria-pressed="false">USD</button>
+            <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
+            <button type="button" data-cur="AUD" aria-pressed="false">AUD</button>
           </div>
         </div>
         <header class="page-header" id="pageHeader">
@@ -2614,7 +2622,12 @@
       /* ---------------------------------------------------------------- *
        * Coupons tab rendering
        * ---------------------------------------------------------------- */
-      const MONEY_PHP = (centavos) => '₱' + (centavos / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const MONEY_PHP = (centavos) => {
+        const cur = (window.AssistaraCurrency && window.AssistaraCurrency.getDisplay) ? window.AssistaraCurrency.getDisplay() : "PHP";
+        const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v,c) => (c==="PHP"?"₱":"")+Number(v/100).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
+        const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(centavos/100, cur) : (centavos/100);
+        return fmt(val, cur);
+      };
       const COUPON_STATUS_BADGE = {
         active: { label: 'Active', class: 'active' },
         inactive: { label: 'Inactive', class: 'inactive' },
@@ -3248,8 +3261,12 @@
         return Number.isFinite(c) && c > 0 ? c : null;
       }
       function ovMoney(php) {
+        const cur = (window.AssistaraCurrency && window.AssistaraCurrency.getDisplay) ? window.AssistaraCurrency.getDisplay() : "PHP";
         if (php == null || !Number.isFinite(Number(php))) return "Unavailable";
-        return "₱" + Number(php).toLocaleString("en-PH", { maximumFractionDigits: 0 });
+        const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v,c) => (c==="PHP"?"₱":"")+Number(v).toLocaleString("en-US");
+        const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : Number(php);
+        if (val == null || !Number.isFinite(Number(val))) return "Unavailable";
+        return fmt(val, cur);
       }
       function ovNum(n) {
         if (n == null || !Number.isFinite(Number(n))) return "Unavailable";
@@ -3457,6 +3474,38 @@
           }
         } finally {
           overviewLoading = false;
+        }
+      }
+      /* Currency switch — display-only, persisted, no reload */
+      if (window.AssistaraCurrency) {
+        const sw = document.getElementById("currencySwitch");
+        if (sw) {
+          sw.querySelectorAll("button").forEach(b => {
+            b.addEventListener("click", () => {
+              const cur = b.dataset.cur;
+              if (!cur) return;
+              window.AssistaraCurrency.setDisplay(cur);
+              sw.querySelectorAll("button").forEach(x => {
+                x.classList.toggle("active", x === b);
+                x.setAttribute("aria-pressed", x === b ? "true" : "false");
+              });
+              /* Refresh monetary displays (Overview + Applications + Coupons) */
+              if (typeof render === "function") try { render(); } catch {}
+              if (typeof renderOverview === "function") try { renderOverview(); } catch {}
+              document.querySelectorAll(".toolRoot").forEach(host => {
+                host.setAttribute("data-currency", cur);
+              });
+            });
+          });
+          /* Set initial active state */
+          const cur = window.AssistaraCurrency.getDisplay();
+          sw.querySelectorAll("button").forEach(b => {
+            const on = b.dataset.cur === cur;
+            b.classList.toggle("active", on);
+            b.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          /* Pre-fetch rate for non-PHP selection */
+          if (cur !== "PHP") window.AssistaraCurrency.fetchRate(cur).catch(()=>{});
         }
       }
       // Sidebar navigation — dashboard tabs, mounted tools and the
@@ -3946,6 +3995,8 @@
         const root = document.createElement("div");
         root.className = "toolRoot";
         root.innerHTML = src.markup;
+        // Propagate currency selection to embedded tool context
+        root.setAttribute("data-currency", (window.AssistaraCurrency && window.AssistaraCurrency.getDisplay) ? window.AssistaraCurrency.getDisplay() : "PHP");
         shadow.appendChild(root);
         $("toolView").replaceChildren(host);
         shadow.addEventListener("click", interceptAdminLink);
