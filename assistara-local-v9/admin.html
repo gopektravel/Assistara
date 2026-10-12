@@ -3501,7 +3501,19 @@
           toast("Signed in. Some data could not be loaded: " + e.message);
         }
       }
-      if (token) restoreSession();
+      if (token) {
+        restoreSession().catch((e) => {
+          console.error("restoreSession failed", e);
+          toast("Session restored but data load failed: " + e.message);
+        });
+        // Fallback: if Overview doesn't appear within 3s, force enterApp
+        setTimeout(() => {
+          if (document.getElementById("overviewView")?.hidden) {
+            console.warn("Overview not visible after restoreSession, forcing enterApp");
+            enterApp().catch((e) => console.error("fallback enterApp failed", e));
+          }
+        }, 3000);
+      }
       (() => {
         const B =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-b2b-calls";
