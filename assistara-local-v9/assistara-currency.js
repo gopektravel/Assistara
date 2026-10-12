@@ -1,9 +1,6 @@
 /* Shared Assistara currency display — display-only, never writes DB */
-const DISP_CURS = ["PHP","USD","EUR","AUD"];
-const DISP_SYM = {PHP:"₱",USD:"$",EUR:"€",AUD:"A$"};
-const DISP_KEY = "assistara_currency_display";
-let dispCur = (()=>{try{const s=localStorage.getItem(DISP_KEY); return DISP_CURS.includes(s)?s:"PHP";}catch{ return "PHP";}})();
-const dispRates = {PHP:1};
+const DISP_CURS = ["PHP","USD","EUR"];
+const DISP_SYM = {PHP:"₱",USD:"$",EUR:"€"};
 let dispRateDate = new Date().toISOString().slice(0,10);
 async function fetchRate(cur){
   if(cur==="PHP"||dispRates[cur]>0) return true;
