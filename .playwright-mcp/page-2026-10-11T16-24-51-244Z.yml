@@ -1,0 +1,25 @@
+- generic [active] [ref=f77e1]:
+  - generic [ref=f77e2]:
+    - banner:
+      - generic [ref=f77e4]:
+        - link [ref=f77e6] [cursor=pointer]:
+          - /url: /home
+          - img "Resend" [ref=f77e7]
+        - button "menu" [ref=f77e10]:
+          - generic [ref=f77e11]: Open main menu
+    - main [ref=f77e14]:
+      - 'heading "404: Not Found" [level=1] [ref=f77e64]'
+      - paragraph [ref=f77e68]: This page does not exist. Please check the URL and try again
+      - link "Go back home" [ref=f77e71] [cursor=pointer]:
+        - /url: /
+      - navigation "Helpful links" [ref=f77e74]:
+        - link "Documentation" [ref=f77e75] [cursor=pointer]:
+          - /url: /docs
+        - link "Blog" [ref=f77e76] [cursor=pointer]:
+          - /url: /blog
+        - link "Sitemap" [ref=f77e77] [cursor=pointer]:
+          - /url: /sitemap.xml
+        - link "llms.txt" [ref=f77e78] [cursor=pointer]:
+          - /url: /llms.txt
+  - region "Notifications alt+T"
+  - alert [ref=f77e79]

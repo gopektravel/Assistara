@@ -1,0 +1,14 @@
+[   13606ms] [LOG] 
+%cWhat are you searching for?
+ font-weight: 800 @ https://resend.com/_next/static/immutable/chunks/1rr0v84jfgkkt.js:3
+[   14572ms] Error: Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at rJ (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:45762)
+    at rZ (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:46795)
+    at https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:141487
+    at sy (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:146648)
+    at sh (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:137900)
+    at https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:137684
+    at sm (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:137692)
+    at sr (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:132825)
+    at sX (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:159521)
+    at sH (https://resend.com/_next/static/immutable/chunks/14b1aaw1q6wm6.js:31:157735)

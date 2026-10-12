@@ -1,0 +1,7 @@
+[     750ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://resend.com/dashboard:0
+[    1733ms] [LOG] 
+%cWhat are you searching for?
+ font-weight: 800 @ https://resend.com/_next/static/immutable/chunks/1rr0v84jfgkkt.js:3
+[    6405ms] [WARNING] The resource https://resend.com/_next/static/immutable/chunks/3kmf772wjuv72.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://resend.com/dashboard:0
+[    6405ms] [WARNING] The resource https://resend.com/_next/static/immutable/chunks/0q9w1p-wq49jc.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://resend.com/dashboard:0
+[    6405ms] [WARNING] The resource https://resend.com/_next/static/immutable/chunks/0sz3w4ruui2m3.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://resend.com/dashboard:0

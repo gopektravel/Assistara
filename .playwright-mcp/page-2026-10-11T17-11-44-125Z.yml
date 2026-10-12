@@ -1,0 +1,40 @@
+- generic:
+  - generic [aria-hidden] [ref=f149e1]:
+    - generic [ref=f149e6]:
+      - generic [ref=f149e8]:
+        - button [ref=f149e71] [cursor=pointer]:
+          - generic [ref=f149e12]:
+            - generic [ref=f149e13]: J
+            - generic [ref=f149e14]: jessevanrobbroeck
+        - button [ref=f149e72]:
+          - generic [ref=f149e20]: Open main menu
+      - generic [ref=f149e23]:
+        - generic [ref=f149e24]:
+          - heading [level=1] [ref=f149e73]: Webhooks
+          - button [expanded] [ref=f149e74] [cursor=pointer]:
+            - generic [ref=f149e31]: Add webhook
+        - generic [ref=f149e34]:
+          - heading [level=2] [ref=f149e75]: No webhooks yet
+          - generic [ref=f149e38]: Configure a webhook to receive real-time updates about email events.
+          - button [ref=f149e76] [cursor=pointer]:
+            - generic [ref=f149e44]: Add webhook
+    - button [ref=f149e77] [cursor=pointer]:
+      - generic [ref=f149e53]: Ask anything
+  - region "Notifications alt+T"
+  - alert [ref=f149e70]
+  - dialog [ref=f149e81]:
+    - heading "Add webhook" [level=2] [ref=f149e82]
+    - generic [ref=f149e83]:
+      - generic [ref=f149e84]:
+        - generic [ref=f149e85]: Endpoint URL
+        - textbox "Endpoint URL" [ref=f149e87]:
+          - /placeholder: https://
+          - text: https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/email-webhook?provider=resend
+      - generic [ref=f149e88]:
+        - generic [ref=f149e89]: Select events to listen
+        - combobox [ref=f149e90] [cursor=pointer]:
+          - generic [ref=f149e91]: 11 Events
+      - generic [ref=f149e95]:
+        - button "Add" [disabled] [active] [ref=f149e96]
+        - button "Cancel" [disabled] [ref=f149e98]
+    - button "Close dialog" [ref=f149e100] [cursor=pointer]

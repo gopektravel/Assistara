@@ -1,0 +1,39 @@
+- generic:
+  - generic [aria-hidden] [ref=f141e1]:
+    - generic [ref=f141e6]:
+      - generic [ref=f141e8]:
+        - button [ref=f141e70] [cursor=pointer]:
+          - generic [ref=f141e12]:
+            - generic [ref=f141e13]: J
+            - generic [ref=f141e29]: jessevanrobbroeck
+        - button [ref=f141e71]:
+          - generic [ref=f141e35]: Open main menu
+      - generic [ref=f141e38]:
+        - generic [ref=f141e39]:
+          - heading [level=1] [ref=f141e72]: Webhooks
+          - button [expanded] [ref=f141e73] [cursor=pointer]:
+            - generic [ref=f141e46]: Add webhook
+        - generic [ref=f141e49]:
+          - heading [level=2] [ref=f141e74]: No webhooks yet
+          - generic [ref=f141e53]: Configure a webhook to receive real-time updates about email events.
+          - button [ref=f141e75] [cursor=pointer]:
+            - generic [ref=f141e59]: Add webhook
+    - button [ref=f141e76] [cursor=pointer]:
+      - generic [ref=f141e68]: Ask anything
+  - region "Notifications alt+T"
+  - alert [ref=f141e69]
+  - dialog [ref=f141e80]:
+    - heading "Add webhook" [level=2] [ref=f141e81]
+    - generic [ref=f141e82]:
+      - generic [ref=f141e83]:
+        - generic [ref=f141e84]: Endpoint URL
+        - textbox "Endpoint URL" [active] [ref=f141e86]:
+          - /placeholder: https://
+      - generic [ref=f141e87]:
+        - generic [ref=f141e88]: Select events to listen
+        - combobox [ref=f141e89] [cursor=pointer]:
+          - generic [ref=f141e90]: Select events...
+      - generic [ref=f141e94]:
+        - button "Add" [disabled] [ref=f141e95]
+        - button "Cancel" [ref=f141e97] [cursor=pointer]
+    - button "Close dialog" [ref=f141e99] [cursor=pointer]

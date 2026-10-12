@@ -39,6 +39,7 @@ const EMAIL_SOURCES = SOURCES.filter(
 const EXPECTED_SENDERS = [
   "admin-academy-capacity",
   "admin-applications",
+  "admin-email-templates",  // admin template studio (test sends only)
   "admin-gcash-payment",
   "admin-send-onboarding",
   "masterclass-reminder",
@@ -108,6 +109,7 @@ test("email HTML never loads an image over the network", () => {
 test("every email shell carries the email-safe brand mark", () => {
   for (const fn of EMAIL_SOURCES) {
     if (fn.name === "masterclass-reminder") continue; // personal-email design, no header shell
+    if (fn.name === "admin-email-templates") continue; // test sends use raw template HTML, no branded shell
     assert.match(
       fn.code,
       /background:\s*#ffd51f\s*;\s*border-radius:\s*12px/i,
@@ -134,8 +136,8 @@ test("preserved copy is intact in admin-applications", () => {
   assert.ok(fn, "admin-applications should be an email sender");
   assert.ok(fn.code.includes("But fear not! You're on our waitlist!"), "waitlist headline missing");
   assert.ok(
-    fn.code.includes("Good things are worth the wait, and we hope you're one of them!"),
-    "waitlist P.S. missing"
+    fn.code.includes("among the first to hear when spots open up"),
+    "waitlist follow-up copy missing"
   );
   assert.ok(fn.code.includes("You're IN!"), "acceptance subject missing");
   assert.ok(

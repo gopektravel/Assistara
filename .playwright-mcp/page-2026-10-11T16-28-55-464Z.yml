@@ -1,0 +1,236 @@
+- generic [active] [ref=f109e1]:
+  - blockquote [aria-hidden] [ref=f109e2]:
+    - heading [level=2] [ref=f109e3]: Documentation Index
+    - paragraph [ref=f109e4]:
+      - text: "Fetch the complete documentation index at:"
+      - link [ref=f109e5] [cursor=pointer]:
+        - /url: /docs/llms.txt
+        - text: /docs/llms.txt
+    - paragraph [ref=f109e6]: Use this file to discover all available pages before exploring further.
+  - generic:
+    - link "Skip to main content" [ref=f109e7] [cursor=pointer]:
+      - /url: "#content-area"
+    - generic [ref=f109e9]:
+      - banner [ref=f109e10]:
+        - generic [ref=f109e14]:
+          - generic [ref=f109e16]:
+            - link "Resend home page light logo" [ref=f109e18] [cursor=pointer]:
+              - /url: https://resend.com
+              - generic [ref=f109e19]: Resend home page
+              - img "light logo" [ref=f109e20]
+            - generic [ref=f109e22]:
+              - button "Open search" [ref=f109e23] [cursor=pointer]:
+                - generic [ref=f109e24]: Search...
+              - button "Toggle assistant panel" [ref=f109e26] [cursor=pointer]
+              - button "More actions" [ref=f109e30] [cursor=pointer]
+          - button "Navigation Webhooks Webhooks" [ref=f109e32] [cursor=pointer]:
+            - generic [ref=f109e33]: Navigation
+            - generic [ref=f109e36]:
+              - generic [ref=f109e37]: Webhooks
+              - generic [ref=f109e41]: Webhooks
+      - main [ref=f109e44]:
+        - generic [ref=f109e46]:
+          - generic [ref=f109e47]:
+            - generic [ref=f109e48]:
+              - navigation "Breadcrumb" [ref=f109e49]:
+                - list [ref=f109e50]:
+                  - listitem [ref=f109e51]: Learn
+                  - listitem [ref=f109e54]: Webhooks
+              - heading "Webhooks" [level=1] [ref=f109e56]
+            - paragraph [ref=f109e58]: An introduction to using webhooks to notify your application about email events.
+            - generic [ref=f109e59]:
+              - button "Copy page" [ref=f109e60] [cursor=pointer]
+              - button "More actions" [ref=f109e65] [cursor=pointer]
+          - generic [ref=f109e68]:
+            - heading "Navigate to header Webhooks" [level=2] [ref=f109e69]:
+              - link "Navigate to header" [ref=f109e70] [cursor=pointer]:
+                - /url: "#webhooks"
+              - generic [ref=f109e75] [cursor=pointer]: Webhooks
+            - generic [ref=f109e76]:
+              - text: Resend provides webhooks, which are real-time HTTPS requests that tell your application an event occurred, such as an email delivery notification or subscription status update. This allows you to receive real-time and actionable updates on the delivery, open, bounce, and click events of your emails. You can create, update, observe, and retry webhooks from the dashboard or
+              - link "via the API" [ref=f109e77] [cursor=pointer]:
+                - /url: /docs/api-reference/webhooks/create-webhook
+              - text: .
+            - generic [ref=f109e78]: "Webhooks deliver a JSON payload with metadata like the from, to, and status of your email event that can be used by your application. Use webhook feeds for common workflows such as:"
+            - list [ref=f109e79]:
+              - listitem [ref=f109e80]:
+                - text: Automatically remove
+                - link "bounced email addresses" [ref=f109e81] [cursor=pointer]:
+                  - /url: /docs/webhooks/emails/bounced
+                - text: from mailing lists.
+              - listitem [ref=f109e82]:
+                - text: Create alerts in your messaging or incident tools based on
+                - link "event types" [ref=f109e83] [cursor=pointer]:
+                  - /url: /docs/webhooks/event-types
+                - text: .
+              - listitem [ref=f109e84]:
+                - link "Store all send events" [ref=f109e85] [cursor=pointer]:
+                  - /url: /docs/webhooks/how-to-store-webhooks-data
+                - text: in your own database for custom reporting/retention.
+              - listitem [ref=f109e86]:
+                - link "Receive inbound emails" [ref=f109e87] [cursor=pointer]:
+                  - /url: /docs/dashboard/receiving/introduction
+                - text: from your application.
+            - heading "Navigate to header Webhook features" [level=2] [ref=f109e88]:
+              - link "Navigate to header" [ref=f109e89] [cursor=pointer]:
+                - /url: "#webhook-features"
+              - generic [ref=f109e94] [cursor=pointer]: Webhook features
+            - generic [ref=f109e95]: "With Resend’s webhook features, you can:"
+            - list [ref=f109e96]:
+              - listitem [ref=f109e97]:
+                - link "Replay any webhook event" [ref=f109e98] [cursor=pointer]:
+                  - /url: /docs/webhooks/retries-and-replays
+                - text: . This is useful when your endpoint missed an event, or when you want to reprocess events with updated handler code.
+              - listitem [ref=f109e99]:
+                - link "Verify webhook requests" [ref=f109e100] [cursor=pointer]:
+                  - /url: /docs/webhooks/verify-webhooks-requests
+                - text: to ensure their authenticity.
+              - listitem [ref=f109e101]:
+                - link "Listen for webhook events locally during development" [ref=f109e102] [cursor=pointer]:
+                  - /url: /docs/cli#webhooks
+                - text: .
+              - listitem [ref=f109e103]:
+                - text: Self-host the
+                - link "Resend Webhook Ingester" [ref=f109e104] [cursor=pointer]:
+                  - /url: /docs/webhooks/ingester
+                - text: to store all your webhook events with an open-source, ready-to-deploy solution that handles all the complexity for you.
+            - heading "Navigate to header Quickstart" [level=2] [ref=f109e105]:
+              - link "Navigate to header" [ref=f109e106] [cursor=pointer]:
+                - /url: "#quickstart"
+              - generic [ref=f109e111] [cursor=pointer]: Quickstart
+            - generic [ref=f109e112]:
+              - text: Get started by
+              - link "creating a webhook" [ref=f109e113] [cursor=pointer]:
+                - /url: /docs/webhooks/create-webhook
+              - text: to incorporate Resend into your application.
+            - generic [ref=f109e114]: "To receive real-time events in your app via webhooks, you need to:"
+            - list [ref=f109e115]:
+              - listitem [ref=f109e116]:
+                - generic [ref=f109e118]: "1"
+                - generic [ref=f109e121]:
+                  - paragraph [ref=f109e122]: Create an endpoint in your application
+                  - generic [ref=f109e123]: Create a route that can accept POST requests. This route will listen for and receive events from Resend.
+              - listitem [ref=f109e125]:
+                - generic [ref=f109e127]: "2"
+                - generic [ref=f109e130]:
+                  - paragraph [ref=f109e131]: Add a webhook in Resend
+                  - generic [ref=f109e133]:
+                    - text: Define a webhook with the URL of your endpoint, and the
+                    - link "email events" [ref=f109e134] [cursor=pointer]:
+                      - /url: /docs/webhooks/event-types
+                    - text: it handles.
+            - generic [ref=f109e135]:
+              - text: See a step-by-step example of
+              - link "creating a webhook" [ref=f109e136] [cursor=pointer]:
+                - /url: /docs/webhooks/create-webhook
+              - text: through the Dashboard, including testing and deployment.
+            - heading "Navigate to header Choose your infrastructure" [level=2] [ref=f109e137]:
+              - link "Navigate to header" [ref=f109e138] [cursor=pointer]:
+                - /url: "#choose-your-infrastructure"
+              - generic [ref=f109e143] [cursor=pointer]: Choose your infrastructure
+            - generic [ref=f109e144]: After creating your application endpoint, you can define and manage your webhooks entirely from the Resend Dashboard. This allows all members of your team to have full access to your email event data and to perform any necessary maintenance.
+            - generic [ref=f109e145]: "To build workflows to manage and respond to email events from your application, you can use a variety of tools:"
+            - list [ref=f109e146]:
+              - listitem [ref=f109e147]:
+                - link "SDK" [ref=f109e148] [cursor=pointer]:
+                  - /url: /docs/sdks
+                - text: ": build and manage webhooks with an SDK built for your language"
+              - listitem [ref=f109e149]:
+                - link "Integrations" [ref=f109e150] [cursor=pointer]:
+                  - /url: /docs/integrations
+                - text: ": build workflows with a framework or tool you already use"
+              - listitem [ref=f109e151]:
+                - link "API" [ref=f109e152] [cursor=pointer]:
+                  - /url: /docs/api-reference/webhooks/create-webhook
+                - text: ": manage webhooks with raw cURL calls"
+              - listitem [ref=f109e153]:
+                - link "CLI" [ref=f109e154] [cursor=pointer]:
+                  - /url: /docs/cli#webhooks
+                - text: ": register endpoints and listen for email event notifications from the terminal."
+              - listitem [ref=f109e155]:
+                - link "MCP" [ref=f109e156] [cursor=pointer]:
+                  - /url: /docs/mcp-server
+                - text: ": build workflows that respond to email events through your agent using natural language."
+            - generic [ref=f109e157]:
+              - text: See how to use Resend’s webhook features such as replaying webhooks and storing webhook data in the
+              - link "webhooks guides" [ref=f109e158] [cursor=pointer]:
+                - /url: "#related-guides"
+              - text: .
+            - heading "Navigate to header Related Guides" [level=2] [ref=f109e159]:
+              - link "Navigate to header" [ref=f109e160] [cursor=pointer]:
+                - /url: "#related-guides"
+              - generic [ref=f109e165] [cursor=pointer]: Related Guides
+            - generic [ref=f109e166]:
+              - link [ref=f109e167] [cursor=pointer]:
+                - heading "Create webhook" [level=2] [ref=f109e172]
+              - link [ref=f109e173] [cursor=pointer]:
+                - heading "Respond to emails" [level=2] [ref=f109e178]
+              - link [ref=f109e179] [cursor=pointer]:
+                - heading "Retry replay webhooks" [level=2] [ref=f109e184]
+              - link [ref=f109e185] [cursor=pointer]:
+                - heading "Email event types" [level=2] [ref=f109e190]
+              - link [ref=f109e191] [cursor=pointer]:
+                - heading "Verify a webhook request" [level=2] [ref=f109e196]
+              - link [ref=f109e197] [cursor=pointer]:
+                - heading "Store webhook data" [level=2] [ref=f109e202]
+              - link [ref=f109e203] [cursor=pointer]:
+                - heading "Self-host the Resend Webhook Ingester" [level=2] [ref=f109e208]
+              - link [ref=f109e209] [cursor=pointer]:
+                - heading "Webhook events reference" [level=2] [ref=f109e214]
+            - heading "Navigate to header Examples" [level=2] [ref=f109e215]:
+              - link "Navigate to header" [ref=f109e216] [cursor=pointer]:
+                - /url: "#examples"
+              - generic [ref=f109e221] [cursor=pointer]: Examples
+            - generic [ref=f109e222]:
+              - link [ref=f109e223] [cursor=pointer]:
+                - generic [ref=f109e227]:
+                  - heading "Next.js (TypeScript)" [level=2] [ref=f109e228]
+                  - generic [ref=f109e229]: See the full source code.
+              - link [ref=f109e231] [cursor=pointer]:
+                - generic [ref=f109e235]:
+                  - heading "Next.js (JavaScript)" [level=2] [ref=f109e236]
+                  - generic [ref=f109e237]: See the full source code.
+              - link [ref=f109e239] [cursor=pointer]:
+                - generic [ref=f109e243]:
+                  - heading "PHP" [level=2] [ref=f109e244]
+                  - generic [ref=f109e245]: See the full source code.
+              - link [ref=f109e247] [cursor=pointer]:
+                - generic [ref=f109e251]:
+                  - heading "Laravel" [level=2] [ref=f109e252]
+                  - generic [ref=f109e253]: See the full source code.
+              - link [ref=f109e255] [cursor=pointer]:
+                - generic [ref=f109e259]:
+                  - heading "Python" [level=2] [ref=f109e260]
+                  - generic [ref=f109e261]: See the full source code.
+              - link [ref=f109e263] [cursor=pointer]:
+                - generic [ref=f109e267]:
+                  - heading "Ruby" [level=2] [ref=f109e268]
+                  - generic [ref=f109e269]: See the full source code.
+          - generic [ref=f109e272]:
+            - paragraph [ref=f109e273]: Was this page helpful?
+            - generic [ref=f109e275]:
+              - button "Yes" [ref=f109e276] [cursor=pointer]
+              - button "No" [ref=f109e281] [cursor=pointer]
+          - navigation "Pagination" [ref=f109e286]:
+            - link "Introduction Previous" [ref=f109e287] [cursor=pointer]:
+              - /url: /docs/dashboard/logs/introduction
+              - generic [ref=f109e288]:
+                - generic [ref=f109e289]: Introduction
+                - generic [ref=f109e290]: Previous
+            - link "Create a Webhook Next" [ref=f109e294] [cursor=pointer]:
+              - /url: /docs/webhooks/create-webhook
+              - generic [ref=f109e295]:
+                - generic [ref=f109e296]: Create a Webhook
+                - generic [ref=f109e297]: Next
+          - generic [ref=f109e302]:
+            - textbox "Ask a question..." [ref=f109e303]
+            - button "Send message" [disabled] [ref=f109e304]
+          - generic [ref=f109e309]:
+            - link "x" [ref=f109e310] [cursor=pointer]:
+              - /url: https://x.com/resend
+            - link "github" [ref=f109e313] [cursor=pointer]:
+              - /url: https://github.com/resend
+            - link "youtube" [ref=f109e316] [cursor=pointer]:
+              - /url: https://www.youtube.com/@resendlabs
+            - link "website" [ref=f109e319] [cursor=pointer]:
+              - /url: https://resend.com/

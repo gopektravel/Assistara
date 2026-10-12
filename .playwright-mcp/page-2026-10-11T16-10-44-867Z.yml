@@ -1,0 +1,38 @@
+- generic [ref=f27e1]:
+  - generic [ref=f27e2]:
+    - generic:
+      - img "Background Image"
+    - link [ref=f27e3] [cursor=pointer]:
+      - /url: /home
+    - main [ref=f27e7]:
+      - generic [ref=f27e8]:
+        - img "Resend" [ref=f27e9]
+        - heading "Log in to Resend" [level=1] [ref=f27e13]
+        - generic [ref=f27e14]:
+          - text: Don't have an account?
+          - link "Sign up" [ref=f27e15] [cursor=pointer]:
+            - /url: /signup
+          - text: .
+      - generic [ref=f27e16]:
+        - button "Log in with Google" [ref=f27e18] [cursor=pointer]
+        - button "Log in with GitHub" [ref=f27e28] [cursor=pointer]
+      - generic [ref=f27e33]:
+        - separator [ref=f27e34]
+        - generic [ref=f27e35]: or
+        - separator [ref=f27e36]
+      - generic [ref=f27e37]:
+        - generic [ref=f27e38]:
+          - generic [ref=f27e39]: Email
+          - textbox "Email" [active] [ref=f27e41]:
+            - /placeholder: alan.turing@example.com
+        - button "Log In" [disabled] [ref=f27e43]
+      - paragraph [ref=f27e45]:
+        - text: By signing in, you agree to our
+        - link "Terms" [ref=f27e46] [cursor=pointer]:
+          - /url: /legal/terms-of-service
+        - text: and
+        - link "Privacy Policy" [ref=f27e47] [cursor=pointer]:
+          - /url: /legal/privacy-policy
+        - text: .
+  - region "Notifications alt+T"
+  - alert [ref=f27e48]

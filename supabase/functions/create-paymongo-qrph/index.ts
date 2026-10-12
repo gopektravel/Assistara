@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveEnrollmentApplication } from "../_shared/enrollment-token.ts";
 
 const SECRET=Deno.env.get("PAYMONGO_SECRET_KEY")||"";
 const PUBLIC=Deno.env.get("PAYMONGO_PUBLIC_KEY")||"";
@@ -24,19 +25,16 @@ Deno.serve(async req=>{
 
   let body:any={};try{body=await req.json()}catch{}
   const token=String(body.token||"").trim();
-  if(!/^[0-9a-f-]{36}$/i.test(token))return reply({ok:false,error:"This enrollment link is invalid."},400,origin);
-
   const db=createClient(U,K,{auth:{persistSession:false}});
-  const {data:app,error:lookupError}=await db.from("academy_applications")
-    .select("id,name,email,decision,status,payment_status,enrollment_token,promo_code,checkout_amount_php,paymongo_payment_intent_id,paymongo_qr_expires_at")
-    .eq("enrollment_token",token).maybeSingle();
+  const {data:app,error:lookupError,tokenKind}=await resolveEnrollmentApplication(db,token,"id,name,email,decision,status,payment_status,enrollment_token,promo_code,checkout_amount_php,paymongo_payment_intent_id,paymongo_qr_expires_at");
+  if(tokenKind==="invalid")return reply({ok:false,error:"This enrollment link is invalid."},400,origin);
   if(lookupError||!app)return reply({ok:false,error:"We could not find this enrollment invitation."},404,origin);
   if(app.decision!=="accepted"&&app.status!=="accepted"&&app.status!=="waitlisted")return reply({ok:false,error:"This enrollment invitation is not active yet."},403,origin);
   if(app.payment_status==="paid")return reply({ok:false,error:"This enrollment has already been paid."},409,origin);
 
   const {data:reservation,error:reservationError}=await db.rpc("reserve_academy_seat",{p_application_id:app.id});
   if(reservationError)return reply({ok:false,error:"Could not reserve your Academy place. Please try again."},500,origin);
-  if(!reservation?.ok)return reply({ok:false,full:true,error:"This cohort is currently full. You have been added to the waitlist. We’ll let you know if a place opens or when the next cohort opens."},409,origin);
+  if(!reservation?.ok)return reply({ok:false,full:true,error:"This cohort is currently full. You have been added to the waitlist. We'll let you know if a place opens or when the next cohort opens."},409,origin);
 
   const amountPhp=(Number(app.checkout_amount_php)>0?Number(app.checkout_amount_php):6900);
   const amount=Math.round(amountPhp*100);
@@ -51,7 +49,7 @@ Deno.serve(async req=>{
     if(existing.ok&&image&&a?.status==="awaiting_next_action")return reply({ok:true,payment_intent_id:app.paymongo_payment_intent_id,image_url:image,test_url:SECRET.includes("_test_")?testUrl:null,amount_php:amountPhp,currency:"PHP",expires_at:app.paymongo_qr_expires_at,test_mode:SECRET.includes("_test_")},200,origin);
   }
 
-  const intent=await paymongo("payment_intents",SECRET,{method:"POST",body:JSON.stringify({data:{attributes:{amount,currency:"PHP",payment_method_allowed:["qrph"],description:"Assistara Academy Founding Cohort",metadata:{source:"assistara_academy",application_id:app.id,enrollment_token:token}}}})});
+  const intent=await paymongo("payment_intents",SECRET,{method:"POST",body:JSON.stringify({data:{attributes:{amount,currency:"PHP",payment_method_allowed:["qrph"],description:"Assistara Academy Founding Cohort",metadata:{source:"assistara_academy",application_id:app.id,enrollment_token:app.enrollment_token}}}})});
   if(!intent.ok||!intent.data?.data?.id){console.error("paymongo_intent_create_failed",intent.status);await db.from("academy_applications").update({payment_status:"not_requested",payment_requested_at:null}).eq("id",app.id).eq("payment_status","pending");return reply({ok:false,error:"Could not start QR payment. Please try again."},502,origin)}
   const pi=intent.data.data,clientKey=pi.attributes?.client_key;
   const pm=await paymongo("payment_methods",PUBLIC,{method:"POST",body:JSON.stringify({data:{attributes:{type:"qrph",billing:{name:app.name,email:app.email}}}})});
@@ -67,7 +65,7 @@ Deno.serve(async req=>{
   }).eq("id",app.id).neq("payment_status","paid").select("id");
   if(saved.error||!saved.data?.length)return reply({ok:false,error:"QR was created, but enrollment could not be reserved. Please refresh before paying."},409,origin);
 
-  // Create pending coupon redemption record if a promo code was applied
+  // Create pending coupon redemption record if a promo code was applied.
   if (app.promo_code) {
     const originalPrice = 690000; // ₱6,900 in centavos
     const finalPrice = amountPhp * 100; // amountPhp is in PHP, convert to centavos

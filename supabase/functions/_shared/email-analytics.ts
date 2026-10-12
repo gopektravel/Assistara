@@ -87,6 +87,14 @@ export interface Measured {
   uniqueClicks: number;
   unsubscribes: number;
   eventsReceived: number;
+  /** Delivered messages from providers with functioning open tracking. */
+  openMeasurableDelivered: number;
+  /** Delivered messages from providers with functioning click tracking. */
+  clickMeasurableDelivered: number;
+  /** Opens from providers with functioning open tracking. */
+  openMeasurableOpens: number;
+  /** Clicks from providers with functioning click tracking. */
+  clickMeasurableClicks: number;
 }
 
 export interface Rates {
@@ -94,6 +102,14 @@ export interface Rates {
   openRate: number | null;
   clickThroughRate: number | null;
   bounceRate: number | null;
+  /** Open rate using only providers with functioning open tracking. Null when no provider has tracking. */
+  estimatedOpenRate: number | null;
+  /** Click rate using only providers with functioning click tracking. Null when no provider has tracking. */
+  estimatedClickRate: number | null;
+  /** Fraction of delivered emails from providers with open tracking (0–1). */
+  openCoverage: number | null;
+  /** Fraction of delivered emails from providers with click tracking (0–1). */
+  clickCoverage: number | null;
 }
 
 export interface Availability {
@@ -105,6 +121,13 @@ export interface Availability {
   clickTracking: boolean;
   unsubscribeEvents: boolean;
   providersReporting: string[];
+  /** Providers with functioning open tracking. */
+  openTrackingProviders: string[];
+  /** Providers with functioning click tracking. */
+  clickTrackingProviders: string[];
+  /** True when all delivered emails come from tracking-enabled providers (no estimate needed). */
+  openCoverageFull: boolean;
+  clickCoverageFull: boolean;
 }
 
 export interface ProviderRow {
@@ -116,6 +139,8 @@ export interface ProviderRow {
   uniqueOpens: number;
   uniqueClicks: number;
   bounced: number;
+  trackingOpen: boolean;
+  trackingClick: boolean;
 }
 
 export interface SeriesPoint {
@@ -200,7 +225,7 @@ export function summarize(
   const rowFor = (p: string): ProviderRow => {
     let r = provMap.get(p);
     if (!r) {
-      r = { provider: p, accepted: 0, failed: 0, unknown: 0, delivered: 0, uniqueOpens: 0, uniqueClicks: 0, bounced: 0 };
+      r = { provider: p, accepted: 0, failed: 0, unknown: 0, delivered: 0, uniqueOpens: 0, uniqueClicks: 0, bounced: 0, trackingOpen: false, trackingClick: false };
       provMap.set(p, r);
     }
     return r;
@@ -314,6 +339,10 @@ export function summarize(
     uniqueClicks: distinctCount(uniq.clicked),
     unsubscribes: distinctCount(uniq.unsubscribed),
     eventsReceived: events.length,
+    openMeasurableDelivered: 0,
+    clickMeasurableDelivered: 0,
+    openMeasurableOpens: 0,
+    clickMeasurableClicks: 0,
   };
 
   const enabled = configs.filter((c) => c.is_enabled !== false);
@@ -328,6 +357,44 @@ export function summarize(
     logs.some((l) => l.has_first_party_tracking === true) ||
     events.some((e) => e.source === "first_party" || e.measurement === "first_party");
 
+  // Per-provider tracking flags: only providers with functioning open/click tracking
+  // are included in estimated-rate denominators.
+  const trackingOpenByProv = new Map<string, boolean>();
+  const trackingClickByProv = new Map<string, boolean>();
+  for (const c of configs) {
+    if (c.is_enabled === false) continue;
+    trackingOpenByProv.set(c.provider, c.tracking_open === true);
+    trackingClickByProv.set(c.provider, c.tracking_click === true);
+  }
+
+  // Compute measurable delivered/opens/clicks per provider.
+  let openMeasurableDelivered = 0;
+  let clickMeasurableDelivered = 0;
+  let openMeasurableOpens = 0;
+  let clickMeasurableClicks = 0;
+  for (const [p, m] of provMeasured) {
+    const hasOpenTracking = trackingOpenByProv.get(p) === true;
+    const hasClickTracking = trackingClickByProv.get(p) === true;
+    const r = rowFor(p);
+    r.trackingOpen = hasOpenTracking;
+    r.trackingClick = hasClickTracking;
+    if (hasOpenTracking) {
+      openMeasurableDelivered += distinctCount(m.delivered);
+      openMeasurableOpens += distinctCount(m.opened);
+    }
+    if (hasClickTracking) {
+      clickMeasurableDelivered += distinctCount(m.delivered);
+      clickMeasurableClicks += distinctCount(m.clicked);
+    }
+  }
+  measured.openMeasurableDelivered = openMeasurableDelivered;
+  measured.clickMeasurableDelivered = clickMeasurableDelivered;
+  measured.openMeasurableOpens = openMeasurableOpens;
+  measured.clickMeasurableClicks = clickMeasurableClicks;
+
+  const openTrackingProviders = [...trackingOpenByProv.entries()].filter(([, v]) => v).map(([k]) => k).sort();
+  const clickTrackingProviders = [...trackingClickByProv.entries()].filter(([, v]) => v).map(([k]) => k).sort();
+
   const availability: Availability = {
     webhookReady,
     firstPartyTracking,
@@ -336,7 +403,18 @@ export function summarize(
     clickTracking: anyClickEvent || firstPartyTracking || (webhookReady && enabled.some((c) => c.tracking_click)),
     unsubscribeEvents: anyUnsubEvent,
     providersReporting: [...new Set(events.map((e) => String(e.provider)))].sort(),
+    openTrackingProviders,
+    clickTrackingProviders,
+    openCoverageFull: measured.delivered > 0 && openMeasurableDelivered === measured.delivered,
+    clickCoverageFull: measured.delivered > 0 && clickMeasurableDelivered === measured.delivered,
   };
+
+  // Estimated rates use only measurable delivered (from tracking-enabled providers)
+  // as the denominator — never treating missing webhook data as zero opens.
+  const estimatedOpenRate = openMeasurableDelivered > 0 ? rate(openMeasurableOpens, openMeasurableDelivered) : null;
+  const estimatedClickRate = clickMeasurableDelivered > 0 ? rate(clickMeasurableClicks, clickMeasurableDelivered) : null;
+  const openCoverage = measured.delivered > 0 ? rate(openMeasurableDelivered, measured.delivered) : null;
+  const clickCoverage = measured.delivered > 0 ? rate(clickMeasurableDelivered, measured.delivered) : null;
 
   const rates: Rates = {
     deliveryRate: availability.deliveryEvents ? rate(measured.delivered, totals.accepted) : null,
@@ -345,6 +423,10 @@ export function summarize(
     openRate: measured.delivered > 0 ? rate(measured.uniqueOpens, measured.delivered) : null,
     clickThroughRate: measured.delivered > 0 ? rate(measured.uniqueClicks, measured.delivered) : null,
     bounceRate: availability.deliveryEvents ? rate(measured.bounced, totals.accepted) : null,
+    estimatedOpenRate,
+    estimatedClickRate,
+    openCoverage,
+    clickCoverage,
   };
 
   const providers = [...provMap.values()].sort((a, b) => b.accepted - a.accepted || a.provider.localeCompare(b.provider));

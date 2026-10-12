@@ -1,0 +1,296 @@
+- generic [active] [ref=f146e1]:
+  - blockquote [aria-hidden] [ref=f146e2]:
+    - heading [level=2] [ref=f146e3]: Documentation Index
+    - paragraph [ref=f146e4]:
+      - text: "Fetch the complete documentation index at:"
+      - link [ref=f146e5] [cursor=pointer]:
+        - /url: /docs/llms.txt
+        - text: /docs/llms.txt
+    - paragraph [ref=f146e6]: Use this file to discover all available pages before exploring further.
+  - generic:
+    - link "Skip to main content" [ref=f146e7] [cursor=pointer]:
+      - /url: "#content-area"
+    - generic [ref=f146e9]:
+      - banner [ref=f146e10]:
+        - generic [ref=f146e14]:
+          - generic [ref=f146e16]:
+            - link "Resend home page light logo" [ref=f146e18] [cursor=pointer]:
+              - /url: https://resend.com
+              - generic [ref=f146e19]: Resend home page
+              - img "light logo" [ref=f146e20]
+            - generic [ref=f146e22]:
+              - button "Open search" [ref=f146e23] [cursor=pointer]:
+                - generic [ref=f146e24]: Search...
+              - button "Toggle assistant panel" [ref=f146e26] [cursor=pointer]
+              - button "More actions" [ref=f146e30] [cursor=pointer]
+          - button "Navigation Webhooks Create a Webhook" [ref=f146e32] [cursor=pointer]:
+            - generic [ref=f146e33]: Navigation
+            - generic [ref=f146e36]:
+              - generic [ref=f146e37]: Webhooks
+              - generic [ref=f146e41]: Create a Webhook
+      - main [ref=f146e44]:
+        - generic [ref=f146e46]:
+          - generic [ref=f146e47]:
+            - generic [ref=f146e48]:
+              - navigation "Breadcrumb" [ref=f146e49]:
+                - list [ref=f146e50]:
+                  - listitem [ref=f146e51]: Learn
+                  - listitem [ref=f146e54]: Webhooks
+              - heading "Create a Webhook" [level=1] [ref=f146e56]
+            - paragraph [ref=f146e58]: Learn how to add a webhook to notify your application about events from Resend.
+            - generic [ref=f146e59]:
+              - button "Copy page" [ref=f146e60] [cursor=pointer]
+              - button "More actions" [ref=f146e65] [cursor=pointer]
+          - generic [ref=f146e68]:
+            - heading "Navigate to header How to receive webhooks" [level=2] [ref=f146e69]:
+              - link "Navigate to header" [ref=f146e70] [cursor=pointer]:
+                - /url: "#how-to-receive-webhooks"
+              - generic [ref=f146e75] [cursor=pointer]: How to receive webhooks
+            - generic [ref=f146e76]: To receive real-time events in your app via webhooks, follow these steps.
+            - generic [ref=f146e77]: Prefer video? Watch the tutorial below.
+            - iframe [ref=f146e78]
+            - list [ref=f146e79]:
+              - listitem [ref=f146e80]:
+                - generic [ref=f146e82]: "1"
+                - generic [ref=f146e85]:
+                  - paragraph [ref=f146e86]: Create a dev endpoint to receive requests
+                  - generic [ref=f146e87]:
+                    - generic [ref=f146e88]: In your local application, create a new route that can accept POST requests.
+                    - generic [ref=f146e89]: "For example, you can add an API route:"
+                    - generic [ref=f146e90]:
+                      - generic [ref=f146e91]:
+                        - generic "pages/api/webhooks.ts" [ref=f146e93]
+                        - generic [ref=f146e94]:
+                          - generic [ref=f146e95]:
+                            - button "Copy the contents from the code block" [ref=f146e96] [cursor=pointer]
+                            - status [ref=f146e100]
+                          - button "Ask Assistant" [ref=f146e102] [cursor=pointer]
+                      - code [ref=f146e109]:
+                        - generic [ref=f146e110]: "export default (req, res) => {"
+                        - generic [ref=f146e111]: "if (req.method === 'POST') {"
+                        - generic [ref=f146e112]: const event = req.body;
+                        - generic [ref=f146e113]: console.log(event);
+                        - generic [ref=f146e114]: "res.status(200).json({});"
+                        - generic [ref=f146e115]: "}"
+                        - generic [ref=f146e116]: "};"
+                    - generic [ref=f146e117]:
+                      - text: On receiving an event, respond with an
+                      - code [ref=f146e118]: HTTP 200 OK
+                      - text: to signal to Resend that the event was successfully delivered.
+                    - note "Tip" [ref=f146e119]:
+                      - generic [ref=f146e123]:
+                        - generic [ref=f146e124]:
+                          - text: For development, you can create a tunnel to your localhost server using a tool like
+                          - link "ngrok" [ref=f146e125] [cursor=pointer]:
+                            - /url: https://ngrok.com/download
+                          - text: or
+                          - link "VS Code Port Forwarding" [ref=f146e126] [cursor=pointer]:
+                            - /url: https://code.visualstudio.com/docs/debugtest/port-forwarding
+                          - text: . These tools serve your local dev environment at a public URL you can use to test your local webhook endpoint.
+                        - generic [ref=f146e127]:
+                          - text: "Example:"
+                          - code [ref=f146e128]: https://example123.ngrok.io/api/webhook
+                    - note "Tip" [ref=f146e129]:
+                      - generic [ref=f146e134]:
+                        - text: The
+                        - link "Resend CLI" [ref=f146e135] [cursor=pointer]:
+                          - /url: /docs/cli
+                        - text: has a built-in
+                        - code [ref=f146e136]: webhooks listen
+                        - text: command that handles local webhook development. It starts a server, registers a temporary webhook, and streams events to your terminal. See the
+                        - link "CLI reference" [ref=f146e137] [cursor=pointer]:
+                          - /url: /docs/cli#webhooks
+                        - text: for setup instructions.
+              - listitem [ref=f146e138]:
+                - generic [ref=f146e140]: "2"
+                - generic [ref=f146e143]:
+                  - paragraph [ref=f146e144]: Add a webhook in Resend
+                  - generic [ref=f146e145]:
+                    - generic [ref=f146e146]:
+                      - text: Navigate to the
+                      - link "Webhooks page" [ref=f146e147] [cursor=pointer]:
+                        - /url: https://resend.com/webhooks
+                      - text: ", then select"
+                      - strong [ref=f146e148]: Add Webhook
+                      - text: .
+                    - list [ref=f146e149]:
+                      - listitem [ref=f146e150]: Add your publicly accessible HTTPS URL
+                      - listitem [ref=f146e151]: Select all events you want to observe
+                    - img "Add Webhook" [ref=f146e155]
+                    - 'button "Expand image: Add Webhook"'
+                    - note "Info" [ref=f146e156]:
+                      - generic [ref=f146e161]:
+                        - text: Resend also supports managing webhooks via the API or the SDKs. View the
+                        - link "API reference" [ref=f146e162] [cursor=pointer]:
+                          - /url: /docs/api-reference/webhooks/create-webhook
+                        - text: for more details.
+              - listitem [ref=f146e163]:
+                - generic [ref=f146e165]: "3"
+                - generic [ref=f146e168]:
+                  - paragraph [ref=f146e169]: Test your local endpoint
+                  - generic [ref=f146e170]:
+                    - generic [ref=f146e171]: To ensure your endpoint is successfully receiving events, perform an event you are tracking with your webhook, like sending an email, creating a contact, or creating a domain.
+                    - generic [ref=f146e172]: "The webhook will send a JSON payload to your endpoint with the event details. For example:"
+                    - generic [ref=f146e173]:
+                      - generic [ref=f146e174]:
+                        - generic [ref=f146e175]:
+                          - button "Copy the contents from the code block" [ref=f146e176] [cursor=pointer]
+                          - status [ref=f146e180]
+                        - button "Ask Assistant" [ref=f146e182] [cursor=pointer]
+                      - code [ref=f146e189]:
+                        - generic [ref=f146e190]: "{"
+                        - generic [ref=f146e191]: "\"type\": \"email.bounced\","
+                        - generic [ref=f146e192]: "\"created_at\": \"2026-11-22T23:41:12.126Z\","
+                        - generic [ref=f146e193]: "\"data\": {"
+                        - generic [ref=f146e194]: "\"broadcast_id\": \"8b146471-e88e-4322-86af-016cd36fd216\","
+                        - generic [ref=f146e195]: "\"created_at\": \"2026-11-22T23:41:11.894719+00:00\","
+                        - generic [ref=f146e196]: "\"email_id\": \"56761188-7520-42d8-8898-ff6fc54ce618\","
+                        - generic [ref=f146e197]: "\"message_id\": \"<111-222-333@email.example.com>\","
+                        - generic [ref=f146e198]: "\"from\": \"Acme <onboarding@resend.dev>\","
+                        - generic [ref=f146e199]: "\"to\": [\"delivered@resend.dev\"],"
+                        - generic [ref=f146e200]: "\"subject\": \"Sending this example\","
+                        - generic [ref=f146e201]: "\"template_id\": \"43f68331-0622-4e15-8202-246a0388854b\","
+                        - generic [ref=f146e202]: "\"bounce\": {"
+                        - generic [ref=f146e203]: "\"message\": \"The recipient's email address is on the suppression list because it has a recent history of producing hard bounces.\","
+                        - generic [ref=f146e204]: "\"subType\": \"Suppressed\","
+                        - generic [ref=f146e205]: "\"type\": \"Permanent\""
+                        - generic [ref=f146e206]: "},"
+                        - generic [ref=f146e207]: "\"tags\": {"
+                        - generic [ref=f146e208]: "\"category\": \"confirm_email\""
+                        - generic [ref=f146e209]: "}"
+                        - generic [ref=f146e210]: "}"
+                        - generic [ref=f146e211]: "}"
+                    - generic [ref=f146e212]: You can also see the webhook details in the dashboard.
+                    - img "Webhook Events List" [ref=f146e216]
+                    - 'button "Expand image: Webhook Events List"'
+                    - note "Info" [ref=f146e217]:
+                      - generic [ref=f146e222]:
+                        - text: View all possible
+                        - link "event types and their webhook payload responses" [ref=f146e223] [cursor=pointer]:
+                          - /url: /docs/webhooks/event-types
+                        - text: .
+              - listitem [ref=f146e224]:
+                - generic [ref=f146e226]: "4"
+                - generic [ref=f146e229]:
+                  - paragraph [ref=f146e230]: Update and deploy your production endpoint
+                  - generic [ref=f146e231]:
+                    - generic [ref=f146e232]: Once you successfully receive events, update your endpoint to process the events.
+                    - generic [ref=f146e233]: "For example, update your API route:"
+                    - generic [ref=f146e234]:
+                      - generic [ref=f146e235]:
+                        - generic "pages/api/webhooks.ts" [ref=f146e237]
+                        - generic [ref=f146e238]:
+                          - generic [ref=f146e239]:
+                            - button "Copy the contents from the code block" [ref=f146e240] [cursor=pointer]
+                            - status [ref=f146e244]
+                          - button "Ask Assistant" [ref=f146e246] [cursor=pointer]
+                      - code [ref=f146e253]:
+                        - generic [ref=f146e254]: "export default (req, res) => {"
+                        - generic [ref=f146e255]: "if (req.method === 'POST') {"
+                        - generic [ref=f146e256]: const event = req.body;
+                        - generic [ref=f146e257]: "if (event.type === 'email.bounced') {"
+                        - generic [ref=f146e258]: //
+                        - generic [ref=f146e259]: "}"
+                        - generic [ref=f146e260]: "res.status(200).json({});"
+                        - generic [ref=f146e261]: "}"
+                        - generic [ref=f146e262]: "};"
+                    - generic [ref=f146e263]: After you’re done testing, deploy your webhook endpoint to production.
+              - listitem [ref=f146e264]:
+                - generic [ref=f146e266]: "5"
+                - generic [ref=f146e269]:
+                  - paragraph [ref=f146e270]: Register your production webhook endpoint
+                  - generic [ref=f146e271]: Once your webhook endpoint is deployed to production, you can register it in the Resend dashboard.
+            - heading "Navigate to header FAQ" [level=2] [ref=f146e273]:
+              - link "Navigate to header" [ref=f146e274] [cursor=pointer]:
+                - /url: "#faq"
+              - generic [ref=f146e279] [cursor=pointer]: FAQ
+            - generic [ref=f146e280]:
+              - group [ref=f146e281]:
+                - paragraph [ref=f146e287] [cursor=pointer]: What is the retry schedule?
+              - group [ref=f146e288]:
+                - paragraph [ref=f146e294] [cursor=pointer]: What IPs do webhooks POST from?
+              - group [ref=f146e295]:
+                - paragraph [ref=f146e301] [cursor=pointer]: What are the delivery guarantees?
+              - group [ref=f146e302]:
+                - paragraph [ref=f146e308] [cursor=pointer]: Do events arrive in order?
+              - group [ref=f146e309]:
+                - paragraph [ref=f146e315] [cursor=pointer]: Can I replay webhook events manually?
+            - heading "Navigate to header API Reference" [level=2] [ref=f146e316]:
+              - link "Navigate to header" [ref=f146e317] [cursor=pointer]:
+                - /url: "#api-reference"
+              - generic [ref=f146e322] [cursor=pointer]: API Reference
+            - generic [ref=f146e323]:
+              - text: For complete API documentation, see the
+              - link "Webhooks API reference" [ref=f146e324] [cursor=pointer]:
+                - /url: /docs/api-reference/webhooks/create-webhook
+              - text: .
+            - heading "Navigate to header Examples" [level=2] [ref=f146e325]:
+              - link "Navigate to header" [ref=f146e326] [cursor=pointer]:
+                - /url: "#examples"
+              - generic [ref=f146e331] [cursor=pointer]: Examples
+            - generic [ref=f146e332]:
+              - link [ref=f146e333] [cursor=pointer]:
+                - link [aria-hidden] [ref=f146e335]:
+                  - /url: https://github.com/resend/resend-examples/tree/main/nextjs-resend-examples/typescript/src/app/inbound
+                  - generic [ref=f146e342]:
+                    - heading [level=2] [ref=f146e343]: Next.js (TypeScript)
+                    - generic [ref=f146e344]: See the full source code.
+              - link [ref=f146e346] [cursor=pointer]:
+                - link [aria-hidden] [ref=f146e348]:
+                  - /url: https://github.com/resend/resend-examples/tree/main/nextjs-resend-examples/javascript/src/app/inbound
+                  - generic [ref=f146e355]:
+                    - heading [level=2] [ref=f146e356]: Next.js (JavaScript)
+                    - generic [ref=f146e357]: See the full source code.
+              - link [ref=f146e359] [cursor=pointer]:
+                - link [aria-hidden] [ref=f146e361]:
+                  - /url: https://github.com/resend/resend-examples/tree/main/php-resend-examples/src/inbound
+                  - generic [ref=f146e368]:
+                    - heading [level=2] [ref=f146e369]: PHP
+                    - generic [ref=f146e370]: See the full source code.
+              - link [ref=f146e372] [cursor=pointer]:
+                - link [aria-hidden] [ref=f146e374]:
+                  - /url: https://github.com/resend/resend-examples/tree/main/laravel-resend-examples
+                  - generic [ref=f146e381]:
+                    - heading [level=2] [ref=f146e382]: Laravel
+                    - generic [ref=f146e383]: See the full source code.
+              - link [ref=f146e385] [cursor=pointer]:
+                - link [aria-hidden] [ref=f146e387]:
+                  - /url: https://github.com/resend/resend-examples/tree/main/python-resend-examples/examples
+                  - generic [ref=f146e394]:
+                    - heading [level=2] [ref=f146e395]: Python
+                    - generic [ref=f146e396]: See the full source code.
+              - link [ref=f146e398] [cursor=pointer]:
+                - link [aria-hidden] [ref=f146e400]:
+                  - /url: https://github.com/resend/resend-examples/tree/main/ruby-resend-examples/examples
+                  - generic [ref=f146e407]:
+                    - heading [level=2] [ref=f146e408]: Ruby
+                    - generic [ref=f146e409]: See the full source code.
+          - generic [ref=f146e412]:
+            - paragraph [ref=f146e413]: Was this page helpful?
+            - generic [ref=f146e415]:
+              - button "Yes" [ref=f146e416] [cursor=pointer]
+              - button "No" [ref=f146e421] [cursor=pointer]
+          - navigation "Pagination" [ref=f146e426]:
+            - link "Webhooks Previous" [ref=f146e427] [cursor=pointer]:
+              - /url: /docs/webhooks/introduction
+              - generic [ref=f146e428]:
+                - generic [ref=f146e429]: Webhooks
+                - generic [ref=f146e430]: Previous
+            - link "Verify Webhooks Requests Next" [ref=f146e434] [cursor=pointer]:
+              - /url: /docs/webhooks/verify-webhooks-requests
+              - generic [ref=f146e435]:
+                - generic [ref=f146e436]: Verify Webhooks Requests
+                - generic [ref=f146e437]: Next
+          - generic [ref=f146e442]:
+            - textbox "Ask a question..." [ref=f146e443]
+            - button "Send message" [disabled] [ref=f146e444]
+          - generic [ref=f146e449]:
+            - link "x" [ref=f146e450] [cursor=pointer]:
+              - /url: https://x.com/resend
+            - link "github" [ref=f146e453] [cursor=pointer]:
+              - /url: https://github.com/resend
+            - link "youtube" [ref=f146e456] [cursor=pointer]:
+              - /url: https://www.youtube.com/@resendlabs
+            - link "website" [ref=f146e459] [cursor=pointer]:
+              - /url: https://resend.com/
+  - alert [ref=f146e462]

@@ -1,0 +1,8 @@
+- generic [active]:
+  - generic [ref=f85e1]:
+    - generic [ref=f85e8]:
+      - button "jessevanrobbroeck" [ref=f85e10] [cursor=pointer]
+      - button "menu" [ref=f85e19]:
+        - generic [ref=f85e20]: Open main menu
+    - button "Ask anything" [ref=f85e28] [cursor=pointer]
+  - region "Notifications alt+T"

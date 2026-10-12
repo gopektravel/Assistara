@@ -1,0 +1,234 @@
+- generic [active]:
+  - generic [ref=f117e1]:
+    - generic [ref=f117e6]:
+      - generic [ref=f117e8]:
+        - button "jessevanrobbroeck" [ref=f117e10] [cursor=pointer]
+        - button "menu" [ref=f117e19]:
+          - generic [ref=f117e20]: Open main menu
+      - generic [ref=f117e23]:
+        - heading "Emails" [level=1] [ref=f117e25]
+        - generic [ref=f117e26]:
+          - generic [ref=f117e27]:
+            - tablist [ref=f117e29]:
+              - tab "Sending" [selected] [ref=f117e30] [cursor=pointer]
+              - tab "Receiving" [ref=f117e31] [cursor=pointer]
+            - link "Suppressions" [ref=f117e33] [cursor=pointer]:
+              - /url: /emails/suppressions
+          - generic [ref=f117e38]:
+            - textbox "Search..." [ref=f117e41]
+            - generic [ref=f117e42]:
+              - button "Last 15 days" [ref=f117e43] [cursor=pointer]
+              - button "All Statuses" [ref=f117e48] [cursor=pointer]
+              - combobox [ref=f117e53] [cursor=pointer]:
+                - generic [ref=f117e54]: All API keys
+              - textbox [aria-hidden] [ref=f117e57]: all
+            - button "Export data" [ref=f117e58] [cursor=pointer]
+          - table [ref=f117e65]:
+            - rowgroup [ref=f117e66]:
+              - row [ref=f117e67]:
+                - columnheader "To" [ref=f117e68]
+                - columnheader "Status" [ref=f117e69]
+                - columnheader "Subject" [ref=f117e70]
+                - columnheader "Sent" [ref=f117e71]
+                - columnheader [ref=f117e72]
+            - rowgroup [ref=f117e73]:
+              - row [ref=f117e74]:
+                - cell [ref=f117e75]:
+                  - generic [ref=f117e76]:
+                    - link [ref=f117e77] [cursor=pointer]:
+                      - /url: /emails/01a12b6d-4c9d-7e8b-90f1-5c8dc50b4812
+                    - link "jessevanrobbroeck@gmail.com" [ref=f117e114] [cursor=pointer]:
+                      - /url: /emails/01a12b6d-4c9d-7e8b-90f1-5c8dc50b4812
+                - cell "delivered" [ref=f117e115]
+                - cell "Application received | Assistara Academy" [ref=f117e118]
+                - cell [ref=f117e120]:
+                  - time [ref=f117e122]: 2h ago
+                - cell [ref=f117e123]:
+                  - button "More actions" [ref=f117e124] [cursor=pointer]
+              - row [ref=f117e128]:
+                - cell [ref=f117e129]:
+                  - generic [ref=f117e130]:
+                    - link [ref=f117e131] [cursor=pointer]:
+                      - /url: /emails/01a12b6d-4c98-785a-aca1-ae31c0e0219b
+                    - link "notifications@getassistara.com" [ref=f117e168] [cursor=pointer]:
+                      - /url: /emails/01a12b6d-4c98-785a-aca1-ae31c0e0219b
+                - cell "delivered" [ref=f117e169]
+                - 'cell "New Academy application: Jesse Van Robbroeck" [ref=f117e172]'
+                - cell [ref=f117e174]:
+                  - time [ref=f117e176]: 2h ago
+                - cell [ref=f117e177]:
+                  - button "More actions" [ref=f117e178] [cursor=pointer]
+              - row [ref=f117e182]:
+                - cell [ref=f117e183]:
+                  - generic [ref=f117e184]:
+                    - link [ref=f117e185] [cursor=pointer]:
+                      - /url: /emails/01a12b64-8d71-7a3e-960e-dea9220fe9a2
+                    - link "alexiaguzman389@gmail.com" [ref=f117e222] [cursor=pointer]:
+                      - /url: /emails/01a12b64-8d71-7a3e-960e-dea9220fe9a2
+                - cell "delivered" [ref=f117e223]
+                - cell "Application received | Assistara Academy" [ref=f117e226]
+                - cell [ref=f117e228]:
+                  - time [ref=f117e230]: 2h ago
+                - cell [ref=f117e231]:
+                  - button "More actions" [ref=f117e232] [cursor=pointer]
+              - row [ref=f117e236]:
+                - cell [ref=f117e237]:
+                  - generic [ref=f117e238]:
+                    - link [ref=f117e239] [cursor=pointer]:
+                      - /url: /emails/01a12b64-8d6f-7959-b3a7-806b3f741a77
+                    - link "notifications@getassistara.com" [ref=f117e276] [cursor=pointer]:
+                      - /url: /emails/01a12b64-8d6f-7959-b3a7-806b3f741a77
+                - cell "delivered" [ref=f117e277]
+                - 'cell "New Academy application: Alexia Guzman Santiago" [ref=f117e280]'
+                - cell [ref=f117e282]:
+                  - time [ref=f117e284]: 2h ago
+                - cell [ref=f117e285]:
+                  - button "More actions" [ref=f117e286] [cursor=pointer]
+              - row [ref=f117e290]:
+                - cell [ref=f117e291]:
+                  - generic [ref=f117e292]:
+                    - link [ref=f117e293] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-1061-7774-afdd-6f910573a737
+                    - link "katrina mae fajardo <fajardokatrinamae38@gmail.com>" [ref=f117e330] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-1061-7774-afdd-6f910573a737
+                - cell "delivered" [ref=f117e331]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e334]
+                - cell [ref=f117e336]:
+                  - time [ref=f117e338]: 7h ago
+                - cell [ref=f117e339]:
+                  - button "More actions" [ref=f117e340] [cursor=pointer]
+              - row [ref=f117e344]:
+                - cell [ref=f117e345]:
+                  - generic [ref=f117e346]:
+                    - link [ref=f117e347] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0e55-70c8-bcfa-04cefa29fb91
+                    - link "Arianne Dane Kyla Lomboy <arianne.dane77@gmail.com>" [ref=f117e384] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0e55-70c8-bcfa-04cefa29fb91
+                - cell "delivered" [ref=f117e385]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e388]
+                - cell [ref=f117e390]:
+                  - time [ref=f117e392]: 7h ago
+                - cell [ref=f117e393]:
+                  - button "More actions" [ref=f117e394] [cursor=pointer]
+              - row [ref=f117e398]:
+                - cell [ref=f117e399]:
+                  - generic [ref=f117e400]:
+                    - link [ref=f117e401] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0c70-760d-a9a0-5a79b0ca5d54
+                    - link "Czyara <ccczyaracaraig@gmail.com>" [ref=f117e438] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0c70-760d-a9a0-5a79b0ca5d54
+                - cell "delivered" [ref=f117e439]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e442]
+                - cell [ref=f117e444]:
+                  - time [ref=f117e446]: 7h ago
+                - cell [ref=f117e447]:
+                  - button "More actions" [ref=f117e448] [cursor=pointer]
+              - row [ref=f117e452]:
+                - cell [ref=f117e453]:
+                  - generic [ref=f117e454]:
+                    - link [ref=f117e455] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0a6b-7d39-8d6a-3637c08333d3
+                    - link "Marnie Liza Fernandez <marnielizafernandez@gmail.com>" [ref=f117e492] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0a6b-7d39-8d6a-3637c08333d3
+                - cell "delivered" [ref=f117e493]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e496]
+                - cell [ref=f117e498]:
+                  - time [ref=f117e500]: 7h ago
+                - cell [ref=f117e501]:
+                  - button "More actions" [ref=f117e502] [cursor=pointer]
+              - row [ref=f117e506]:
+                - cell [ref=f117e507]:
+                  - generic [ref=f117e508]:
+                    - link [ref=f117e509] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0894-76d8-969b-358540bb6d09
+                    - link "Alec Nicole Gabatino <teachernikkie2017@gmail.com>" [ref=f117e546] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0894-76d8-969b-358540bb6d09
+                - cell "delivered" [ref=f117e547]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e550]
+                - cell [ref=f117e552]:
+                  - time [ref=f117e554]: 7h ago
+                - cell [ref=f117e555]:
+                  - button "More actions" [ref=f117e556] [cursor=pointer]
+              - row [ref=f117e560]:
+                - cell [ref=f117e561]:
+                  - generic [ref=f117e562]:
+                    - link [ref=f117e563] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-069d-7f0f-a195-783478a1478c
+                    - link "Edward <edward.jacobe96@gmail.com>" [ref=f117e600] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-069d-7f0f-a195-783478a1478c
+                - cell "delivered" [ref=f117e601]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e604]
+                - cell [ref=f117e606]:
+                  - time [ref=f117e608]: 7h ago
+                - cell [ref=f117e609]:
+                  - button "More actions" [ref=f117e610] [cursor=pointer]
+              - row [ref=f117e614]:
+                - cell [ref=f117e615]:
+                  - generic [ref=f117e616]:
+                    - link [ref=f117e617] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0491-7b5a-b159-6676a6155283
+                    - link "Lorraine Grace Castro <lorrainegracec@gmail.com>" [ref=f117e654] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-0491-7b5a-b159-6676a6155283
+                - cell "delivered" [ref=f117e655]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e658]
+                - cell [ref=f117e660]:
+                  - time [ref=f117e662]: 7h ago
+                - cell [ref=f117e663]:
+                  - button "More actions" [ref=f117e664] [cursor=pointer]
+              - row [ref=f117e668]:
+                - cell [ref=f117e669]:
+                  - generic [ref=f117e670]:
+                    - link [ref=f117e671] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-02aa-7c29-80c6-4b687af9d195
+                    - link "Bregatte Manog <mbree.gatte@gmail.com>" [ref=f117e708] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-02aa-7c29-80c6-4b687af9d195
+                - cell "delivered" [ref=f117e709]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e712]
+                - cell [ref=f117e714]:
+                  - time [ref=f117e716]: 7h ago
+                - cell [ref=f117e717]:
+                  - button "More actions" [ref=f117e718] [cursor=pointer]
+              - row [ref=f117e722]:
+                - cell [ref=f117e723]:
+                  - generic [ref=f117e724]:
+                    - link [ref=f117e725] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-00c7-7d19-b975-f33f4dfb12eb
+                    - link "Roselle Almgren <rosellehipolio@gmail.com>" [ref=f117e762] [cursor=pointer]:
+                      - /url: /emails/01a12a4d-00c7-7d19-b975-f33f4dfb12eb
+                - cell "delivered" [ref=f117e763]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e766]
+                - cell [ref=f117e768]:
+                  - time [ref=f117e770]: 7h ago
+                - cell [ref=f117e771]:
+                  - button "More actions" [ref=f117e772] [cursor=pointer]
+              - row [ref=f117e776]:
+                - cell [ref=f117e777]:
+                  - generic [ref=f117e778]:
+                    - link [ref=f117e779] [cursor=pointer]:
+                      - /url: /emails/01a12a4c-feb7-7d06-b0ed-bfea06025c59
+                    - link "Jane Espinosa <janeoppenheimer@icloud.com>" [ref=f117e816] [cursor=pointer]:
+                      - /url: /emails/01a12a4c-feb7-7d06-b0ed-bfea06025c59
+                - cell "delivered" [ref=f117e817]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e820]
+                - cell [ref=f117e822]:
+                  - time [ref=f117e824]: 7h ago
+                - cell [ref=f117e825]:
+                  - button "More actions" [ref=f117e826] [cursor=pointer]
+              - row [ref=f117e830]:
+                - cell [ref=f117e831]:
+                  - generic [ref=f117e832]:
+                    - link [ref=f117e833] [cursor=pointer]:
+                      - /url: /emails/01a12a4c-fcc0-7357-85f6-0b6e9e22344f
+                    - link "Baby Lita Nocum <babylitanocum.work@gmail.com>" [ref=f117e870] [cursor=pointer]:
+                      - /url: /emails/01a12a4c-fcc0-7357-85f6-0b6e9e22344f
+                - cell "delivered" [ref=f117e871]
+                - cell "We're going live in 30 minutes! 💛" [ref=f117e874]
+                - cell [ref=f117e876]:
+                  - time [ref=f117e878]: 7h ago
+                - cell [ref=f117e879]:
+                  - button "More actions" [ref=f117e880] [cursor=pointer]
+          - generic [ref=f117e885]:
+            - button "Newer" [disabled] [ref=f117e886]
+            - button "Older" [ref=f117e888] [cursor=pointer]
+    - button "Ask anything" [ref=f117e894] [cursor=pointer]
+  - region "Notifications alt+T"

@@ -1,0 +1,42 @@
+- generic [active]:
+  - generic [ref=f153e1]:
+    - generic [ref=f153e6]:
+      - generic [ref=f153e8]:
+        - button "J jessevanrobbroeck" [ref=f153e10] [cursor=pointer]:
+          - generic [ref=f153e12]:
+            - generic [ref=f153e13]: J
+            - generic [ref=f153e29]: jessevanrobbroeck
+        - button "menu" [ref=f153e34]:
+          - generic [ref=f153e35]: Open main menu
+      - generic [ref=f153e39]:
+        - generic [ref=f153e40]:
+          - generic [ref=f153e41]:
+            - generic [ref=f153e74]:
+              - text: Webhook
+              - heading "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/email-webhook?provider=resend" [level=1] [ref=f153e76]
+            - button "More actions" [ref=f153e78] [cursor=pointer]
+          - generic [ref=f153e82]:
+            - generic [ref=f153e83]:
+              - generic [ref=f153e84]: Listening for
+              - generic [ref=f153e86]:
+                - generic [ref=f153e87]: email.bounced
+                - generic [ref=f153e88]: email.clicked
+                - button "+9" [ref=f153e89] [cursor=pointer]
+            - generic [ref=f153e91]:
+              - generic [ref=f153e92]: Status
+              - generic [ref=f153e93]: enabled
+            - generic [ref=f153e95]:
+              - generic [ref=f153e96]: Created
+              - time [ref=f153e98]: 6min ago
+            - generic [ref=f153e99]:
+              - generic [ref=f153e100]: Signing Secret
+              - generic "••••••••••••••••••••" [ref=f153e101]:
+                - generic [ref=f153e103]:
+                  - button "Copy to clipboard" [ref=f153e104] [cursor=pointer]
+                  - button "Show value" [ref=f153e109] [cursor=pointer]
+        - generic [ref=f153e116]:
+          - heading "No webhook events yet" [level=2] [ref=f153e117]
+          - generic [ref=f153e118]: Once you start sending emails, you'll be able to see all the webhook events.
+    - button "Ask anything" [ref=f153e123] [cursor=pointer]
+  - region "Notifications alt+T"
+  - alert [ref=f153e128]

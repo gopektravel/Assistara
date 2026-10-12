@@ -192,9 +192,25 @@ function metricCard(label, value, sub, available) {
     : `<div class="kpi">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}`}</div>`;
 }
 
-function availabilityBanner(av) {
+function estimatedLabel(r, kind, m) {
+  const isOpen = kind === "open";
+  const rate = isOpen ? r.estimatedOpenRate : r.estimatedClickRate;
+  const coverage = isOpen ? r.openCoverage : r.clickCoverage;
+  const measurable = isOpen ? m.openMeasurableDelivered : m.clickMeasurableDelivered;
+  const total = m.delivered;
+  const full = isOpen ? (r.openCoverageFull) : (r.clickCoverageFull);
+  if (rate === null || rate === undefined) return "No measurable data yet";
+  const pctVal = (rate * 100).toFixed(1);
+  if (full) return `${isOpen ? "Open rate" : "CTR"} ${pctVal}% of delivered`;
+  const covPct = coverage !== null && coverage !== undefined ? (coverage * 100).toFixed(1) : "0";
+  return `Estimated ${isOpen ? "open rate" : "click rate"}: ${pctVal}% · ${num(measurable)} of ${num(total)} emails measurable (${covPct}%)`;
+}
+
+function availabilityBanner(av, r) {
   if (av.deliveryEvents && av.openTracking && av.clickTracking) {
-    return `<div class="banner"><span class="pill good">Measured</span> Delivery, open and click events are being reported by: <strong>${esc(av.providersReporting.join(", ") || "—")}</strong>.</div>`;
+    if (r.openCoverageFull && r.clickCoverageFull) {
+      return `<div class="banner"><span class="pill good">Measured</span> Delivery, open and click events are being reported by: <strong>${esc(av.providersReporting.join(", ") || "—")}</strong>.</div>`;
+    }
   }
   const missing = [];
   if (!av.deliveryEvents) missing.push("delivery / bounce");
@@ -233,15 +249,15 @@ async function renderOverview() {
   const j = await req("overview", rangeParams());
   const o = j.overview, av = o.availability, t = o.totals, m = o.measured, r = o.rates;
   const html = `
-    ${availabilityBanner(av)}
+    ${availabilityBanner(av, r)}
     <div class="grid cards">
       ${metricCard("Messages", num(t.messages), `${num(t.attempts)} provider attempts`, true)}
       ${metricCard("Accepted by provider", num(t.accepted), "Provider accepted the send (not yet delivery)", true)}
       ${metricCard("Failed", num(t.failed), "Definitive provider rejection", true)}
       ${metricCard("Unknown / pending", `${num(t.unknown)} / ${num(t.pending)}`, "Ambiguous or awaiting result", true)}
       ${metricCard("Delivered", av.deliveryEvents ? num(m.delivered) : null, av.deliveryEvents ? `Delivery rate ${pct(r.deliveryRate)}` : "Provider webhooks not configured", av.deliveryEvents)}
-      ${metricCard("Unique opens (est.)", av.openTracking ? num(m.uniqueOpens) : null, av.openTracking ? `Estimated · open rate ${pct(r.openRate)} of delivered` : "Open tracking not configured", av.openTracking)}
-      ${metricCard("Unique clicks", av.clickTracking ? num(m.uniqueClicks) : null, av.clickTracking ? `CTR ${pct(r.clickThroughRate)} of delivered` : "Click tracking not configured", av.clickTracking)}
+      ${metricCard("Unique opens (est.)", av.openTracking ? num(m.uniqueOpens) : null, av.openTracking ? estimatedLabel(r, "open", m) : "Open tracking not configured", av.openTracking)}
+      ${metricCard("Unique clicks", av.clickTracking ? num(m.uniqueClicks) : null, av.clickTracking ? estimatedLabel(r, "click", m) : "Click tracking not configured", av.clickTracking)}
       ${metricCard("Bounces", av.deliveryEvents ? num(m.bounced) : null, av.deliveryEvents ? `Bounce rate ${pct(r.bounceRate)} of accepted` : "Provider webhooks not configured", av.deliveryEvents)}
       ${metricCard("Suppressed addresses", num(j.suppressions), av.unsubscribeEvents ? `${num(m.unsubscribes)} unsubscribe event(s) reported` : "Unsubscribe events not yet reported", j.suppressions !== null)}
     </div>
@@ -254,14 +270,16 @@ async function renderOverview() {
     <div class="card" style="margin-top:14px">
       <h3>By provider</h3>
       <div class="scroll"><table>
-        <thead><tr><th>Provider</th><th>Accepted</th><th>Failed</th><th>Unknown</th><th>Delivered</th><th>Unique opens</th><th>Unique clicks</th><th>Bounces</th></tr></thead>
+        <thead><tr><th>Provider</th><th>Accepted</th><th>Failed</th><th>Unknown</th><th>Delivered</th><th>Unique opens</th><th>Unique clicks</th><th>Bounces</th><th>Open tracking</th><th>Click tracking</th></tr></thead>
         <tbody>${o.providers.length ? o.providers.map((p) => `<tr>
           <td><strong>${esc(p.provider)}</strong></td>
           <td class="num">${num(p.accepted)}</td><td class="num">${num(p.failed)}</td><td class="num">${num(p.unknown)}</td>
           <td class="num">${av.deliveryEvents ? num(p.delivered) : "<span class='muted'>—</span>"}</td>
           <td class="num">${av.openTracking ? num(p.uniqueOpens) : "<span class='muted'>—</span>"}</td>
           <td class="num">${av.clickTracking ? num(p.uniqueClicks) : "<span class='muted'>—</span>"}</td>
-          <td class="num">${av.deliveryEvents ? num(p.bounced) : "<span class='muted'>—</span>"}</td></tr>`).join("")
+          <td class="num">${av.deliveryEvents ? num(p.bounced) : "<span class='muted'>—</span>"}</td>
+          <td>${p.trackingOpen ? "<span class='pill good'>on</span>" : "<span class='pill warn'>off</span>"}</td>
+          <td>${p.trackingClick ? "<span class='pill good'>on</span>" : "<span class='pill warn'>off</span>"}</td></tr>`).join("")
           : `<tr><td colspan="8" class="muted">No sends in this range.</td></tr>`}</tbody>
       </table></div>
     </div>

@@ -213,7 +213,17 @@ function pickString(...values: unknown[]): string | null {
 
 function pickRawType(provider: EmailProvider, payload: any): string {
   if (provider === "resend") return String(payload?.type || "");
-  return String(payload?.event ?? payload?.type ?? payload?.event_type ?? payload?.kind ?? "");
+  // Sender: explicit event fields first, then infer from payload structure
+  const explicit = payload?.event ?? payload?.type ?? payload?.event_type ?? payload?.kind;
+  if (explicit) return String(explicit);
+  // Infer from transactional_campaign_data (Sender webhook format)
+  const tcd = payload?.transactional_campaign_data;
+  if (tcd && typeof tcd === "object") {
+    const smtp = String(tcd.smtp_response || "").toLowerCase();
+    if (smtp.includes("bounce") || smtp.includes("null mx") || smtp.includes("rejected") || smtp.includes("failed")) return "bounce";
+    if (smtp.includes("delivered") || smtp.includes("accepted")) return "delivered";
+  }
+  return "";
 }
 
 function pickMessageId(provider: EmailProvider, payload: any): string | null {
@@ -232,7 +242,7 @@ function pickMessageId(provider: EmailProvider, payload: any): string | null {
 
 function pickRecipient(provider: EmailProvider, payload: any): string | null {
   const d = payload?.data ?? payload;
-  const to = d?.to ?? payload?.to ?? d?.email ?? payload?.email;
+  const to = d?.to ?? payload?.to ?? d?.email ?? payload?.email ?? d?.subscriber?.Email ?? payload?.subscriber?.Email;
   if (Array.isArray(to)) return to.length ? String(to[0]).trim().toLowerCase() : null;
   return to ? String(to).trim().toLowerCase() : null;
 }

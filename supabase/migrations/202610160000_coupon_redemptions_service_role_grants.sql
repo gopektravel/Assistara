@@ -1,0 +1,27 @@
+-- Grant service_role table privileges on academy_coupon_redemptions
+--
+-- Context: migration 202610130002 created this table with RLS enabled and a
+-- service_role-only policy, but omitted table-level GRANT statements. In
+-- PostgreSQL 15+, newly created tables do not grant privileges to service_role
+-- automatically, so the RLS policy alone was insufficient. Every Edge Function
+-- that reads coupon redemption data as service_role failed with
+-- "permission denied for table academy_coupon_redemptions".
+--
+-- Privilege audit (post-fix SELECT is the only direct table access required):
+--   SELECT  - REQUIRED: admin-coupons (get/delete pre-check), apply-academy-promo,
+--             create-checkout-session, create-paymongo-qrph, enrollment-invitation
+--             all run SELECT/count queries against this table.
+--   INSERT  - NOT REQUIRED: all writes go through the SECURITY DEFINER RPCs
+--             create_coupon_redemption_pending() and confirm_coupon_redemption(),
+--             which execute as the function owner (postgres) and therefore bypass
+--             table-level grants entirely.
+--   UPDATE  - NOT REQUIRED: same as INSERT - performed only inside
+--             confirm_coupon_redemption() (SECURITY DEFINER).
+--   DELETE  - NOT REQUIRED: no code path deletes redemptions directly.
+--
+-- Only service_role is granted. The RLS policy
+--   "Service role full access" FOR ALL USING (auth.role() = 'service_role')
+-- remains the access gate and is intentionally left untouched. No grants are
+-- made to anon, authenticated, or PUBLIC.
+
+grant select on table public.academy_coupon_redemptions to service_role;

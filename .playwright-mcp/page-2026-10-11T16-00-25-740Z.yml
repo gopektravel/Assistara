@@ -1,0 +1,894 @@
+- generic [active] [ref=f4e1]:
+  - generic [ref=f4e3]:
+    - banner [ref=f4e4]:
+      - generic [ref=f4e6]:
+        - link "Resend" [ref=f4e9] [cursor=pointer]:
+          - /url: /home
+          - img "Resend" [ref=f4e10]
+        - list [ref=f4e12]:
+          - listitem [ref=f4e13]:
+            - button "Features" [ref=f4e14]
+          - listitem [ref=f4e17]:
+            - button "Company" [ref=f4e18]
+          - listitem [ref=f4e21]:
+            - button "Enterprise" [ref=f4e22]
+          - listitem [ref=f4e25]:
+            - button "Help" [ref=f4e26]
+          - listitem [ref=f4e29]:
+            - button "Docs" [ref=f4e30]
+          - listitem [ref=f4e33]:
+            - button "AI" [ref=f4e34]
+          - listitem [ref=f4e37]:
+            - link "Pricing" [ref=f4e38] [cursor=pointer]:
+              - /url: /pricing
+        - generic [ref=f4e39]:
+          - link "Log in" [ref=f4e40] [cursor=pointer]:
+            - /url: /login
+          - link "Get started" [ref=f4e41] [cursor=pointer]:
+            - /url: /signup
+    - generic [ref=f4e42]:
+      - img "Floor background"
+      - generic [ref=f4e44]:
+        - generic [ref=f4e45]:
+          - link "Join us at Resend Forward" [ref=f4e47] [cursor=pointer]:
+            - /url: /forward
+          - heading "Email for developers" [level=1] [ref=f4e51]: Email fordevelopers
+          - paragraph [ref=f4e52]: The best way to reach humans instead of spam folders. Deliver transactional and marketing emails at scale.
+          - generic [ref=f4e53]:
+            - link "Get started" [ref=f4e54] [cursor=pointer]:
+              - /url: /signup
+            - link "Documentation" [ref=f4e55] [cursor=pointer]:
+              - /url: https://resend.com/docs
+        - img "Light ray background"
+    - generic [ref=f4e56]:
+      - paragraph [ref=f4e57]:
+        - generic [ref=f4e58]: Companies of all sizes trust Resend to deliver their most important emails.
+      - generic [ref=f4e59]:
+        - img "Warner Bros." [ref=f4e61]
+        - img "Max" [ref=f4e78]
+        - img "Raycast" [ref=f4e82]
+        - img "Mistral AI" [ref=f4e88]
+        - img "Replit" [ref=f4e108]
+        - img "Anghami" [ref=f4e111]
+      - generic [ref=f4e114]:
+        - img "Gumroad" [ref=f4e116]
+        - img "Decathlon" [ref=f4e119]
+        - img "Supabase" [ref=f4e124]
+        - img "Leap" [ref=f4e138]
+        - img "Payload" [ref=f4e144]
+        - img "Paper" [ref=f4e151]
+      - link [ref=f4e153] [cursor=pointer]:
+        - /url: /enterprise
+    - generic [ref=f4e157]:
+      - heading "Integrate" [level=2] [ref=f4e158]
+      - paragraph [ref=f4e159]: A simple, elegant interface so you can start sending emails in minutes. It fits right into your code with SDKs for your favorite programming languages.
+      - generic [ref=f4e160]:
+        - tablist [ref=f4e162]:
+          - tab "Node.js" [selected] [ref=f4e163]
+          - tab "Serverless" [ref=f4e166]
+          - tab "Ruby" [ref=f4e169]
+          - tab "Python" [ref=f4e172]
+          - tab "PHP" [ref=f4e175]
+          - tab "CLI" [ref=f4e178]
+          - tab "Go" [ref=f4e181]
+          - tab "Rust" [ref=f4e184]
+          - tab "Java" [ref=f4e187]
+          - tab "Elixir" [ref=f4e190]
+          - tab ".NET" [ref=f4e193]
+          - tab "REST" [ref=f4e196]
+          - tab "SMTP" [ref=f4e199]
+        - tabpanel [ref=f4e202]:
+          - generic [ref=f4e204]:
+            - generic [ref=f4e208]:
+              - tablist [ref=f4e210]:
+                - tab "Node.js" [selected] [ref=f4e211]
+                - tab "Next.js" [ref=f4e215]
+                - tab "Remix" [ref=f4e217]
+                - tab "Nuxt" [ref=f4e219]
+                - tab "Express" [ref=f4e221]
+                - tab "Hono" [ref=f4e223]
+                - tab "Redwood" [ref=f4e225]
+                - tab "Bun" [ref=f4e227]
+                - tab "Astro" [ref=f4e229]
+              - button "Copy to clipboard" [ref=f4e234] [cursor=pointer]
+            - tabpanel [ref=f4e240]:
+              - generic "Node.js" [ref=f4e242]:
+                - generic [ref=f4e243]:
+                  - generic [ref=f4e244]:
+                    - generic [ref=f4e245]: "1"
+                    - text: "import { Resend } from 'resend';"
+                  - generic [ref=f4e246]: "2"
+                  - generic [ref=f4e248]:
+                    - generic [ref=f4e249]: "3"
+                    - text: const resend = new Resend('re_xxxxxxxxx');
+                  - generic [ref=f4e250]: "4"
+                  - generic [ref=f4e252]:
+                    - generic [ref=f4e253]: "5"
+                    - text: "(async function() {"
+                  - generic [ref=f4e254]:
+                    - generic [ref=f4e255]: "6"
+                    - text: "const { data, error } = await resend.emails.send({"
+                  - generic [ref=f4e256]:
+                    - generic [ref=f4e257]: "7"
+                    - text: "from: 'onboarding@resend.dev',"
+                  - generic [ref=f4e258]:
+                    - generic [ref=f4e259]: "8"
+                    - text: "to: 'delivered@resend.dev',"
+                  - generic [ref=f4e260]:
+                    - generic [ref=f4e261]: "9"
+                    - text: "subject: 'Hello World',"
+                  - generic [ref=f4e262]:
+                    - generic [ref=f4e263]: "10"
+                    - text: "html: '<strong>it works!</strong>'"
+                  - generic [ref=f4e264]:
+                    - generic [ref=f4e265]: "11"
+                    - text: "});"
+                  - generic [ref=f4e266]: "12"
+                  - generic [ref=f4e268]:
+                    - generic [ref=f4e269]: "13"
+                    - text: "if (error) {"
+                  - generic [ref=f4e270]:
+                    - generic [ref=f4e271]: "14"
+                    - text: return console.log(error);
+                  - generic [ref=f4e272]:
+                    - generic [ref=f4e273]: "15"
+                    - text: "}"
+                  - generic [ref=f4e274]: "16"
+                  - generic [ref=f4e276]:
+                    - generic [ref=f4e277]: "17"
+                    - text: console.log(data);
+                  - generic [ref=f4e278]:
+                    - generic [ref=f4e279]: "18"
+                    - text: "})();"
+              - generic [ref=f4e280]:
+                - link "View on GitHub" [ref=f4e281] [cursor=pointer]:
+                  - /url: https://github.com/resend/resend-node-example
+                - link "Download ZIP" [ref=f4e285] [cursor=pointer]:
+                  - /url: https://github.com/resend/resend-node-example/archive/refs/heads/main.zip
+    - generic [ref=f4e289]:
+      - heading "First-class developer experience" [level=2] [ref=f4e290]
+      - paragraph [ref=f4e291]:
+        - text: We are a team of engineers who love building tools for other engineers. Our goal is to create the email platform we've always wished we had — one that
+        - emphasis [ref=f4e292]: just works
+        - text: .
+      - generic [ref=f4e293]:
+        - generic [ref=f4e294]:
+          - generic [ref=f4e296]:
+            - generic [ref=f4e298]:
+              - combobox "Select test mode" [ref=f4e299]:
+                - generic [ref=f4e301]:
+                  - generic [ref=f4e302]: delivered
+                  - generic [ref=f4e303]: delivered@resend.dev
+              - textbox [aria-hidden] [ref=f4e306]: delivered
+              - button "Send test email" [ref=f4e307]: Send
+            - generic [ref=f4e311]:
+              - generic [ref=f4e312]:
+                - generic [ref=f4e313]: "HTTP 200:"
+                - generic [ref=f4e314]: "{ \"id\": \"26abdd24-36a9-475d-83bf-4d27a31c7def\" }"
+              - generic [ref=f4e315]:
+                - generic [ref=f4e316]: "HTTP 200:"
+                - generic [ref=f4e317]: "{ \"id\": \"cc3817db-d398-4892-8bc0-8bc589a2cfb3\" }"
+              - generic [ref=f4e318]:
+                - generic [ref=f4e319]: "HTTP 200:"
+                - generic [ref=f4e320]: "{ \"id\": \"4ea2f827-c3a2-471e-b0a1-8bb0bcb5c67c\" }"
+              - generic [ref=f4e321]:
+                - generic [ref=f4e322]: "HTTP 200:"
+                - generic [ref=f4e323]: "{ \"id\": \"8e1d73b4-ebe1-485d-bce8-0d7044f1d879\" }"
+              - generic [ref=f4e324]:
+                - generic [ref=f4e325]: "HTTP 200:"
+                - generic [ref=f4e326]: "{ \"id\": \"a08045a6-122a-4e16-ace1-aa81df4278ac\" }"
+              - generic [ref=f4e327]:
+                - generic [ref=f4e328]: "HTTP 200:"
+                - generic [ref=f4e329]: "{ \"id\": \"c3be1838-b80e-457a-9fc5-3abf49c3b33e\" }"
+              - generic [ref=f4e330]:
+                - generic [ref=f4e331]: "HTTP 200:"
+                - generic [ref=f4e332]: "{ \"id\": \"13359f77-466e-436d-9cb2-ff0b0c9a8af4\" }"
+          - generic [ref=f4e333]:
+            - heading "Test mode" [level=2] [ref=f4e336]
+            - paragraph [ref=f4e337]: Simulate events and experiment with our API without the risk of accidentally sending real emails to real people.
+            - link "Learn more" [ref=f4e338] [cursor=pointer]:
+              - /url: https://resend.com/docs/dashboard/emails/send-test-emails
+        - generic [ref=f4e339]:
+          - generic [ref=f4e342]:
+            - generic [ref=f4e348]:
+              - generic [ref=f4e349]: delivered
+              - generic [ref=f4e354]:
+                - generic [ref=f4e355]: to with subject
+                - generic [ref=f4e358]:
+                  - text: "on"
+                  - generic [ref=f4e359]: agent
+                  - generic [ref=f4e361]: running on
+            - generic [ref=f4e368]:
+              - generic [ref=f4e369]: clicked
+              - generic [ref=f4e374]:
+                - generic [ref=f4e375]: from on
+                - generic [ref=f4e378]:
+                  - text: "on"
+                  - generic [ref=f4e379]: agent
+                  - generic [ref=f4e381]: running on
+            - generic [ref=f4e388]:
+              - generic [ref=f4e389]: opened
+              - generic [ref=f4e394]:
+                - generic [ref=f4e395]: from with subject
+                - generic [ref=f4e398]:
+                  - text: "on"
+                  - generic [ref=f4e399]: agent
+                  - generic [ref=f4e401]: running on
+            - generic [ref=f4e408]:
+              - generic [ref=f4e409]: complained
+              - generic [ref=f4e414]:
+                - generic [ref=f4e415]: to with feedback
+                - generic [ref=f4e418]:
+                  - text: "on"
+                  - generic [ref=f4e419]: agent
+                  - generic [ref=f4e421]: running on
+            - generic [ref=f4e428]:
+              - generic [ref=f4e429]: bounced
+              - generic [ref=f4e434]:
+                - generic [ref=f4e435]: to with type
+                - generic [ref=f4e438]:
+                  - text: "on"
+                  - generic [ref=f4e439]: agent
+                  - generic [ref=f4e441]: running on
+          - generic [ref=f4e444]:
+            - heading "Modular webhooks" [level=2] [ref=f4e447]
+            - paragraph [ref=f4e448]: Receive real-time notifications directly to your server. Every time an email is delivered, opened, bounces, or a link is clicked.
+            - link "Learn more" [ref=f4e449] [cursor=pointer]:
+              - /url: https://resend.com/docs/webhooks/introduction
+    - generic [ref=f4e450]:
+      - heading "Write using a delightful editor" [level=2] [ref=f4e452]
+      - paragraph [ref=f4e453]: A modern editor that makes it easy for anyone to write, format, and send emails. Visually build your email and change the design by adding custom styles.
+      - generic [ref=f4e454]:
+        - generic [ref=f4e455]:
+          - generic [ref=f4e456]:
+            - generic [ref=f4e457]: Styles
+            - generic [ref=f4e460]: Weekly Acme Newsletter
+            - generic [ref=f4e461]:
+              - generic [ref=f4e462]: a day ago
+              - generic [ref=f4e465]: Test
+              - generic [ref=f4e466]: Send
+          - generic [ref=f4e468]:
+            - generic [ref=f4e469]:
+              - generic [ref=f4e470]: From
+              - generic [ref=f4e471]: your.name@acme.com
+            - generic [ref=f4e472]:
+              - generic [ref=f4e473]: To
+              - generic [ref=f4e474]:
+                - text: Newsletter
+                - generic [ref=f4e477]: Subscribers
+            - generic [ref=f4e478]:
+              - generic [ref=f4e479]: Subject
+              - generic [ref=f4e480]: Weekly Newsletter
+        - img "Full-screen image" [ref=f4e482]
+    - generic [ref=f4e484]:
+      - heading "Go beyond editing" [level=2] [ref=f4e485]
+      - paragraph [ref=f4e486]: Group and control your contacts in a simple and intuitive way. Straightforward analytics and reporting tools that will help you send better emails.
+      - generic [ref=f4e487]:
+        - generic [ref=f4e488]:
+          - img "Audiences Screenshot" [ref=f4e491]
+          - generic [ref=f4e492]:
+            - heading "Contact management" [level=2] [ref=f4e495]
+            - paragraph [ref=f4e496]: Import your list in minutes, regardless the size of your audience. Get full visibility of each contact and their personal attributes.
+            - link "Learn more" [ref=f4e497] [cursor=pointer]:
+              - /url: /features/audiences
+        - generic [ref=f4e498]:
+          - img "Illustration" [ref=f4e501]
+          - generic [ref=f4e502]:
+            - heading "Broadcast analytics" [level=2] [ref=f4e505]
+            - paragraph [ref=f4e506]: Unlock powerful insights and understand exactly how your audience is interacting with your broadcast emails.
+            - link "Learn more" [ref=f4e507] [cursor=pointer]:
+              - /url: /features/broadcasts
+    - generic [ref=f4e508]:
+      - heading "Develop emails using React" [level=2] [ref=f4e510]
+      - paragraph [ref=f4e511]: Create beautiful templates without having to deal with <table> layouts and HTML. Powered by react-email, our open source component library.
+      - generic [ref=f4e512]:
+        - link [ref=f4e513] [cursor=pointer]:
+          - /url: /signup
+        - link [ref=f4e517] [cursor=pointer]:
+          - /url: https://react.email/docs
+      - generic [ref=f4e521]:
+        - generic [ref=f4e528]:
+          - switch "Email view mode" [ref=f4e529]
+          - checkbox [aria-hidden] [ref=f4e537]
+          - switch "Email appearance mode" [ref=f4e538]
+          - checkbox [aria-hidden] [ref=f4e546]
+        - generic [ref=f4e547]:
+          - complementary [ref=f4e548]:
+            - tablist [ref=f4e550]:
+              - tab "user-welcome.tsx" [selected] [ref=f4e551]
+              - tab "reset-password.tsx" [ref=f4e555]
+              - tab "user-invite.tsx" [ref=f4e559]
+              - tab "weekly-digest.tsx" [ref=f4e563]
+          - tabpanel [ref=f4e567]:
+            - generic [ref=f4e570]:
+              - generic [ref=f4e571]:
+                - generic [ref=f4e572]: "1"
+                - text: "import { Body, Button, Column, Container, Head, Heading, Hr, Html, Img, Link, Preview, Row, Section, Text, Tailwind } from 'react-email';"
+              - generic [ref=f4e573]:
+                - generic [ref=f4e574]: "2"
+                - text: import * as React from 'react';
+              - generic [ref=f4e575]: "3"
+              - generic [ref=f4e577]:
+                - generic [ref=f4e578]: "4"
+                - text: "const WelcomeEmail = ({"
+              - generic [ref=f4e579]:
+                - generic [ref=f4e580]: "5"
+                - text: username = 'Steve',
+              - generic [ref=f4e581]:
+                - generic [ref=f4e582]: "6"
+                - text: company = 'ACME',
+              - generic [ref=f4e583]:
+                - generic [ref=f4e584]: "7"
+                - text: "}: WelcomeEmailProps) => {"
+              - generic [ref=f4e585]:
+                - generic [ref=f4e586]: "8"
+                - text: "const previewText = `Welcome to ${company}, ${username}!`;"
+              - generic [ref=f4e587]: "9"
+              - generic [ref=f4e589]:
+                - generic [ref=f4e590]: "10"
+                - text: return (
+              - generic [ref=f4e591]:
+                - generic [ref=f4e592]: "11"
+                - text: <Html>
+              - generic [ref=f4e593]:
+                - generic [ref=f4e594]: "12"
+                - text: <Head />
+              - generic [ref=f4e595]:
+                - generic [ref=f4e596]: "13"
+                - text: "<Preview>{previewText}</Preview>"
+              - generic [ref=f4e597]:
+                - generic [ref=f4e598]: "14"
+                - text: <Tailwind>
+              - generic [ref=f4e599]:
+                - generic [ref=f4e600]: "15"
+                - text: <Body className="bg-white my-auto mx-auto font-sans">
+              - generic [ref=f4e601]:
+                - generic [ref=f4e602]: "16"
+                - text: <Container className="my-10 mx-auto p-5 w-[465px]">
+              - generic [ref=f4e603]:
+                - generic [ref=f4e604]: "17"
+                - text: <Section className="mt-8">
+              - generic [ref=f4e605]:
+                - generic [ref=f4e606]: "18"
+                - text: <Img
+              - generic [ref=f4e607]:
+                - generic [ref=f4e608]: "19"
+                - text: "src={`${baseUrl}/static/example-logo.png`}"
+              - generic [ref=f4e609]:
+                - generic [ref=f4e610]: "20"
+                - text: width="80"
+              - generic [ref=f4e611]:
+                - generic [ref=f4e612]: "21"
+                - text: height="80"
+              - generic [ref=f4e613]:
+                - generic [ref=f4e614]: "22"
+                - text: alt="Logo Example"
+              - generic [ref=f4e615]:
+                - generic [ref=f4e616]: "23"
+                - text: className="my-0 mx-auto"
+              - generic [ref=f4e617]:
+                - generic [ref=f4e618]: "24"
+                - text: />
+              - generic [ref=f4e619]:
+                - generic [ref=f4e620]: "25"
+                - text: </Section>
+              - generic [ref=f4e621]:
+                - generic [ref=f4e622]: "26"
+                - text: <Heading className="text-2xl font-normal text-center p-0 my-8 mx-0">
+              - generic [ref=f4e623]:
+                - generic [ref=f4e624]: "27"
+                - text: "Welcome to <strong>{company}</strong>, {username}!"
+              - generic [ref=f4e625]:
+                - generic [ref=f4e626]: "28"
+                - text: </Heading>
+              - generic [ref=f4e627]:
+                - generic [ref=f4e628]: "29"
+                - text: <Text className="text-sm">
+              - generic [ref=f4e629]:
+                - generic [ref=f4e630]: "30"
+                - text: "Hello {username},"
+              - generic [ref=f4e631]:
+                - generic [ref=f4e632]: "31"
+                - text: </Text>
+              - generic [ref=f4e633]:
+                - generic [ref=f4e634]: "32"
+                - text: <Text className="text-sm">
+              - generic [ref=f4e635]:
+                - generic [ref=f4e636]: "33"
+                - text: "We're excited to have you onboard at <strong>{company}</strong>. We hope you enjoy your journey with us. If you have any questions or need assistance, feel free to reach out."
+              - generic [ref=f4e637]:
+                - generic [ref=f4e638]: "34"
+                - text: </Text>
+              - generic [ref=f4e639]:
+                - generic [ref=f4e640]: "35"
+                - text: <Section className="text-center mt-[32px] mb-[32px]">
+              - generic [ref=f4e641]:
+                - generic [ref=f4e642]: "36"
+                - text: <Button
+              - generic [ref=f4e643]:
+                - generic [ref=f4e644]: "37"
+                - text: "pX={20}"
+              - generic [ref=f4e645]:
+                - generic [ref=f4e646]: "38"
+                - text: "pY={12}"
+              - generic [ref=f4e647]:
+                - generic [ref=f4e648]: "39"
+                - text: className="bg-[#00A3FF] rounded-sm text-white text-xs font-semibold no-underline text-center"
+              - generic [ref=f4e649]:
+                - generic [ref=f4e650]: "40"
+                - text: "href={`${baseUrl}/get-started`}"
+              - generic [ref=f4e651]:
+                - generic [ref=f4e652]: "41"
+                - text: ">"
+              - generic [ref=f4e653]:
+                - generic [ref=f4e654]: "42"
+                - text: Get Started
+              - generic [ref=f4e655]:
+                - generic [ref=f4e656]: "43"
+                - text: </Button>
+              - generic [ref=f4e657]:
+                - generic [ref=f4e658]: "44"
+                - text: </Section>
+              - generic [ref=f4e659]:
+                - generic [ref=f4e660]: "45"
+                - text: <Text className="text-sm">
+              - generic [ref=f4e661]:
+                - generic [ref=f4e662]: "46"
+                - text: Cheers,
+              - generic [ref=f4e663]:
+                - generic [ref=f4e664]: "47"
+                - text: <br/>
+              - generic [ref=f4e665]:
+                - generic [ref=f4e666]: "48"
+                - text: "The {company} Team"
+              - generic [ref=f4e667]:
+                - generic [ref=f4e668]: "49"
+                - text: </Text>
+              - generic [ref=f4e669]:
+                - generic [ref=f4e670]: "50"
+                - text: </Container>
+              - generic [ref=f4e671]:
+                - generic [ref=f4e672]: "51"
+                - text: </Body>
+              - generic [ref=f4e673]:
+                - generic [ref=f4e674]: "52"
+                - text: </Tailwind>
+              - generic [ref=f4e675]:
+                - generic [ref=f4e676]: "53"
+                - text: </Html>
+              - generic [ref=f4e677]:
+                - generic [ref=f4e678]: "54"
+                - text: );
+              - generic [ref=f4e679]:
+                - generic [ref=f4e680]: "55"
+                - text: "};"
+              - generic [ref=f4e681]: "56"
+              - generic [ref=f4e683]:
+                - generic [ref=f4e684]: "57"
+                - text: "interface WelcomeEmailProps {"
+              - generic [ref=f4e685]:
+                - generic [ref=f4e686]: "58"
+                - text: "username?: string;"
+              - generic [ref=f4e687]:
+                - generic [ref=f4e688]: "59"
+                - text: "company?: string;"
+              - generic [ref=f4e689]:
+                - generic [ref=f4e690]: "60"
+                - text: "}"
+              - generic [ref=f4e691]: "61"
+              - generic [ref=f4e693]:
+                - generic [ref=f4e694]: "62"
+                - text: const baseUrl = process.env.URL
+              - generic [ref=f4e695]:
+                - generic [ref=f4e696]: "63"
+                - text: "? `https://${process.env.URL}`"
+              - generic [ref=f4e697]:
+                - generic [ref=f4e698]: "64"
+                - text: ": '';"
+              - generic [ref=f4e699]: "65"
+              - generic [ref=f4e701]:
+                - generic [ref=f4e702]: "66"
+                - text: export default WelcomeEmail;
+            - generic [ref=f4e703]:
+              - generic:
+                - img "Logo Example"
+                - heading "Welcome to ACME, user!" [level=2]:
+                  - text: Welcome to
+                  - strong: ACME
+                  - text: ", user!"
+                - paragraph: Hello Steve,
+                - paragraph:
+                  - text: We're excited to have you onboard at
+                  - strong: ACME
+                  - text: . We hope you enjoy your journey with us. If you have any questions or need assistance, feel free to reach out.
+                - link "Get Started":
+                  - /url: /get-started
+                - paragraph: Cheers,The ACME Team
+    - generic [ref=f4e704]:
+      - heading "Reach humans, not spam folders" [level=2] [ref=f4e705]
+      - generic [ref=f4e706]:
+        - generic [ref=f4e707]:
+          - heading "Proactive blocklist tracking" [level=3] [ref=f4e711]
+          - paragraph [ref=f4e712]:
+            - text: Be the first to know if your domain is added to a
+            - button "DNSBLs" [ref=f4e713]
+            - text: such as those offered by
+            - button "Spamhaus" [ref=f4e714]
+            - text: with removal requests generated by Resend.
+        - generic [ref=f4e715]:
+          - heading "Faster time to inbox" [level=3] [ref=f4e719]
+          - paragraph [ref=f4e720]: Send emails from the region closest to your users. Reduce delivery latency with North American, South American, European, and Asian regions.
+        - generic [ref=f4e721]:
+          - heading "Build confidence with BIMI" [level=3] [ref=f4e725]
+          - paragraph [ref=f4e726]:
+            - text: Showcase your logo and company branding with
+            - button "BIMI" [ref=f4e727]
+            - text: . Receive guidance to obtain a
+            - button "VMC" [ref=f4e728]
+            - text: "- the email equivalent of a checkmark on social media."
+        - generic [ref=f4e729]:
+          - heading "Managed dedicated IPs" [level=3] [ref=f4e733]
+          - paragraph [ref=f4e734]: Get a fully managed dedicated IP that automatically warms up and autoscales based on your sending volume, no waiting period.
+        - generic [ref=f4e735]:
+          - heading "Dynamic suppression list" [level=3] [ref=f4e739]
+          - paragraph [ref=f4e740]:
+            - text: Prevent repeated sending to recipients who no longer want your email and comply with standards like the
+            - button "CAN-SPAM Act" [ref=f4e741]
+            - text: and others.
+        - generic [ref=f4e742]:
+          - heading "IP and domain monitoring" [level=3] [ref=f4e746]
+          - paragraph [ref=f4e747]: Monitor your DNS configuration for any errors or regressions. Be notified of any changes that could hinder your deliverability.
+        - generic [ref=f4e748]:
+          - heading "Verify DNS records" [level=3] [ref=f4e752]
+          - paragraph [ref=f4e753]:
+            - text: Protect your reputation by verifying your identity as a legitimate sender. Secure your email communication using
+            - button "DKIM" [ref=f4e754]
+            - text: and
+            - button "SPF" [ref=f4e755]
+            - text: .
+        - generic [ref=f4e756]:
+          - heading "Battle-tested infrastructure" [level=3] [ref=f4e760]
+          - paragraph [ref=f4e761]: Rely on a platform of reputable IP's used by trustworthy senders with distributed workloads across different IP pools.
+        - generic [ref=f4e762]:
+          - heading "Prevent spoofing with DMARC" [level=3] [ref=f4e766]
+          - paragraph [ref=f4e767]:
+            - text: Avoid impersonation by creating
+            - button "DMARC" [ref=f4e768]
+            - text: policies and instructing inbox providers on how to treat unauthenticated email.
+    - generic [ref=f4e769]:
+      - img "Vercel" [ref=f4e771]
+      - blockquote [ref=f4e772]: Resend is transforming email for developers. Simple interface, easy integrations, handy templates. What else could we ask for.
+      - generic [ref=f4e775]:
+        - paragraph [ref=f4e776]: Guillermo Rauch
+        - paragraph [ref=f4e777]: CEO at Vercel
+      - link "Send with Next.js":
+        - /url: https://resend.com/docs/send-with-nextjs
+    - generic [ref=f4e778]:
+      - heading "Everything in your control" [level=2] [ref=f4e780]
+      - paragraph [ref=f4e781]: All the features you need to manage your email sending, troubleshoot with detailed logs, and protect your domain reputation – without the friction.
+      - generic [ref=f4e782]:
+        - tablist [ref=f4e783]:
+          - tab [selected] [ref=f4e784] [cursor=pointer]:
+            - heading "Intuitive analytics" [level=3] [ref=f4e792]
+          - tab [ref=f4e793] [cursor=pointer]:
+            - heading "Full visibility" [level=3] [ref=f4e801]
+          - tab [ref=f4e802] [cursor=pointer]:
+            - heading "Domain authentication" [level=3] [ref=f4e810]
+        - tabpanel [ref=f4e811]:
+          - img "Resend Dashboard - Overview" [ref=f4e813]
+    - generic [ref=f4e814]:
+      - heading "Beyond expectations" [level=2] [ref=f4e815]
+      - paragraph [ref=f4e816]: Resend is driving remarkable developer experiences that enable success stories, empower businesses, and fuel growth across industries and individuals.
+      - generic [ref=f4e819]:
+        - list [ref=f4e820]:
+          - listitem [ref=f4e821]:
+            - blockquote [ref=f4e822]:
+              - generic [ref=f4e823]: "\"Our team loves Resend. It makes email sending so easy and reliable. After we switched to Dedicated IPs, our deliverability improved tremendously and we don't hear complaints about emails landing on spam anymore.\""
+              - generic [ref=f4e830]:
+                - generic [ref=f4e831]: Vlad Matsiiako
+                - generic [ref=f4e832]: Co-founder of Infisical
+          - listitem [ref=f4e833]:
+            - blockquote [ref=f4e834]:
+              - generic [ref=f4e835]: "\"As a developer I love the approach that the Resend team is taking. Its so refreshing. They are also extremely user-centric and helpful in terms of getting you up and running, sending beautiful emails that deliver.\""
+              - generic [ref=f4e842]:
+                - generic [ref=f4e843]: Hahnbee Lee
+                - generic [ref=f4e844]: Co-Founder at Mintlify
+          - listitem [ref=f4e845]:
+            - blockquote [ref=f4e846]:
+              - generic [ref=f4e847]: "\"We value tools that feel stable, well thought out, and aligned with the standards we expect across our stack. Resend meets those expectations. It lets our team stay focused on building the larger platform rather than getting pulled into the overhead that typically comes with legacy email infrastructure.\""
+              - generic [ref=f4e854]:
+                - generic [ref=f4e855]: Bradley Greenwood
+                - generic [ref=f4e856]: VP of Engineering at MrBeast
+          - listitem [ref=f4e857]:
+            - blockquote [ref=f4e858]:
+              - generic [ref=f4e859]: "\"Our partnership with Resend has been a great experience. They've made sure we can focus on what we do best—building our product and growing our business.\""
+              - generic [ref=f4e866]:
+                - generic [ref=f4e867]: Sahil Lavingia
+                - generic [ref=f4e868]: CEO of Gumroad
+          - listitem [ref=f4e869]:
+            - blockquote [ref=f4e870]:
+              - generic [ref=f4e871]: "\"Switching over to Resend from SendGrid marked a significant improvement in our email management. We started with a small test - waitlist emails for our iOS and Windows apps. Within 30 minutes, we were done.\""
+              - generic [ref=f4e878]:
+                - generic [ref=f4e879]: Thomas Mann
+                - generic [ref=f4e880]: Founder & CEO of Raycast
+          - listitem [ref=f4e881]:
+            - blockquote [ref=f4e882]:
+              - generic [ref=f4e883]: "\"The simplicity and reliability of Resend allowed our engineers to focus on building features rather than troubleshooting email infrastructure.\""
+              - generic [ref=f4e890]:
+                - generic [ref=f4e891]: Amadeo Pellicce
+                - generic [ref=f4e892]: Connectors, Agents and Automations Lead at Replit
+          - listitem [ref=f4e893]:
+            - blockquote [ref=f4e894]:
+              - generic [ref=f4e895]: "\"We're a small team with a lot on our plates. Email infrastructure is something we don't want to think about, and with Resend we don't have to.\""
+              - generic [ref=f4e902]:
+                - generic [ref=f4e903]: Peter Suhm
+                - generic [ref=f4e904]: Ops at Tailwind
+          - listitem [ref=f4e905]:
+            - blockquote [ref=f4e906]:
+              - generic [ref=f4e907]: "\"The best part about taking Resend into production was that there was no friction at all.\""
+              - generic [ref=f4e914]:
+                - generic [ref=f4e915]: Tara Nagar
+                - generic [ref=f4e916]: Software Engineer at Braintrust
+          - listitem [ref=f4e917]:
+            - blockquote [ref=f4e918]:
+              - generic [ref=f4e919]: "\"The flexibility of Resend is what we value most. It allows us to quickly adapt and refine our email communications as our products evolve.\""
+              - generic [ref=f4e926]:
+                - generic [ref=f4e927]: Glauber Costa
+                - generic [ref=f4e928]: Founder and CEO at Turso
+          - listitem [ref=f4e929]:
+            - blockquote [ref=f4e930]:
+              - generic [ref=f4e931]: "\"Resend is email with simpler APIs, better webhooks, and best-in-class debugging.\""
+              - generic [ref=f4e938]:
+                - generic [ref=f4e939]: Dan Farrelly
+                - generic [ref=f4e940]: CTO and Co-Founder of Inngest
+        - list [ref=f4e941]:
+          - listitem [ref=f4e942]:
+            - blockquote [ref=f4e943]:
+              - generic [ref=f4e944]: "\"Our team loves Resend. It makes email sending so easy and reliable. After we switched to Dedicated IPs, our deliverability improved tremendously and we don't hear complaints about emails landing on spam anymore.\""
+              - generic [ref=f4e951]:
+                - generic [ref=f4e952]: Vlad Matsiiako
+                - generic [ref=f4e953]: Co-founder of Infisical
+          - listitem [ref=f4e954]:
+            - blockquote [ref=f4e955]:
+              - generic [ref=f4e956]: "\"As a developer I love the approach that the Resend team is taking. Its so refreshing. They are also extremely user-centric and helpful in terms of getting you up and running, sending beautiful emails that deliver.\""
+              - generic [ref=f4e963]:
+                - generic [ref=f4e964]: Hahnbee Lee
+                - generic [ref=f4e965]: Co-Founder at Mintlify
+          - listitem [ref=f4e966]:
+            - blockquote [ref=f4e967]:
+              - generic [ref=f4e968]: "\"We value tools that feel stable, well thought out, and aligned with the standards we expect across our stack. Resend meets those expectations. It lets our team stay focused on building the larger platform rather than getting pulled into the overhead that typically comes with legacy email infrastructure.\""
+              - generic [ref=f4e975]:
+                - generic [ref=f4e976]: Bradley Greenwood
+                - generic [ref=f4e977]: VP of Engineering at MrBeast
+          - listitem [ref=f4e978]:
+            - blockquote [ref=f4e979]:
+              - generic [ref=f4e980]: "\"Our partnership with Resend has been a great experience. They've made sure we can focus on what we do best—building our product and growing our business.\""
+              - generic [ref=f4e987]:
+                - generic [ref=f4e988]: Sahil Lavingia
+                - generic [ref=f4e989]: CEO of Gumroad
+          - listitem [ref=f4e990]:
+            - blockquote [ref=f4e991]:
+              - generic [ref=f4e992]: "\"Switching over to Resend from SendGrid marked a significant improvement in our email management. We started with a small test - waitlist emails for our iOS and Windows apps. Within 30 minutes, we were done.\""
+              - generic [ref=f4e999]:
+                - generic [ref=f4e1000]: Thomas Mann
+                - generic [ref=f4e1001]: Founder & CEO of Raycast
+          - listitem [ref=f4e1002]:
+            - blockquote [ref=f4e1003]:
+              - generic [ref=f4e1004]: "\"The simplicity and reliability of Resend allowed our engineers to focus on building features rather than troubleshooting email infrastructure.\""
+              - generic [ref=f4e1011]:
+                - generic [ref=f4e1012]: Amadeo Pellicce
+                - generic [ref=f4e1013]: Connectors, Agents and Automations Lead at Replit
+          - listitem [ref=f4e1014]:
+            - blockquote [ref=f4e1015]:
+              - generic [ref=f4e1016]: "\"We're a small team with a lot on our plates. Email infrastructure is something we don't want to think about, and with Resend we don't have to.\""
+              - generic [ref=f4e1023]:
+                - generic [ref=f4e1024]: Peter Suhm
+                - generic [ref=f4e1025]: Ops at Tailwind
+          - listitem [ref=f4e1026]:
+            - blockquote [ref=f4e1027]:
+              - generic [ref=f4e1028]: "\"The best part about taking Resend into production was that there was no friction at all.\""
+              - generic [ref=f4e1035]:
+                - generic [ref=f4e1036]: Tara Nagar
+                - generic [ref=f4e1037]: Software Engineer at Braintrust
+          - listitem [ref=f4e1038]:
+            - blockquote [ref=f4e1039]:
+              - generic [ref=f4e1040]: "\"The flexibility of Resend is what we value most. It allows us to quickly adapt and refine our email communications as our products evolve.\""
+              - generic [ref=f4e1047]:
+                - generic [ref=f4e1048]: Glauber Costa
+                - generic [ref=f4e1049]: Founder and CEO at Turso
+          - listitem [ref=f4e1050]:
+            - blockquote [ref=f4e1051]:
+              - generic [ref=f4e1052]: "\"Resend is email with simpler APIs, better webhooks, and best-in-class debugging.\""
+              - generic [ref=f4e1059]:
+                - generic [ref=f4e1060]: Dan Farrelly
+                - generic [ref=f4e1061]: CTO and Co-Founder of Inngest
+        - list [ref=f4e1062]:
+          - listitem [ref=f4e1063]:
+            - blockquote [ref=f4e1064]:
+              - generic [ref=f4e1065]: "\"Our team loves Resend. It makes email sending so easy and reliable. After we switched to Dedicated IPs, our deliverability improved tremendously and we don't hear complaints about emails landing on spam anymore.\""
+              - generic [ref=f4e1072]:
+                - generic [ref=f4e1073]: Vlad Matsiiako
+                - generic [ref=f4e1074]: Co-founder of Infisical
+          - listitem [ref=f4e1075]:
+            - blockquote [ref=f4e1076]:
+              - generic [ref=f4e1077]: "\"As a developer I love the approach that the Resend team is taking. Its so refreshing. They are also extremely user-centric and helpful in terms of getting you up and running, sending beautiful emails that deliver.\""
+              - generic [ref=f4e1084]:
+                - generic [ref=f4e1085]: Hahnbee Lee
+                - generic [ref=f4e1086]: Co-Founder at Mintlify
+          - listitem [ref=f4e1087]:
+            - blockquote [ref=f4e1088]:
+              - generic [ref=f4e1089]: "\"We value tools that feel stable, well thought out, and aligned with the standards we expect across our stack. Resend meets those expectations. It lets our team stay focused on building the larger platform rather than getting pulled into the overhead that typically comes with legacy email infrastructure.\""
+              - generic [ref=f4e1096]:
+                - generic [ref=f4e1097]: Bradley Greenwood
+                - generic [ref=f4e1098]: VP of Engineering at MrBeast
+          - listitem [ref=f4e1099]:
+            - blockquote [ref=f4e1100]:
+              - generic [ref=f4e1101]: "\"Our partnership with Resend has been a great experience. They've made sure we can focus on what we do best—building our product and growing our business.\""
+              - generic [ref=f4e1108]:
+                - generic [ref=f4e1109]: Sahil Lavingia
+                - generic [ref=f4e1110]: CEO of Gumroad
+          - listitem [ref=f4e1111]:
+            - blockquote [ref=f4e1112]:
+              - generic [ref=f4e1113]: "\"Switching over to Resend from SendGrid marked a significant improvement in our email management. We started with a small test - waitlist emails for our iOS and Windows apps. Within 30 minutes, we were done.\""
+              - generic [ref=f4e1120]:
+                - generic [ref=f4e1121]: Thomas Mann
+                - generic [ref=f4e1122]: Founder & CEO of Raycast
+          - listitem [ref=f4e1123]:
+            - blockquote [ref=f4e1124]:
+              - generic [ref=f4e1125]: "\"The simplicity and reliability of Resend allowed our engineers to focus on building features rather than troubleshooting email infrastructure.\""
+              - generic [ref=f4e1132]:
+                - generic [ref=f4e1133]: Amadeo Pellicce
+                - generic [ref=f4e1134]: Connectors, Agents and Automations Lead at Replit
+          - listitem [ref=f4e1135]:
+            - blockquote [ref=f4e1136]:
+              - generic [ref=f4e1137]: "\"We're a small team with a lot on our plates. Email infrastructure is something we don't want to think about, and with Resend we don't have to.\""
+              - generic [ref=f4e1144]:
+                - generic [ref=f4e1145]: Peter Suhm
+                - generic [ref=f4e1146]: Ops at Tailwind
+          - listitem [ref=f4e1147]:
+            - blockquote [ref=f4e1148]:
+              - generic [ref=f4e1149]: "\"The best part about taking Resend into production was that there was no friction at all.\""
+              - generic [ref=f4e1156]:
+                - generic [ref=f4e1157]: Tara Nagar
+                - generic [ref=f4e1158]: Software Engineer at Braintrust
+          - listitem [ref=f4e1159]:
+            - blockquote [ref=f4e1160]:
+              - generic [ref=f4e1161]: "\"The flexibility of Resend is what we value most. It allows us to quickly adapt and refine our email communications as our products evolve.\""
+              - generic [ref=f4e1168]:
+                - generic [ref=f4e1169]: Glauber Costa
+                - generic [ref=f4e1170]: Founder and CEO at Turso
+          - listitem [ref=f4e1171]:
+            - blockquote [ref=f4e1172]:
+              - generic [ref=f4e1173]: "\"Resend is email with simpler APIs, better webhooks, and best-in-class debugging.\""
+              - generic [ref=f4e1180]:
+                - generic [ref=f4e1181]: Dan Farrelly
+                - generic [ref=f4e1182]: CTO and Co-Founder of Inngest
+    - generic [ref=f4e1183]:
+      - heading "Email reimagined. Available today." [level=2] [ref=f4e1184]: Email reimagined.Available today.
+      - link [ref=f4e1186] [cursor=pointer]:
+        - /url: /signup
+    - contentinfo [ref=f4e1192]:
+      - generic [ref=f4e1193]:
+        - paragraph [ref=f4e1194]: "2261 Market Street #5039San Francisco, CA 94114"
+        - generic [ref=f4e1195]:
+          - link [ref=f4e1196] [cursor=pointer]:
+            - /url: https://x.com/resend
+            - img "X" [ref=f4e1197]
+          - link [ref=f4e1198] [cursor=pointer]:
+            - /url: https://github.com/resend
+            - img "GitHub" [ref=f4e1199]
+          - link [ref=f4e1200] [cursor=pointer]:
+            - /url: https://linkedin.com/company/resend
+            - img "LinkedIn" [ref=f4e1201]
+          - link [ref=f4e1202] [cursor=pointer]:
+            - /url: https://www.youtube.com/channel/UC0FkhoSz2kYqHVBk4L0QYIg
+            - img "Youtube" [ref=f4e1203]
+        - link "Status unknown" [ref=f4e1204] [cursor=pointer]:
+          - /url: /status
+      - generic [ref=f4e1210]:
+        - generic [ref=f4e1211]:
+          - paragraph [ref=f4e1212]: Features
+          - list [ref=f4e1213]:
+            - listitem [ref=f4e1214]:
+              - link "Automations" [ref=f4e1215] [cursor=pointer]:
+                - /url: /features/automations
+            - listitem [ref=f4e1216]:
+              - link "Audiences" [ref=f4e1217] [cursor=pointer]:
+                - /url: /features/audiences
+            - listitem [ref=f4e1218]:
+              - link "Broadcasts" [ref=f4e1219] [cursor=pointer]:
+                - /url: /features/broadcasts
+            - listitem [ref=f4e1220]:
+              - link "Inbound" [ref=f4e1221] [cursor=pointer]:
+                - /url: /features/inbound
+            - listitem [ref=f4e1222]:
+              - link "Templates" [ref=f4e1223] [cursor=pointer]:
+                - /url: /features/templates
+            - listitem [ref=f4e1224]:
+              - link "Webhooks" [ref=f4e1225] [cursor=pointer]:
+                - /url: /features/webhooks
+            - listitem [ref=f4e1226]:
+              - link "Dedicated IPs" [ref=f4e1227] [cursor=pointer]:
+                - /url: /features/dedicated-ips
+        - generic [ref=f4e1228]:
+          - paragraph [ref=f4e1229]: Resources
+          - list [ref=f4e1230]:
+            - listitem [ref=f4e1231]:
+              - link "Changelog" [ref=f4e1232] [cursor=pointer]:
+                - /url: /changelog
+            - listitem [ref=f4e1233]:
+              - link "Pricing" [ref=f4e1234] [cursor=pointer]:
+                - /url: /pricing
+            - listitem [ref=f4e1235]:
+              - link "Enterprise" [ref=f4e1236] [cursor=pointer]:
+                - /url: /enterprise
+            - listitem [ref=f4e1237]:
+              - link "Security" [ref=f4e1238] [cursor=pointer]:
+                - /url: /security
+            - listitem [ref=f4e1239]:
+              - link "SOC 2" [ref=f4e1240] [cursor=pointer]:
+                - /url: /security/soc-2
+            - listitem [ref=f4e1241]:
+              - link "GDPR" [ref=f4e1242] [cursor=pointer]:
+                - /url: /security/gdpr
+            - listitem [ref=f4e1243]:
+              - link "Brand" [ref=f4e1244] [cursor=pointer]:
+                - /url: /brand
+        - generic [ref=f4e1245]:
+          - paragraph [ref=f4e1246]: Company
+          - list [ref=f4e1247]:
+            - listitem [ref=f4e1248]:
+              - link "About" [ref=f4e1249] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f4e1250]:
+              - link "Blog" [ref=f4e1251] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=f4e1252]:
+              - link "Careers" [ref=f4e1253] [cursor=pointer]:
+                - /url: /careers
+            - listitem [ref=f4e1254]:
+              - link "Clubs" [ref=f4e1255] [cursor=pointer]:
+                - /url: /clubs
+            - listitem [ref=f4e1256]:
+              - link "Customers" [ref=f4e1257] [cursor=pointer]:
+                - /url: /customers
+            - listitem [ref=f4e1258]:
+              - link "Humans" [ref=f4e1259] [cursor=pointer]:
+                - /url: /humans
+            - listitem [ref=f4e1260]:
+              - link "Philosophy" [ref=f4e1261] [cursor=pointer]:
+                - /url: /philosophy
+        - generic [ref=f4e1262]:
+          - paragraph [ref=f4e1263]: Help
+          - list [ref=f4e1264]:
+            - listitem [ref=f4e1265]:
+              - link "Support" [ref=f4e1266] [cursor=pointer]:
+                - /url: /support
+            - listitem [ref=f4e1267]:
+              - link "Status" [ref=f4e1268] [cursor=pointer]:
+                - /url: /status
+            - listitem [ref=f4e1269]:
+              - link "Migrate" [ref=f4e1270] [cursor=pointer]:
+                - /url: /migrate
+            - listitem [ref=f4e1271]:
+              - link "Knowledge base" [ref=f4e1272] [cursor=pointer]:
+                - /url: https://resend.com/docs/knowledge-base/introduction
+            - listitem [ref=f4e1273]:
+              - link "Legal policies" [ref=f4e1274] [cursor=pointer]:
+                - /url: /legal
+        - generic [ref=f4e1275]:
+          - paragraph [ref=f4e1276]: Community
+          - list [ref=f4e1277]:
+            - listitem [ref=f4e1278]:
+              - link "Events" [ref=f4e1279] [cursor=pointer]:
+                - /url: /events
+            - listitem [ref=f4e1280]:
+              - link "Insiders" [ref=f4e1281] [cursor=pointer]:
+                - /url: /insiders
+            - listitem [ref=f4e1282]:
+              - link "Open source" [ref=f4e1283] [cursor=pointer]:
+                - /url: /open-source
+            - listitem [ref=f4e1284]:
+              - link "Wallpapers" [ref=f4e1285] [cursor=pointer]:
+                - /url: /wallpapers
+  - region "Notifications alt+T"

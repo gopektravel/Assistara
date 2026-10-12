@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveEnrollmentApplication } from "../_shared/enrollment-token.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!;
 const K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -33,16 +34,13 @@ Deno.serve(async (req) => {
   try { b = await req.json() } catch {}
   const token = String(b.token || "").trim();
   const code = String(b.code || "").trim().toUpperCase();
-  if (!/^[0-9a-f-]{36}$/i.test(token) || !code) return out({ ok: false, error: "Enter a valid promo code." }, 400);
+  if (!token || !code) return out({ ok: false, error: "Enter a valid promo code." }, 400);
 
   const db = createClient(U, K, { auth: { persistSession: false } });
 
-  const { data: a, error: ae } = await db
-    .from("academy_applications")
-    .select("id, decision, status, payment_status, email")
-    .eq("enrollment_token", token)
-    .maybeSingle();
+  const { data: a, error: ae, tokenKind } = await resolveEnrollmentApplication(db, token, "id,decision,status,payment_status,email,promo_code,checkout_amount_php");
   if (ae) return out({ ok: false, error: "Enrollment lookup failed." }, 500);
+  if (tokenKind === "invalid") return out({ ok: false, error: "Enter a valid promo code." }, 400);
   if (!a || (a.decision !== "accepted" && a.status !== "accepted")) return out({ ok: false, error: "Enrollment invitation is not active." }, 403);
 
   const { data: p, error: pe } = await db

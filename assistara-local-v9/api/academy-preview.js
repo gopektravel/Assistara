@@ -41,7 +41,7 @@ async function readPage(name) {
 function qaBar(page, mc, cap) {
   const link = (label, params, active) =>
     `<a href="/academy/preview?page=${page}&mc=${mc}&cap=${cap}${params}" style="text-decoration:none;padding:6px 11px;border-radius:999px;font-weight:800;font-size:12px;${active ? "background:#ffd51f;color:#151515" : "background:#2a2a2a;color:#fff"}">${label}</a>`;
-  return `<div id="qaPreviewBar" style="position:fixed;left:50%;top:8px;transform:translateX(-50%);z-index:2147483647;display:flex;gap:6px;align-items:center;background:#171717;color:#fff;border-radius:999px;padding:7px 9px;font:800 11px/1 Manrope,system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.3);flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px)"><span style="color:#ffd51f;padding:0 4px">QA PREVIEW</span>` +
+  return `<div id="qaPreviewBar" style="position:fixed;left:50%;top:8px;transform:translateX(-50%);z-index:2147483647;display:flex;gap:6px;align-items:center;background:#171717;color:#fff;border-radius:999px;padding:7px 9px;font:800 11px/1 "Manrope",sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.3);flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px)"><span style="color:#ffd51f;padding:0 4px">QA PREVIEW</span>` +
     `<span style="opacity:.6;padding:0 4px">Masterclass</span>` +
     MC_STATES.map((s) => link(s, "", mc === s)).join("") +
     `<span style="opacity:.6;padding:0 6px">Academy</span>` +

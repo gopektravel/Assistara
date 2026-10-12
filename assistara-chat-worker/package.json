@@ -1,0 +1,18 @@
+{
+  "name": "assistara-live-chat",
+  "version": "1.0.0",
+  "description": "Assistara Academy masterclass live chat server",
+  "main": "railway-server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node railway-server.js",
+    "dev": "node --watch railway-server.js"
+  },
+  "dependencies": {
+    "esbuild": "^0.25.0",
+    "ws": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

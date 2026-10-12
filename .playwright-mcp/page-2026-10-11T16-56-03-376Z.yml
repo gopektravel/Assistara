@@ -1,0 +1,21 @@
+- generic [active]:
+  - generic [ref=f141e1]:
+    - generic [ref=f141e6]:
+      - generic [ref=f141e8]:
+        - button "J jessevanrobbroeck" [ref=f141e10] [cursor=pointer]:
+          - generic [ref=f141e12]:
+            - generic [ref=f141e13]: J
+            - generic [ref=f141e29]: jessevanrobbroeck
+        - button "menu" [ref=f141e34]:
+          - generic [ref=f141e35]: Open main menu
+      - generic [ref=f141e38]:
+        - generic [ref=f141e39]:
+          - heading "Webhooks" [level=1] [ref=f141e40]
+          - button "Add webhook" [ref=f141e42] [cursor=pointer]
+        - generic [ref=f141e49]:
+          - heading "No webhooks yet" [level=2] [ref=f141e52]
+          - generic [ref=f141e53]: Configure a webhook to receive real-time updates about email events.
+          - button "Add webhook" [ref=f141e55] [cursor=pointer]
+    - button "Ask anything" [ref=f141e64] [cursor=pointer]
+  - region "Notifications alt+T"
+  - alert [ref=f141e69]

@@ -2,8 +2,12 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createEmailDelivery } from "../_shared/email-delivery.ts";
 import { resolveEmailTemplate } from "../_shared/email-templates.ts";
+import { academyEnrollmentApologyTemplate } from "../_shared/academy-enrollment-apology-template.ts";
+import { createReplacementEnrollmentToken } from "../_shared/enrollment-token.ts";
 
 const U = Deno.env.get("SUPABASE_URL")!, K = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, R = Deno.env.get("RESEND_API_KEY") || "", SITE = "https://www.getassistara.com", USER = "admin", LIMIT = 15, enc = new TextEncoder();
+const ENROLLMENT_FIX_CAMPAIGN = "academy_enrollment_link_fixed_20261012";
+const ENROLLMENT_FIX_CUTOFF = "2026-10-12T07:40:44.780Z";
 const allowed = new Set(["https://getassistara.com", "https://www.getassistara.com", "http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]);
 const ok = (o: string | null) => !!o && (allowed.has(o) || o.endsWith(".vercel.app"));
 const b64 = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
@@ -17,6 +21,38 @@ function shell(title: string, body: string, cta?: { label: string, href: string 
 
 async function log(db: any, type: string, id: string | null, action: string, details: any = {}) {
   await db.from('admin_activity_log').insert({ entity_type: type, entity_id: id, action, details });
+}
+
+async function affectedEnrollmentRecipients(db: any) {
+  const { data: deliveries, error: deliveryError } = await db
+    .from('email_delivery_log')
+    .select('recipient_id,sent_at,status')
+    .eq('email_type', 'academy_acceptance')
+    .in('status', ['sent', 'delivered'])
+    .lte('sent_at', ENROLLMENT_FIX_CUTOFF)
+    .not('recipient_id', 'is', null);
+  if (deliveryError) throw deliveryError;
+  const ids = [...new Set((deliveries || []).map((row: any) => String(row.recipient_id || '')).filter((id: string) => /^[0-9a-f-]{36}$/i.test(id)))];
+  if (!ids.length) return [];
+  const { data: apps, error: appError } = await db
+    .from('academy_applications')
+    .select('id,name,email,decision,status,payment_status,promo_code,checkout_amount_php,enrollment_token')
+    .in('id', ids);
+  if (appError) throw appError;
+  return (apps || [])
+    .filter((app: any) => app.payment_status !== 'paid' && (app.decision === 'accepted' || app.status === 'accepted'))
+    .sort((left: any, right: any) => String(left.name || '').localeCompare(String(right.name || '')));
+}
+
+async function enrollmentApologyTemplate(app: any) {
+  const first = String(app.name || 'there').trim().split(/\s+/)[0] || 'there';
+  const replacementToken = await createReplacementEnrollmentToken(app.id);
+  const url = `${SITE}/academy/checkout?token=${encodeURIComponent(replacementToken)}`;
+  const tpl = await resolveEmailTemplate('academy_enrollment_link_fixed', {
+    first_name: first,
+    new_enrollment_link: url,
+  }, () => academyEnrollmentApologyTemplate(first, url));
+  return { first, url, tpl };
 }
 
 async function send(to: string, subject: string, html: string, text?: string, toName?: string, recipientId?: string) {
@@ -40,15 +76,17 @@ async function send(to: string, subject: string, html: string, text?: string, to
 }
 
 Deno.serve(async req => {
-  const o = req.headers.get('origin'), h = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ok(o) ? o! : SITE, 'Access-Control-Allow-Headers': 'content-type,authorization', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Vary': 'Origin' };
+  const o = req.headers.get('origin'), h = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ok(o) ? o! : SITE, 'Access-Control-Allow-Headers': 'content-type,authorization,x-enrollment-apology-key', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Vary': 'Origin' };
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: h });
   const out = (x: any, s = 200) => new Response(JSON.stringify(x), { status: s, headers: h });
   if (req.method !== 'POST' || (o && !ok(o))) return out({ ok: false, error: 'Forbidden' }, 403);
-  const t = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  if (!await auth(t)) return out({ ok: false, error: 'Session expired' }, 401);
-
   let b: any = {}; try { b = await req.json() } catch { }
-  const a = String(b.action || ''), db = createClient(U, K, { auth: { persistSession: false } });
+  const a = String(b.action || '');
+  const t = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  const campaignSecret = Deno.env.get('ENROLLMENT_APOLOGY_SEND_KEY') || '';
+  const campaignAuthorized = a === 'send_enrollment_apology' && campaignSecret.length >= 32 && req.headers.get('x-enrollment-apology-key') === campaignSecret;
+  if (!campaignAuthorized && !await auth(t)) return out({ ok: false, error: 'Session expired' }, 401);
+  const db = createClient(U, K, { auth: { persistSession: false } });
 
   if (a === 'list') {
     const [A, W, B, L, KL] = await Promise.all([
@@ -81,6 +119,90 @@ Deno.serve(async req => {
     return out({ ok: true, applications: applicants, students, signups: W.data || [], b2b: B.data || [], activity: L.error ? [] : L.data || [], links: KL.error ? [] : KL.data || [], visits: VS.error ? [] : VS.data || [], capacity: { limit: cap?.capacity ?? LIMIT, paid: cap?.paid ?? paidCount, spots_left: cap != null ? cap.available : Math.max(0, LIMIT - paidCount), reservations: cap?.reservations ?? 0, stale_pending: cap?.stale_pending ?? 0, waitlist_waiting: cap?.waitlist_waiting ?? 0, waitlist_invited: cap?.waitlist_invited ?? 0, exceptions_open: cap?.exceptions_open ?? 0, cohort_name: cap?.cohort_name || 'Founding Cohort', is_open: cap?.is_open ?? true } });
   }
 
+  if (a === 'audit_enrollment_apology' || a === 'preview_enrollment_apology') {
+    try {
+      const recipients = await affectedEnrollmentRecipients(db);
+      const summary = recipients.map((app: any) => ({
+        application_id: app.id,
+        name: app.name,
+        email: String(app.email || '').replace(/^(.).*(@.*)$/, '$1***$2'),
+        amount_php: Number(app.checkout_amount_php) > 0 ? Number(app.checkout_amount_php) : 6900,
+        promo_code: app.promo_code || null,
+      }));
+      if (a === 'audit_enrollment_apology') return out({ ok: true, campaign: ENROLLMENT_FIX_CAMPAIGN, count: summary.length, recipients: summary });
+      if (!recipients.length) return out({ ok: false, error: 'No eligible affected recipients' }, 404);
+      const rendered = await enrollmentApologyTemplate(recipients[0]);
+      return out({
+        ok: true,
+        campaign: ENROLLMENT_FIX_CAMPAIGN,
+        count: summary.length,
+        recipient: summary[0],
+        subject: rendered.tpl.subject,
+        html: rendered.tpl.html,
+        text: rendered.tpl.text,
+        template_key: rendered.tpl.key,
+        template_version: rendered.tpl.version,
+        template_source: rendered.tpl.source,
+      });
+    } catch (error) {
+      console.error('enrollment_apology_audit_failed', error instanceof Error ? error.message : 'unknown');
+      return out({ ok: false, error: 'Could not audit affected enrollment recipients' }, 500);
+    }
+  }
+
+  if (a === 'enrollment_apology_status') {
+    const { data: rows, error } = await db.from('email_delivery_log').select('status').eq('campaign_key', ENROLLMENT_FIX_CAMPAIGN);
+    if (error) return out({ ok: false, error: 'Could not load campaign status' }, 500);
+    const counts = { sent: 0, delivered: 0, failed: 0, pending: 0 };
+    for (const row of rows || []) {
+      if (row.status === 'delivered') counts.delivered++;
+      else if (row.status === 'sent') counts.sent++;
+      else if (['failed', 'expired', 'suppressed'].includes(row.status)) counts.failed++;
+      else counts.pending++;
+    }
+    return out({ ok: true, campaign: ENROLLMENT_FIX_CAMPAIGN, total: (rows || []).length, ...counts });
+  }
+
+  if (a === 'send_enrollment_apology') {
+    if (String(b.approval || '') !== 'APPROVED_SEND_ENROLLMENT_APOLOGY') return out({ ok: false, error: 'Explicit approval is required' }, 409);
+    let recipients: any[];
+    try { recipients = await affectedEnrollmentRecipients(db) } catch { return out({ ok: false, error: 'Could not audit affected enrollment recipients' }, 500) }
+    const delivery = await createEmailDelivery(`enrollment-apology-${Date.now()}`);
+    const results = [];
+    for (const app of recipients) {
+      const idempotencyKey = `${ENROLLMENT_FIX_CAMPAIGN}:${app.id}`;
+      const rendered = await enrollmentApologyTemplate(app);
+      await db.from('email_delivery_log').upsert({
+        idempotency_key: idempotencyKey,
+        email_type: 'academy_enrollment_link_fixed',
+        recipient_email: app.email,
+        recipient_name: app.name,
+        recipient_id: app.id,
+        campaign_key: ENROLLMENT_FIX_CAMPAIGN,
+        subject: rendered.tpl.subject,
+        status: 'pending',
+        metadata: { template_key: rendered.tpl.key, template_version: rendered.tpl.version, template_source: rendered.tpl.source },
+        max_attempts: 3,
+      }, { onConflict: 'idempotency_key', ignoreDuplicates: true });
+      const result = await delivery.send({
+        idempotencyKey,
+        emailType: 'academy_enrollment_link_fixed',
+        to: app.email,
+        toName: app.name,
+        subject: rendered.tpl.subject,
+        html: rendered.tpl.html,
+        text: rendered.tpl.text,
+        replyTo: 'academy@getassistara.com',
+        fromName: rendered.tpl.senderName || 'Assistara Academy',
+        campaignKey: ENROLLMENT_FIX_CAMPAIGN,
+        recipientId: app.id,
+        metadata: { template_key: rendered.tpl.key, template_version: rendered.tpl.version, template_source: rendered.tpl.source },
+      } as import("../_shared/email-delivery.ts").EmailDeliveryOptions);
+      results.push({ application_id: app.id, success: result.success, status: result.status, provider: result.provider });
+    }
+    return out({ ok: results.every((result: any) => result.success), campaign: ENROLLMENT_FIX_CAMPAIGN, total: results.length, results });
+  }
+
   if (a === 'decision' || a === 'resend_decision') {
     const id = String(b.id || ''), d = String(b.decision || '');
     if (!['accepted', 'declined'].includes(d)) return out({ ok: false, error: 'Invalid decision' }, 400);
@@ -96,16 +218,65 @@ Deno.serve(async req => {
     const delivery = await createEmailDelivery('admin-applications');
     const idempotencyKey = `admin-decision-${app.id}-${Date.now()}`;
 
+    // Pre-create delivery log to satisfy FK constraint on email_delivery_claim
+    // (masterclass-reminder does this pattern; see _shared/email-delivery.ts claimDelivery RPC)
+    const deadline = new Date(Date.now() + 24 * 3600e3).toISOString();
+    const emailType = d === 'accepted' ? 'academy_acceptance' : 'academy_declined';
+    const campaignKey = 'academy_decisions';
+
+    // Check for assigned promo code on the applicant record
+    const assignedPromoId = app.assigned_promo_code_id;
+    let isDiscounted = false;
+    let assignedPromoCode = null;
+    let assignedPromoAmount = null;
+
+    if (d === 'accepted' && assignedPromoId) {
+      const { data: promo } = await db
+        .from('academy_promo_codes')
+        .select('code, amount_php')
+        .eq('id', assignedPromoId)
+        .maybeSingle();
+      if (promo && promo.active && (!promo.expires_at || new Date(promo.expires_at).getTime() > Date.now())) {
+        isDiscounted = true;
+        assignedPromoCode = promo.code;
+        assignedPromoAmount = promo.amount_php;
+      }
+    }
+
+    const templateKey = isDiscounted ? 'academy_application_accepted_discounted' : (d === 'accepted' ? 'academy_application_accepted' : 'academy_application_waitlisted');
+    const emailSubject = isDiscounted ? "You're IN! Welcome to Assistara Academy 🎉💛" : (d === 'accepted' ? "You're IN! Your Assistara Academy application is approved!" : "Not this round, but you're on our list!");
+
+    await db.from('email_delivery_log').insert({
+      idempotency_key: idempotencyKey,
+      email_type: emailType,
+      recipient_email: app.email,
+      recipient_name: app.name,
+      subject: emailSubject,
+      deadline,
+      metadata: { campaign: campaignKey, template_key: templateKey, template_version: 0, template_source: 'fallback' },
+      max_attempts: 3
+    }, { returning: 'minimal' });
+
     if (d === 'accepted') {
       const url = `${SITE}/academy/checkout?token=${encodeURIComponent(app.enrollment_token)}`;
       const first = esc((app.name || 'there').split(/\s+/)[0]);
       const note = `We may accept more applicants than the ${LIMIT} available spots. Acceptance does not guarantee a seat. Only the first ${LIMIT} accepted applicants to complete payment will secure their place in this cohort.`;
       // Published dashboard template (if any) wins; otherwise the inline HTML below.
-      const tpl = await resolveEmailTemplate('academy_application_accepted', { first_name: first, checkout_url: url, limit: LIMIT, name: app.name }, () => ({
-        subject: "You're IN! Your Assistara Academy application is approved!",
-        html: shell("You're IN! Welcome to Assistara Academy!", `<p>Hi ${first},</p><h2 style="font-size:22px;margin:20px 0 8px">You did it!</h2><p>We've reviewed your application, and we're excited to offer you a place in the <strong>Assistara Academy Founding Cohort!</strong></p><p>You're one step closer to building your skills, finding your first remote client, and creating new opportunities for yourself.</p><p><strong>Here's the important part:</strong></p><div style="background:#fff9df;border:1px solid #e6c353;border-radius:12px;padding:18px;color:#151515"><strong>Only ${LIMIT} paid spots available!</strong><br>Your application has been accepted, but your seat isn't reserved just yet. Spots are confirmed once payment is completed.</div><p>Ready to make it official? Secure your place and let's get started!</p><p>See you inside!<br><strong>The Assistara Team</strong></p>`, { label: 'YES! Secure my spot', href: url }),
-        text: `You're IN! Welcome to Assistara Academy!\n\nHi ${first},\n\nYou did it! We've reviewed your application, and we're excited to offer you a place in the Assistara Academy Founding Cohort!\n\nOnly ${LIMIT} paid spots available! Your application has been accepted, but your seat isn't reserved just yet. Spots are confirmed once payment is completed.\n\nYES! Secure my spot:\n${url}\n\nSee you inside!\nThe Assistara Team\n\nA quick note: ${note}`,
-        senderName: 'Assistara Academy',
+      const regularPrice = '₱6,900';
+      const discountedPrice = isDiscounted && assignedPromoAmount ? `₱${assignedPromoAmount}` : '₱4,900';
+      const couponCode = isDiscounted && assignedPromoCode ? assignedPromoCode : 'MASTERCLASS';
+
+      const tpl = await resolveEmailTemplate(templateKey, isDiscounted
+        ? { first_name: first, checkout_url: url, limit: LIMIT, name: app.name, coupon_code: couponCode, regular_price: regularPrice, discounted_price: discountedPrice }
+        : { first_name: first, checkout_url: url, limit: LIMIT, name: app.name }, () => ({
+        subject: emailSubject,
+        html: isDiscounted
+          ? shell("You're IN! Welcome to Assistara Academy! 🎉💛", `<p>Hi ${first},</p><p>We've reviewed your application, and we have some exciting news...</p><p><strong>You've been ACCEPTED into Assistara Academy!</strong> 🎉</p><p>We're so happy to welcome you to our first generation of students!</p><p>You took the first step by applying, and now we're excited to help you take the next one: building real skills, gaining confidence, and working toward your first remote client.</p><h3 style="font-size:20px;margin:24px 0 12px">A little welcome gift from us! 🎁💛</h3><p>Since we're welcoming our very first generation of Assistara Academy students, we wanted to make the occasion a little more special.</p><p><strong>We're giving you ₱2,000 OFF your Academy enrollment!</strong></p><p style="font-size:18px;font-weight:700;color:#151515;margin:16px 0">Regular price: <span style="text-decoration:line-through;color:#77716a">${regularPrice}</span></p><p style="font-size:24px;font-weight:800;color:#176638;margin:8px 0"><strong>Your welcome price: ${discountedPrice} 💛</strong></p><p style="background:#fff9df;border:1px solid #e6c353;border-radius:12px;padding:16px;color:#151515;font-weight:700">Your welcome code: <strong style="font-family:monospace;font-size:18px">${couponCode}</strong></p><p>Simply enter <strong>${couponCode}</strong> at checkout and click <strong>Apply</strong> to unlock your discount.</p><h3 style="font-size:20px;margin:24px 0 12px">Your next step 🚀</h3><p>We're keeping our first Academy batch small, with <strong>only ${LIMIT} spots available</strong>, so we can give our founding students the attention and support they deserve.</p><p>Your application has been approved, but your spot is only secured once you've completed enrollment.</p>`, { label: 'SECURE MY ACADEMY SPOT →', href: url })
+          : shell("You're IN! Welcome to Assistara Academy!", `<p>Hi ${first},</p><h2 style="font-size:22px;margin:20px 0 8px">You did it!</h2><p>We've reviewed your application, and we're excited to offer you a place in the <strong>Assistara Academy Founding Cohort!</strong></p><p>You're one step closer to building your skills, finding your first remote client, and creating new opportunities for yourself.</p><p><strong>Here's the important part:</strong></p><div style="background:#fff9df;border:1px solid #e6c353;border-radius:12px;padding:18px;color:#151515"><strong>Only ${LIMIT} paid spots available!</strong><br>Your application has been accepted, but your seat isn't reserved just yet. Spots are confirmed once payment is completed.</div><p>Ready to make it official? Secure your place and let's get started!</p><p>See you inside!<br><strong>The Assistara Team</strong></p>`, { label: 'YES! Secure my spot', href: url }),
+        text: isDiscounted
+          ? `You're IN! Welcome to Assistara Academy! 🎉💛\n\nHi ${first},\n\nWe've reviewed your application, and we have some exciting news...\n\nYou've been ACCEPTED into Assistara Academy! 🎉\n\nWe're so happy to welcome you to our first generation of students!\n\nYou took the first step by applying, and now we're excited to help you take the next one: building real skills, gaining confidence, and working toward your first remote client.\n\nA little welcome gift from us! 🎁💛\n\nSince we're welcoming our very first generation of Assistara Academy students, we wanted to make the occasion a little more special.\n\nWe're giving you ₱2,000 OFF your Academy enrollment!\n\nRegular price: ${regularPrice}\n\nYour welcome price: ${discountedPrice} 💛\n\nYour welcome code: ${couponCode}\n\nSimply enter ${couponCode} at checkout and click Apply to unlock your discount.\n\nYour next step 🚀\n\nWe're keeping our first Academy batch small, with only ${LIMIT} spots available, so we can give our founding students the attention and support they deserve.\n\nYour application has been approved, but your spot is only secured once you've completed enrollment.\n\nSECURE MY ACADEMY SPOT →\n${url}\n\nWe can't wait to welcome you inside, ${first}!\n\nHere's to new skills, new opportunities, and the beginning of something exciting. 💛\n\nXyra & the Assistara Team\n\nP.S. Remember to enter your welcome code ${couponCode} at checkout to receive your discount!`
+          : `You're IN! Welcome to Assistara Academy!\n\nHi ${first},\n\nYou did it! We've reviewed your application, and we're excited to offer you a place in the Assistara Academy Founding Cohort!\n\nOnly ${LIMIT} paid spots available! Your application has been accepted, but your seat isn't reserved just yet. Spots are confirmed once payment is completed.\n\nYES! Secure my spot:\n${url}\n\nSee you inside!\nThe Assistara Team\n\nA quick note: ${note}`,
+        senderName: isDiscounted ? 'Xyra & the Assistara Team' : 'Assistara Academy',
       }));
       const { html, text } = tpl;
 

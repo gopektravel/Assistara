@@ -12,6 +12,7 @@
 // ----------------------------------------------------------------------------
 
 import { brandedEmail, brandedText, countdownBand } from "./email-brand.ts";
+import { academyEnrollmentApologyTemplate } from "./academy-enrollment-apology-template.ts";
 import type { LegacyFallback, TemplateVars } from "./email-templates.ts";
 
 export interface TemplateVarDef {
@@ -76,6 +77,26 @@ const esc = (s: unknown) => String(s ?? "").replaceAll("&", "&amp;").replaceAll(
 // The registry
 // ===========================================================================
 export const TEMPLATES: TemplateDef[] = [
+  {
+    key: "academy_enrollment_link_fixed",
+    name: "Academy enrollment link fixed",
+    category: "transactional",
+    subject: "Oops! Your Assistara enrollment link is fixed 💛",
+    previewText: "Your new private enrollment link is ready.",
+    isCritical: true,
+    requiredVars: ["first_name", "new_enrollment_link"],
+    requiredLinks: [],
+    vars: [
+      { name: "first_name", label: "First name", description: "Accepted applicant's first name", type: "string", required: true, sample: "Jesse", dynamic: true },
+      { name: "new_enrollment_link", label: "New enrollment link", description: "Fresh signed checkout link for this application", type: "url", required: true, sample: `${SITE}/academy/checkout?token=replacement-token`, dynamic: true },
+    ],
+    samples: { first_name: "Jesse", new_enrollment_link: `${SITE}/academy/checkout?token=replacement-token` },
+    render: (v) => academyEnrollmentApologyTemplate(
+      String(v.first_name || "there"),
+      String(v.new_enrollment_link || ""),
+    ),
+  },
+
   // 1. Academy application confirmation (website-form → frame())
   {
     key: "academy_application_confirmation",
@@ -147,6 +168,36 @@ export const TEMPLATES: TemplateDef[] = [
         { label: "YES! Secure my spot", href: String(v.checkout_url ?? "") },
       ),
       senderName: "Assistara Academy",
+    }),
+  },
+
+  // 3b. Application accepted — discounted (founding cohort welcome offer)
+  {
+    key: "academy_application_accepted_discounted",
+    name: "Application accepted — discounted",
+    category: "transactional",
+    subject: "You're IN! Welcome to Assistara Academy 🎉💛",
+    previewText: "",
+    isCritical: true,
+    requiredVars: ["first_name", "checkout_url", "limit", "coupon_code", "regular_price", "discounted_price"],
+    requiredLinks: [],
+    vars: [
+      { name: "first_name", label: "First name", description: "Applicant's first name", type: "string", required: true, sample: "Jesse", dynamic: true },
+      { name: "checkout_url", label: "Payment link", description: "Checkout link to secure the seat", type: "url", required: true, sample: `${SITE}/academy/enroll?token=sample-token`, dynamic: true },
+      { name: "limit", label: "Cohort limit", description: "Paid spots available", type: "number", required: true, sample: "15", dynamic: false },
+      { name: "coupon_code", label: "Coupon code", description: "Welcome discount code", type: "string", required: true, sample: "MASTERCLASS", dynamic: false },
+      { name: "regular_price", label: "Regular price", description: "Full price before discount", type: "string", required: true, sample: "₱6,900", dynamic: false },
+      { name: "discounted_price", label: "Discounted price", description: "Price after welcome discount", type: "string", required: true, sample: "₱4,900", dynamic: false },
+    ],
+    samples: { first_name: "Jesse", checkout_url: `${SITE}/academy/enroll?token=sample-token`, limit: "15", coupon_code: "MASTERCLASS", regular_price: "₱6,900", discounted_price: "₱4,900" },
+    render: (v) => ({
+      subject: "You're IN! Welcome to Assistara Academy 🎉💛",
+      html: appShell(
+        "You're IN! Welcome to Assistara Academy! 🎉💛",
+        `<p>Hi ${FIRST(v)},</p><p>We've reviewed your application, and we have some exciting news...</p><p><strong>You've been ACCEPTED into Assistara Academy!</strong> 🎉</p><p>We're so happy to welcome you to our first generation of students!</p><p>You took the first step by applying, and now we're excited to help you take the next one: building real skills, gaining confidence, and working toward your first remote client.</p><h3 style="font-size:20px;margin:24px 0 12px">A little welcome gift from us! 🎁💛</h3><p>Since we're welcoming our very first generation of Assistara Academy students, we wanted to make the occasion a little more special.</p><p><strong>We're giving you ₱2,000 OFF your Academy enrollment!</strong></p><p style="font-size:18px;font-weight:700;color:#151515;margin:16px 0">Regular price: <span style="text-decoration:line-through;color:#77716a">${esc(v.regular_price ?? "₱6,900")}</span></p><p style="font-size:24px;font-weight:800;color:#176638;margin:8px 0"><strong>Your welcome price: ${esc(v.discounted_price ?? "₱4,900")} 💛</strong></p><p style="background:#fff9df;border:1px solid #e6c353;border-radius:12px;padding:16px;color:#151515;font-weight:700">Your welcome code: <strong style="font-family:monospace;font-size:18px">${esc(v.coupon_code ?? "MASTERCLASS")}</strong></p><p>Simply enter <strong>${esc(v.coupon_code ?? "MASTERCLASS")}</strong> at checkout and click <strong>Apply</strong> to unlock your discount.</p><h3 style="font-size:20px;margin:24px 0 12px">Your next step 🚀</h3><p>We're keeping our first Academy batch small, with <strong>only ${esc(v.limit)} spots available</strong>, so we can give our founding students the attention and support they deserve.</p><p>Your application has been approved, but your spot is only secured once you've completed enrollment.</p>`,
+        { label: "SECURE MY ACADEMY SPOT →", href: String(v.checkout_url ?? "") },
+      ),
+      senderName: "Xyra & the Assistara Team",
     }),
   },
 

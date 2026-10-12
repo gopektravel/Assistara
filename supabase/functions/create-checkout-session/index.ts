@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveEnrollmentApplication } from "../_shared/enrollment-token.ts";
 
 const STRIPE = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const U = Deno.env.get("SUPABASE_URL")!;
@@ -22,10 +23,13 @@ Deno.serve(async (req) => {
   let b: any = {};
   try { b = await req.json() } catch {}
   const token = String(b.token || "").trim();
-  if (!/^[0-9a-f-]{36}$/i.test(token)) return rep({ ok: false, error: "This enrollment link is invalid." }, 400, h);
-
   const db = createClient(U, K, { auth: { persistSession: false } });
-  const { data: app } = await db.from("academy_applications").select("id,name,email,decision,status,payment_status,enrollment_token,promo_code,checkout_amount_php").eq("enrollment_token", token).maybeSingle();
+  const { data: app, error: lookupError, tokenKind } = await resolveEnrollmentApplication(db, token, "id,name,email,decision,status,payment_status,enrollment_token,promo_code,checkout_amount_php");
+  if (lookupError) {
+    console.error("checkout_invitation_lookup_failed", lookupError.code || "unknown");
+    return rep({ ok: false, error: "Enrollment lookup is temporarily unavailable." }, 500, h);
+  }
+  if (tokenKind === "invalid") return rep({ ok: false, error: "This enrollment link is invalid." }, 400, h);
   if (!app) return rep({ ok: false, error: "We could not find this enrollment invitation." }, 404, h);
   if (app.decision !== "accepted" && app.status !== "accepted" && app.status !== "waitlisted") return rep({ ok: false, error: "This enrollment invitation is not active yet." }, 403, h);
   if (app.payment_status === "paid") return rep({ ok: false, error: "This enrollment has already been paid." }, 409, h);
@@ -51,7 +55,7 @@ Deno.serve(async (req) => {
   params.set("client_reference_id", app.id);
   params.set("metadata[source]", "assistara_academy");
   params.set("metadata[application_id]", app.id);
-  params.set("metadata[enrollment_token]", token);
+  params.set("metadata[enrollment_token]", app.enrollment_token);
   params.set("metadata[amount_php]", String(amount));
   if (app.promo_code) params.set("metadata[promo_code]", app.promo_code);
 
@@ -68,7 +72,7 @@ Deno.serve(async (req) => {
 
   await db.from("academy_applications").update({ stripe_checkout_session_id: data.id }).eq("id", app.id);
 
-  // Create pending coupon redemption record if a promo code was applied
+  // Create pending coupon redemption record if a promo code was applied.
   if (app.promo_code) {
     const originalPrice = 690000; // ₱6,900 in centavos
     const finalPrice = amount * 100; // amount is in PHP, convert to centavos

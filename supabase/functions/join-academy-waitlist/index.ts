@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveEnrollmentApplication } from "../_shared/enrollment-token.ts";
 
 // Public priority-waitlist join. Two paths, both non-privileged (join only —
 // listing/inviting/resolving waitlisted applicants stays behind the admin
@@ -37,8 +38,8 @@ Deno.serve(async req => {
   // Path 1 — accepted applicant with a private enrollment token.
   const token = String(b.token || "").trim();
   if (token) {
-    if (!/^[0-9a-f-]{36}$/i.test(token)) return out({ ok: false, error: "Invalid enrollment link" }, 400);
-    const { data: app } = await db.from("academy_applications").select("id").eq("enrollment_token", token).maybeSingle();
+    const { data: app, tokenKind } = await resolveEnrollmentApplication(db, token, "id");
+    if (tokenKind === "invalid") return out({ ok: false, error: "Invalid enrollment link" }, 400);
     if (!app) return out({ ok: false, error: "Enrollment invitation not found" }, 404);
     return await joinByApplication(app.id);
   }

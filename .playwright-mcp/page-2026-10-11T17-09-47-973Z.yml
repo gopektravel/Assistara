@@ -1,0 +1,85 @@
+- generic:
+  - generic [aria-hidden] [ref=f149e1]:
+    - generic [ref=f149e6]:
+      - generic [ref=f149e8]:
+        - button [ref=f149e71] [cursor=pointer]:
+          - generic [ref=f149e12]:
+            - generic [ref=f149e13]: J
+            - generic [ref=f149e14]: jessevanrobbroeck
+        - button [ref=f149e72]:
+          - generic [ref=f149e20]: Open main menu
+      - generic [ref=f149e23]:
+        - generic [ref=f149e24]:
+          - heading [level=1] [ref=f149e73]: Webhooks
+          - button [expanded] [ref=f149e74] [cursor=pointer]:
+            - generic [ref=f149e31]: Add webhook
+        - generic [ref=f149e34]:
+          - heading [level=2] [ref=f149e75]: No webhooks yet
+          - generic [ref=f149e38]: Configure a webhook to receive real-time updates about email events.
+          - button [ref=f149e76] [cursor=pointer]:
+            - generic [ref=f149e44]: Add webhook
+    - button [ref=f149e77] [cursor=pointer]:
+      - generic [ref=f149e53]: Ask anything
+  - region "Notifications alt+T"
+  - alert [ref=f149e70]
+  - dialog [ref=f149e81]:
+    - heading "Add webhook" [level=2] [ref=f149e82]
+    - generic [ref=f149e83]:
+      - generic [ref=f149e84]:
+        - generic [ref=f149e85]: Endpoint URL
+        - textbox "Endpoint URL" [ref=f149e87]:
+          - /placeholder: https://
+          - text: https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/email-webhook?provider=resend
+      - generic [ref=f149e88]:
+        - generic [ref=f149e89]: Select events to listen
+        - combobox [expanded] [ref=f149e90] [cursor=pointer]:
+          - generic [ref=f149e91]: Select events...
+        - dialog [ref=f149e109]:
+          - generic [ref=f149e110]:
+            - combobox [expanded] [active] [ref=f149e116]
+            - listbox "Suggestions" [ref=f149e117]:
+              - generic [ref=f149e118]:
+                - group [ref=f149e119]:
+                  - option "All Events" [selected] [ref=f149e120] [cursor=pointer]
+                - group [ref=f149e122]:
+                  - option "Select all Contacts events" [ref=f149e123] [cursor=pointer]:
+                    - paragraph [ref=f149e124]: Contacts
+                  - option "contact.created" [ref=f149e127] [cursor=pointer]
+                  - option "contact.deleted" [ref=f149e131] [cursor=pointer]
+                  - option "contact.topics.updated" [ref=f149e135] [cursor=pointer]
+                  - option "contact.updated" [ref=f149e139] [cursor=pointer]
+                - group [ref=f149e143]:
+                  - option "Select all Domains events" [ref=f149e144] [cursor=pointer]:
+                    - paragraph [ref=f149e145]: Domains
+                  - option "domain.created" [ref=f149e148] [cursor=pointer]
+                  - option "domain.deleted" [ref=f149e152] [cursor=pointer]
+                  - option "domain.updated" [ref=f149e156] [cursor=pointer]
+                - group [ref=f149e160]:
+                  - option "Select all Email events" [ref=f149e161] [cursor=pointer]:
+                    - paragraph [ref=f149e162]: Email
+                  - option "email.bounced" [ref=f149e165] [cursor=pointer]
+                  - option "email.clicked" [ref=f149e169] [cursor=pointer]
+                  - option "email.complained" [ref=f149e175] [cursor=pointer]
+                  - option "email.delivered" [ref=f149e179] [cursor=pointer]
+                  - option "email.delivery_delayed" [ref=f149e183] [cursor=pointer]
+                  - option "email.failed" [ref=f149e187] [cursor=pointer]
+                  - option "email.opened" [ref=f149e191] [cursor=pointer]
+                  - option "email.received" [ref=f149e197] [cursor=pointer]
+                  - option "email.scheduled" [ref=f149e201] [cursor=pointer]
+                  - option "email.sent" [ref=f149e205] [cursor=pointer]
+                  - option "email.suppressed" [ref=f149e209] [cursor=pointer]
+                - group [ref=f149e213]:
+                  - option "Select all Suppressions events" [ref=f149e214] [cursor=pointer]:
+                    - paragraph [ref=f149e215]: Suppressions
+                  - option "suppression.added" [ref=f149e218] [cursor=pointer]
+                  - option "suppression.removed" [ref=f149e222] [cursor=pointer]
+                - group [ref=f149e226]:
+                  - option "Select all Topic events" [ref=f149e227] [cursor=pointer]:
+                    - paragraph [ref=f149e228]: Topic
+                  - option "topic.created" [ref=f149e231] [cursor=pointer]
+                  - option "topic.deleted" [ref=f149e235] [cursor=pointer]
+                  - option "topic.updated" [ref=f149e239] [cursor=pointer]
+      - generic [ref=f149e95]:
+        - button "Add" [disabled] [ref=f149e96]
+        - button "Cancel" [ref=f149e98] [cursor=pointer]
+    - button "Close dialog" [ref=f149e100] [cursor=pointer]

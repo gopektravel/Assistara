@@ -1,0 +1,28 @@
+{
+  "name": "assistara-chat",
+  "main": "src/server/index.ts",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CHAT_ROOM",
+        "class_name": "AssistaraChatRoom_20261010_1"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["AssistaraChatRoom_20261010_1"],
+      "new_sqlite_classes": ["AssistaraChatRoom_20261010_1"]
+    }
+  ],
+  "vars": {
+    "MASTERCLASS_ROOM_ID": "founding-masterclass-2026"
+  }
+}

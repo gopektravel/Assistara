@@ -1,0 +1,32 @@
+- generic [ref=f9e1]:
+  - generic [ref=f9e4]:
+    - generic [ref=f9e10]:
+      - generic [ref=f9e11]: Log In
+      - generic [ref=f9e12]:
+        - generic [ref=f9e13]:
+          - generic [ref=f9e15]:
+            - generic [ref=f9e16]: Email address*
+            - textbox "Email address*" [active] [ref=f9e18]:
+              - /placeholder: ""
+          - generic [ref=f9e20]:
+            - generic [ref=f9e21]:
+              - generic [ref=f9e22]: Password*
+              - textbox "Password*" [ref=f9e24]:
+                - /placeholder: ""
+            - button "show password" [ref=f9e25] [cursor=pointer]
+          - button "Log In" [ref=f9e27] [cursor=pointer]
+        - generic [ref=f9e29]: OR
+        - generic [ref=f9e31]:
+          - button "Sign in with Google" [ref=f9e32] [cursor=pointer]
+          - button "Sign in with Apple" [ref=f9e34] [cursor=pointer]
+          - button "Sign in with SAML" [ref=f9e36] [cursor=pointer]
+    - contentinfo [ref=f9e38]:
+      - link "Create an account" [ref=f9e39] [cursor=pointer]:
+        - /url: https://onboarding.brevo.com/account/register
+      - link "I forgot my password" [ref=f9e40] [cursor=pointer]:
+        - /url: /forgot-password
+  - alert [ref=f9e41]
+  - iframe [ref=f9e44]:
+    - generic [ref=f10e6]:
+      - text: protected by
+      - strong [ref=f10e7]: reCAPTCHA

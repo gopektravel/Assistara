@@ -127,7 +127,7 @@ var AssistaraChatClient = (() => {
         min-height: 0;
         background: var(--cream, #fbfaf6);
         color: var(--ink, #151515);
-        font-family: "Manrope", "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: "Manrope", sans-serif;
         -webkit-font-smoothing: antialiased;
       }
 

@@ -1,0 +1,88 @@
+<!-- Concept 3 — MINIMALIST -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Assistara Masterclass Thumbnail — Minimalist</title>
+<style>__MANROPE_CSS__</style>
+<style>
+  :root{
+    --yellow:#FFD51F;
+    --yellow-2:#FFF1A8;
+    --ink:#151515;
+    --cream:#FBFAF6;
+    --muted:#66625F;
+    --hairline:#ECE8E0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#FFFFFF}
+  body{font-family:"Manrope",sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .stage{position:relative;width:1280px;height:720px;background:#FFFFFF;color:var(--ink);overflow:hidden}
+
+  /* ---------- elegant geometry ---------- */
+  .geo-sq{position:absolute;right:-160px;top:96px;width:560px;height:560px;border:2px solid rgba(21,21,21,.09);
+    border-radius:150px}
+  .geo-dot{position:absolute;right:334px;top:154px;width:52px;height:52px;background:var(--yellow);border-radius:15px}
+  .geo-circle{position:absolute;right:118px;bottom:-190px;width:420px;height:420px;border:1.5px solid #E5E0D5;
+    border-radius:50%}
+
+  /* ---------- lockup ---------- */
+  .lockup{position:absolute;top:54px;left:72px;display:flex;align-items:center;gap:13px}
+  .lockup svg{width:44px;height:44px;display:block}
+  .lockup .name{color:var(--ink);font-weight:800;font-size:18px;letter-spacing:-.01em}
+
+  /* ---------- live ---------- */
+  .live{position:absolute;top:58px;right:72px;display:flex;align-items:center;gap:9px;
+    border:1px solid #E6E2D9;border-radius:999px;padding:10px 17px;background:#FFFFFF}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--yellow)}
+  .live .txt{color:var(--ink);font-weight:800;font-size:12.5px;letter-spacing:.16em;line-height:1}
+
+  /* ---------- headline ---------- */
+  .kicker{position:absolute;top:196px;left:72px;display:flex;align-items:center;gap:11px;
+    font-weight:800;font-size:13px;letter-spacing:.22em;color:#9B968E}
+  .kicker .sq{width:10px;height:10px;background:var(--yellow);border-radius:3px}
+
+  .h{position:absolute;top:238px;left:72px;font-weight:800;letter-spacing:-.045em;line-height:1.0}
+  .h .l1{font-size:46px;letter-spacing:-.02em;color:#8F8A81;display:block}
+  .h .l2{font-size:106px;display:block;margin-top:12px;color:var(--ink)}
+  .h .l3{font-size:106px;display:block;margin-top:8px;color:var(--ink)}
+
+  .mark{position:relative;isolation:isolate;display:inline-block}
+  .mark::after{content:"";position:absolute;left:-10px;right:-10px;bottom:12px;height:32px;
+    background:var(--yellow);border-radius:12px;transform:rotate(-1.1deg);z-index:-1}
+
+  .sub{position:absolute;top:566px;left:72px;display:flex;align-items:center;gap:15px;
+    font-weight:600;font-size:26px;letter-spacing:-.01em;color:var(--muted)}
+  .sub .dash{width:30px;height:3px;background:var(--ink);border-radius:2px;opacity:.85}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="geo-circle"></div>
+  <div class="geo-sq"></div>
+  <div class="geo-dot"></div>
+
+  <div class="lockup" data-m="lockup">
+    <!-- REAL Assistara logo (assistara-logo.svg) -->
+    <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-label="Assistara">
+      <rect width="96" height="96" rx="27" fill="#FFD51F"/>
+      <path d="M24 69.5 42.2 31.8c2.2-4.5 5.1-6.8 8.8-6.8 3.8 0 6.8 2.3 9 6.8l18.5 37.7c2.1 4.4-.8 8.5-5.2 8.5-2.7 0-4.9-1.5-6.1-4L52.8 45.3c-.8-1.6-2.8-1.6-3.6 0L35.2 74c-1.2 2.5-3.4 4-6 4-4.5 0-7.4-4.2-5.2-8.5Z" fill="#151515"/>
+      <circle cx="48" cy="68" r="7.4" fill="#151515"/>
+    </svg>
+    <span class="name">Assistara Academy</span>
+  </div>
+
+  <div class="live" data-m="live"><span class="dot"></span><span class="txt">LIVE</span></div>
+
+  <div class="kicker" data-m="kicker"><span class="sq"></span>FREE MASTERCLASS</div>
+
+  <div class="h" data-m="h">
+    <span class="l1" data-m="l1">HOW TO LAND YOUR</span>
+    <span class="l2" data-m="l2">FIRST REMOTE</span>
+    <span class="l3" data-m="l3"><span class="mark">CLIENT</span></span>
+  </div>
+
+  <div class="sub" data-m="sub"><span class="dash"></span>Even as a complete beginner</div>
+</div>
+</body>
+</html>

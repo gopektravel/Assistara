@@ -1,0 +1,70 @@
+[    2300ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://login.brevo.com/?target=https%3A%2F%2Fapp.brevo.com%2Fsettings%2Fwebhooks:0
+[    3205ms] [ERROR] Failed to load resource: the server responded with a status of 403 () @ https://onboarding-api.brevo.com/authentication:0
+[    5000ms] [WARNING] [PostHog.js] You have already initialized PostHog! Re-initializing is a no-op @ https://eu-assets.i.posthog.com/static/array.js:0
+[  196949ms] [ERROR] TypeError: Cannot destructure property 'ACCOUNT_APP_URL' of '(0 , u.E)(...)' as it is undefined.
+    at D (https://account-management.brevo.com/4639.cbe13641a4066b77aa1b.js:1:5327)
+    at hu (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:60348)
+    at xi (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:119289)
+    at bs (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:108541)
+    at vs (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:108469)
+    at gs (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:108332)
+    at as (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:105167)
+    at ls (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:103723)
+    at S (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:130214)
+    at MessagePort.T (https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:2:130746) @ https://mfe.brevo.com/spa-mfe.961.b1ca7b8fb8a85718ab3b.js:1
+[  207227ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  207227ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  207516ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  207516ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  207518ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  208829ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  208829ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  209122ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  209122ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  209123ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  212217ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  212218ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  212511ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  212511ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  212513ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  217707ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  217707ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  217996ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  217997ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  217999ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  273697ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  273698ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  273987ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  273987ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  273990ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  334858ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  334858ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  335154ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  335156ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  335159ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  395764ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  395764ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  396060ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  396061ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  396063ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  456725ms] [ERROR] Access to fetch at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  456726ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
+[  457020ms] [ERROR] Access to XMLHttpRequest at 'https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events' from origin 'https://app.brevo.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://app.brevo.com/:0
+[  457021ms] [WARNING] [Elastic APM] Failed sending events! Error: https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io:443/intake/v2/rum/events HTTP status: 0
+    at e._constructError (https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:20143)
+    at https://product-homepage.brevo.com/78470.5f30fb9606b400ba0e59.js:1:19243 @ https://ph.brevo.com/static/1.438.7/posthog-recorder.js:0
+[  457023ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://596808a16dec4fc39413bf34b0a70240.apm.eu-west-1.aws.cloud.es.io/intake/v2/rum/events:0
