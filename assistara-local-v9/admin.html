@@ -156,9 +156,6 @@
       #toolView[hidden] {
         display: none;
       }
-      #dash:has(+ #toolView:not([hidden])) {
-        display: none;
-      }
       .toolError {
         background: #fff;
         border: 1px solid var(--line);
@@ -3707,6 +3704,7 @@
         $("toolView").hidden = true;
         $("toolView").replaceChildren();
         $("dashBody").style.display = "";
+        $("dash").style.display = "";
         $("overviewView").hidden = false;
         $("tabScaffold").style.display = "none";
         if (switching && opts.push !== false)
@@ -3727,6 +3725,7 @@
         $("toolView").hidden = true;
         $("toolView").replaceChildren();
         $("dashBody").style.display = "";
+        $("dash").style.display = "";
         $("overviewView").hidden = true;
         $("tabScaffold").style.display = "";
         if (switching && opts.push !== false)
@@ -3745,6 +3744,7 @@
         agentView = name;
         if (switching && opts.push !== false) history.pushState({ view: name }, "", t.path);
         $("dashBody").style.display = "none";
+        $("dash").style.display = "none";
         $("toolView").hidden = false;
         markNav('.sidebar-nav .nav-item[data-tool="' + name + '"]');
         updateChrome(TOOL_VIEW_META[name] || TOOL_VIEW_META.acquisition);

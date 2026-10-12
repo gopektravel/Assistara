@@ -162,8 +162,16 @@ test("embedded tools use one shared page title and Live Events UI naming", () =>
 
 test("tool views keep 24px below the header without retaining hidden dashboard space", () => {
   assert.match(admin, /#toolView \{\s*padding: 0 0 40px;\s*\}/);
-  assert.match(admin, /#dash:has\(\+ #toolView:not\(\[hidden\]\)\) \{\s*display: none;\s*\}/);
   assert.match(admin, /\.shell>\.head\+\*\{margin-top:0\}/);
+  // The dashboard section owns a 60px bottom padding. It must be hidden while
+  // a tool is mounted (its inline display wins over CSS), and restored by both
+  // dashboard views so switching back never leaves it off-screen.
+  assert.match(admin, /\$\("dashBody"\)\.style\.display = "none";\s*\n\s*\$\("dash"\)\.style\.display = "none";\s*\n\s*\$\("toolView"\)\.hidden = false;/);
+  assert.equal(
+    (admin.match(/\$\("dashBody"\)\.style\.display = "";\s*\n\s*\$\("dash"\)\.style\.display = "";/g) || []).length,
+    2,
+    "both showOverview and showDashboard must restore the dashboard section",
+  );
   const layout = admin.slice(admin.indexOf("#toolView {"), admin.indexOf(".toolError"));
   assert.doesNotMatch(layout, /margin-top:\s*-/i);
   assert.doesNotMatch(layout, /transform:/i);
