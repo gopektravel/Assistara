@@ -61,7 +61,7 @@ Queue rule: a batch is built and locally verified, and the queue advances at the
 - Test Student Portal states: p2m2c1qa/p2m2c1done, p2m2c2qa/p2m2c2done and p2m2c3qa/p2m2c3done are implemented and listed in the selector.
 - Source fidelity: the source AI prompts are reproduced verbatim in the learner pages and the decks; looka.com stays a free alternative to Canva rather than a requirement; no free-Pro implication is made.
 - Slide delivery: local PDFs are the production fallback because Drive credentials are unavailable; the shared preview helper supports local paths and legacy Drive IDs.
-- Web typography: Assistara learner-facing web surfaces use DM Sans only; PDF/slide production retains Manrope as required by the binding slide standard.
+- Web typography: all Assistara web surfaces use Manrope exclusively, matching the binding brand standard.
 
 ### Batch blockers and limitations
 - Human-eye slide inspection is SATISFIED: the project owner completed and approved the page-by-page review of all 24 slide pages on 2026-09-26 with no defects reported. The earlier `Image read error - could not load image` was a model-side reading limitation and is now historical.
@@ -1550,7 +1550,7 @@ Initialization note: direct production browser verification was blocked because 
 - skills_fix: skillState now uses skillThreshold instead of comparing completed classes with the full mapped-class list.
 - visual_QA: automated PDF checks passed; mandatory human-eye inspection is still BLOCKED because the attempted screenshot read returned `Image read error - could not load image`.
 - live_production_QA: BLOCKED; connected Vercel authorization exposes zero teams/projects, so deployed portal interaction, Drive preview/download responses, authenticated persistence and physical device checks are NOT VERIFIED LIVE.
-- web_typography: learner-facing Academy web surfaces now use DM Sans only; Manrope remains confined to the binding PDF/slide production standard and slide assets.
+- web_typography: learner-facing Academy web surfaces use Manrope exclusively.
 - final_status: BUILT + FINAL LOCAL QA.
 - final_status_phrase: `PHASE 2 MODULE 1 BLOCKED — mandatory human-eye slide inspection and live/deployed verification are unavailable.`
 - next_target_after_unblock: P2 M2 C1 — Build a Brand Strategy for Clients (p2m2c1); do not start or advance the queue until the blocked gates are resolved.
@@ -1612,7 +1612,7 @@ Initialization note: direct production browser verification was blocked because 
 - implementation: lesson27, lesson28 and lesson29 metadata; `vbrandLessonStates` and `vbrandLessonContent`; one shared `renderVisualBrandLesson(lesson, number, config)`; renderLesson27/renderLesson28/renderLesson29; three `openClass` dispatches; six Test Student Portal states (p2m2c1qa/p2m2c1done through p2m2c3qa/p2m2c3done) plus matching selector options; 63 rendered `vb*` teaching components.
 - module_2_css: the M2 ruleset lives inside the second `<style>` block, which also holds the ClickUp lesson rules; a third block holds the existing brand rules. Verified structurally (block 2 spans the M2 marker) and at runtime through computed styles.
 - dead_css_removed: 13 rules covering 6 classes that no M2 content ever rendered (vbTag and its 5 colour variants, vbEyebrowRow, vbDoNote, vbFontChip x3, vbFontsRow, vbKit) were removed; the compound responsive selector was reduced to `.vbStage,.vbSplit2`. No rendered class lost styling, and the file still has exactly 3 balanced `<style>` blocks. Dashboard 548,177 -> 546,998 bytes.
-- web_typography: PASS — computed `font-family` on the M2 teaching components resolves to DM Sans with no Manrope fallback in the learner pages; the M2 ruleset declares DM Sans only.
+- web_typography: REVERIFY — Manrope is now the exclusive web font; rendered-font browser verification is required before release.
 - assessments: 4 questions per class, 12 questions and 36 option-specific `whyWrong` explanations, authored from the source with no answer disclosure. `node scripts/validate_quick_checks.js` -> `RESULT: PASS (0 enforced failures)`; enforced set p2m1c1-p2m1c4 and p2m2c1-p2m2c3, 29 questions, 87 incorrect options, 26 `qcFeedback()` references and 26 guarded correct-mark sites, zero `'wrong'` literals. Inline script parses clean.
 - local_slide_delivery: /academy/slides/p2m2c1-brand-strategy.pdf, /academy/slides/p2m2c2-create-a-logo.pdf and /academy/slides/p2m2c3-brand-kit.pdf are connected through openLessonSlidesPreview; local HTTP fetches returned 200 with application/pdf and a %PDF- header.
 - artifact_p2m2c1: 8 pages; 256,340 bytes; SHA-256 8FA0F5B245F2B1AB747D0AB027CB536036BAB3DC8556B615F484EB87DB05B03C.

@@ -124,7 +124,7 @@ and re-ran `vercel build` successfully. Guarded by `api/vercel-build-sanity.test
 | O2 | — | `MASTERCLASS` coupon lives only in `MASTERCLASS_COUPON_SQL.sql` (4900), not in a migration | Owner: confirm the live row `code='MASTERCLASS', amount_php=4900, active=true` |
 | O3 | P2 | Live email delivery unverified (no test inbox / provider access) | Owner: send one test via each template, confirm inbox + SPF/DKIM |
 | O4 | P2 | Live Stripe/PayMongo sandbox payments unverified | Owner: run §6 C/D |
-| O5 | P3 | Font inconsistency: `AGENTS.md` says DM Sans; most pages ship Manrope, `login.html` uses DM Sans | Owner decision |
+| O5 | Resolved | Manrope is the permanent, exclusive Assistara web font; enforced by `AGENTS.md` and release tests | Complete |
 | O6 | P3 | Soft 404s return HTTP 200 (Vercel catch-all) | Cosmetic; leave for post-launch |
 | O7 | P3 | Extra unversioned functions (`submit-lead`, `cal-booking-webhook`, `send-masterclass-announcement`, sandbox fns) | Version later; not on the launch path |
 

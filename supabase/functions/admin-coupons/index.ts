@@ -46,6 +46,19 @@ async function log(db: any, type: string, id: string | null, action: string, det
 
 // Pricing functions imported from shared module (see _shared/coupon-pricing.ts)
 
+// Production originally stored the coupon's final price as whole pesos in
+// amount_php. Normalize those legacy rows for the read API until the additive
+// coupon migration is applied; never write the derived values back here.
+function normalizeCoupon(coupon: any, regularPricePhp: number) {
+  if (coupon.discount_type && Number.isFinite(Number(coupon.discount_value))) return coupon;
+  const legacyFinalPriceCentavos = Math.max(0, Number(coupon.amount_php || 0) * 100);
+  return {
+    ...coupon,
+    discount_type: "fixed_php",
+    discount_value: Math.max(0, regularPricePhp - legacyFinalPriceCentavos),
+  };
+}
+
 // Validate coupon data
 function validateCouponData(data: any, isUpdate = false) {
   const errors: string[] = [];
@@ -126,7 +139,10 @@ Deno.serve(async (req) => {
     try {
       // Get coupons with analytics
       const { data: coupons, error } = await db.rpc("get_coupon_analytics");
-      if (error) throw error;
+      // Analytics are additive. Legacy production databases may not have the
+      // optional reporting RPC yet; the Admin must still list and manage the
+      // canonical coupon records instead of failing the whole section.
+      const analytics = error ? [] : (coupons || []);
 
       // Also get raw coupon data for full details
       const { data: rawCoupons, error: rawError } = await db
@@ -137,8 +153,9 @@ Deno.serve(async (req) => {
       if (rawError) throw rawError;
 
       // Merge analytics with raw data
-      const analyticsMap = new Map((coupons || []).map((c: any) => [c.coupon_id, c]));
-      const enriched = (rawCoupons || []).map((c: any) => {
+      const analyticsMap = new Map(analytics.map((c: any) => [c.coupon_id, c]));
+      const enriched = (rawCoupons || []).map((rawCoupon: any) => {
+        const c = normalizeCoupon(rawCoupon, REGULAR_PRICE_PHP);
         const a = analyticsMap.get(c.id);
         return {
           ...c,
@@ -180,11 +197,12 @@ Deno.serve(async (req) => {
 
       if (rError) throw rError;
 
+      const normalizedCoupon = normalizeCoupon(coupon, REGULAR_PRICE_PHP);
       return out({
         ok: true,
         coupon: {
-          ...coupon,
-          preview: calculateDiscountPreview(coupon.discount_type, coupon.discount_value, REGULAR_PRICE_PHP),
+          ...normalizedCoupon,
+          preview: calculateDiscountPreview(normalizedCoupon.discount_type, normalizedCoupon.discount_value, REGULAR_PRICE_PHP),
           redemptions: redemptions || [],
         },
       });

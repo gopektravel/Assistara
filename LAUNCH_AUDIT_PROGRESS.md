@@ -38,7 +38,7 @@ Legend: [x] done, [~] in progress, [ ] not started, [!] owner action / blocked.
 - [!] Deploy Vercel + Supabase functions (needs explicit approval)
 
 ## Open, non-blocking
-- [ ] O5 Font conflict (AGENTS.md DM Sans vs shipped Manrope) — owner decision
+- [x] O5 Font conflict resolved — Manrope is the permanent, exclusive Assistara web font
 - [ ] O6 Soft 404s return HTTP 200
 - [ ] O7 Extra unversioned functions (`submit-lead`, `cal-booking-webhook`,
       `send-masterclass-announcement`, sandbox fns) — version later
