@@ -1,5 +1,15 @@
-/* Currency selector — compact, Manrope, minimal */
-.currencySwitch { display: inline-flex; gap: 2px; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-family: var(--font-family); }
-.currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 6px 10px; font: var(--font-family); font-size: 11px; font-weight: 700; line-height: 1; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.currencySwitch { display: inline-flex; gap: 2px; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-family: "Manrope", sans-serif; }
+.currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 6px 10px; font: "Manrope", sans-serif; font-size: 11px; font-weight: 700; line-height: 1; color: var(--muted); cursor: pointer; white-space: nowrap; }
 .currencySwitch button:not(.active):hover { background: #f1eee5; color: var(--ink); }
 .currencySwitch button.active { background: #171717; color: #fff; }
+
+/* Compact overview dashboard — clean premium hierarchy */
+#overviewView .card { padding: 16px; border-radius: 12px; }
+#overviewView .stats-grid { gap: 12px; }
+#ovKpis { gap: 12px; }
+.stat-card { padding: 14px 16px; border-radius: 10px; }
+.enrollment { padding: 12px 0; }
+.ovActionProgress { margin-top: 12px; }
+/* Remove excessive skeleton padding */
+.skeleton-stat { min-height: 28px; }
+.skeleton-text-sm { min-height: 14px; margin-top: 4px; }

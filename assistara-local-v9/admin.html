@@ -2031,7 +2031,11 @@
         if (enrolled) return "enrolled";
         if (payment === "paid") return "onboarding";
         if (payment === "pending") return "payment_pending";
-        if (decision === "accepted") return "awaiting_payment";
+        if (decision === "accepted") {
+          const invite = appAcceptanceEmail(x);
+          if (invite && invite.latest) return "invitation_sent";
+          return "accepted";
+        }
         return "new";
       }
       // Acceptance invitation outcome from the activity log. Payment state is never read here.
@@ -3332,6 +3336,11 @@
         view.innerHTML =
           '<div class="grid-stats-4" id="ovKpis"></div>' +
           '<div class="enrollment" id="ovEnrollment" style="margin-top:16px"></div>' +
+          '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Applicant Progress — Action Needed</h4>' +
+          '<div class="grid-stats-4" id="ovActionProgress" style="display:flex;gap:12px;flex-wrap:wrap;"></div>' +
+          '</div>' +
+
           '<div class="grid" style="margin-top:16px">' +
           '<div class="col-5"><div class="card" id="ovEmail"></div></div>' +
           "</div>";
@@ -3395,6 +3404,28 @@
             '<div class="stat-sublabel">' + c.s + '</div>' +
           '</a>'
         ).join("");
+        // Actionable applicant progress — needs attention / paid / enrolled
+        const progApps = (typeof activeApps === "function") ? activeApps() : [];
+        const needed = progApps.filter((x) => { const s = String(x.application_status || x.stage || x.status || "").toLowerCase(); return s === "new" || s === "awaiting_payment" || s === "payment_pending" || s === "onboarding"; });
+        const paid = progApps.filter((x) => String(x.payment_status || "").toLowerCase() === "paid" && !x.enrollment);
+        const enrolled = progApps.filter((x) => x.enrollment || String(x.application_status || "").toLowerCase() === "enrolled");
+        $("ovActionProgress").innerHTML = [
+          '<div style="flex:1;min-width:140px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+            '<div style="font-size:11px;font-weight:700;color:#171717;">Needs Attention</div>' +
+            '<div style="font-size:20px;font-weight:800;color:#171717;margin-top:4px;">' + needed.length + '</div>' +
+            '<div style="font-size:11px;color:#746e65;">New / Awaiting payment / Onboarding</div>' +
+          '</div>',
+          '<div style="flex:1;min-width:140px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+            '<div style="font-size:11px;font-weight:700;color:#171717;">Paid</div>' +
+            '<div style="font-size:20px;font-weight:800;color:#171717;margin-top:4px;">' + paid.length + '</div>' +
+            '<div style="font-size:11px;color:#746e65;">Payment received</div>' +
+          '</div>',
+          '<div style="flex:1;min-width:140px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+            '<div style="font-size:11px;font-weight:700;color:#171717;">Enrolled</div>' +
+            '<div style="font-size:20px;font-weight:800;color:#171717;margin-top:4px;">' + enrolled.length + '</div>' +
+            '<div style="font-size:11px;color:#746e65;">Active in program</div>' +
+          '</div>',
+        ].join("");
         paintEnrollment(data.capacity, !data.capacity && !data.capacityError);
 
         // Email delivery status (30 days).
