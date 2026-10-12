@@ -820,6 +820,7 @@ async function previewMessage(id) {
         <button class="btn primary" id="studio-save">Save Draft</button>
         <button class="btn" id="studio-test">Send Test</button>
         <button class="btn primary" id="studio-publish">Publish to Live</button>
+        <button class="btn" id="studio-delete" style="color:#b3261e;border-color:#b3261e;background:transparent">Delete</button>
       </div>`;
     $("studio-back").addEventListener("click", () => { studio.view = "list"; studioLoadList(); });
     $("studio-reload").addEventListener("click", async () => {
@@ -831,6 +832,19 @@ async function previewMessage(id) {
       } catch (e) { toast("Reload failed: " + e.message); }
     });
     $("studio-save").addEventListener("click", studioSaveDraft);
+    $("studio-delete").addEventListener("click", () => {
+      const name = studio.active || "this template";
+      const confirmed = confirm("Delete template \"" + name + "\"? This only removes it from the active list (soft delete, recoverable). Draft-only allowed.");
+      if (!confirmed) return;
+      studioReq("delete_draft", { key: studio.active }).then((res) => {
+        if (res && res.ok) {
+          studio.view = "list"; studioLoadList();
+          alert("Template deleted. Use Restore in versions/history to recover.");
+        } else {
+          alert("Delete blocked: published templates cannot be deleted, or server rejected.");
+        }
+      }).catch(() => alert("Delete failed — check admin session."));
+    });
     $("studio-test").addEventListener("click", studioTestSend);
     $("studio-publish").addEventListener("click", studioPublish);
     $("studio-versions-btn").addEventListener("click", studioRenderVersions);
