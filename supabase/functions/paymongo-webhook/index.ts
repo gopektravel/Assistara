@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { resolveEmailTemplate } from "../_shared/email-templates.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildReceiptPdf } from "../_shared/receipt-pdf.ts";
 declare const EdgeRuntime:{waitUntil:(p:Promise<any>)=>void};
@@ -12,7 +13,7 @@ const SITE="https://www.getassistara.com",SELF_URL="https://jhmmwleejgidrxavzdlq
 const json=(x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{"Content-Type":"application/json"}});
 const hex=(b:ArrayBuffer)=>Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 const safeEqual=(a:string,b:string)=>{if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0};
-const esc=(s:any)=>String(s||"").replaceAll("&","&").replaceAll("<","<").replaceAll(">",">").replaceAll('"',""");
+const esc=(s:any)=>String(s||"").replaceAll("&","&").replaceAll("<","<").replaceAll(">",">").replaceAll('"',"&quot;");
 const money=(n:any)=>"PHP "+Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
 const paymongo=async(path:string)=>{const r=await fetch("https://api.paymongo.com/v1/"+path,{headers:{Authorization:"Basic "+btoa(SECRET+":")}});return {ok:r.ok,data:await r.json().catch(()=>({}))}};
 
