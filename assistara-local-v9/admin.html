@@ -3144,6 +3144,7 @@
         if (!view || $("ovKpis")) return;
         view.innerHTML =
           '<div class="grid-stats-4" id="ovKpis"></div>' +
+          '<section id="enrollmentSection" aria-label="Academy Enrollment" style="margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:var(--radius-lg);background:#fff;"></section>' +
           '<div class="grid" style="margin-top:16px">' +
           '<div class="col-7"><div class="card" id="ovUrgent"></div></div>' +
           '<div class="col-5"><div class="card" id="ovEmail"></div></div>' +
@@ -3337,7 +3338,35 @@
         // Finance is reached from the KPI cards above; no separate summary block.
         $("ovFinance").innerHTML = "";
       }
-      async function renderOverview(force = false) {
+      function paintEnrollment() {
+  const sec = document.getElementById('enrollmentSection');
+  if (!sec) return;
+  const apps = activeApps();
+  const stage = (x) => appStage(x);
+  const counts = { new:0, invited:0, needs:0, awaiting:0, paid:0, enrolled:0 };
+  apps.forEach(x => {
+    const s = stage(x);
+    if (s === 'New') counts.new++;
+    else if (s === 'Invited') counts.invited++;
+    else if (s === 'Needs Action') counts.needs++;
+    else if (s === 'Awaiting Payment') counts.awaiting++;
+    else if (s === 'Paid') counts.paid++;
+    else if (s === 'Enrolled') counts.enrolled++;
+  });
+  const cap = window.capacityPanel ? window.capacityPanel.capacity || 15 : 15;
+  const paid = counts.paid;
+  const pct = cap ? Math.round(paid/cap*100) : 0;
+  sec.innerHTML = `<div class="enrollmentTile"><div class="tile-val">${counts.new}</div><div class="tile-label">New</div></div>
+<div class="enrollmentTile"><div class="tile-val">${counts.invited}</div><div class="tile-label">Invited</div></div>
+<div class="enrollmentTile"><div class="tile-val">${counts.needs}</div><div class="tile-label">Needs Action</div></div>
+<div class="enrollmentTile"><div class="tile-val">${counts.awaiting}</div><div class="tile-label">Awaiting Payment</div></div>
+<div class="enrollmentTile"><div class="tile-val">${counts.paid}</div><div class="tile-label">Paid</div></div>
+<div class="enrollmentTile"><div class="tile-val">${counts.enrolled}</div><div class="tile-label">Enrolled</div></div>
+<div style="margin-top:8px"><div style="font-family:var(--font-family);font-size:13px;color:var(--ink);">Available seats: <b>${Math.max(0, cap - counts.enrolled)}</b> / ${cap}</div><div id="seatProgress" style="margin-top:4px;height:6px;background:var(--line);border-radius:3px;overflow:hidden;"><div id="seatProgressFill" style="width:${pct}%;height:100%;background:var(--success);transition:width .3s ease;"></div></div></div>`;
+paintEnrollment();
+}
+
+async function renderOverview(force = false) {
         const view = $("overviewView");
         if (!view) return;
         ovEnsureSkeleton();
