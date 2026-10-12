@@ -168,9 +168,14 @@ test("tool views keep 24px below the header without retaining hidden dashboard s
   // dashboard views so switching back never leaves it off-screen.
   assert.match(admin, /\$\("dashBody"\)\.style\.display = "none";\s*\n\s*\$\("dash"\)\.style\.display = "none";\s*\n\s*\$\("toolView"\)\.hidden = false;/);
   assert.equal(
-    (admin.match(/\$\("dashBody"\)\.style\.display = "";\s*\n\s*\$\("dash"\)\.style\.display = "";/g) || []).length,
+    (admin.match(/\$\("dashBody"\)\.style\.display = "";\s*\n\s*\$\("dash"\)\.style\.display = "block";/g) || []).length,
     2,
-    "both showOverview and showDashboard must restore the dashboard section",
+    "both showOverview and showDashboard must visibly restore the dashboard section",
+  );
+  assert.doesNotMatch(
+    admin,
+    /\$\("dash"\)\.style\.display = "";/,
+    "clearing the inline display revives the base #dash { display:none } rule",
   );
   const layout = admin.slice(admin.indexOf("#toolView {"), admin.indexOf(".toolError"));
   assert.doesNotMatch(layout, /margin-top:\s*-/i);
