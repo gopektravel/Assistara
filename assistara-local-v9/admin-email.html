@@ -690,15 +690,19 @@ async function previewMessage(id) {
   }
 
   function studioRenderList() {
-    const list = studio.list || [];
-    const rows = list.map((t) => `
-      <div class="studio-item" data-studio-open="${esc(t.key)}">
+    const filter = studio.filter || "active";
+    const list = (studio.list || []).filter((t) => filter === "all" || (filter === "deleted" ? t.status === "deleted" : t.status !== "deleted"));
+    const rows = list.map((t) => {
+      const isDeleted = t.status === "deleted";
+      return `<div class="studio-item" data-studio-open="${esc(t.key)}" style="${isDeleted ? 'opacity:0.6;border-left:3px solid #b3261e' : ''}">
         <div style="flex:1;min-width:0">
-          <div style="font-weight:800;font-size:13px">${esc(t.name)}</div>
+          <div style="font-weight:800;font-size:13px">${esc(t.name)} ${isDeleted ? '<span class="pill" style="background:#b3261e;color:#fff">deleted</span>' : ''}</div>
           <div class="small muted" style="margin-top:2px">${esc(t.key)} · ${esc(t.category)} · v${t.version || 0}</div>
         </div>
-        <span class="pill ${t.status === "published" ? "good" : "warn"}">${esc(t.status)}</span>
-      </div>`).join("");
+        <span class="pill ${t.status === "published" ? "good" : t.status === "deleted" ? "warn" : "warn"}">${esc(t.status)}</span>
+        ${isDeleted ? `<button class="btn" onclick="event.stopPropagation(); studioRestore('${esc(t.key)}')" style="margin-left:6px;color:#b3261e;border-color:#b3261e;background:transparent">Restore</button>` : ''}
+      </div>`;
+    }).join("");
     $("view").innerHTML = `
       <div class="card">
         <div class="head" style="margin:0 0 10px">
@@ -707,12 +711,24 @@ async function previewMessage(id) {
             <div class="sub" style="font-size:12px;color:var(--muted);margin:0">Select a template to edit. Drafts don't affect live email until published.</div>
           </div>
           <button class="btn" id="studio-import">Import legacy</button>
+          <div style="display:flex;gap:6px;margin-left:auto">
+            <button class="btn ghost" onclick="studio.filter='active';studioRenderList()">Active</button>
+            <button class="btn ghost" onclick="studio.filter='deleted';studioRenderList()">Deleted</button>
+            <button class="btn ghost" onclick="studio.filter='all';studioRenderList()">All</button>
+          </div>
         </div>
         ${rows || '<div class="empty">No templates yet. Import the legacy set to begin.</div>'}
       </div>`;
     $("studio-import").addEventListener("click", studioImport);
   }
 
+  window.studioRestore = function(key) {
+    if (!confirm("Restore \"" + (key || "template") + "\" from deleted to draft?")) return;
+    studioReq("restore_draft", { key }).then((res) => {
+      if (res && res.ok) { studio.filter = "active"; studioLoadList(); alert("Restored to draft."); }
+      else alert("Restore blocked: must be deleted draft.");
+    }).catch(() => alert("Restore failed."));
+  };
   async function studioLoadList() {
     try {
       const j = await studioReq("list");
