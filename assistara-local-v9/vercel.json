@@ -246,6 +246,14 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-currency.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assistara-currency.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "app.js",
       "use": "@vercel/static"
     },
@@ -553,6 +561,14 @@
     {
       "src": "/manrope-lock.css",
       "dest": "/manrope-lock.css"
+    },
+    {
+      "src": "/admin-currency.css",
+      "dest": "/admin-currency.css"
+    },
+    {
+      "src": "/assistara-currency.js",
+      "dest": "/assistara-currency.js"
     },
     {
       "src": "/app.js",
