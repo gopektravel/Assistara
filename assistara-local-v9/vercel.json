@@ -644,11 +644,11 @@
     },
     {
       "src": "/admin/email",
-      "dest": "/admin"
+      "dest": "/admin.html"
     },
     {
       "src": "/admin/email/",
-      "dest": "/admin"
+      "dest": "/admin.html"
     },
     {
       "src": "/admin-finance.html",
@@ -665,6 +665,10 @@
     {
       "src": "/admin-email.html",
       "dest": "/admin-email.html"
+    },
+    {
+      "src": "/admin-template-studio.html",
+      "dest": "/admin-template-studio.html"
     },
     {
       "src": "/t/o",
