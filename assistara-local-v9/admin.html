@@ -1663,7 +1663,7 @@
           status = "Screenshot requested";
           buttons += `<button onclick="noResponsePay('${x.id}')">No response</button>`;
         }
-        return `<div class="payment"><div><b>${esc(x.name)}</b><div class="sub">GCash · ₱6,900 · Ref: <strong>${esc(x.gcash_reference || "Not provided")}</strong><br><strong>Status: ${esc(status)}</strong>${x.gcash_submitted_at ? "<br>" + new Date(x.gcash_submitted_at).toLocaleString() : ""}</div></div><div class="actions">${buttons}</div></div>`;
+        return `<div class="payment"><div><b>${esc(x.name)}</b><div class="sub">GCash · ${ovMoney(6900)} · Ref: <strong>${esc(x.gcash_reference || "Not provided")}</strong><br><strong>Status: ${esc(status)}</strong>${x.gcash_submitted_at ? "<br>" + new Date(x.gcash_submitted_at).toLocaleString() : ""}</div></div><div class="actions">${buttons}</div></div>`;
       }
       function drawPending() {
         const p = actionablePending();
@@ -2622,9 +2622,11 @@
        * ---------------------------------------------------------------- */
       const MONEY_PHP = (centavos) => {
         const cur = (window.AssistaraCurrency && window.AssistaraCurrency.getDisplay) ? window.AssistaraCurrency.getDisplay() : "PHP";
-        const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v,c) => (c==="PHP"?"₱":"")+Number(v/100).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
-        const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(centavos/100, cur) : (centavos/100);
-        return fmt(val, cur);
+        const php = Number(centavos) / 100;
+        const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v) => "₱"+Number(v).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
+        const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : php;
+        if (val == null || !Number.isFinite(Number(val))) return fmt(php, "PHP") + " · conversion unavailable";
+        return (cur === "PHP" ? "" : "≈ ") + fmt(val, cur);
       };
       const COUPON_STATUS_BADGE = {
         active: { label: 'Active', class: 'active' },
@@ -3146,7 +3148,8 @@
           paintCapacityBits();
           if (agentView === "overview") paintEnrollment(capacityOverview);
           const { capacity, paid, reservations, stale_pending, available, waitlist_waiting, waitlist_invited, exceptions_open, cohort_name, is_open } = ov;
-          const money = n => 'â‚±' + Number(n).toLocaleString('en-PH');
+          /* Payment-exception amounts are stored in PHP; conversion is display-only. */
+          const money = (n) => ovMoney(Number(n));
           const badge = (txt, cls) => '<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:'+cls+'">'+txt+'</span>';
           const grid = `
             <div class="capacityCard"><div class="capacityLabel">Cohort</div><div class="capacityValue">${esc(cohort_name||'Founding Cohort')}</div></div>
@@ -3263,8 +3266,8 @@
         if (php == null || !Number.isFinite(Number(php))) return "Unavailable";
         const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v,c) => (c==="PHP"?"₱":"")+Number(v).toLocaleString("en-US");
         const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : Number(php);
-        if (val == null || !Number.isFinite(Number(val))) return "Unavailable";
-        return fmt(val, cur);
+        if (val == null || !Number.isFinite(Number(val))) return fmt(Number(php), "PHP") + " · conversion unavailable";
+        return (cur === "PHP" ? "" : "≈ ") + fmt(val, cur);
       }
       function ovNum(n) {
         if (n == null || !Number.isFinite(Number(n))) return "Unavailable";
@@ -3329,11 +3332,12 @@
         (sub ? '<div class="stat-sublabel">' + sub + "</div>" : "") +
         "</div>";
       const ovSkeleton = () =>
-        '<div class="currency-switch-bar" style="display:flex;justify-content:flex-end;margin-bottom:12px;"><div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency" style="display:inline-flex;gap:2px;padding:3px;background:#fff;border:1px solid #eae5df;border-radius:999px;font-family:var(--font-family);"><button type="button" data-cur="PHP" aria-pressed="true" style="border:0;background:#171717;color:#fff;border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;">PHP</button><button type="button" data-cur="USD" aria-pressed="false" style="border:0;background:none;color:#777;border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;">USD</button><button type="button" data-cur="EUR" aria-pressed="false" style="border:0;background:none;color:#777;border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;">EUR</button></div></div><div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text-sm" style="margin-top:8px"></div>';
+        '<div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text-sm" style="margin-top:8px"></div>';
       const ovEnsureSkeleton = () => {
         const view = $("overviewView");
         if (!view || $("ovKpis")) return;
         view.innerHTML =
+          '<div class="currency-switch-bar" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;"><div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency"><button type="button" data-cur="PHP" aria-pressed="true">PHP</button><button type="button" data-cur="USD" aria-pressed="false">USD</button><button type="button" data-cur="EUR" aria-pressed="false">EUR</button></div></div>' +
           '<div class="grid-stats-4" id="ovKpis"></div>' +
           '<div class="enrollment" id="ovEnrollment" style="margin-top:16px"></div>' +
           '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
@@ -3501,37 +3505,39 @@
           overviewLoading = false;
         }
       }
-      /* Currency switch — display-only, persisted, no reload */
+      /* Currency switch — delegated because Overview is rendered after login. */
       if (window.AssistaraCurrency) {
-        const sw = document.getElementById("currencySwitch");
-        if (sw) {
-          sw.querySelectorAll("button").forEach(b => {
-            b.addEventListener("click", () => {
-              const cur = b.dataset.cur;
-              if (!cur) return;
-              window.AssistaraCurrency.setDisplay(cur);
-              sw.querySelectorAll("button").forEach(x => {
-                x.classList.toggle("active", x === b);
-                x.setAttribute("aria-pressed", x === b ? "true" : "false");
-              });
-              /* Refresh monetary displays (Overview + Applications + Coupons) */
-              if (typeof render === "function") try { render(); } catch {}
-              if (typeof renderOverview === "function") try { renderOverview(); } catch {}
-              document.querySelectorAll(".toolRoot").forEach(host => {
-                host.setAttribute("data-currency", cur);
-              });
-            });
+        const paintSharedCurrency = (cur) => {
+          document.querySelectorAll("#currencySwitch button").forEach((button) => {
+            const on = button.dataset.cur === cur;
+            button.classList.toggle("active", on);
+            button.setAttribute("aria-pressed", on ? "true" : "false");
           });
-          /* Set initial active state */
-          const cur = window.AssistaraCurrency.getDisplay();
-          sw.querySelectorAll("button").forEach(b => {
-            const on = b.dataset.cur === cur;
-            b.classList.toggle("active", on);
-            b.setAttribute("aria-pressed", on ? "true" : "false");
-          });
-          /* Pre-fetch rate for non-PHP selection */
-          if (cur !== "PHP") window.AssistaraCurrency.fetchRate(cur).catch(()=>{});
-        }
+          document.querySelectorAll(".toolRoot").forEach((host) => host.setAttribute("data-currency", cur));
+        };
+        document.addEventListener("click", async (event) => {
+          const button = event.target.closest("#currencySwitch button[data-cur]");
+          if (!button) return;
+          const cur = button.dataset.cur;
+          if (!window.AssistaraCurrency.DISP_CURS.includes(cur)) return;
+          const ready = await window.AssistaraCurrency.fetchRate(cur);
+          if (!ready) {
+            if (typeof toast === "function") toast("Conversion unavailable. Amounts remain in PHP.");
+            return;
+          }
+          window.AssistaraCurrency.setDisplay(cur);
+        });
+        window.addEventListener("assistara:currencychange", (event) => {
+          const cur = event.detail && event.detail.currency ? event.detail.currency : "PHP";
+          paintSharedCurrency(cur);
+          if (typeof render === "function") try { render(); } catch {}
+          if (typeof renderOverview === "function") try { renderOverview(); } catch {}
+        });
+        const cur = window.AssistaraCurrency.getDisplay();
+        paintSharedCurrency(cur);
+        if (cur !== "PHP") window.AssistaraCurrency.fetchRate(cur).then((ready) => {
+          if (!ready) window.AssistaraCurrency.setDisplay("PHP");
+        });
       }
       // Sidebar navigation — dashboard tabs, mounted tools and the
       // Overview all live in the one shell.

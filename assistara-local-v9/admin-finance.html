@@ -930,12 +930,12 @@
         * Round each displayed transaction to cents, then sum those cents.
         * This preference never writes financial data.
        * ---------------------------------------------------------------- */
-      /* ONE shared currency preference with Dashboard (same localStorage key).
-       Invalid saved preferences — including AUD — reset to PHP. */
+       /* ONE shared currency preference with Dashboard (same localStorage key).
+        Invalid saved preferences reset to PHP. */
     const DISPLAY_CURRENCIES = window.AssistaraCurrency ? window.AssistaraCurrency.DISP_CURS : ["PHP", "USD", "EUR"];
     const DISPLAY_KEY = window.AssistaraCurrency ? window.AssistaraCurrency.DISP_KEY : "assistara_currency_display";
     const displayRates = window.AssistaraCurrency ? window.AssistaraCurrency.dispRates : { PHP: 1 };
-    const displayRateDate = window.AssistaraCurrency ? window.AssistaraCurrency.dispRateDate : new Date().toISOString().slice(0, 10);
+    const displayRateDate = window.AssistaraCurrency ? window.AssistaraCurrency.getRateDate() : new Date().toISOString().slice(0, 10);
     let displayCurrency = (() => {
         try {
           const saved = localStorage.getItem(DISPLAY_KEY);
@@ -2259,6 +2259,14 @@
 
       document.querySelectorAll("#currencySwitch button").forEach((b) => {
         b.addEventListener("click", () => { setDisplayCurrency(b.dataset.cur); });
+      });
+      window.addEventListener("assistara:currencychange", async (event) => {
+        const next = event.detail && DISPLAY_CURRENCIES.includes(event.detail.currency) ? event.detail.currency : "PHP";
+        if (next === displayCurrency) return;
+        const ready = await ensureDisplayRate(next);
+        displayCurrency = ready ? next : "PHP";
+        paintCurrencySwitch();
+        render();
       });
       window.addEventListener("focus", () => {
         if (!document.hidden) loadAll(true).catch(() => {});
