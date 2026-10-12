@@ -13,9 +13,6 @@
     <link rel="stylesheet" href="/admin-sidebar.css" />
     <link rel="stylesheet" href="/admin-header.css" />
     <link rel="stylesheet" href="/manrope-lock.css?v=20261012-1" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       :root {
         --ink: #151515;
@@ -44,18 +41,18 @@
         color: var(--ink);
         font-family: "Manrope", sans-serif;
       }
-      /* App shell — sidebar + full-width workspace (see admin-*.css) */
+      /* App shell ??? sidebar + full-width workspace (see admin-*.css) */
       .shell {
         width: 100%;
       }
-      /* Sidebar visibility — hidden until a session exists */
+      /* Sidebar visibility ??? hidden until a session exists */
       #sidebar {
         display: none;
       }
       html[data-admin-session="1"] #sidebar {
         display: flex;
       }
-      /* Workspace chrome — hidden until a session exists */
+      /* Workspace chrome ??? hidden until a session exists */
       #workspaceTop,
       #pageHeader {
         display: none;
@@ -1173,7 +1170,7 @@
         <div id="capacityPanel" style="display:none">
           <div class="capacity-section">
             <h3>Cohort Capacity</h3>
-            <div class="sub" style="margin:-6px 0 10px">15-seat founding cohort — seat enforcement, waitlist and payment exceptions for applicants.</div>
+            <div class="sub" style="margin:-6px 0 10px">15-seat founding cohort ??? seat enforcement, waitlist and payment exceptions for applicants.</div>
             <div class="capacity-grid" id="capacityGrid"></div>
           </div>
           <div class="capacity-section">
@@ -1261,14 +1258,12 @@
         acquisitionVisits = [],
         studentProgress = [],
         coupons = [],
-        tab = "applicants",
-        applicantFilterKey = "all",
-        applicantSortKey = "action";
+        tab = "applicants";
       // Cohort capacity now lives inside the Applicants view; it is (re)loaded
       // when the Applicants tab is entered, not on every render/keystroke.
       let capacityDirty = true;
       /* ---------------------------------------------------------------- *
-       * Admin UI state — persisted per browser tab so moving to a tool
+       * Admin UI state ??? persisted per browser tab so moving to a tool
        * (Finance / Acquisition / Live Events) and returning via Back
        * or the in-app link restores the exact screen: selected tab, search,
        * student filters, expanded cards and scroll position.
@@ -1282,7 +1277,7 @@
       let agentView = "dashboard";
       const viewScroll = { dashboard: 0 };
       /* ---------------------------------------------------------------- *
-       * Sidebar — collapse state (persisted) and mobile drawer.
+       * Sidebar ??? collapse state (persisted) and mobile drawer.
        * ---------------------------------------------------------------- */
       const SIDEBAR_KEY = "assistara_admin_sidebar";
       function readSidebarCollapsed() {
@@ -1319,7 +1314,7 @@
         $("menuToggle").setAttribute("aria-expanded", "false");
       }
       /* ---------------------------------------------------------------- *
-       * Page chrome — shared header (breadcrumbs, title, subtitle) and
+       * Page chrome ??? shared header (breadcrumbs, title, subtitle) and
        * the contextual search box. Dashboard tabs keep the search because
        * it filters records; the Overview, Cohorts and mounted tools do
        * not use it, so it is hidden there.
@@ -1328,7 +1323,7 @@
         overview: {
           crumb: [["Overview", "Dashboard"]],
           title: "Dashboard",
-          sub: "Business command center — applications, enrollment, revenue, acquisition and urgent actions.",
+          sub: "Business command center ??? applications, enrollment, revenue, acquisition and urgent actions.",
           search: false,
         },
         applicants: {
@@ -1626,25 +1621,25 @@
       function paymentRow(x) {
         const f = x.gcash_followup_status || "";
         let status = "Payment pending",
-          buttons = `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>`;
+          buttons = `<button class="success" onclick="approvePay('${x.id}')">??? Approve payment</button>`;
         if (!f)
-          buttons += `<button class="danger" onclick="rejectPay('${x.id}')">✕ Could not verify</button>`;
+          buttons += `<button class="danger" onclick="rejectPay('${x.id}')">??? Could not verify</button>`;
         else if (f === "screenshot_requested") {
           status = "Screenshot requested";
           buttons += `<button onclick="noResponsePay('${x.id}')">No response</button>`;
         }
-        return `<div class="payment"><div><b>${esc(x.name)}</b><div class="sub">GCash · ₱6,900 · Ref: <strong>${esc(x.gcash_reference || "Not provided")}</strong><br><strong>Status: ${esc(status)}</strong>${x.gcash_submitted_at ? "<br>" + new Date(x.gcash_submitted_at).toLocaleString() : ""}</div></div><div class="actions">${buttons}</div></div>`;
+        return `<div class="payment"><div><b>${esc(x.name)}</b><div class="sub">GCash ?? ???6,900 ?? Ref: <strong>${esc(x.gcash_reference || "Not provided")}</strong><br><strong>Status: ${esc(status)}</strong>${x.gcash_submitted_at ? "<br>" + new Date(x.gcash_submitted_at).toLocaleString() : ""}</div></div><div class="actions">${buttons}</div></div>`;
       }
       function drawPending() {
         const p = actionablePending();
         const navCount = $("navAppCount");
         if (navCount) {
           navCount.hidden = !p.length;
-          navCount.textContent = p.length ? "🔔 " + p.length : "";
+          navCount.textContent = p.length ? "???? " + p.length : "";
         }
         $("pendingBox").innerHTML =
           p.length && tab === "applicants"
-            ? `<div class="alert"><h2>🔔 PAYMENT PENDING VERIFICATION (${p.length})</h2><div class="sub">Only payments that still need an action appear here. After the final no-response follow-up, the record is archived below as Unverified payment.</div>${p.map(paymentRow).join("")}</div>`
+            ? `<div class="alert"><h2>???? PAYMENT PENDING VERIFICATION (${p.length})</h2><div class="sub">Only payments that still need an action appear here. After the final no-response follow-up, the record is archived below as Unverified payment.</div>${p.map(paymentRow).join("")}</div>`
             : "";
       }
       function humanizeKey(key) {
@@ -1669,7 +1664,7 @@
           return value
             .map(item => answerText(field, item))
             .filter(Boolean)
-            .join(" • ");
+            .join(" ??? ");
         }
         if (typeof value === "object") {
           return Object.entries(value)
@@ -1695,7 +1690,7 @@
       }
       function paintAnswers(box, record) {
         if (!record) {
-          box.innerHTML = '<p class="answerNote">Loading application answers…</p>';
+          box.innerHTML = '<p class="answerNote">Loading application answers???</p>';
           return;
         }
         if (record.error) {
@@ -1761,7 +1756,7 @@
         if (trigger) {
           trigger.setAttribute("aria-expanded", open ? "true" : "false");
           trigger.setAttribute("aria-label", `${open ? "Collapse" : "Expand"} applicant record`);
-          trigger.textContent = open ? "⌃" : "⌄";
+          trigger.textContent = open ? "???" : "???";
         }
         if (open) {
           openApps.add(key);
@@ -1909,81 +1904,49 @@
         const key = x.id === null || x.id === undefined ? "" : String(x.id);
         const expandable = SAFE_APP_ID.test(key);
         const open = expandable && openApps.has(key);
-        const submitted = x.created_at ? "Applied " + esc(formatDate(x.created_at)) : "";
+        const submitted = x.created_at ? `<div class="sub appSubmitted">Applied ${esc(formatDate(x.created_at))}</div>` : "";
         const source = applicationSource(x);
-
-        const decision = currentDecision(x);
-        const status = String(x.status || "").toLowerCase();
-        const payment = String(x.payment_status || "not_requested").toLowerCase();
-        const isGcashPending = x.payment_method === "gcash" && payment === "pending" && !["followup_sent", "no_response"].includes(x.gcash_followup_status || "");
-        const isActiveLearner = status === "onboarded" && payment === "paid" && !!x.onboarding_completed_at && !!x.auth_user_id && !x.suspended_at;
-
-        let stage = "—", stageClass = "", nextAction = "—", actionClass = "";
-        const isDeclined = decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected";
-        const isSuspended = !!x.suspended_at;
-        const isAcceptedUnpaid = decision === "accepted" && payment !== "paid";
-        const isPaymentPending = payment === "pending";
-        const isPaidOnboarding = payment === "paid" && !isActiveLearner;
-
-        if (!decision && ["new", "reviewing"].includes(status) && ["", "none", "not_requested"].includes(payment) && !x.auth_user_id && !x.onboarding_completed_at && !x.suspended_at) {
-          stage = "New"; stageClass = "stage-new";
-          nextAction = "Admin: Review application"; actionClass = "action-admin";
-        } else if (isDeclined) {
-          stage = "Declined"; stageClass = "stage-declined";
-          nextAction = "Closed"; actionClass = "action-closed";
-        } else if (isSuspended) {
-          stage = "Suspended"; stageClass = "stage-suspended";
-          nextAction = "Account suspended"; actionClass = "action-admin";
-        } else if (isAcceptedUnpaid) {
-          stage = "Accepted — Awaiting Payment"; stageClass = "stage-awaiting-payment";
-          nextAction = isGcashPending ? "Admin: Verify GCash payment" : "Applicant: Complete payment";
-          actionClass = isGcashPending ? "action-admin" : "action-applicant";
-        } else if (isPaymentPending) {
-          stage = "Payment Pending"; stageClass = "stage-payment-pending";
-          nextAction = isGcashPending ? "Admin: Verify GCash payment" : "Applicant: Complete payment";
-          actionClass = isGcashPending ? "action-admin" : "action-applicant";
-        } else if (isPaidOnboarding) {
-          stage = "Paid — Onboarding Pending"; stageClass = "stage-onboarding";
-          const needsApplicant = !!x.auth_user_id && !x.onboarding_completed_at;
-          nextAction = needsApplicant ? "Applicant: Complete onboarding" : "Admin: Resend onboarding link";
-          actionClass = needsApplicant ? "action-applicant" : "action-admin";
-        } else if (isActiveLearner) {
-          stage = "Enrolled"; stageClass = "stage-enrolled";
-          nextAction = "No action needed"; actionClass = "action-none";
-        }
-
-        let emailBadge = "";
-        const acceptedSends = (x.activity || []).filter((e) => e.action === "decision_email_sent" && e.details && e.details.decision === "accepted");
-        if (acceptedSends.length) {
-          emailBadge = acceptedSends[0].details.email_sent === false ? '<span class="badge badge-danger">Email failed</span>' : '<span class="badge badge-success">Email sent</span>';
-        }
-
-        const chevron = expandable ? '<button class="expandArrow" type="button" data-toggle-app="' + esc(key) + '" aria-label="' + (open ? "Collapse" : "Expand") + ' applicant record" aria-controls="app-panel-' + esc(key) + '" aria-expanded="' + (open ? "true" : "false") + '">' + (open ? "⌃" : "⌄") + '</button>' : "";
-
-        const panel = expandable ? '<div class="applicantPanel' + (open ? " open" : "") + '" id="app-panel-' + esc(key) + '">' +
-          '<section class="recordSection"><h3>ACQUISITION SOURCE</h3><p class="accountState"><b>' + esc(source.label) + '</b></p>' + attributionDetailHTML(source.detail) + '</section>' +
-          '<section class="recordSection"><h3>APPLICATION ANSWERS</h3><div class="answersPanel" id="answers-' + esc(key) + '"></div></section>' +
-          '<section class="recordSection"><h3>INTERNAL NOTES</h3><div class="notesEditor" id="notes-' + esc(key) + '"></div></section>' +
-          '<section class="recordSection"><h3>PAYMENT & ENROLLMENT</h3>' + paymentEnrollmentInfo(x) + '</section>' +
-          '<section class="recordSection"><h3>ACADEMY ACCOUNT</h3><p class="accountState">' + esc(academyAccountLabel(x)) + '</p></section>' +
-          '<section class="recordSection recordActivity"><h3>ACTIVITY</h3>' + activityTimeline(x) + '</section>' +
-        '</div>' : "";
-
-        return '<div class="applicantRow' + (open ? " open" : "") + '" id="app-' + esc(key) + '">' +
-          '<div class="applicantRowMain">' +
-            '<div class="applicantIdentity">' +
-              '<div class="applicantName">' + esc(x.name || "No name") + '</div>' +
-              '<div class="applicantSub">' + esc(x.email || "") + ' · ' + esc(submitted) + '</div>' +
-            '</div>' +
-            '<div class="applicantStage ' + stageClass + '">' + esc(stage) + '</div>' +
-            '<div class="applicantNextAction ' + actionClass + '">' +
-              '<span class="actionLabel">' + esc(nextAction) + '</span>' + emailBadge +
-            '</div>' +
-            chevron +
-          '</div>' +
-          '<div class="applicantActions">' + applicationActions(x) + '</div>' +
-          panel +
-        '</div>';
+        return `<div class="card applicationCard${open ? " open" : ""}" id="app-${esc(key)}">
+          <div class="applicationCardHead">
+            <div class="applicationIdentity">
+              <div class="name">${esc(x.name || "No name")}</div>
+              <div class="sub">${esc(x.email || "")}</div>
+              ${submitted}
+            </div>
+            <div class="applicationHeadRight">
+              <div class="badges">${stateBadges(x)}</div>
+              ${expandable ? `<button class="expandArrow" type="button" data-toggle-app="${esc(key)}" aria-label="${open ? "Collapse" : "Expand"} applicant record" aria-controls="app-panel-${esc(key)}" aria-expanded="${open ? "true" : "false"}">${open ? "???" : "???"}</button>` : ""}
+            </div>
+          </div>
+          <div class="actions applicationActions">${applicationActions(x)}</div>
+          ${expandable ? `<div class="appPanel${open ? " open" : ""}" id="app-panel-${esc(key)}">
+            <section class="recordSection">
+              <h3>ACQUISITION SOURCE</h3>
+              <p class="accountState"><b>${esc(source.label)}</b></p>
+              ${attributionDetailHTML(source.detail)}
+            </section>
+            <section class="recordSection">
+              <h3>APPLICATION ANSWERS</h3>
+              <div class="answersPanel" id="answers-${esc(key)}"></div>
+            </section>
+            <section class="recordSection">
+              <h3>INTERNAL NOTES</h3>
+              <div class="notesEditor" id="notes-${esc(key)}"></div>
+            </section>
+            <section class="recordSection">
+              <h3>PAYMENT &amp; ENROLLMENT</h3>
+              ${paymentEnrollmentInfo(x)}
+            </section>
+            <section class="recordSection">
+              <h3>ACADEMY ACCOUNT</h3>
+              <p class="accountState">${esc(academyAccountLabel(x))}</p>
+            </section>
+            <section class="recordSection recordActivity">
+              <h3>ACTIVITY</h3>
+              ${activityTimeline(x)}
+            </section>
+          </div>` : ""}
+        </div>`;
       }
       function currentDecision(x) {
         const decision = String(x.decision || "").trim().toLowerCase();
@@ -2005,10 +1968,10 @@
         if (decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected") return `<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Permanently delete</button>`;
         if (x.suspended_at || isActiveLearner) return "";
         if (decision === "accepted" && payment !== "paid") {
-          return `<button onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
+          return `<button onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">??? Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">??? Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
         if (payment === "pending") {
-          return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
+          return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">??? Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">??? Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
         }
         if (payment === "paid") return `<button class="success" onclick="onboard('${esc(x.id)}')">Resend account-setup link</button>${isTestRecord && !x.auth_user_id && !x.onboarding_completed_at ? `<button class="danger" onclick="deleteApplication('${esc(x.id)}',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete test record</button>` : ""}`;
         return "";
@@ -2018,14 +1981,14 @@
         const payment = String(x.payment_status || "not_requested").toLowerCase();
         const method = String(x.payment_method || "").toLowerCase();
         const readiness = String(x.payment_readiness || "");
-        const paymentField = answerSchema.find(field => field.field === "payment_readiness") || { options: { "Willing to invest in myself": "Yes, I’m willing to invest in myself.", "Need payment plan": "I’m ready to join, but I would need a payment plan." } };
+        const paymentField = answerSchema.find(field => field.field === "payment_readiness") || { options: { "Willing to invest in myself": "Yes, I???m willing to invest in myself.", "Need payment plan": "I???m ready to join, but I would need a payment plan." } };
         const preference = answerText(paymentField, readiness);
         const paymentLabels = { not_requested: "Not requested", pending: "Pending", paid: "Paid", failed: "Failed", refunded: "Refunded" };
         const methodLabels = { stripe: "Stripe", gcash: "GCash", paymongo_qrph: "QR Ph" };
         const rows = [
-          ["Decision", decision ? decision.charAt(0).toUpperCase() + decision.slice(1) : ["new", "reviewing"].includes(String(x.status || "").toLowerCase()) ? "Awaiting review" : "—"],
+          ["Decision", decision ? decision.charAt(0).toUpperCase() + decision.slice(1) : ["new", "reviewing"].includes(String(x.status || "").toLowerCase()) ? "Awaiting review" : "???"],
           ["Payment", paymentLabels[payment] || "Not requested"],
-          ["Payment method", methodLabels[method] || "—"],
+          ["Payment method", methodLabels[method] || "???"],
         ];
         if (preference) rows.push(["Payment preference", preference]);
         const planRequested = readiness === "Need payment plan" || /would need a payment plan/i.test(preference);
@@ -2043,7 +2006,7 @@
         const payment = String(x.payment_status || "not_requested").toLowerCase();
         if (x.suspended_at) return "SUSPENDED";
         if (status === "onboarded" && payment === "paid" && x.onboarding_completed_at && x.auth_user_id) return "ACTIVE LEARNER";
-        if (payment === "paid") return "PAID — ACCOUNT SETUP PENDING";
+        if (payment === "paid") return "PAID ??? ACCOUNT SETUP PENDING";
         if (payment === "pending") return "PAYMENT PENDING";
         if (currentDecision(x) === "accepted") return "WAITING FOR PAYMENT";
         return "NOT ELIGIBLE YET";
@@ -2074,7 +2037,7 @@
        * Mirrors the learner Academy's own curriculum structure and progress
        * rules exactly. The admin reads the SAME canonical tables
        * (academy_class_progress, academy_exam_attempts) that drive the
-       * learner dashboard — no parallel progress system.
+       * learner dashboard ??? no parallel progress system.
        * ---------------------------------------------------------------- */
       const CURRICULUM = [
         { n: "01", title: "Freelancing Foundations", modules: [
@@ -2213,15 +2176,15 @@
         const suspended = !!x.suspended_at;
         const prog = x._progress || { pct: 0, totalCompleted: 0, currentPhase: null, currentModule: null, currentClass: null, examsPassed: 0, examsFailed: 0, examsPending: 0, lastActivity: null };
         const statusBadge = suspended ? '<span class="badge suspended">Suspended</span>' : '<span class="badge active_account">Active</span>';
-        const phaseLabel = prog.currentPhase !== null ? `Phase ${prog.currentPhase + 1} → Module ${prog.currentModule + 1} → Class ${prog.currentClass + 1}` : "Not started";
-        const examSummary = `${prog.examsPassed} Passed · ${prog.examsFailed} Failed · ${prog.examsPending} Pending`;
-        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">⌄</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
+        const phaseLabel = prog.currentPhase !== null ? `Phase ${prog.currentPhase + 1} ??? Module ${prog.currentModule + 1} ??? Class ${prog.currentClass + 1}` : "Not started";
+        const examSummary = `${prog.examsPassed} Passed ?? ${prog.examsFailed} Failed ?? ${prog.examsPending} Pending`;
+        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">???</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
       }
       // Every tab-scoped container is reset here, before the active tab renders,
       // so components from a previous tab (capacity overview, waitlist, payment
       // exceptions, webinar attribution/points, the pending-payment alert, the
       // student filters) can never remain visible in another tab. This is the
-      // single place that owns tab isolation — no scattered per-branch resets.
+      // single place that owns tab isolation ??? no scattered per-branch resets.
       function resetTabScaffold() {
         $("capacityPanel").style.display = "none";
         $("signupGoal").innerHTML = "";
@@ -2230,67 +2193,39 @@
         if (f) f.style.display = "none";
         const cf = $("couponFilters");
         if (cf) cf.style.display = "none";
-        const af = $("appFilters");
-        if (af) af.hidden = true;
       }
       async function render() {
         resetTabScaffold();
         drawPending();
         if (tab === "applicants") {
-          const filterKey = applicantFilterKey;
-          const sortKey = applicantSortKey;
-          const allApps = activeApps().filter(match);
-          const a = allApps.filter((x) => appMatchesFilter(x, filterKey));
-          const counts = {};
-          for (const [key] of APP_FILTERS) counts[key] = allApps.filter((x) => appMatchesFilter(x, key)).length;
-
-          let sorted = a.slice();
-          if (sortKey === "newest") sorted.sort((m, n) => Date.parse(n.created_at || "") - Date.parse(m.created_at || ""));
-          else if (sortKey === "oldest") sorted.sort((m, n) => Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
-          else if (sortKey === "stage") sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
-          else sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
-
-          paintEnrollment();
-
-          const filterBar = $("appFilters");
-          filterBar.hidden = false;
-          filterBar.innerHTML =
-            '<div class="filter-group">' +
-              '<label class="field-label" for="applicantFilter">Filter</label>' +
-              '<select id="applicantFilter" class="field-select">' +
-              APP_FILTERS.map(([key, label]) =>
-                '<option value="' + key + '"' + (key === filterKey ? " selected" : "") + '>' + label + ' (' + counts[key] + ')</option>'
-              ).join("") +
-              '</select>' +
-            '</div>' +
-            '<div class="filter-group">' +
-              '<label class="field-label" for="applicantSort">Sort</label>' +
-              '<select id="applicantSort" class="field-select">' +
-              '<option value="action"' + (sortKey === "action" ? " selected" : "") + '>Priority (admin action first)</option>' +
-              '<option value="newest"' + (sortKey === "newest" ? " selected" : "") + '>Newest first</option>' +
-              '<option value="oldest"' + (sortKey === "oldest" ? " selected" : "") + '>Oldest first</option>' +
-              '<option value="stage"' + (sortKey === "stage" ? " selected" : "") + '>By stage</option>' +
-              '</select>' +
-            '</div>';
-          $("applicantFilter").onchange = (e) => { applicantFilterKey = e.target.value; render(); saveUiState(); };
-          $("applicantSort").onchange = (e) => { applicantSortKey = e.target.value; render(); saveUiState(); };
-
-          $("cards").innerHTML = sorted.length
-            ? sorted.map(appCard).join("")
-            : '<div class="empty">No applications in this view. Choose "All" to see every record.</div>';
+          const a = activeApps().filter(match);
+          stat([
+            [totalApplications(), "Applications", "Total applications"],
+            [
+              a.filter((x) => currentDecision(x) === "accepted" && String(x.payment_status || "not_requested").toLowerCase() !== "paid").length,
+              "Waiting for payment",
+            ],
+            [
+              a.filter((x) => String(x.payment_status || "").toLowerCase() === "paid" && !(String(x.status || "").toLowerCase() === "onboarded" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at)).length,
+              "Paid ??? Onboarding Pending",
+            ],
+            [
+              a.filter((x) => x.suspended_at).length,
+              "Suspended",
+            ],
+          ]);
+          $("cards").innerHTML = a.length
+            ? a.map(appCard).join("")
+            : '<div class="empty">No applications found.</div>';
           hydrateOpenApps();
           hydrateOpenNotes();
+          // Capacity overview, waitlist and payment exceptions live here, inside
+          // the Applicants workflow.
           $("capacityPanel").style.display = "block";
-          if (expandCapacityDetails) {
-            expandCapacityDetails = false;
-            const cd = $("capacityDetails");
-            const ct = $("capacityToggle");
-            if (cd) cd.hidden = false;
-            if (ct) ct.setAttribute("aria-expanded", "true");
-          }
           if (capacityDirty) { capacityDirty = false; renderCapacity(); }
           return;
-        }        if (tab === "students") {
+        }
+        if (tab === "students") {
           const s = students.filter(match);
           // Apply status filter
           const statusFilter = $("studentFilter") ? $("studentFilter").value : "all";
@@ -2345,7 +2280,7 @@
           const acquisitionPoints=visibleWeb.reduce((sum,x)=>sum+acquisitionWeight(x),0)+directApps.reduce((sum,a)=>sum+acquisitionWeightOf(a.payment_readiness),0),goal=400,pct=Math.min(100,Math.round((acquisitionPoints/goal)*100));
           const scoredWeights=[...visibleWeb.map(acquisitionWeight),...directApps.map(a=>acquisitionWeightOf(a.payment_readiness))];
           const paymentPlanCount=scoredWeights.filter(w=>w===8).length,fullPayCount=scoredWeights.filter(w=>w===15).length;
-          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${acquisitionPoints} / ${goal} points</b><div><span>Acquisition goal · ${visibleWeb.length} webinar signups · ${directApps.length} direct applications · ${paymentPlanCount} payment plan ×8 · ${fullPayCount} full pay ×15</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
+          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${acquisitionPoints} / ${goal} points</b><div><span>Acquisition goal ?? ${visibleWeb.length} webinar signups ?? ${directApps.length} direct applications ?? ${paymentPlanCount} payment plan ??8 ?? ${fullPayCount} full pay ??15</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
           const sourceFor=x=>window.AssistaraAttribution.resolve(x,{kind:"signup",links:acquisitionLinks,visits:acquisitionVisits,signups:web});
           const attrCounts={Tracked:0,Recovered:0,UTM:0,Direct:0,Untracked:0};
           visibleWeb.forEach((x)=>{const s=sourceFor(x);attrCounts[s.status]=(attrCounts[s.status]||0)+1});
@@ -2357,10 +2292,10 @@
             [totalApplications(), "Applications", "Total applications"],
             [visibleWeb.filter((x) => x.purchased).length, "Purchased"],
           ]);
-          $("signupGoal").innerHTML += `<div class="attrSummary">Attribution · Tracked ${attrCounts.Tracked} · Recovered ${attrCounts.Recovered}${attrCounts.UTM?" · UTM "+attrCounts.UTM:""}${attrCounts.Direct?" · Direct "+attrCounts.Direct:""} · Untracked ${attrCounts.Untracked}</div>`;
+          $("signupGoal").innerHTML += `<div class="attrSummary">Attribution ?? Tracked ${attrCounts.Tracked} ?? Recovered ${attrCounts.Recovered}${attrCounts.UTM?" ?? UTM "+attrCounts.UTM:""}${attrCounts.Direct?" ?? Direct "+attrCounts.Direct:""} ?? Untracked ${attrCounts.Untracked}</div>`;
           const w = visibleWeb.filter(match);
           $("cards").innerHTML = w.length
-            ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
+            ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>???</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"???")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"???"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
@@ -2381,7 +2316,7 @@
             .filter(match)
             .map(
               (x) =>
-                `<div class="card"><div class="name">${esc(x.company || x.name || "B2B lead")}</div><div class="sub">${esc(x.name)} · ${esc(x.email)}</div>${badge(x.status || "new")}</div>`,
+                `<div class="card"><div class="name">${esc(x.company || x.name || "B2B lead")}</div><div class="sub">${esc(x.name)} ?? ${esc(x.email)}</div>${badge(x.status || "new")}</div>`,
             )
             .join("") || '<div class="empty">No B2B leads.</div>';
       }
@@ -2454,8 +2389,8 @@
           const isCurrentPhase = prog.currentPhase === pi;
           html += '<div class="phaseBlock' + (isCurrentPhase ? ' open' : '') + '">';
           html += '<div class="phaseBlockHead" onclick="this.parentElement.classList.toggle(\'open\')">';
-          html += '<h5>Phase ' + (pi + 1) + ' — ' + esc(phase.title) + '</h5>';
-          html += '<span class="phasePct">' + phaseDone + ' / ' + phaseClasses + ' classes · ' + phasePct + '%</span>';
+          html += '<h5>Phase ' + (pi + 1) + ' ??? ' + esc(phase.title) + '</h5>';
+          html += '<span class="phasePct">' + phaseDone + ' / ' + phaseClasses + ' classes ?? ' + phasePct + '%</span>';
           html += '</div><div class="phaseBlockBody">';
           for (let mi = 0; mi < phase.modules.length; mi++) {
             const mod = phase.modules[mi];
@@ -2464,7 +2399,7 @@
             const isModComplete = modDone === modTotal;
             const isCurrentMod = isCurrentPhase && prog.currentModule === mi;
             const modStatus = isModComplete ? 'completed' : isCurrentMod ? 'current' : 'locked';
-            html += '<div class="moduleRow"><span class="moduleName">Module ' + (mi + 1) + ' — ' + esc(mod[0]) + '</span><span class="moduleStatus ' + modStatus + '">' + (isModComplete ? 'Completed' : isCurrentMod ? 'In Progress' : 'Locked') + '</span></div>';
+            html += '<div class="moduleRow"><span class="moduleName">Module ' + (mi + 1) + ' ??? ' + esc(mod[0]) + '</span><span class="moduleStatus ' + modStatus + '">' + (isModComplete ? 'Completed' : isCurrentMod ? 'In Progress' : 'Locked') + '</span></div>';
             if (isCurrentMod) {
               for (let ci = 0; ci < mod[1].length; ci++) {
                 const isDone = prog._completedSet && prog._completedSet.has(classKey(pi, mi, ci));
@@ -2502,7 +2437,7 @@
       /* ---------------------------------------------------------------- *
        * Coupons tab rendering
        * ---------------------------------------------------------------- */
-      const MONEY_PHP = (centavos) => '₱' + (centavos / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const MONEY_PHP = (centavos) => '???' + (centavos / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const COUPON_STATUS_BADGE = {
         active: { label: 'Active', class: 'active' },
         inactive: { label: 'Inactive', class: 'inactive' },
@@ -2529,9 +2464,9 @@
         return `<span class="badge ${info.class}">${info.label}</span>`;
       }
       function formatDateShort(iso) {
-        if (!iso) return '—';
+        if (!iso) return '???';
         const d = new Date(iso);
-        return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return isNaN(d.getTime()) ? '???' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       }
       function couponCard(c) {
         const preview = c.preview || {};
@@ -2570,8 +2505,8 @@
               <h3>Coupon Details</h3>
               <dl class="recordFacts">
                 <div><dt>Code</dt><dd><code>${esc(c.code)}</code></dd></div>
-                <div><dt>Campaign</dt><dd>${esc(c.campaign_name || '—')}</dd></div>
-                <div><dt>Description</dt><dd>${esc(c.description || '—')}</dd></div>
+                <div><dt>Campaign</dt><dd>${esc(c.campaign_name || '???')}</dd></div>
+                <div><dt>Description</dt><dd>${esc(c.description || '???')}</dd></div>
                 <div><dt>Discount Type</dt><dd>${discountTypeLabel}</dd></div>
                 <div><dt>Discount Value</dt><dd>${discountValueDisplay}</dd></div>
                 <div><dt>Regular Price</dt><dd>${MONEY_PHP(preview.regular_price_php || 690000)}</dd></div>
@@ -2697,7 +2632,7 @@
         if (!["fixed_php", "percentage", "target_price"].includes(type)) { alert("Invalid discount type"); return; }
         let value = 0;
         if (type === "fixed_php" || type === "target_price") {
-          const input = prompt("Discount value in PHP (e.g., 3000 for ₱3,000):", "3000");
+          const input = prompt("Discount value in PHP (e.g., 3000 for ???3,000):", "3000");
           value = Math.round(parseFloat(input) * 100);
         } else {
           const input = prompt("Discount percentage (e.g., 25 for 25%):", "25");
@@ -2823,7 +2758,7 @@
         window.toggleApp(expander.dataset.toggleApp);
       });
       window.approvePay = async (id) => {
-        if (!confirm("Approve this GCash payment as ₱6,900 PAID?")) return;
+        if (!confirm("Approve this GCash payment as ???6,900 PAID?")) return;
         try {
           const d = await req("approve", { id }, PAY);
           toast(
@@ -2963,7 +2898,7 @@
           const ov = await req("overview", { cohort_code: "founding-2026" }, CAP);
           if (!ov.ok) { $("capacityGrid").innerHTML = '<div class="error">Failed to load capacity overview.</div>'; return; }
           const { capacity, paid, reservations, stale_pending, available, waitlist_waiting, waitlist_invited, exceptions_open, cohort_name, is_open } = ov;
-          const money = n => 'â‚±' + Number(n).toLocaleString('en-PH');
+          const money = n => '???????' + Number(n).toLocaleString('en-PH');
           const badge = (txt, cls) => '<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:'+cls+'">'+txt+'</span>';
           const grid = `
             <div class="capacityCard"><div class="capacityLabel">Cohort</div><div class="capacityValue">${esc(cohort_name||'Founding Cohort')}</div></div>
@@ -3043,7 +2978,7 @@
        *
        * Surfaces real, authorized data from the endpoints the existing
        * tools already use. Every widget is independently guarded: when a
-       * source is unavailable it says so — a number is never invented and
+       * source is unavailable it says so ??? a number is never invented and
        * an unavailable metric is never silently rendered as zero.
        * Async data is cached briefly so moving in and out of the
        * Overview never fires redundant requests.
@@ -3062,7 +2997,7 @@
           /diagnostic/i.test(String(x.source || ""))
         );
       }
-      // Canonical known payment amount — mirrors Finance. A paid record
+      // Canonical known payment amount ??? mirrors Finance. A paid record
       // without a known amount counts as paid but contributes no revenue
       // (the amount is genuinely unknown, never assumed).
       function ovKnownRevenue(x) {
@@ -3073,14 +3008,14 @@
       }
       function ovMoney(php) {
         if (php == null || !Number.isFinite(Number(php))) return "Unavailable";
-        return "₱" + Number(php).toLocaleString("en-PH", { maximumFractionDigits: 0 });
+        return "???" + Number(php).toLocaleString("en-PH", { maximumFractionDigits: 0 });
       }
       function ovNum(n) {
         if (n == null || !Number.isFinite(Number(n))) return "Unavailable";
         return Number(n).toLocaleString("en-PH");
       }
       // Materialise recurring expenses into the current month and sum
-      // their PHP value — the same occurrence model Finance uses.
+      // their PHP value ??? the same occurrence model Finance uses.
       function ovExpensesThisMonth(expenses) {
         const now = new Date();
         const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
@@ -3144,13 +3079,16 @@
         if (!view || $("ovKpis")) return;
         view.innerHTML =
           '<div class="grid-stats-4" id="ovKpis"></div>' +
-          '<section id="enrollmentSection" aria-label="Academy Enrollment" style="margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:var(--radius-lg);background:#fff;"></section>' +
           '<div class="grid" style="margin-top:16px">' +
-          '<div class="col-7"><div class="card" id="ovUrgent"></div></div>' +
+          '<div class="col-8"><div class="card" id="ovFunnel"></div></div>' +
+          '<div class="col-4"><div class="card" id="ovUrgent"></div></div>' +
+          "</div>" +
+          '<div class="grid" style="margin-top:16px">' +
+          '<div class="col-7"><div class="card" id="ovActivity"></div></div>' +
           '<div class="col-5"><div class="card" id="ovEmail"></div></div>' +
           "</div>" +
           '<div class="grid" style="margin-top:16px">' +
-          '<div class="col-12"><div class="card" id="ovActivity"></div></div>' +
+          '<div class="col-12"><div class="card" id="ovFinance"></div></div>' +
           "</div>";
       };
       let overviewCache = null;
@@ -3195,28 +3133,59 @@
             !/diagnostic/i.test(String(x.name || "")) &&
             !/diagnostic/i.test(String(x.source || "")),
         );
+        const attended = visibleSignups.filter((x) => x.attended).length;
+        const purchased = visibleSignups.filter((x) => x.purchased).length;
         const pendingPayments = actionablePending().length;
 
-        // KPI cards — clickable through the existing router (no reload, no new router).
-        const kpiCards = [
-          { v: ovNum(totalApplications()), l: "Applications", s: ovNum(reviewable.length) + " awaiting review", a: "applicants" },
-          { v: data.capacity ? ovNum(data.capacity.paid) : ovSkeleton(), l: "Paid enrollments", s: data.capacity ? ovNum(data.capacity.available) + " of " + ovNum(data.capacity.capacity) + " seats available" : "", a: "applicants" },
-          { v: ovMoney(revenue), l: "Gross revenue", s: paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded", a: "finance" },
-          { v: data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : ovSkeleton(), l: "Expenses this month", s: data.expenses ? ovNum(ovExpensesThisMonth(data.expenses).occurrences) + " occurrences across " + ovNum(ovExpensesThisMonth(data.expenses).schedules) + " schedules" : "", a: "finance" },
+        $("ovKpis").innerHTML =
+          ovStat(ovNum(totalApplications()), "Applications", ovNum(reviewable.length) + " awaiting review") +
+          ovStat(
+            data.capacity ? ovNum(data.capacity.paid) : ovSkeleton(),
+            "Paid enrollments",
+            data.capacity
+              ? ovNum(data.capacity.available) + " of " + ovNum(data.capacity.capacity) + " seats available"
+              : "",
+          ) +
+          ovStat(
+            ovMoney(revenue),
+            "Gross revenue",
+            paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded",
+          ) +
+          ovStat(
+            data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : ovSkeleton(),
+            "Expenses this month",
+            data.expenses
+              ? ovNum(ovExpensesThisMonth(data.expenses).occurrences) + " occurrences across " + ovNum(ovExpensesThisMonth(data.expenses).schedules) + " schedules"
+              : "",
+          );
+
+        // Acquisition funnel.
+        const funnelSteps = [
+          ["Tracked visits", acquisitionVisits.length],
+          ["Webinar signups", visibleSignups.length],
+          ["Applications", totalApplications()],
+          ["Attended", attended],
+          ["Purchased", purchased],
         ];
-        $("ovKpis").innerHTML = kpiCards.map((c) =>
-          '<a class="stat-card card-interactive" href="#" data-action="' + c.a + '"' +
-          ' onclick="event.preventDefault();' + (c.a === "finance" ? "openTool('finance')" : "showDashboard({push:true});tab='" + c.a + "';render();saveUiState();") + '">' +
-            '<div class="stat-value">' + c.v + '</div>' +
-            '<div class="stat-label">' + c.l + '</div>' +
-            '<div class="stat-sublabel">' + c.s + '</div>' +
-          '</a>'
-        ).join("");
+        const funnelMax = Math.max(1, ...funnelSteps.map((s) => s[1]));
+        $("ovFunnel").innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Acquisition funnel</h3><div class="card-subtitle">Last recorded visits, signups, applications and purchases.</div></div></div>' +
+          '<div class="chart-funnel">' +
+          funnelSteps
+            .map(
+              ([label, value]) =>
+                '<div class="chart-funnel-step"><div class="chart-funnel-label">' +
+                label +
+                '</div><div class="chart-funnel-bar" style="width:' +
+                Math.max(2, Math.round((value / funnelMax) * 100)) +
+                '%"></div><div class="chart-funnel-value">' +
+                ovNum(value) +
+                "</div></div>",
+            )
+            .join("") +
+          "</div>";
 
-        // Visit tracking belongs in Acquisition Tracker; not shown in Overview.
-        $("ovFunnel").innerHTML = "";
-
-        // Recent activity — derived from real timestamps only.
+        // Recent activity ??? derived from real timestamps only.
         const events = [];
         paidApps.forEach((x) => {
           const t = Date.parse(x.paid_at || "");
@@ -3224,7 +3193,7 @@
             events.push({
               t,
               label: "Payment received",
-              detail: esc(x.name || "Applicant") + " · " + ovMoney(ovKnownRevenue(x)),
+              detail: esc(x.name || "Applicant") + " ?? " + ovMoney(ovKnownRevenue(x)),
               kind: "success",
             });
         });
@@ -3269,7 +3238,7 @@
               "</ul>"
             : '<div class="empty">No recent activity.</div>');
 
-        // Urgent actions — only real, actionable items.
+        // Urgent actions ??? only real, actionable items.
         const urgent = [];
         if (pendingPayments)
           urgent.push([pendingPayments, "GCash payment" + (pendingPayments === 1 ? "" : "s") + " awaiting verification", "/admin"]);
@@ -3332,41 +3301,35 @@
               ) +
               ovStat(ovNum(totals.failed), "Failed", "Definitive provider rejection") +
               "</div>" +
-              '<p class="sub" style="margin-top:12px">Acceptance is exact. Delivery, bounces, opens and clicks are measured only from provider webhook events — where webhooks are not configured the metric is shown as Unavailable rather than zero.</p>');
+              '<p class="sub" style="margin-top:12px">Acceptance is exact. Delivery, bounces, opens and clicks are measured only from provider webhook events ??? where webhooks are not configured the metric is shown as Unavailable rather than zero.</p>');
 
         // Finance summary.
-        // Finance is reached from the KPI cards above; no separate summary block.
-        $("ovFinance").innerHTML = "";
+        $("ovFinance").innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Finance summary</h3><div class="card-subtitle">Gross revenue (all paid, known amounts) and current-month expenses.</div></div><div class="page-actions"><a class="btn btn-ghost" href="/admin/finance">Open Finance</a></div></div>' +
+          '<div class="grid-stats-3">' +
+          ovStat(ovMoney(revenue), "Gross revenue", paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded") +
+          ovStat(
+            data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : "Unavailable",
+            "Expenses this month",
+            data.expenses
+              ? ovNum(ovExpensesThisMonth(data.expenses).schedules) + " recurring / one-time schedules"
+              : "",
+          ) +
+          ovStat(
+            data.expenses && revenue != null
+              ? ovMoney(revenue - ovExpensesThisMonth(data.expenses).total)
+              : "Unavailable",
+            "Net (revenue ??? expenses)",
+            "Known revenue minus current-month expenses",
+          ) +
+          "</div>" +
+          (data.expensesError
+            ? '<div class="alert alert-warning" style="margin-top:12px"><div><div class="alert-title">Expenses unavailable</div><p>' +
+              esc(data.expensesError.message || "Could not load expenses.") +
+              "</p></div></div>"
+            : "");
       }
-      function paintEnrollment() {
-  const sec = document.getElementById('enrollmentSection');
-  if (!sec) return;
-  const apps = activeApps();
-  const stage = (x) => appStage(x);
-  const counts = { new:0, invited:0, needs:0, awaiting:0, paid:0, enrolled:0 };
-  apps.forEach(x => {
-    const s = stage(x);
-    if (s === 'New') counts.new++;
-    else if (s === 'Invited') counts.invited++;
-    else if (s === 'Needs Action') counts.needs++;
-    else if (s === 'Awaiting Payment') counts.awaiting++;
-    else if (s === 'Paid') counts.paid++;
-    else if (s === 'Enrolled') counts.enrolled++;
-  });
-  const cap = window.capacityPanel ? window.capacityPanel.capacity || 15 : 15;
-  const paid = counts.paid;
-  const pct = cap ? Math.round(paid/cap*100) : 0;
-  sec.innerHTML = `<div class="enrollmentTile"><div class="tile-val">${counts.new}</div><div class="tile-label">New</div></div>
-<div class="enrollmentTile"><div class="tile-val">${counts.invited}</div><div class="tile-label">Invited</div></div>
-<div class="enrollmentTile"><div class="tile-val">${counts.needs}</div><div class="tile-label">Needs Action</div></div>
-<div class="enrollmentTile"><div class="tile-val">${counts.awaiting}</div><div class="tile-label">Awaiting Payment</div></div>
-<div class="enrollmentTile"><div class="tile-val">${counts.paid}</div><div class="tile-label">Paid</div></div>
-<div class="enrollmentTile"><div class="tile-val">${counts.enrolled}</div><div class="tile-label">Enrolled</div></div>
-<div style="margin-top:8px"><div style="font-family:var(--font-family);font-size:13px;color:var(--ink);">Available seats: <b>${Math.max(0, cap - counts.enrolled)}</b> / ${cap}</div><div id="seatProgress" style="margin-top:4px;height:6px;background:var(--line);border-radius:3px;overflow:hidden;"><div id="seatProgressFill" style="width:${pct}%;height:100%;background:var(--success);transition:width .3s ease;"></div></div></div>`;
-paintEnrollment();
-}
-
-async function renderOverview(force = false) {
+      async function renderOverview(force = false) {
         const view = $("overviewView");
         if (!view) return;
         ovEnsureSkeleton();
@@ -3394,7 +3357,7 @@ async function renderOverview(force = false) {
           overviewLoading = false;
         }
       }
-      // Sidebar navigation — dashboard tabs, mounted tools and the
+      // Sidebar navigation ??? dashboard tabs, mounted tools and the
       // Overview all live in the one shell.
       document
         .querySelectorAll(".sidebar-nav .nav-item[data-tab]")
@@ -3463,7 +3426,7 @@ async function renderOverview(force = false) {
         if (btn.disabled) return;
         errorEl.textContent = "";
         btn.disabled = true;
-        btn.textContent = "Signing in…";
+        btn.textContent = "Signing in???";
         try {
           const d = await req(
             "login",
@@ -3566,7 +3529,7 @@ async function renderOverview(force = false) {
             esc(x.business_name || x.contact_name) +
             '</div><div class="sub">' +
             esc(x.contact_name) +
-            " · " +
+            " ?? " +
             esc(x.contact_email) +
             "<br>" +
             esc(
@@ -3689,7 +3652,7 @@ async function renderOverview(force = false) {
         };
       })();
       /* ================================================================
-       * Admin application shell — client-side tool navigation.
+       * Admin application shell ??? client-side tool navigation.
        *
        * Finance, Acquisition Tracker and Live Events already exist as
        * standalone pages. Instead of navigating to them (a full document load
@@ -3816,7 +3779,7 @@ async function renderOverview(force = false) {
           .replace(/(^|[}{,])\s*(?:html|body)\s*(?=[,{])/g, "$1 :host ");
       }
 
-      /* Shared brand tokens — injected into every tool shadow root AFTER the
+      /* Shared brand tokens ??? injected into every tool shadow root AFTER the
          tool's own CSS so the canonical Assistara tokens win. This is the
          first step of the migration: every tool immediately uses the real
          brand tokens (colors, font, spacing) without touching its own
@@ -3863,7 +3826,7 @@ async function renderOverview(force = false) {
           '\n.shell>.head+*{margin-top:0}' +
           '\n.shell{width:100%!important;margin:0!important;padding-top:0!important}';
         shadow.appendChild(style);
-        // Shared brand tokens — after the tool CSS so they win.
+        // Shared brand tokens ??? after the tool CSS so they win.
         const tokens = document.createElement("style");
         tokens.textContent = await loadSharedTokens();
         shadow.appendChild(tokens);
