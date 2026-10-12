@@ -41,18 +41,18 @@
         color: var(--ink);
         font-family: "Manrope", sans-serif;
       }
-      /* App shell ??? sidebar + full-width workspace (see admin-*.css) */
+      /* App shell — sidebar + full-width workspace (see admin-*.css) */
       .shell {
         width: 100%;
       }
-      /* Sidebar visibility ??? hidden until a session exists */
+      /* Sidebar visibility — hidden until a session exists */
       #sidebar {
         display: none;
       }
       html[data-admin-session="1"] #sidebar {
         display: flex;
       }
-      /* Workspace chrome ??? hidden until a session exists */
+      /* Workspace chrome — hidden until a session exists */
       #workspaceTop,
       #pageHeader {
         display: none;
@@ -1167,23 +1167,30 @@
           </select>
         </div>
         <div id="signupGoal"></div><div id="stats" class="grid-stats-4"></div>
+        <div id="appFilters" class="filterBar" hidden></div>
         <div id="capacityPanel" style="display:none">
           <div class="capacity-section">
-            <h3>Cohort Capacity</h3>
-            <div class="sub" style="margin:-6px 0 10px">15-seat founding cohort ??? seat enforcement, waitlist and payment exceptions for applicants.</div>
-            <div class="capacity-grid" id="capacityGrid"></div>
-          </div>
-          <div class="capacity-section">
-            <h3>Priority Waitlist</h3>
-            <div id="waitlistTable"></div>
-            <button id="inviteNextBtn" class="btn" disabled>Invite Next Eligible</button>
-          </div>
-          <div class="capacity-section">
-            <h3>Payment Exceptions (Overflow / Blocked)</h3>
-            <div id="exceptionsTable"></div>
+            <button class="capacityToggle" id="capacityToggle" type="button" aria-expanded="false">
+              <span class="capacityToggleTitle">Capacity details</span>
+              <span class="capacityToggleSub">Seat enforcement, waitlist and payment exceptions</span>
+              <span class="capacityToggleChevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="enrollmentIndicators" id="capacityIndicators"></div>
+            <div id="capacityDetails" hidden>
+              <div class="capacity-grid" id="capacityGrid"></div>
+              <div class="capacityDetailGroup">
+                <h3>Priority Waitlist</h3>
+                <div id="waitlistTable"></div>
+                <button id="inviteNextBtn" class="btn" disabled>Invite Next Eligible</button>
+              </div>
+              <div class="capacityDetailGroup">
+                <h3>Payment Exceptions</h3>
+                <div id="exceptionsTable"></div>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="cards" class="grid-cards"></div>
+        <div id="cards"></div>
         </div>
         </div>
       </section>
@@ -1258,12 +1265,16 @@
         acquisitionVisits = [],
         studentProgress = [],
         coupons = [],
-        tab = "applicants";
+        tab = "applicants",
+        applicantFilterKey = "all",
+        applicantSortKey = "action";
       // Cohort capacity now lives inside the Applicants view; it is (re)loaded
       // when the Applicants tab is entered, not on every render/keystroke.
       let capacityDirty = true;
+      let capacityOverview = null;
+      let expandCapacityDetails = false;
       /* ---------------------------------------------------------------- *
-       * Admin UI state ??? persisted per browser tab so moving to a tool
+       * Admin UI state — persisted per browser tab so moving to a tool
        * (Finance / Acquisition / Live Events) and returning via Back
        * or the in-app link restores the exact screen: selected tab, search,
        * student filters, expanded cards and scroll position.
@@ -1277,7 +1288,7 @@
       let agentView = "dashboard";
       const viewScroll = { dashboard: 0 };
       /* ---------------------------------------------------------------- *
-       * Sidebar ??? collapse state (persisted) and mobile drawer.
+       * Sidebar — collapse state (persisted) and mobile drawer.
        * ---------------------------------------------------------------- */
       const SIDEBAR_KEY = "assistara_admin_sidebar";
       function readSidebarCollapsed() {
@@ -1314,7 +1325,7 @@
         $("menuToggle").setAttribute("aria-expanded", "false");
       }
       /* ---------------------------------------------------------------- *
-       * Page chrome ??? shared header (breadcrumbs, title, subtitle) and
+       * Page chrome — shared header (breadcrumbs, title, subtitle) and
        * the contextual search box. Dashboard tabs keep the search because
        * it filters records; the Overview, Cohorts and mounted tools do
        * not use it, so it is hidden there.
@@ -1323,7 +1334,7 @@
         overview: {
           crumb: [["Overview", "Dashboard"]],
           title: "Dashboard",
-          sub: "Business command center ??? applications, enrollment, revenue, acquisition and urgent actions.",
+          sub: "Business command center — applications, enrollment, revenue, acquisition and urgent actions.",
           search: false,
         },
         applicants: {
@@ -1380,9 +1391,9 @@
           sub: "Livestream status, YouTube stream, chat and presentation.",
         },
         email: {
-          crumb: [],
-          title: "",
-          sub: "",
+          crumb: [["Marketing", "Email Command Center"]],
+          title: "Email Command Center",
+          sub: "Delivery, campaigns, recipients, providers and live activity.",
         },
       };
       function renderBreadcrumbs(crumb) {
@@ -1414,6 +1425,8 @@
             studentSort: $("studentSort") ? $("studentSort").value : "",
             couponFilter: $("couponFilter") ? $("couponFilter").value : "",
             couponSort: $("couponSort") ? $("couponSort").value : "",
+            applicantFilter: applicantFilterKey,
+            applicantSort: applicantSortKey,
             openApps: [...openApps],
             openStudents: [...openStudents],
             openCoupons: [...openCoupons],
@@ -1434,6 +1447,8 @@
         if ($("studentSort") && typeof s.studentSort === "string") $("studentSort").value = s.studentSort;
         if ($("couponFilter") && typeof s.couponFilter === "string") $("couponFilter").value = s.couponFilter;
         if ($("couponSort") && typeof s.couponSort === "string") $("couponSort").value = s.couponSort;
+        if (APP_FILTERS.some(([key]) => key === s.applicantFilter)) applicantFilterKey = s.applicantFilter;
+        if (["action", "newest", "oldest", "stage"].includes(s.applicantSort)) applicantSortKey = s.applicantSort;
         if (Array.isArray(s.openApps)) s.openApps.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openApps.add(String(id)); });
         if (Array.isArray(s.openStudents)) s.openStudents.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openStudents.add(String(id)); });
         if (Array.isArray(s.openCoupons)) s.openCoupons.forEach((id) => { if (SAFE_APP_ID.test(String(id))) openCoupons.add(String(id)); });
@@ -1580,6 +1595,16 @@
         if (decision === "declined") return badge("declined");
         return badge(applicationState(x));
       }
+      function goApplicants(filterKey, options = {}) {
+        tab = "applicants";
+        showDashboard({ push: true });
+        if ($("search")) $("search").value = "";
+        applicantFilterKey = APP_FILTERS.some(([key]) => key === filterKey) ? filterKey : "all";
+        expandCapacityDetails = !!options.capacity;
+        capacityDirty = true;
+        render();
+        saveUiState();
+      }
       function stat(a) {
         $("stats").innerHTML = a
           .map(
@@ -1592,16 +1617,24 @@
         return !q || JSON.stringify(x).toLowerCase().includes(q);
       }
       function activeApps() {
-        // Keep the full application record visible through the end of its
-        // lifecycle; completed and declined records are not reviewable, but
-        // remain useful records and have their actions guarded separately.
-        // Defense-in-depth: also filter out fully enrolled students on the frontend.
-        return apps.filter((x) => !(x.status === "onboarded" && x.payment_status === "paid" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at));
+        // Keep every persisted application visible through its whole lifecycle.
+        // The API separates enrolled application records into `students`; merge
+        // them back here so Applications can show the complete lifecycle while
+        // the Students tab can still present its learner-focused view.
+        const records = [...apps, ...students];
+        const seen = new Set();
+        return records.filter((record) => {
+          if (!record || typeof record !== "object") return false;
+          const key = String(record.id || record.application_id || record.email || "");
+          if (key && seen.has(key)) return false;
+          if (key) seen.add(key);
+          return true;
+        });
       }
       // ONE canonical definition of "total applications". Every counter that
       // reports an application total reads this, so the Applications tab and the
-      // Webinar Signups tab can never drift apart again. Enrolled students are
-      // listed separately on the Students tab. Not search-filtered: it is a
+      // Webinar Signups tab can never drift apart again. Enrolled records remain
+      // visible here and also appear in the Students tab. Not search-filtered: it is a
       // total, and a total that changes while typing in the search box is not a
       // total.
       function totalApplications() {
@@ -1621,25 +1654,25 @@
       function paymentRow(x) {
         const f = x.gcash_followup_status || "";
         let status = "Payment pending",
-          buttons = `<button class="success" onclick="approvePay('${x.id}')">??? Approve payment</button>`;
+          buttons = `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>`;
         if (!f)
-          buttons += `<button class="danger" onclick="rejectPay('${x.id}')">??? Could not verify</button>`;
+          buttons += `<button class="danger" onclick="rejectPay('${x.id}')">✕ Could not verify</button>`;
         else if (f === "screenshot_requested") {
           status = "Screenshot requested";
           buttons += `<button onclick="noResponsePay('${x.id}')">No response</button>`;
         }
-        return `<div class="payment"><div><b>${esc(x.name)}</b><div class="sub">GCash ?? ???6,900 ?? Ref: <strong>${esc(x.gcash_reference || "Not provided")}</strong><br><strong>Status: ${esc(status)}</strong>${x.gcash_submitted_at ? "<br>" + new Date(x.gcash_submitted_at).toLocaleString() : ""}</div></div><div class="actions">${buttons}</div></div>`;
+        return `<div class="payment"><div><b>${esc(x.name)}</b><div class="sub">GCash · ₱6,900 · Ref: <strong>${esc(x.gcash_reference || "Not provided")}</strong><br><strong>Status: ${esc(status)}</strong>${x.gcash_submitted_at ? "<br>" + new Date(x.gcash_submitted_at).toLocaleString() : ""}</div></div><div class="actions">${buttons}</div></div>`;
       }
       function drawPending() {
         const p = actionablePending();
         const navCount = $("navAppCount");
         if (navCount) {
           navCount.hidden = !p.length;
-          navCount.textContent = p.length ? "???? " + p.length : "";
+          navCount.textContent = p.length ? "🔔 " + p.length : "";
         }
         $("pendingBox").innerHTML =
           p.length && tab === "applicants"
-            ? `<div class="alert"><h2>???? PAYMENT PENDING VERIFICATION (${p.length})</h2><div class="sub">Only payments that still need an action appear here. After the final no-response follow-up, the record is archived below as Unverified payment.</div>${p.map(paymentRow).join("")}</div>`
+            ? `<div class="alert"><h2>🔔 PAYMENT PENDING VERIFICATION (${p.length})</h2><div class="sub">Only payments that still need an action appear here. After the final no-response follow-up, the record is archived below as Unverified payment.</div>${p.map(paymentRow).join("")}</div>`
             : "";
       }
       function humanizeKey(key) {
@@ -1664,7 +1697,7 @@
           return value
             .map(item => answerText(field, item))
             .filter(Boolean)
-            .join(" ??? ");
+            .join(" • ");
         }
         if (typeof value === "object") {
           return Object.entries(value)
@@ -1690,7 +1723,7 @@
       }
       function paintAnswers(box, record) {
         if (!record) {
-          box.innerHTML = '<p class="answerNote">Loading application answers???</p>';
+          box.innerHTML = '<p class="answerNote">Loading application answers…</p>';
           return;
         }
         if (record.error) {
@@ -1756,7 +1789,7 @@
         if (trigger) {
           trigger.setAttribute("aria-expanded", open ? "true" : "false");
           trigger.setAttribute("aria-label", `${open ? "Collapse" : "Expand"} applicant record`);
-          trigger.textContent = open ? "???" : "???";
+          trigger.textContent = open ? "⌃" : "⌄";
         }
         if (open) {
           openApps.add(key);
@@ -1877,7 +1910,10 @@
       // a real acquisition-link visit always wins, UTMs are only a fallback, and
       // Untracked is shown only when nothing reliable exists anywhere.
       function applicationSource(x) {
-        const r = window.AssistaraAttribution.resolve(x, {
+        if (!window.AssistaraAttribution || typeof window.AssistaraAttribution.resolve !== "function") {
+          return { label: "Untracked", token: "untracked", detail: null };
+        }
+        const r = window.AssistaraAttribution.resolve(x || {}, {
           kind: "application",
           links: acquisitionLinks,
           visits: acquisitionVisits,
@@ -1901,54 +1937,153 @@
         return `<div class="attrDetail">${rows.map(([k, v]) => `<div class="attrRow"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>`;
       }
       function appCard(x) {
+        x = x && typeof x === "object" ? x : {};
         const key = x.id === null || x.id === undefined ? "" : String(x.id);
         const expandable = SAFE_APP_ID.test(key);
         const open = expandable && openApps.has(key);
-        const submitted = x.created_at ? `<div class="sub appSubmitted">Applied ${esc(formatDate(x.created_at))}</div>` : "";
+        const submitted = x.created_at ? "Applied " + esc(formatDate(x.created_at)) : "";
         const source = applicationSource(x);
-        return `<div class="card applicationCard${open ? " open" : ""}" id="app-${esc(key)}">
-          <div class="applicationCardHead">
-            <div class="applicationIdentity">
-              <div class="name">${esc(x.name || "No name")}</div>
-              <div class="sub">${esc(x.email || "")}</div>
-              ${submitted}
-            </div>
-            <div class="applicationHeadRight">
-              <div class="badges">${stateBadges(x)}</div>
-              ${expandable ? `<button class="expandArrow" type="button" data-toggle-app="${esc(key)}" aria-label="${open ? "Collapse" : "Expand"} applicant record" aria-controls="app-panel-${esc(key)}" aria-expanded="${open ? "true" : "false"}">${open ? "???" : "???"}</button>` : ""}
-            </div>
-          </div>
-          <div class="actions applicationActions">${applicationActions(x)}</div>
-          ${expandable ? `<div class="appPanel${open ? " open" : ""}" id="app-panel-${esc(key)}">
-            <section class="recordSection">
-              <h3>ACQUISITION SOURCE</h3>
-              <p class="accountState"><b>${esc(source.label)}</b></p>
-              ${attributionDetailHTML(source.detail)}
-            </section>
-            <section class="recordSection">
-              <h3>APPLICATION ANSWERS</h3>
-              <div class="answersPanel" id="answers-${esc(key)}"></div>
-            </section>
-            <section class="recordSection">
-              <h3>INTERNAL NOTES</h3>
-              <div class="notesEditor" id="notes-${esc(key)}"></div>
-            </section>
-            <section class="recordSection">
-              <h3>PAYMENT &amp; ENROLLMENT</h3>
-              ${paymentEnrollmentInfo(x)}
-            </section>
-            <section class="recordSection">
-              <h3>ACADEMY ACCOUNT</h3>
-              <p class="accountState">${esc(academyAccountLabel(x))}</p>
-            </section>
-            <section class="recordSection recordActivity">
-              <h3>ACTIVITY</h3>
-              ${activityTimeline(x)}
-            </section>
-          </div>` : ""}
-        </div>`;
+
+        const decision = currentDecision(x);
+        const status = String(x.status || "").toLowerCase();
+        const payment = String(x.payment_status || "not_requested").toLowerCase();
+        const emailInfo = appAcceptanceEmail(x);
+        const isGcashPending = x.payment_method === "gcash" && payment === "pending" && !["followup_sent", "no_response"].includes(x.gcash_followup_status || "");
+        const isActiveLearner = status === "onboarded" && payment === "paid" && !!x.onboarding_completed_at && !!x.auth_user_id && !x.suspended_at;
+
+        let stage = "—", stageClass = "", nextAction = "—", actionClass = "";
+        const isDeclined = decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected";
+        const isSuspended = !!x.suspended_at;
+        const isAcceptedUnpaid = decision === "accepted" && payment !== "paid";
+        const isPaymentPending = payment === "pending";
+        const isPaidOnboarding = payment === "paid" && !isActiveLearner;
+
+        if (!decision && ["new", "reviewing"].includes(status) && ["", "none", "not_requested"].includes(payment) && !x.auth_user_id && !x.onboarding_completed_at && !x.suspended_at) {
+          stage = "New"; stageClass = "stage-new";
+          nextAction = "Admin: Review application"; actionClass = "action-admin";
+        } else if (isDeclined) {
+          stage = "Declined"; stageClass = "stage-declined";
+          nextAction = "Closed"; actionClass = "action-closed";
+        } else if (isSuspended) {
+          stage = "Suspended"; stageClass = "stage-suspended";
+          nextAction = "Account suspended"; actionClass = "action-admin";
+        } else if (isPaymentPending) {
+          stage = "Payment Pending"; stageClass = "stage-payment-pending";
+          nextAction = isGcashPending ? "Admin: Verify GCash payment" : "Applicant: Complete payment";
+          actionClass = isGcashPending ? "action-admin" : "action-applicant";
+        } else if (isAcceptedUnpaid) {
+          stage = "Accepted — Awaiting Payment"; stageClass = "stage-awaiting-payment";
+          nextAction = "Applicant: Complete payment";
+          actionClass = "action-applicant";
+          if (!emailInfo.delivered) { nextAction = "Admin: Resolve email delivery"; actionClass = "action-admin"; }
+        } else if (isPaidOnboarding) {
+          stage = "Paid — Onboarding Pending"; stageClass = "stage-onboarding";
+          const needsApplicant = !!x.auth_user_id && !x.onboarding_completed_at;
+          nextAction = needsApplicant ? "Applicant: Complete onboarding" : "Admin: Resend onboarding link";
+          actionClass = needsApplicant ? "action-applicant" : "action-admin";
+        } else if (isActiveLearner) {
+          stage = "Enrolled"; stageClass = "stage-enrolled";
+          nextAction = "No action needed"; actionClass = "action-none";
+        }
+
+        let emailBadge = "";
+        if (emailInfo.attempted) {
+          emailBadge = emailInfo.delivered ? '<span class="badge badge-success">Email sent</span>' : '<span class="badge badge-danger">Email failed</span>';
+        }
+
+        const chevron = expandable ? '<button class="expandArrow" type="button" data-toggle-app="' + esc(key) + '" aria-label="' + (open ? "Collapse" : "Expand") + ' applicant record" aria-controls="app-panel-' + esc(key) + '" aria-expanded="' + (open ? "true" : "false") + '">' + (open ? "⌃" : "⌄") + '</button>' : "";
+
+        const panel = expandable ? '<div class="applicantPanel' + (open ? " open" : "") + '" id="app-panel-' + esc(key) + '">' +
+          '<section class="recordSection"><h3>ACQUISITION SOURCE</h3><p class="accountState"><b>' + esc(source.label) + '</b></p>' + attributionDetailHTML(source.detail) + '</section>' +
+          '<section class="recordSection"><h3>APPLICATION ANSWERS</h3><div class="answersPanel" id="answers-' + esc(key) + '"></div></section>' +
+          '<section class="recordSection"><h3>INTERNAL NOTES</h3><div class="notesEditor" id="notes-' + esc(key) + '"></div></section>' +
+          '<section class="recordSection"><h3>PAYMENT & ENROLLMENT</h3>' + paymentEnrollmentInfo(x) + '</section>' +
+          '<section class="recordSection"><h3>ACADEMY ACCOUNT</h3><p class="accountState">' + esc(academyAccountLabel(x)) + '</p></section>' +
+          '<section class="recordSection recordActivity"><h3>ACTIVITY</h3>' + activityTimeline(x) + '</section>' +
+        '</div>' : "";
+
+        return '<div class="applicantRow' + (open ? " open" : "") + '" id="app-' + esc(key) + '">' +
+          '<div class="applicantRowMain">' +
+            '<div class="applicantIdentity">' +
+              '<div class="applicantName">' + esc(x.name || "No name") + '</div>' +
+              '<div class="applicantSub">' + esc(x.email || "") + ' · ' + esc(submitted) + '</div>' +
+            '</div>' +
+            '<div class="applicantStage ' + stageClass + '">' + esc(stage) + '</div>' +
+            '<div class="applicantNextAction ' + actionClass + '">' +
+              '<span class="actionLabel">' + esc(nextAction) + '</span>' + emailBadge +
+            '</div>' +
+            chevron +
+          '</div>' +
+          '<div class="applicantActions">' + applicationActions(x) + '</div>' +
+          panel +
+        '</div>';
       }
+      function appStage(x) {
+        x = x && typeof x === "object" ? x : {};
+        const decision = currentDecision(x);
+        const status = String(x.status || "").trim().toLowerCase();
+        const payment = String(x.payment_status || "not_requested").trim().toLowerCase();
+        const enrolled = status === "onboarded" && payment === "paid" && !!x.onboarding_completed_at && !!x.auth_user_id && !x.suspended_at;
+        if (x.suspended_at) return "suspended";
+        if (decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected") return "closed";
+        if (enrolled) return "enrolled";
+        if (payment === "paid") return "onboarding";
+        if (payment === "pending") return "payment_pending";
+        if (decision === "accepted") return "awaiting_payment";
+        return "new";
+      }
+      // Acceptance invitation outcome from the activity log. Payment state is never read here.
+      function appAcceptanceEmail(x) {
+        const activity = Array.isArray(x && x.activity) ? x.activity : [];
+        const attempts = activity.filter((event) =>
+          event && event.action === "decision_email_sent" &&
+          event.details && String(event.details.decision || "").toLowerCase() === "accepted"
+        );
+        const latest = attempts[0] || null;
+        return {
+          issued: currentDecision(x) === "accepted",
+          attempted: !!latest,
+          delivered: !!latest && latest.details.email_sent !== false,
+        };
+      }
+      function appNeedsAdmin(x) {
+        const stage = appStage(x);
+        if (stage === "new" || stage === "payment_pending") return true;
+        if (stage === "awaiting_payment") {
+          if (!appAcceptanceEmail(x).delivered) return true;
+          return x.payment_method === "gcash" && !["followup_sent", "no_response"].includes(x.gcash_followup_status || "");
+        }
+        if (stage === "onboarding") return !x.auth_user_id;
+        return false;
+      }
+      function appPriority(x) {
+        if (appNeedsAdmin(x)) return 0;
+        const stage = appStage(x);
+        if (stage === "closed" || stage === "suspended") return 3;
+        if (stage === "enrolled") return 2;
+        return 1;
+      }
+      function appMatchesFilter(x, key) {
+        const stage = appStage(x);
+        if (key === "needs_action") return appNeedsAdmin(x);
+        if (key === "new") return stage === "new";
+        if (key === "awaiting_payment") return ["awaiting_payment", "payment_pending"].includes(stage);
+        if (key === "paid") return stage === "onboarding";
+        if (key === "enrolled") return stage === "enrolled";
+        if (key === "closed") return ["closed", "suspended"].includes(stage);
+        return true;
+      }
+      const APP_FILTERS = [
+        ["needs_action", "Needs My Action"],
+        ["new", "New"],
+        ["awaiting_payment", "Invited / Awaiting Payment"],
+        ["paid", "Paid / Onboarding"],
+        ["enrolled", "Enrolled"],
+        ["all", "All"],
+        ["closed", "Closed"],
+      ];
       function currentDecision(x) {
+        x = x && typeof x === "object" ? x : {};
         const decision = String(x.decision || "").trim().toLowerCase();
         if (decision === "accepted" || decision === "declined") return decision;
         const status = String(x.status || "").trim().toLowerCase();
@@ -1968,10 +2103,10 @@
         if (decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected") return `<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Permanently delete</button>`;
         if (x.suspended_at || isActiveLearner) return "";
         if (decision === "accepted" && payment !== "paid") {
-          return `<button onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">??? Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">??? Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
+          return `<button onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
         if (payment === "pending") {
-          return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">??? Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">??? Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
+          return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
         }
         if (payment === "paid") return `<button class="success" onclick="onboard('${esc(x.id)}')">Resend account-setup link</button>${isTestRecord && !x.auth_user_id && !x.onboarding_completed_at ? `<button class="danger" onclick="deleteApplication('${esc(x.id)}',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete test record</button>` : ""}`;
         return "";
@@ -1981,14 +2116,14 @@
         const payment = String(x.payment_status || "not_requested").toLowerCase();
         const method = String(x.payment_method || "").toLowerCase();
         const readiness = String(x.payment_readiness || "");
-        const paymentField = answerSchema.find(field => field.field === "payment_readiness") || { options: { "Willing to invest in myself": "Yes, I???m willing to invest in myself.", "Need payment plan": "I???m ready to join, but I would need a payment plan." } };
+        const paymentField = answerSchema.find(field => field.field === "payment_readiness") || { options: { "Willing to invest in myself": "Yes, I’m willing to invest in myself.", "Need payment plan": "I’m ready to join, but I would need a payment plan." } };
         const preference = answerText(paymentField, readiness);
         const paymentLabels = { not_requested: "Not requested", pending: "Pending", paid: "Paid", failed: "Failed", refunded: "Refunded" };
         const methodLabels = { stripe: "Stripe", gcash: "GCash", paymongo_qrph: "QR Ph" };
         const rows = [
-          ["Decision", decision ? decision.charAt(0).toUpperCase() + decision.slice(1) : ["new", "reviewing"].includes(String(x.status || "").toLowerCase()) ? "Awaiting review" : "???"],
+          ["Decision", decision ? decision.charAt(0).toUpperCase() + decision.slice(1) : ["new", "reviewing"].includes(String(x.status || "").toLowerCase()) ? "Awaiting review" : "—"],
           ["Payment", paymentLabels[payment] || "Not requested"],
-          ["Payment method", methodLabels[method] || "???"],
+          ["Payment method", methodLabels[method] || "—"],
         ];
         if (preference) rows.push(["Payment preference", preference]);
         const planRequested = readiness === "Need payment plan" || /would need a payment plan/i.test(preference);
@@ -2006,7 +2141,7 @@
         const payment = String(x.payment_status || "not_requested").toLowerCase();
         if (x.suspended_at) return "SUSPENDED";
         if (status === "onboarded" && payment === "paid" && x.onboarding_completed_at && x.auth_user_id) return "ACTIVE LEARNER";
-        if (payment === "paid") return "PAID ??? ACCOUNT SETUP PENDING";
+        if (payment === "paid") return "PAID — ACCOUNT SETUP PENDING";
         if (payment === "pending") return "PAYMENT PENDING";
         if (currentDecision(x) === "accepted") return "WAITING FOR PAYMENT";
         return "NOT ELIGIBLE YET";
@@ -2037,7 +2172,7 @@
        * Mirrors the learner Academy's own curriculum structure and progress
        * rules exactly. The admin reads the SAME canonical tables
        * (academy_class_progress, academy_exam_attempts) that drive the
-       * learner dashboard ??? no parallel progress system.
+       * learner dashboard — no parallel progress system.
        * ---------------------------------------------------------------- */
       const CURRICULUM = [
         { n: "01", title: "Freelancing Foundations", modules: [
@@ -2176,15 +2311,15 @@
         const suspended = !!x.suspended_at;
         const prog = x._progress || { pct: 0, totalCompleted: 0, currentPhase: null, currentModule: null, currentClass: null, examsPassed: 0, examsFailed: 0, examsPending: 0, lastActivity: null };
         const statusBadge = suspended ? '<span class="badge suspended">Suspended</span>' : '<span class="badge active_account">Active</span>';
-        const phaseLabel = prog.currentPhase !== null ? `Phase ${prog.currentPhase + 1} ??? Module ${prog.currentModule + 1} ??? Class ${prog.currentClass + 1}` : "Not started";
-        const examSummary = `${prog.examsPassed} Passed ?? ${prog.examsFailed} Failed ?? ${prog.examsPending} Pending`;
-        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">???</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
+        const phaseLabel = prog.currentPhase !== null ? `Phase ${prog.currentPhase + 1} → Module ${prog.currentModule + 1} → Class ${prog.currentClass + 1}` : "Not started";
+        const examSummary = `${prog.examsPassed} Passed · ${prog.examsFailed} Failed · ${prog.examsPending} Pending`;
+        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">⌄</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
       }
       // Every tab-scoped container is reset here, before the active tab renders,
       // so components from a previous tab (capacity overview, waitlist, payment
       // exceptions, webinar attribution/points, the pending-payment alert, the
       // student filters) can never remain visible in another tab. This is the
-      // single place that owns tab isolation ??? no scattered per-branch resets.
+      // single place that owns tab isolation — no scattered per-branch resets.
       function resetTabScaffold() {
         $("capacityPanel").style.display = "none";
         $("signupGoal").innerHTML = "";
@@ -2193,39 +2328,67 @@
         if (f) f.style.display = "none";
         const cf = $("couponFilters");
         if (cf) cf.style.display = "none";
+        const af = $("appFilters");
+        if (af) af.hidden = true;
       }
       async function render() {
         resetTabScaffold();
         drawPending();
         if (tab === "applicants") {
-          const a = activeApps().filter(match);
-          stat([
-            [totalApplications(), "Applications", "Total applications"],
-            [
-              a.filter((x) => currentDecision(x) === "accepted" && String(x.payment_status || "not_requested").toLowerCase() !== "paid").length,
-              "Waiting for payment",
-            ],
-            [
-              a.filter((x) => String(x.payment_status || "").toLowerCase() === "paid" && !(String(x.status || "").toLowerCase() === "onboarded" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at)).length,
-              "Paid ??? Onboarding Pending",
-            ],
-            [
-              a.filter((x) => x.suspended_at).length,
-              "Suspended",
-            ],
-          ]);
-          $("cards").innerHTML = a.length
-            ? a.map(appCard).join("")
-            : '<div class="empty">No applications found.</div>';
+          const filterKey = applicantFilterKey;
+          const sortKey = applicantSortKey;
+          const allApps = activeApps().filter(match);
+          const a = allApps.filter((x) => appMatchesFilter(x, filterKey));
+          const counts = {};
+          for (const [key] of APP_FILTERS) counts[key] = allApps.filter((x) => appMatchesFilter(x, key)).length;
+
+          let sorted = a.slice();
+          if (sortKey === "newest") sorted.sort((m, n) => Date.parse(n.created_at || "") - Date.parse(m.created_at || ""));
+          else if (sortKey === "oldest") sorted.sort((m, n) => Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
+          else if (sortKey === "stage") sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
+          else sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
+
+          paintEnrollment();
+
+          const filterBar = $("appFilters");
+          filterBar.hidden = false;
+          filterBar.innerHTML =
+            '<div class="filter-group">' +
+              '<label class="field-label" for="applicantFilter">Filter</label>' +
+              '<select id="applicantFilter" class="field-select">' +
+              APP_FILTERS.map(([key, label]) =>
+                '<option value="' + key + '"' + (key === filterKey ? " selected" : "") + '>' + label + ' (' + counts[key] + ')</option>'
+              ).join("") +
+              '</select>' +
+            '</div>' +
+            '<div class="filter-group">' +
+              '<label class="field-label" for="applicantSort">Sort</label>' +
+              '<select id="applicantSort" class="field-select">' +
+              '<option value="action"' + (sortKey === "action" ? " selected" : "") + '>Priority (admin action first)</option>' +
+              '<option value="newest"' + (sortKey === "newest" ? " selected" : "") + '>Newest first</option>' +
+              '<option value="oldest"' + (sortKey === "oldest" ? " selected" : "") + '>Oldest first</option>' +
+              '<option value="stage"' + (sortKey === "stage" ? " selected" : "") + '>By stage</option>' +
+              '</select>' +
+            '</div>';
+          $("applicantFilter").onchange = (e) => { applicantFilterKey = e.target.value; render(); saveUiState(); };
+          $("applicantSort").onchange = (e) => { applicantSortKey = e.target.value; render(); saveUiState(); };
+
+          $("cards").innerHTML = sorted.length
+            ? sorted.map(appCard).join("")
+            : '<div class="empty">No applications in this view. Choose "All" to see every record.</div>';
           hydrateOpenApps();
           hydrateOpenNotes();
-          // Capacity overview, waitlist and payment exceptions live here, inside
-          // the Applicants workflow.
           $("capacityPanel").style.display = "block";
+          if (expandCapacityDetails) {
+            expandCapacityDetails = false;
+            const cd = $("capacityDetails");
+            const ct = $("capacityToggle");
+            if (cd) cd.hidden = false;
+            if (ct) ct.setAttribute("aria-expanded", "true");
+          }
           if (capacityDirty) { capacityDirty = false; renderCapacity(); }
           return;
-        }
-        if (tab === "students") {
+        }        if (tab === "students") {
           const s = students.filter(match);
           // Apply status filter
           const statusFilter = $("studentFilter") ? $("studentFilter").value : "all";
@@ -2280,7 +2443,7 @@
           const acquisitionPoints=visibleWeb.reduce((sum,x)=>sum+acquisitionWeight(x),0)+directApps.reduce((sum,a)=>sum+acquisitionWeightOf(a.payment_readiness),0),goal=400,pct=Math.min(100,Math.round((acquisitionPoints/goal)*100));
           const scoredWeights=[...visibleWeb.map(acquisitionWeight),...directApps.map(a=>acquisitionWeightOf(a.payment_readiness))];
           const paymentPlanCount=scoredWeights.filter(w=>w===8).length,fullPayCount=scoredWeights.filter(w=>w===15).length;
-          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${acquisitionPoints} / ${goal} points</b><div><span>Acquisition goal ?? ${visibleWeb.length} webinar signups ?? ${directApps.length} direct applications ?? ${paymentPlanCount} payment plan ??8 ?? ${fullPayCount} full pay ??15</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
+          $("signupGoal").innerHTML=`<div class="signupGoal"><div class="signupGoalTop"><div><b>${acquisitionPoints} / ${goal} points</b><div><span>Acquisition goal · ${visibleWeb.length} webinar signups · ${directApps.length} direct applications · ${paymentPlanCount} payment plan ×8 · ${fullPayCount} full pay ×15</span></div></div><b>${pct}%</b></div><div class="signupGoalTrack"><div class="signupGoalFill" style="width:${pct}%"></div></div></div>`;
           const sourceFor=x=>window.AssistaraAttribution.resolve(x,{kind:"signup",links:acquisitionLinks,visits:acquisitionVisits,signups:web});
           const attrCounts={Tracked:0,Recovered:0,UTM:0,Direct:0,Untracked:0};
           visibleWeb.forEach((x)=>{const s=sourceFor(x);attrCounts[s.status]=(attrCounts[s.status]||0)+1});
@@ -2292,10 +2455,10 @@
             [totalApplications(), "Applications", "Total applications"],
             [visibleWeb.filter((x) => x.purchased).length, "Purchased"],
           ]);
-          $("signupGoal").innerHTML += `<div class="attrSummary">Attribution ?? Tracked ${attrCounts.Tracked} ?? Recovered ${attrCounts.Recovered}${attrCounts.UTM?" ?? UTM "+attrCounts.UTM:""}${attrCounts.Direct?" ?? Direct "+attrCounts.Direct:""} ?? Untracked ${attrCounts.Untracked}</div>`;
+          $("signupGoal").innerHTML += `<div class="attrSummary">Attribution · Tracked ${attrCounts.Tracked} · Recovered ${attrCounts.Recovered}${attrCounts.UTM?" · UTM "+attrCounts.UTM:""}${attrCounts.Direct?" · Direct "+attrCounts.Direct:""} · Untracked ${attrCounts.Untracked}</div>`;
           const w = visibleWeb.filter(match);
           $("cards").innerHTML = w.length
-            ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>???</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"???")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"???"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
+            ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
@@ -2316,30 +2479,51 @@
             .filter(match)
             .map(
               (x) =>
-                `<div class="card"><div class="name">${esc(x.company || x.name || "B2B lead")}</div><div class="sub">${esc(x.name)} ?? ${esc(x.email)}</div>${badge(x.status || "new")}</div>`,
+                `<div class="card"><div class="name">${esc(x.company || x.name || "B2B lead")}</div><div class="sub">${esc(x.name)} · ${esc(x.email)}</div>${badge(x.status || "new")}</div>`,
             )
             .join("") || '<div class="empty">No B2B leads.</div>';
       }
       async function load() {
-        const d = await req("list");
-        apps = d.applications || [];
-        students = d.students || [];
-        web = d.signups || [];
-        b2b = d.b2b || [];
-        acquisitionVisits = d.visits || [];
-        try { const a=await fetch("https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-acquisition",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({action:"list"})}); const aj=await a.json(); acquisitionLinks=a.ok?(aj.links||[]):[] } catch { acquisitionLinks=[] }
+        let d;
         try {
-          accounts = (await req("list", {}, ACC)).accounts || [];
-        } catch {
-          accounts = [];
+          d = await req("list");
+        } catch (error) {
+          const retry = '<div class="alert alert-danger"><div><div class="alert-title">Admin records could not be loaded</div><p>' + esc(error.message || "Request failed") + '</p><button class="btn btn-sm" type="button" onclick="load()">Retry</button></div></div>';
+          if (agentView === "overview") $("overviewView").innerHTML = retry;
+          else $("cards").innerHTML = retry;
+          throw error;
         }
-        // Fetch student progress from the canonical progress tables
-        try {
-          const pData = await req("student-progress", {}, PROGRESS);
-          studentProgress = pData.students || [];
-        } catch {
-          studentProgress = [];
-        }
+        apps = Array.isArray(d.applications) ? d.applications.filter(Boolean) : [];
+        students = Array.isArray(d.students) ? d.students.filter(Boolean) : [];
+        web = Array.isArray(d.signups) ? d.signups.filter(Boolean) : [];
+        b2b = Array.isArray(d.b2b) ? d.b2b.filter(Boolean) : [];
+        acquisitionVisits = Array.isArray(d.visits) ? d.visits.filter(Boolean) : [];
+
+        // Paint the primary records immediately. Optional services must never
+        // block Applications or leave the page in a loading state.
+        await render();
+        if (agentView === "overview") renderOverview();
+
+        const acquisitionRequest = fetch(ACQUISITION, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ action: "list" }),
+        }).then(async (response) => {
+          const json = await response.json().catch(() => ({}));
+          if (!response.ok) throw Error(json.error || "Acquisition request failed");
+          return json.links || [];
+        });
+        const [acquisitionResult, accountResult, progressResult, couponResult] = await Promise.allSettled([
+          acquisitionRequest,
+          req("list", {}, ACC),
+          req("student-progress", {}, PROGRESS),
+          req("list", {}, COUPONS),
+        ]);
+        acquisitionLinks = acquisitionResult.status === "fulfilled" ? acquisitionResult.value : [];
+        accounts = accountResult.status === "fulfilled" && Array.isArray(accountResult.value.accounts) ? accountResult.value.accounts : [];
+        studentProgress = progressResult.status === "fulfilled" && Array.isArray(progressResult.value.students) ? progressResult.value.students : [];
+        coupons = couponResult.status === "fulfilled" && Array.isArray(couponResult.value.coupons) ? couponResult.value.coupons : [];
+
         // Attach progress to each student record
         const progressByUid = new Map();
         for (const sp of studentProgress) {
@@ -2349,15 +2533,8 @@
           const pe = progressByUid.get(s.auth_user_id);
           s._progress = computeStudentProgress(s, pe);
         }
-        // Fetch coupons
-        try {
-          const cData = await req("list", {}, COUPONS);
-          coupons = cData.coupons || [];
-        } catch {
-          coupons = [];
-        }
-        render();
-        if (agentView === "overview") renderOverview(true);
+        await render();
+        if (agentView === "overview") renderOverview();
       }
       window.toggleStudent = (id) => {
         const key = String(id);
@@ -2389,8 +2566,8 @@
           const isCurrentPhase = prog.currentPhase === pi;
           html += '<div class="phaseBlock' + (isCurrentPhase ? ' open' : '') + '">';
           html += '<div class="phaseBlockHead" onclick="this.parentElement.classList.toggle(\'open\')">';
-          html += '<h5>Phase ' + (pi + 1) + ' ??? ' + esc(phase.title) + '</h5>';
-          html += '<span class="phasePct">' + phaseDone + ' / ' + phaseClasses + ' classes ?? ' + phasePct + '%</span>';
+          html += '<h5>Phase ' + (pi + 1) + ' — ' + esc(phase.title) + '</h5>';
+          html += '<span class="phasePct">' + phaseDone + ' / ' + phaseClasses + ' classes · ' + phasePct + '%</span>';
           html += '</div><div class="phaseBlockBody">';
           for (let mi = 0; mi < phase.modules.length; mi++) {
             const mod = phase.modules[mi];
@@ -2399,7 +2576,7 @@
             const isModComplete = modDone === modTotal;
             const isCurrentMod = isCurrentPhase && prog.currentModule === mi;
             const modStatus = isModComplete ? 'completed' : isCurrentMod ? 'current' : 'locked';
-            html += '<div class="moduleRow"><span class="moduleName">Module ' + (mi + 1) + ' ??? ' + esc(mod[0]) + '</span><span class="moduleStatus ' + modStatus + '">' + (isModComplete ? 'Completed' : isCurrentMod ? 'In Progress' : 'Locked') + '</span></div>';
+            html += '<div class="moduleRow"><span class="moduleName">Module ' + (mi + 1) + ' — ' + esc(mod[0]) + '</span><span class="moduleStatus ' + modStatus + '">' + (isModComplete ? 'Completed' : isCurrentMod ? 'In Progress' : 'Locked') + '</span></div>';
             if (isCurrentMod) {
               for (let ci = 0; ci < mod[1].length; ci++) {
                 const isDone = prog._completedSet && prog._completedSet.has(classKey(pi, mi, ci));
@@ -2437,7 +2614,7 @@
       /* ---------------------------------------------------------------- *
        * Coupons tab rendering
        * ---------------------------------------------------------------- */
-      const MONEY_PHP = (centavos) => '???' + (centavos / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const MONEY_PHP = (centavos) => '₱' + (centavos / 100).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const COUPON_STATUS_BADGE = {
         active: { label: 'Active', class: 'active' },
         inactive: { label: 'Inactive', class: 'inactive' },
@@ -2464,9 +2641,9 @@
         return `<span class="badge ${info.class}">${info.label}</span>`;
       }
       function formatDateShort(iso) {
-        if (!iso) return '???';
+        if (!iso) return '—';
         const d = new Date(iso);
-        return isNaN(d.getTime()) ? '???' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       }
       function couponCard(c) {
         const preview = c.preview || {};
@@ -2505,8 +2682,8 @@
               <h3>Coupon Details</h3>
               <dl class="recordFacts">
                 <div><dt>Code</dt><dd><code>${esc(c.code)}</code></dd></div>
-                <div><dt>Campaign</dt><dd>${esc(c.campaign_name || '???')}</dd></div>
-                <div><dt>Description</dt><dd>${esc(c.description || '???')}</dd></div>
+                <div><dt>Campaign</dt><dd>${esc(c.campaign_name || '—')}</dd></div>
+                <div><dt>Description</dt><dd>${esc(c.description || '—')}</dd></div>
                 <div><dt>Discount Type</dt><dd>${discountTypeLabel}</dd></div>
                 <div><dt>Discount Value</dt><dd>${discountValueDisplay}</dd></div>
                 <div><dt>Regular Price</dt><dd>${MONEY_PHP(preview.regular_price_php || 690000)}</dd></div>
@@ -2632,7 +2809,7 @@
         if (!["fixed_php", "percentage", "target_price"].includes(type)) { alert("Invalid discount type"); return; }
         let value = 0;
         if (type === "fixed_php" || type === "target_price") {
-          const input = prompt("Discount value in PHP (e.g., 3000 for ???3,000):", "3000");
+          const input = prompt("Discount value in PHP (e.g., 3000 for ₱3,000):", "3000");
           value = Math.round(parseFloat(input) * 100);
         } else {
           const input = prompt("Discount percentage (e.g., 25 for 25%):", "25");
@@ -2758,7 +2935,7 @@
         window.toggleApp(expander.dataset.toggleApp);
       });
       window.approvePay = async (id) => {
-        if (!confirm("Approve this GCash payment as ???6,900 PAID?")) return;
+        if (!confirm("Approve this GCash payment as ₱6,900 PAID?")) return;
         try {
           const d = await req("approve", { id }, PAY);
           toast(
@@ -2892,13 +3069,73 @@
           await load();
         } catch (e) { alert(e.message); }
       };
+      function enrollmentTile(value, label, sub, filterKey) {
+        return '<a class="enrollmentTile" href="#" onclick="event.preventDefault();goApplicants(\'' + filterKey + '\')">' +
+          '<b>' + value + '</b><span>' + esc(label) + '</span>' +
+          (sub ? '<small>' + esc(sub) + '</small>' : "") + '</a>';
+      }
+      function paintEnrollment(cap, loading = false) {
+        const box = $("ovEnrollment");
+        if (!box) return;
+        const allApps = activeApps();
+        const accepted = allApps.filter((x) => appAcceptanceEmail(x).issued);
+        const delivered = accepted.filter((x) => appAcceptanceEmail(x).delivered);
+        const newCount = allApps.filter((x) => appStage(x) === "new").length;
+        const awaiting = allApps.filter((x) => ["awaiting_payment", "payment_pending"].includes(appStage(x))).length;
+        const onboarding = allApps.filter((x) => appStage(x) === "onboarding").length;
+        const enrolled = allApps.filter((x) => appStage(x) === "enrolled").length;
+        const needsAdmin = allApps.filter(appNeedsAdmin).length;
+        const available = cap ? ovNum(cap.available) : loading ? ovSkeleton() : "Unavailable";
+        const progress = cap && Number(cap.capacity) > 0
+          ? Math.max(0, Math.min(100, Math.round(((cap.paid || 0) / cap.capacity) * 100)))
+          : 0;
+        const indicators = [
+          [accepted.length - delivered.length, "invitation delivery issue", "needs_action"],
+          [actionablePending().length, "payment verification", "needs_action"],
+          [cap ? Number(cap.exceptions_open || 0) : 0, "payment exception", "all"],
+        ].filter(([n]) => n > 0);
+        box.innerHTML =
+          '<div class="card-header"><div><h3 class="card-title">Academy Enrollment</h3><div class="card-subtitle">Live application and cohort pipeline.</div></div></div>' +
+          '<div class="enrollmentMetrics">' +
+            enrollmentTile(ovNum(allApps.length), "Total Applications", "Every persisted record", "all") +
+            enrollmentTile(ovNum(newCount), "New / Unreviewed", "Awaiting a decision", "new") +
+            enrollmentTile(ovNum(accepted.length), "Invited / Accepted", delivered.length + " invitations delivered", "awaiting_payment") +
+            enrollmentTile(ovNum(needsAdmin), "Needs Admin Action", "Oldest action first", "needs_action") +
+            enrollmentTile(ovNum(awaiting), "Awaiting Payment", "Accepted, not confirmed paid", "awaiting_payment") +
+            enrollmentTile(ovNum(onboarding), "Paid / Confirmed", "Onboarding pending", "paid") +
+            enrollmentTile(ovNum(enrolled), "Enrolled", "Active learners", "enrolled") +
+            '<a class="enrollmentTile" id="enrollmentSeats" href="#" onclick="event.preventDefault();goApplicants(\'all\',{capacity:true})"><b>' + available + '</b><span>Available Seats</span><small>From cohort capacity</small></a>' +
+          '</div>' +
+          (cap ? '<div class="seatProgress"><div class="seatProgressLabel"><span>Confirmed paid seats</span><span>' + ovNum(cap.paid || 0) + ' / ' + ovNum(cap.capacity || 0) + '</span></div><div class="progress-track"><div class="progress-fill success" id="seatProgressFill" style="width:' + progress + '%"></div></div></div>' : '') +
+          '<div class="enrollmentIndicators" id="enrollmentIndicators">' + indicators.map(([n, label, filter]) => '<a class="enrollmentIndicator" href="#" onclick="event.preventDefault();goApplicants(\'' + filter + '\')">' + ovNum(n) + ' ' + esc(label) + (n === 1 ? '' : 's') + '</a>').join('') + '</div>' +
+          (!cap && !loading ? '<div class="alert alert-warning" style="margin-top:10px"><div><div class="alert-title">Capacity unavailable</div><p>Application counts are current; seat availability could not be loaded.</p><button class="btn btn-sm" type="button" onclick="renderOverview(true)">Retry</button></div></div>' : '') +
+          '<div class="enrollmentFootnote"><a href="#" onclick="event.preventDefault();showDashboard({push:true});tab=\'students\';render();saveUiState();">View enrolled learners in Students</a></div>';
+      }
+      function paintCapacityBits() {
+        const box = $("capacityIndicators");
+        if (!box) return;
+        const cap = capacityOverview;
+        if (!cap) {
+          box.innerHTML = '<span class="enrollmentIndicator">Capacity unavailable — open details to retry</span>';
+          return;
+        }
+        const items = [
+          [Number(cap.available || 0), "seat" + (Number(cap.available || 0) === 1 ? "" : "s") + " available"],
+          [Number(cap.waitlist_waiting || 0), "waiting"],
+          [Number(cap.exceptions_open || 0), "payment exception" + (Number(cap.exceptions_open || 0) === 1 ? "" : "s")],
+        ].filter(([n]) => n > 0);
+        box.innerHTML = items.map(([n, label]) => '<span class="enrollmentIndicator">' + ovNum(n) + ' ' + esc(label) + '</span>').join('');
+      }
       async function renderCapacity() {
         try {
           const CAP = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-academy-capacity";
           const ov = await req("overview", { cohort_code: "founding-2026" }, CAP);
           if (!ov.ok) { $("capacityGrid").innerHTML = '<div class="error">Failed to load capacity overview.</div>'; return; }
+          capacityOverview = ov;
+          paintCapacityBits();
+          if (agentView === "overview") paintEnrollment(capacityOverview);
           const { capacity, paid, reservations, stale_pending, available, waitlist_waiting, waitlist_invited, exceptions_open, cohort_name, is_open } = ov;
-          const money = n => '???????' + Number(n).toLocaleString('en-PH');
+          const money = n => 'â‚±' + Number(n).toLocaleString('en-PH');
           const badge = (txt, cls) => '<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:'+cls+'">'+txt+'</span>';
           const grid = `
             <div class="capacityCard"><div class="capacityLabel">Cohort</div><div class="capacityValue">${esc(cohort_name||'Founding Cohort')}</div></div>
@@ -2913,7 +3150,11 @@
             <div class="capacityCard"><div class="capacityLabel">Payment Exceptions (open)</div><div class="capacityValue" style="color:#982b2b;font-size:28px">${exceptions_open||0}</div></div>
           `;
           $("capacityGrid").innerHTML = grid;
-        } catch (e) { $("capacityGrid").innerHTML = '<div class="error">Error: '+esc(e.message)+'</div>'; }
+        } catch (e) {
+          capacityOverview = null;
+          paintCapacityBits();
+          $("capacityGrid").innerHTML = '<div class="error">Capacity could not be loaded. <button class="btn btn-sm" type="button" onclick="capacityDirty=true;renderCapacity()">Retry</button><div class="sub">'+esc(e.message)+'</div></div>';
+        }
         try {
           const CAP = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-academy-capacity";
           const wl = await req("waitlist", { cohort_code: "founding-2026" }, CAP);
@@ -2978,7 +3219,7 @@
        *
        * Surfaces real, authorized data from the endpoints the existing
        * tools already use. Every widget is independently guarded: when a
-       * source is unavailable it says so ??? a number is never invented and
+       * source is unavailable it says so — a number is never invented and
        * an unavailable metric is never silently rendered as zero.
        * Async data is cached briefly so moving in and out of the
        * Overview never fires redundant requests.
@@ -2997,7 +3238,7 @@
           /diagnostic/i.test(String(x.source || ""))
         );
       }
-      // Canonical known payment amount ??? mirrors Finance. A paid record
+      // Canonical known payment amount — mirrors Finance. A paid record
       // without a known amount counts as paid but contributes no revenue
       // (the amount is genuinely unknown, never assumed).
       function ovKnownRevenue(x) {
@@ -3008,14 +3249,14 @@
       }
       function ovMoney(php) {
         if (php == null || !Number.isFinite(Number(php))) return "Unavailable";
-        return "???" + Number(php).toLocaleString("en-PH", { maximumFractionDigits: 0 });
+        return "₱" + Number(php).toLocaleString("en-PH", { maximumFractionDigits: 0 });
       }
       function ovNum(n) {
         if (n == null || !Number.isFinite(Number(n))) return "Unavailable";
         return Number(n).toLocaleString("en-PH");
       }
       // Materialise recurring expenses into the current month and sum
-      // their PHP value ??? the same occurrence model Finance uses.
+      // their PHP value — the same occurrence model Finance uses.
       function ovExpensesThisMonth(expenses) {
         const now = new Date();
         const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
@@ -3079,16 +3320,9 @@
         if (!view || $("ovKpis")) return;
         view.innerHTML =
           '<div class="grid-stats-4" id="ovKpis"></div>' +
+          '<div class="enrollment" id="ovEnrollment" style="margin-top:16px"></div>' +
           '<div class="grid" style="margin-top:16px">' +
-          '<div class="col-8"><div class="card" id="ovFunnel"></div></div>' +
-          '<div class="col-4"><div class="card" id="ovUrgent"></div></div>' +
-          "</div>" +
-          '<div class="grid" style="margin-top:16px">' +
-          '<div class="col-7"><div class="card" id="ovActivity"></div></div>' +
           '<div class="col-5"><div class="card" id="ovEmail"></div></div>' +
-          "</div>" +
-          '<div class="grid" style="margin-top:16px">' +
-          '<div class="col-12"><div class="card" id="ovFinance"></div></div>' +
           "</div>";
       };
       let overviewCache = null;
@@ -3133,145 +3367,24 @@
             !/diagnostic/i.test(String(x.name || "")) &&
             !/diagnostic/i.test(String(x.source || "")),
         );
-        const attended = visibleSignups.filter((x) => x.attended).length;
-        const purchased = visibleSignups.filter((x) => x.purchased).length;
         const pendingPayments = actionablePending().length;
 
-        $("ovKpis").innerHTML =
-          ovStat(ovNum(totalApplications()), "Applications", ovNum(reviewable.length) + " awaiting review") +
-          ovStat(
-            data.capacity ? ovNum(data.capacity.paid) : ovSkeleton(),
-            "Paid enrollments",
-            data.capacity
-              ? ovNum(data.capacity.available) + " of " + ovNum(data.capacity.capacity) + " seats available"
-              : "",
-          ) +
-          ovStat(
-            ovMoney(revenue),
-            "Gross revenue",
-            paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded",
-          ) +
-          ovStat(
-            data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : ovSkeleton(),
-            "Expenses this month",
-            data.expenses
-              ? ovNum(ovExpensesThisMonth(data.expenses).occurrences) + " occurrences across " + ovNum(ovExpensesThisMonth(data.expenses).schedules) + " schedules"
-              : "",
-          );
-
-        // Acquisition funnel.
-        const funnelSteps = [
-          ["Tracked visits", acquisitionVisits.length],
-          ["Webinar signups", visibleSignups.length],
-          ["Applications", totalApplications()],
-          ["Attended", attended],
-          ["Purchased", purchased],
+        // KPI cards — clickable through the existing router (no reload, no new router).
+        const kpiCards = [
+          { v: ovNum(totalApplications()), l: "Applications", s: ovNum(reviewable.length) + " awaiting review", a: "applicants", f: "all" },
+          { v: data.capacity ? ovNum(data.capacity.paid) : data.capacityError ? "Unavailable" : ovSkeleton(), l: "Paid enrollments", s: data.capacity ? ovNum(data.capacity.available) + " of " + ovNum(data.capacity.capacity) + " seats available" : data.capacityError ? "Capacity service unavailable" : "", a: "applicants", f: "paid" },
+          { v: ovMoney(revenue), l: "Gross revenue", s: paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded", a: "finance" },
+          { v: data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : data.expensesError ? "Unavailable" : ovSkeleton(), l: "Expenses this month", s: data.expenses ? ovNum(ovExpensesThisMonth(data.expenses).occurrences) + " occurrences across " + ovNum(ovExpensesThisMonth(data.expenses).schedules) + " schedules" : data.expensesError ? "Finance service unavailable" : "", a: "finance" },
         ];
-        const funnelMax = Math.max(1, ...funnelSteps.map((s) => s[1]));
-        $("ovFunnel").innerHTML =
-          '<div class="card-header"><div><h3 class="card-title">Acquisition funnel</h3><div class="card-subtitle">Last recorded visits, signups, applications and purchases.</div></div></div>' +
-          '<div class="chart-funnel">' +
-          funnelSteps
-            .map(
-              ([label, value]) =>
-                '<div class="chart-funnel-step"><div class="chart-funnel-label">' +
-                label +
-                '</div><div class="chart-funnel-bar" style="width:' +
-                Math.max(2, Math.round((value / funnelMax) * 100)) +
-                '%"></div><div class="chart-funnel-value">' +
-                ovNum(value) +
-                "</div></div>",
-            )
-            .join("") +
-          "</div>";
-
-        // Recent activity ??? derived from real timestamps only.
-        const events = [];
-        paidApps.forEach((x) => {
-          const t = Date.parse(x.paid_at || "");
-          if (Number.isFinite(t))
-            events.push({
-              t,
-              label: "Payment received",
-              detail: esc(x.name || "Applicant") + " ?? " + ovMoney(ovKnownRevenue(x)),
-              kind: "success",
-            });
-        });
-        activeApps().forEach((x) => {
-          const t = Date.parse(x.created_at || "");
-          if (Number.isFinite(t))
-            events.push({
-              t,
-              label: "New application",
-              detail: esc(x.name || "Applicant"),
-              kind: "info",
-            });
-        });
-        visibleSignups.forEach((x) => {
-          const t = Date.parse(x.created_at || "");
-          if (Number.isFinite(t))
-            events.push({
-              t,
-              label: "Webinar signup",
-              detail: esc(x.name || "Signup"),
-              kind: "info",
-            });
-        });
-        events.sort((a, b) => b.t - a.t);
-        const recent = events.slice(0, 8);
-        $("ovActivity").innerHTML =
-          '<div class="card-header"><div><h3 class="card-title">Recent activity</h3><div class="card-subtitle">Payments, applications and signups.</div></div></div>' +
-          (recent.length
-            ? '<ul class="activityTimeline">' +
-              recent
-                .map(
-                  (e) =>
-                    "<li><time>" +
-                    new Date(e.t).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) +
-                    "</time><div><strong>" +
-                    e.label +
-                    "</strong><div class=\"sub\">" +
-                    e.detail +
-                    "</div></div></li>",
-                )
-                .join("") +
-              "</ul>"
-            : '<div class="empty">No recent activity.</div>');
-
-        // Urgent actions ??? only real, actionable items.
-        const urgent = [];
-        if (pendingPayments)
-          urgent.push([pendingPayments, "GCash payment" + (pendingPayments === 1 ? "" : "s") + " awaiting verification", "/admin"]);
-        if (data.capacity) {
-          if (data.capacity.waitlist_waiting)
-            urgent.push([data.capacity.waitlist_waiting, "applicant" + (data.capacity.waitlist_waiting === 1 ? "" : "s") + " on the waitlist", "/admin"]);
-          if (data.capacity.exceptions_open)
-            urgent.push([data.capacity.exceptions_open, "open payment exception" + (data.capacity.exceptions_open === 1 ? "" : "s"), "/admin"]);
-        }
-        const emailFailures =
-          data.email && data.email.overview
-            ? Number(data.email.overview.totals?.failed || 0)
-            : 0;
-        if (emailFailures)
-          urgent.push([emailFailures, "failed email" + (emailFailures === 1 ? "" : "s") + " in the last 30 days", "/admin/email"]);
-        $("ovUrgent").innerHTML =
-          '<div class="card-header"><div><h3 class="card-title">Urgent actions</h3><div class="card-subtitle">Items that need an admin decision.</div></div></div>' +
-          (urgent.length
-            ? '<div class="grid" style="gap:10px">' +
-              urgent
-                .map(
-                  ([n, label, href]) =>
-                    '<a class="card card-interactive" href="' +
-                    href +
-                    '" style="display:flex;align-items:center;gap:12px"><span class="stat-value" style="color:var(--warning-dark)">' +
-                    ovNum(n) +
-                    '</span><span class="stat-label">' +
-                    label +
-                    "</span></a>",
-                )
-                .join("") +
-              "</div>"
-            : '<div class="empty">Nothing requires action right now.</div>');
+        $("ovKpis").innerHTML = kpiCards.map((c) =>
+          '<a class="stat-card card-interactive" href="#" data-action="' + c.a + '"' +
+          ' onclick="event.preventDefault();' + (c.a === "finance" ? "openTool('finance')" : "goApplicants('" + c.f + "')") + '">' +
+            '<div class="stat-value">' + c.v + '</div>' +
+            '<div class="stat-label">' + c.l + '</div>' +
+            '<div class="stat-sublabel">' + c.s + '</div>' +
+          '</a>'
+        ).join("");
+        paintEnrollment(data.capacity, !data.capacity && !data.capacityError);
 
         // Email delivery status (30 days).
         const ov = data.email ? data.email.overview : null;
@@ -3286,7 +3399,9 @@
           (data.emailError
             ? '<div class="alert alert-warning"><div><div class="alert-title">Delivery status unavailable</div><p>' +
               esc(data.emailError.message || "Could not load email status.") +
-              "</p></div></div>"
+              '</p><button class="btn btn-sm" type="button" onclick="renderOverview(true)">Retry</button></div></div>'
+            : !data.email
+            ? '<div class="skeleton skeleton-card" aria-label="Loading email delivery"></div>'
             : '<div class="grid-stats-2">' +
               ovStat(ovNum(totals.accepted), "Accepted (30d)", ovNum(totals.attempts) + " provider attempts") +
               ovStat(
@@ -3301,33 +3416,19 @@
               ) +
               ovStat(ovNum(totals.failed), "Failed", "Definitive provider rejection") +
               "</div>" +
-              '<p class="sub" style="margin-top:12px">Acceptance is exact. Delivery, bounces, opens and clicks are measured only from provider webhook events ??? where webhooks are not configured the metric is shown as Unavailable rather than zero.</p>');
+              '<p class="sub" style="margin-top:12px">Acceptance is exact. Delivery, bounces, opens and clicks are measured only from provider webhook events — where webhooks are not configured the metric is shown as Unavailable rather than zero.</p>');
 
-        // Finance summary.
-        $("ovFinance").innerHTML =
-          '<div class="card-header"><div><h3 class="card-title">Finance summary</h3><div class="card-subtitle">Gross revenue (all paid, known amounts) and current-month expenses.</div></div><div class="page-actions"><a class="btn btn-ghost" href="/admin/finance">Open Finance</a></div></div>' +
-          '<div class="grid-stats-3">' +
-          ovStat(ovMoney(revenue), "Gross revenue", paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded") +
-          ovStat(
-            data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : "Unavailable",
-            "Expenses this month",
-            data.expenses
-              ? ovNum(ovExpensesThisMonth(data.expenses).schedules) + " recurring / one-time schedules"
-              : "",
-          ) +
-          ovStat(
-            data.expenses && revenue != null
-              ? ovMoney(revenue - ovExpensesThisMonth(data.expenses).total)
-              : "Unavailable",
-            "Net (revenue ??? expenses)",
-            "Known revenue minus current-month expenses",
-          ) +
-          "</div>" +
-          (data.expensesError
-            ? '<div class="alert alert-warning" style="margin-top:12px"><div><div class="alert-title">Expenses unavailable</div><p>' +
-              esc(data.expensesError.message || "Could not load expenses.") +
-              "</p></div></div>"
-            : "");
+        // Finance is reached from the KPI cards above; no separate summary block.
+      }
+      function paintOverviewState(data) {
+        try {
+          paintOverview(data);
+          return true;
+        } catch (error) {
+          console.error("Overview render failed", error);
+          $("overviewView").innerHTML = '<div class="alert alert-danger"><div><div class="alert-title">Overview could not be rendered</div><p>' + esc(error.message || "Render failed") + '</p><button class="btn btn-sm" type="button" onclick="renderOverview(true)">Retry</button></div></div>';
+          return false;
+        }
       }
       async function renderOverview(force = false) {
         const view = $("overviewView");
@@ -3335,29 +3436,30 @@
         ovEnsureSkeleton();
         const now = Date.now();
         if (!force && overviewCache && now - overviewCache.at < OVERVIEW_TTL) {
-          paintOverview(overviewCache.data);
+          paintOverviewState(overviewCache.data);
           return;
         }
         // First paint: synchronous KPIs and funnel render immediately
         // from already-loaded data; async widgets paint as skeletons
         // and fill once their endpoints resolve.
         if (!overviewCache) {
-          paintOverview({ capacity: null, expenses: null, email: null });
+          paintOverviewState({ capacity: null, expenses: null, email: null });
         }
         if (overviewLoading) return;
         overviewLoading = true;
         try {
           const data = await fetchOverviewData();
           overviewCache = { at: Date.now(), data };
-          if (agentView === "overview") paintOverview(data);
-        } catch {
-          // Each widget already guards its own failure; a total
-          // failure here leaves the synchronous widgets intact.
+          if (agentView === "overview") paintOverviewState(data);
+        } catch (error) {
+          if (agentView === "overview") {
+            $("overviewView").innerHTML = '<div class="alert alert-danger"><div><div class="alert-title">Overview data could not be loaded</div><p>' + esc(error.message || "Request failed") + '</p><button class="btn btn-sm" type="button" onclick="renderOverview(true)">Retry</button></div></div>';
+          }
         } finally {
           overviewLoading = false;
         }
       }
-      // Sidebar navigation ??? dashboard tabs, mounted tools and the
+      // Sidebar navigation — dashboard tabs, mounted tools and the
       // Overview all live in the one shell.
       document
         .querySelectorAll(".sidebar-nav .nav-item[data-tab]")
@@ -3406,12 +3508,23 @@
         if (window.innerWidth >= 1024) closeMobileSidebar();
       });
       applySidebarState();
+      $("capacityToggle").onclick = () => {
+        const cd = $("capacityDetails");
+        const capacityToggle = $("capacityToggle");
+        const open = cd.hidden;
+        cd.hidden = !open;
+        capacityToggle.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open && capacityDirty) {
+          capacityDirty = false;
+          renderCapacity();
+        }
+      };
       $("search").oninput = () => { render(); saveUiState(); };
       // Student filter/sort listeners
       const studentFilter = $("studentFilter");
       if (studentFilter) studentFilter.onchange = () => { render(); saveUiState(); };
-      const studentSort = $("studentSort");
-      if (studentSort) studentSort.onchange = () => { render(); saveUiState(); };
+      const studentSortControl = $("studentSort");
+      if (studentSortControl) studentSortControl.onchange = () => { render(); saveUiState(); };
       // Coupon filter/sort listeners
       const couponFilter = $("couponFilter");
       if (couponFilter) couponFilter.onchange = () => { render(); saveUiState(); };
@@ -3426,7 +3539,7 @@
         if (btn.disabled) return;
         errorEl.textContent = "";
         btn.disabled = true;
-        btn.textContent = "Signing in???";
+        btn.textContent = "Signing in…";
         try {
           const d = await req(
             "login",
@@ -3529,7 +3642,7 @@
             esc(x.business_name || x.contact_name) +
             '</div><div class="sub">' +
             esc(x.contact_name) +
-            " ?? " +
+            " · " +
             esc(x.contact_email) +
             "<br>" +
             esc(
@@ -3652,7 +3765,7 @@
         };
       })();
       /* ================================================================
-       * Admin application shell ??? client-side tool navigation.
+       * Admin application shell — client-side tool navigation.
        *
        * Finance, Acquisition Tracker and Live Events already exist as
        * standalone pages. Instead of navigating to them (a full document load
@@ -3779,7 +3892,7 @@
           .replace(/(^|[}{,])\s*(?:html|body)\s*(?=[,{])/g, "$1 :host ");
       }
 
-      /* Shared brand tokens ??? injected into every tool shadow root AFTER the
+      /* Shared brand tokens — injected into every tool shadow root AFTER the
          tool's own CSS so the canonical Assistara tokens win. This is the
          first step of the migration: every tool immediately uses the real
          brand tokens (colors, font, spacing) without touching its own
@@ -3826,7 +3939,7 @@
           '\n.shell>.head+*{margin-top:0}' +
           '\n.shell{width:100%!important;margin:0!important;padding-top:0!important}';
         shadow.appendChild(style);
-        // Shared brand tokens ??? after the tool CSS so they win.
+        // Shared brand tokens — after the tool CSS so they win.
         const tokens = document.createElement("style");
         tokens.textContent = await loadSharedTokens();
         shadow.appendChild(tokens);
@@ -3997,6 +4110,8 @@
           await openTool(routeTool, { push: false });
         } else if (location.pathname === "/admin/overview") {
           showOverview({ push: false });
+        } else if (ui && ui.tab) {
+          showDashboard({ push: false });
         } else {
           showOverview({ push: false });
         }

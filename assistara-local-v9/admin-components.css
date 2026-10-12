@@ -1063,6 +1063,11 @@ textarea:focus-visible,
 .capacityToggleChevron { margin-left: auto; color: var(--muted); transition: transform var(--transition); }
 .capacityToggle[aria-expanded="true"] .capacityToggleChevron { transform: rotate(180deg); }
 
+#capacityDetails { margin-top: 14px; }
+#capacityDetails[hidden] { display: none; }
+.capacityDetailGroup { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.capacityDetailGroup h3 { margin: 0 0 10px; font: var(--text-h4); }
+
 @media (max-width: 900px) {
   .enrollmentMetrics { grid-template-columns: repeat(2, 1fr); }
 }
