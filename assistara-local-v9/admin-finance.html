@@ -824,6 +824,7 @@
         }
       }
     </style>
+    <script src="/assistara-currency.js"></script>
   </head>
   <body>
     <div class="shell">
@@ -929,13 +930,19 @@
         * Round each displayed transaction to cents, then sum those cents.
         * This preference never writes financial data.
        * ---------------------------------------------------------------- */
-      const DISPLAY_CURRENCIES = ["PHP", "USD", "EUR"];
-      const DISPLAY_KEY = "assistara_finance_display_currency";
-      const displayRates = { PHP: 1 }; // PHP per 1 unit of the display currency
-      const displayRateDate = new Date().toISOString().slice(0, 10);
-      let displayCurrency = (() => {
+      /* ONE shared currency preference with Dashboard (same localStorage key).
+       Invalid saved preferences — including AUD — reset to PHP. */
+    const DISPLAY_CURRENCIES = window.AssistaraCurrency ? window.AssistaraCurrency.DISP_CURS : ["PHP", "USD", "EUR"];
+    const DISPLAY_KEY = window.AssistaraCurrency ? window.AssistaraCurrency.DISP_KEY : "assistara_currency_display";
+    const displayRates = window.AssistaraCurrency ? window.AssistaraCurrency.dispRates : { PHP: 1 };
+    const displayRateDate = window.AssistaraCurrency ? window.AssistaraCurrency.dispRateDate : new Date().toISOString().slice(0, 10);
+    let displayCurrency = (() => {
         try {
           const saved = localStorage.getItem(DISPLAY_KEY);
+          if (saved && !DISPLAY_CURRENCIES.includes(saved)) {
+            localStorage.setItem(DISPLAY_KEY, "PHP");
+            return "PHP";
+          }
           return DISPLAY_CURRENCIES.includes(saved) ? saved : "PHP";
         } catch {
           return "PHP";
@@ -2137,6 +2144,7 @@
       async function ensureDisplayRate(cur) {
         if (!DISPLAY_CURRENCIES.includes(cur)) return false;
         if (cur === "PHP") return true;
+        if (window.AssistaraCurrency) return window.AssistaraCurrency.fetchRate(cur);
         if (Number.isFinite(displayRates[cur]) && displayRates[cur] > 0) return true;
         try {
           const res = await req(FIN, "fx", { currency: cur, date: displayRateDate });
@@ -2164,6 +2172,7 @@
           return;
         }
         displayCurrency = cur;
+        if (window.AssistaraCurrency) window.AssistaraCurrency.setDisplay(cur);
         try {
           localStorage.setItem(DISPLAY_KEY, cur);
         } catch {}
