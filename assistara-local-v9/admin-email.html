@@ -154,6 +154,7 @@ const state = { tab: "overview", provider: "", campaign: "", live: false, liveTi
 const TABS = [
   ["overview", "Overview"], ["reminder30", "30-Min Reminder"], ["campaigns", "Campaigns"], ["recipients", "Recipients"],
   ["providers", "Providers"], ["activity", "Live activity"], ["setup", "Setup Required"], ["acquisition", "Acquisition"],
+  ["template-studio", "Template Studio"],
 ];
 
 function rangeSelect() {
@@ -648,7 +649,14 @@ async function previewMessage(id) {
     }
   } catch (e) { $("modal-body").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; }
 }
-const RENDER = { overview: renderOverview, reminder30: renderReminder30, campaigns: renderCampaigns, recipients: renderRecipients, providers: () => renderProviders(false), activity: renderActivity, setup: renderSetup, acquisition: renderAcquisition };
+function renderTemplateStudio() {
+  // Embed the full Template Studio as a same-origin iframe. The iframe shares the
+  // Admin session (assistara_admin_token lives in localStorage/sessionStorage,
+  // accessible across same-origin frames) so no second login is required.
+  $("view").innerHTML = `<div id="ts-frame-wrap" style="margin:-16px -16px -22px"><iframe id="ts-frame" src="/admin-template-studio.html" style="width:100%;height:calc(100vh - 110px);border:0;border-radius:12px;display:block;background:#f4f3ef"></iframe></div>`;
+}
+
+const RENDER = { overview: renderOverview, reminder30: renderReminder30, campaigns: renderCampaigns, recipients: renderRecipients, providers: () => renderProviders(false), activity: renderActivity, setup: renderSetup, acquisition: renderAcquisition, "template-studio": renderTemplateStudio };;
 
 async function draw() {
   renderTabs();

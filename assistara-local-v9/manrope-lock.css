@@ -1,2 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
-html,body,body *,body *::before,body *::after,button,button *,button::before,button::after,a,a *,a::before,a::after,input,input::placeholder,textarea,textarea::placeholder,select,option,optgroup,label,h1,h2,h3,h4,h5,h6,p,span,div,nav,header,footer,main,section,article,[class],[id],[class]::before,[class]::after,[id]::before,[id]::after{font-family:"Manrope",sans-serif!important}
+/* Canonical Manrope lock – do NOT modify. Override via custom properties only. */
+/* Do NOT add any new @font-face or font-family rules here – every UI MUST use this lock. */
+/* This file is preloaded in all Admin pages – loaded by <link rel="preload" href="/manrope-lock.css" /> before page render. */
+
+:root {
+  --font-family: "Manrope", sans-serif;
+}
+
+/* IF ANY UI COMPONENT or inline style sets font-family to Arial, Inter, DM Sans, or system-ui, this test FAILS. */
+/* No exceptions – all text, buttons, inputs, tables, charts, modals, navigation and embedded tools must render in Manrope. */

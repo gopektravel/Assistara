@@ -644,11 +644,11 @@
     },
     {
       "src": "/admin/email",
-      "dest": "/admin-template-studio.html"
+      "dest": "/admin"
     },
     {
       "src": "/admin/email/",
-      "dest": "/admin-template-studio.html"
+      "dest": "/admin"
     },
     {
       "src": "/admin-finance.html",
