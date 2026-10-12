@@ -58,6 +58,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-template-studio.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "academy-apply.html",
       "use": "@vercel/static"
     },
@@ -640,11 +644,11 @@
     },
     {
       "src": "/admin/email",
-      "dest": "/admin.html"
+      "dest": "/admin-template-studio.html"
     },
     {
       "src": "/admin/email/",
-      "dest": "/admin.html"
+      "dest": "/admin-template-studio.html"
     },
     {
       "src": "/admin-finance.html",
