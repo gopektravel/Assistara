@@ -160,6 +160,15 @@ test("embedded tools use one shared page title and Live Events UI naming", () =>
   assert.match(admin, /title: "Live Events"/);
 });
 
+test("tool views keep 24px below the header without retaining hidden dashboard space", () => {
+  assert.match(admin, /#toolView \{\s*padding: 0 0 40px;\s*\}/);
+  assert.match(admin, /#dash:has\(\+ #toolView:not\(\[hidden\]\)\) \{\s*display: none;\s*\}/);
+  assert.match(admin, /\.shell>\.head\+\*\{margin-top:0\}/);
+  const layout = admin.slice(admin.indexOf("#toolView {"), admin.indexOf(".toolError"));
+  assert.doesNotMatch(layout, /margin-top:\s*-/i);
+  assert.doesNotMatch(layout, /transform:/i);
+});
+
 test("standalone admin pages validate the shared session and never flash login", () => {
   for (const p of ["admin-finance.html", "admin-acquisition.html", "admin-masterclass-event.html", "admin-email.html"]) {
     const s = read("assistara-local-v9/" + p);

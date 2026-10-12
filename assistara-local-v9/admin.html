@@ -151,9 +151,12 @@
          client-side Admin views so moving between tools never reloads the
          document and never re-runs the login/session boot. */
       #toolView {
-        padding: 4px 0 40px;
+        padding: 0 0 40px;
       }
       #toolView[hidden] {
+        display: none;
+      }
+      #dash:has(+ #toolView:not([hidden])) {
         display: none;
       }
       .toolError {
@@ -3821,6 +3824,7 @@
           scopeToolCss(src.css) +
           '\n:host,.toolRoot,.toolRoot *,button,input,select,textarea,table,canvas{font-family:"Manrope",sans-serif!important}' +
           '\n.top,.shell>.head{display:none!important}' +
+          '\n.shell>.head+*{margin-top:0}' +
           '\n.shell{width:100%!important;margin:0!important;padding-top:0!important}';
         shadow.appendChild(style);
         // Shared brand tokens — after the tool CSS so they win.
