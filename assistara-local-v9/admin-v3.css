@@ -1,14 +1,16 @@
 /* Assistara Admin V3 — shared visual system for the shell and every tool. */
 :root {
-  --admin-bg: #f5f4ef;
+  /* These resolve to the canonical admin-tokens.css palette so the shell and
+     the tool views cannot drift onto a second set of near-identical greys. */
+  --admin-bg: var(--cream, #f5f4ef);
   --admin-surface: #fff;
-  --admin-subtle: #faf9f5;
-  --admin-ink: #171717;
-  --admin-muted: #6e6961;
-  --admin-line: #e3e0d8;
-  --admin-line-strong: #cbc6bc;
-  --admin-yellow: #ffd51f;
-  --admin-green: #156b35;
+  --admin-subtle: var(--neutral-light);
+  --admin-ink: var(--ink, #151515);
+  --admin-muted: var(--muted, #66625f);
+  --admin-line: var(--neutral-border, #e3e0d8);
+  --admin-line-strong: var(--neutral-dark, #cbc6bc);
+  --admin-yellow: var(--yellow, #ffd51f);
+  --admin-green: var(--success-dark, #156b35);
   --admin-green-hover: #0f5429;
   --admin-radius: 14px;
   --admin-radius-sm: 10px;
@@ -64,7 +66,7 @@ body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !i
   background: #fffef9 !important; transform: translateY(-1px);
 }
 .stat-value { font-size: clamp(24px,2.2vw,32px); letter-spacing: -.035em; }
-.stat-label { margin-top: 7px; font-weight: 750; }
+.stat-label { margin-top: 7px; font-weight: 700; }
 .stat-sublabel { margin-top: 4px; line-height: 1.45; }
 
 /* Overview storytelling */
@@ -85,7 +87,7 @@ body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !i
 .overview-list { display: grid; gap: 8px; }
 .funnelStep {
   flex: 1 1 130px; min-width: 0; padding: 13px; border: 1px solid var(--admin-line);
-  border-radius: 11px; background: var(--admin-subtle); color: var(--admin-ink);
+  border-radius: var(--radius-md, 10px); background: var(--admin-subtle); color: var(--admin-ink);
   text-decoration: none; transition: border-color .15s ease, background .15s ease;
 }
 .funnelStep:hover { border-color: var(--admin-ink); background: #fff; }
@@ -94,7 +96,7 @@ body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !i
 .funnelArrow { align-self: center; color: #aaa59d; font-weight: 800; }
 .overviewRow, .activityRow {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  min-height: 40px; padding: 9px 11px; border: 1px solid #efede7; border-radius: 10px;
+  min-height: 40px; padding: 9px 11px; border: 1px solid var(--neutral-light); border-radius: 10px;
   background: var(--admin-subtle); color: var(--admin-ink); text-decoration: none;
 }
 a.overviewRow:hover, a.activityRow:hover { border-color: var(--admin-line-strong); background: #fff; }
@@ -118,14 +120,14 @@ a.overviewRow:hover, a.activityRow:hover { border-color: var(--admin-line-strong
 .ovSourceList { margin-top: 10px; display: grid; gap: 6px; }
 .ovSourceRow { display: grid; grid-template-columns: minmax(0,1fr) 90px 34px; align-items: center; gap: 8px; }
 .ovSourceName { font-size: 11px; color: var(--admin-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ovSourceBar { height: 6px; border-radius: 999px; background: #ece9e1; overflow: hidden; }
+.ovSourceBar { height: 6px; border-radius: 999px; background: var(--neutral-border); overflow: hidden; }
 .ovSourceBar i { display: block; height: 100%; border-radius: 999px; background: var(--admin-ink); }
 .ovSourceRow strong { font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Stacked application-stage bar (Applications page) */
 .pipelineBar {
   display: flex; height: 10px; border-radius: 999px; overflow: hidden;
-  background: #ece9e1; margin: 2px 0 10px;
+  background: var(--neutral-border); margin: 2px 0 10px;
 }
 .pipelineBar span { display: block; height: 100%; }
 .pipelineBar span + span { box-shadow: inset 1px 0 0 rgba(255,255,255,.55); }
@@ -137,13 +139,13 @@ a.overviewRow:hover, a.activityRow:hover { border-color: var(--admin-line-strong
 .activityRow strong { font-size: 12px; }
 .activityRow small, .activityRow time { color: var(--admin-muted); font-size: 10px; }
 #ovNeedsAttention { border-left: 4px solid #d97706 !important; }
-#ovEmail .grid-stats-2 { grid-template-columns: repeat(4,minmax(0,1fr)); }
-.progress-track { height: 6px; background: #ebe8df; }
+#ovEmail .grid-stats-2 { grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); }
+.progress-track { height: 6px; background: var(--neutral-border); }
 
 /* Controls */
 .btn, button.btn, .primary, button.main {
   min-height: 36px; padding: 8px 12px; border-radius: var(--admin-radius-sm) !important;
-  font-size: 12px; font-weight: 750; letter-spacing: .01em; box-shadow: none;
+  font-size: 12px; font-weight: 700; letter-spacing: .01em; box-shadow: none;
 }
 .btn-success { background: var(--admin-green) !important; color: #fff !important; border-color: var(--admin-green) !important; }
 .btn-success:hover { background: var(--admin-green-hover) !important; border-color: var(--admin-green-hover) !important; }
@@ -169,7 +171,7 @@ table th {
   font-size: 10px !important; font-weight: 800 !important; letter-spacing: .055em;
   text-transform: uppercase; white-space: nowrap;
 }
-table td { padding: 11px 12px !important; border-color: #efede7 !important; vertical-align: middle; }
+table td { padding: 11px 12px !important; border-color: var(--neutral-light) !important; vertical-align: middle; }
 table tbody tr:hover td { background: #fbfaf6; }
 
 /* Records and empty states */
@@ -179,7 +181,7 @@ table tbody tr:hover td { background: #fbfaf6; }
 }
 .applicationCard:hover, .studentCard:hover, .couponCard:hover, .b2bCard:hover { border-color: var(--admin-line-strong) !important; }
 .recordFacts > div, .capacityCard { background: var(--admin-subtle) !important; }
-.badge, .pill { font-weight: 750; letter-spacing: .02em; }
+.badge, .pill { font-weight: 700; letter-spacing: .02em; }
 .empty, .empty-state { padding: 30px 20px; background: #fff; }
 
 /* Mounted and standalone tools */
@@ -188,7 +190,7 @@ table tbody tr:hover td { background: #fbfaf6; }
 .toolRoot .top, .toolRoot .shell > .head { display: none !important; }
 .toolRoot .tool, .toolRoot .card { margin: 0 0 10px !important; }
 .toolRoot .stats, .toolRoot .cards, .toolRoot .grid.cards { gap: 12px !important; }
-.toolRoot .tabs { gap: 4px; padding: 4px; border: 1px solid var(--admin-line); border-radius: 11px; background: #ebe9e2; }
+.toolRoot .tabs { gap: 4px; padding: 4px; border: 1px solid var(--admin-line); border-radius: var(--radius-md, 10px); background: #ebe9e2; }
 .toolRoot .tab, .toolRoot .tabs button { border-radius: 8px !important; }
 .toolRoot .tab.active, .toolRoot .tabs button.active {
   background: #fff !important; color: var(--admin-ink) !important; box-shadow: 0 1px 4px rgba(20,20,18,.09);
@@ -198,14 +200,14 @@ table tbody tr:hover td { background: #fbfaf6; }
 .sidebar { box-shadow: 10px 0 30px rgba(0,0,0,.08); }
 .sidebar-header { min-height: 68px; }
 .nav-group-title { padding-top: 13px; color: #9f9a92; }
-.nav-item { margin: 1px 8px; width: calc(100% - 16px); padding: 9px 11px; border-left: 0; border-radius: 9px; }
+.nav-item { margin: 1px 8px; width: calc(100% - 16px); padding: 9px 11px; border-left: 0; border-radius: var(--radius-sm, 8px); }
 .nav-item.active { background: #30302d; box-shadow: inset 3px 0 0 var(--admin-yellow); }
 .sidebar-footer { background: #111; }
 .currencySwitch { width: 100%; }
 
 @media (max-width: 1180px) {
   .grid-stats-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  #ovEmail .grid-stats-2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #ovEmail .grid-stats-2 { grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr)); }
   .overview-span-8, .overview-span-7, .overview-span-6,
   .overview-span-5, .overview-span-4 { grid-column: span 6; }
 }
@@ -218,7 +220,7 @@ table tbody tr:hover td { background: #fbfaf6; }
   .content-toolbar .studentFilters, .content-toolbar .filterBar { width: 100%; margin-left: 0; }
   .content-toolbar select { flex: 1 1 150px; min-width: 0; }
   .grid-stats-4, .grid-stats-3, .grid-stats-2,
-  #ovEmail .grid-stats-2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #ovEmail .grid-stats-2 { grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr)); }
   .overview-grid { grid-template-columns: 1fr; }
   .overview-span-8, .overview-span-7, .overview-span-6,
   .overview-span-5, .overview-span-4, .overview-span-12 { grid-column: 1; }

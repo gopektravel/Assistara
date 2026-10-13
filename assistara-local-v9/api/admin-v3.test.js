@@ -427,3 +427,62 @@ test("the dashboard no longer carries a Needs attention panel", () => {
   assert.match(admin, /enrollmentIndicator/);
   assert.match(admin, /Needs Admin Action/);
 });
+
+test("the Admin uses one palette, not a parallel copy", () => {
+  // A computed-style audit found admin-v3.css carried its own --admin-*
+  // tokens sitting a few steps off the canonical admin-tokens.css palette:
+  // #171717 alongside --ink #151515 (270 vs 12 uses), #6e6961 alongside
+  // --muted #66625f, #e3e0d8 alongside --neutral-border. One role, two values.
+  // Every --admin-* colour must now resolve to a canonical token.
+  const tokenLine = (name) => {
+    const m = v3.match(new RegExp("--" + name + ":\\s*([^;]+);"));
+    return m ? m[1].trim() : null;
+  };
+  for (const name of ["admin-ink", "admin-muted", "admin-line", "admin-yellow", "admin-green"]) {
+    const value = tokenLine(name);
+    assert.ok(value, "missing --" + name);
+    assert.match(
+      value,
+      /^var\(--(ink|muted|neutral-border|yellow|success-dark)/,
+      "--" + name + " must resolve to a canonical token, got " + value,
+    );
+  }
+  // A fallback that reintroduces the old grey defeats the point.
+  assert.doesNotMatch(v3, /--admin-ink: #171717/);
+  assert.doesNotMatch(v3, /--admin-muted: #6e6961/);
+  assert.doesNotMatch(v3, /--admin-line: #e3e0d8/);
+
+  // Chart data marks must be the same black as body text.
+  assert.match(admin, /const ovInk = "#151515";/);
+  assert.doesNotMatch(admin, /#171717/);
+});
+
+test("the type scale and radii stay on their tokens", () => {
+  // The audit found off-scale declarations introduced by the chart work:
+  // font-weight 750, 9px and 17px type, and 9px/11px radii. None may return.
+  const sheets = { "admin-v3.css": v3, "admin-charts.css": charts, "admin-components.css": components };
+
+  for (const [name, body] of Object.entries(sheets)) {
+    assert.doesNotMatch(body, /font-weight:\s*750/, name + " has off-scale weight 750");
+    assert.doesNotMatch(body, /font-size:\s*9px/, name + " has 9px type, below the 10px floor");
+    assert.doesNotMatch(body, /font-size:\s*17px/, name + " has off-scale 17px type");
+    assert.doesNotMatch(body, /border-radius:\s*9px/, name + " has off-scale 9px radius");
+    assert.doesNotMatch(body, /border-radius:\s*11px/, name + " has off-scale 11px radius");
+  }
+
+  // One amber system: the enrollment indicator must not redeclare its own.
+  assert.doesNotMatch(components, /#7a5b00/);
+  assert.doesNotMatch(components, /#fff8e6/);
+  assert.doesNotMatch(components, /#e5d9b8/);
+  assert.match(components, /\.enrollmentIndicator \{[\s\S]*?background: var\(--warning-light\)/);
+});
+
+test("the dashboard gives its heaviest panel room to breathe", () => {
+  // Six email stat cards were forced into four ~80px columns inside a span-4
+  // panel, making it 685px tall — the tallest thing on the page, for a panel
+  // that is mostly whitespace. The track must size itself and the panel must
+  // be given the width its content needs.
+  assert.match(v3, /#ovEmail \.grid-stats-2 \{ grid-template-columns: repeat\(auto-fit, minmax\(min\(/);
+  assert.doesNotMatch(v3, /#ovEmail \.grid-stats-2 \{ grid-template-columns: repeat\(4,/);
+  assert.match(admin, /overview-span-12" id="ovEmail"/);
+});

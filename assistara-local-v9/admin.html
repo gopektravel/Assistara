@@ -72,7 +72,7 @@
       }
       .top {
         margin-top: 16px;
-        background: #171717;
+        background: #151515;
         color: #fff;
         border-radius: 18px;
         padding: 12px 15px;
@@ -278,7 +278,7 @@
         background: var(--yellow);
         border-color: #e6ba00;
       }
-      .signupGoal { background:#171717; color:#fff; border-radius:16px; padding:16px; margin:0 0 14px; }
+      .signupGoal { background:#151515; color:#fff; border-radius:16px; padding:16px; margin:0 0 14px; }
       .signupGoalTop { display:flex; justify-content:space-between; align-items:end; gap:12px; }
       .signupGoalTop b { font-size:24px; }
       .signupGoalTop span { font-size:12px; color:#c9c5bc; }
@@ -328,7 +328,7 @@
       .detail {
         margin: 12px 0;
         padding: 11px;
-        background: #faf9f5;
+        background: var(--admin-subtle);
         border-radius: 10px;
         font-size: 13px;
       }
@@ -356,7 +356,7 @@
         margin-bottom: 14px;
       }
       .studentCol {
-        background: #faf9f5;
+        background: var(--admin-subtle);
         border-radius: 10px;
         padding: 12px;
       }
@@ -621,7 +621,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 12px 14px;
-        background: #faf9f5;
+        background: var(--admin-subtle);
         cursor: pointer;
       }
       .phaseBlockHead h5 {
@@ -689,7 +689,7 @@
         flex-shrink: 0;
       }
       .classDot.completed { background: #1d6a3b; }
-      .classDot.current { background: var(--yellow); border: 2px solid #171717; }
+      .classDot.current { background: var(--yellow); border: 2px solid #151515; }
       .classDot.locked { background: #d0ccc2; }
       .classRow .className {
         flex: 1;
@@ -794,7 +794,7 @@
         bottom: 20px;
         padding: 13px 16px;
         border-radius: 12px;
-        background: #171717;
+        background: #151515;
         color: #fff;
         display: none;
       }
@@ -880,7 +880,7 @@
       }
       .callFact,
       .answers {
-        background: #faf9f5;
+        background: var(--admin-subtle);
         border-radius: 10px;
         padding: 10px;
         font-size: 12px;
@@ -926,7 +926,7 @@
         align-items: start;
       }
       .answerItem {
-        background: #faf9f5;
+        background: var(--admin-subtle);
         border: 1px solid var(--line);
         border-radius: 12px;
         padding: 11px 12px;
@@ -981,9 +981,9 @@
         color: var(--ink);
       }
       .notesInput:focus {
-        outline: 2px solid #171717;
+        outline: 2px solid #151515;
         outline-offset: 1px;
-        border-color: #171717;
+        border-color: #151515;
       }
       .notesRow {
         display: flex;
@@ -993,8 +993,8 @@
         flex-wrap: wrap;
       }
       .notesSave {
-        border: 1px solid #171717;
-        background: #171717;
+        border: 1px solid #151515;
+        background: #151515;
         color: #fff;
         border-radius: 999px;
         padding: 7px 14px;
@@ -1049,7 +1049,7 @@
         cursor: pointer;
       }
       .expandArrow:hover,
-      .expandArrow:focus-visible { background: #faf9f5; border-color: #a9a398; }
+      .expandArrow:focus-visible { background: var(--admin-subtle); border-color: #a9a398; }
       .applicationActions { margin-top: 10px; }
       .appPanel { display: none; margin-top: 14px; border-top: 1px solid var(--line); }
       .appPanel.open { display: block; }
@@ -1065,7 +1065,7 @@
       .recordSection .answerGrid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
       .notesEditor { min-width: 0; }
       .recordFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
-      .recordFacts > div { min-width: 0; border-radius: 10px; background: #faf9f5; padding: 9px 11px; }
+      .recordFacts > div { min-width: 0; border-radius: 10px; background: var(--admin-subtle); padding: 9px 11px; }
       .recordFacts dt { color: var(--muted); font-size: 11px; font-weight: 700; }
       .recordFacts dd { margin: 3px 0 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
       .accountState { display: inline-flex; margin: 0; padding: 7px 10px; border-radius: 8px; background: #f5f3ee; font-size: 12px; font-weight: 800; }
@@ -2504,7 +2504,7 @@
         return months + "mo ago";
       }
       function progressBar(pct, color) {
-        const c = color || "#171717";
+        const c = color || "#151515";
         return `<div class="progressTrack"><div class="progressFill" style="width:${pct}%;background:${c}"></div></div>`;
       }
       function studentCard(x) {
@@ -3727,9 +3727,9 @@
               '<section class="overview-panel overview-span-12"><h3>Applications &amp; payments \u2014 last 8 weeks</h3><div id="ovTrend" class="overview-chart"></div></section>' +
               '<section class="overview-panel overview-span-6"><h3>Student progress</h3><div id="ovStudents" class="overview-list"></div></section>' +
               '<section class="overview-panel overview-span-6"><h3>Recent activity</h3><div id="ovActivity" class="overview-list"></div></section>' +
-              '<section class="overview-panel overview-span-4"><h3>Application status</h3><div class="grid-stats-3" id="ovActionProgress"></div></section>' +
-              '<section class="overview-panel overview-span-4"><h3>Acquisition &amp; Masterclass</h3><div id="ovAcq" class="overview-flow"></div></section>' +
-              '<section class="overview-panel overview-span-4" id="ovEmail"></section>' +
+              '<section class="overview-panel overview-span-6"><h3>Application status</h3><div class="grid-stats-3" id="ovActionProgress"></div></section>' +
+              '<section class="overview-panel overview-span-6"><h3>Acquisition &amp; Masterclass</h3><div id="ovAcq" class="overview-flow"></div></section>' +
+              '<section class="overview-panel overview-span-12" id="ovEmail"></section>' +
             '</div>' +
           '</div>';
       };
@@ -3778,7 +3778,7 @@
        * the same loaded records the tiles use, so a chart can never disagree
        * with a number shown beside it.
        * ------------------------------------------------------------------ */
-      const ovInk = "#171717";
+      const ovInk = "#151515";
       const ovMid = "#6b665e";
       const ovGood = "#156b35";
       const ovWarn = "#8a4b00";
