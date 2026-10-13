@@ -90,6 +90,50 @@ test("every dashboard counter reads the canonical lifecycle helper", () => {
   assert.doesNotMatch(acq, /const leads = Array\.isArray/);
 });
 
+test("the acquisition pipeline is one component with no dead cells", () => {
+  const page = read("admin-acquisition.html");
+
+  // The loose stat/metric squares are gone: one funnel plus one per-link bar.
+  assert.doesNotMatch(page, /<div class="stat"><b>/);
+  assert.doesNotMatch(page, /<div class="metric"><b>/);
+  assert.match(page, /class="acqFunnel"/);
+  assert.match(page, /class="acqPipe"/);
+  assert.match(page, /acqPipeLegend/);
+
+  // A B2B link only ever has two real figures. The old code padded it out with
+  // four permanent "-" cells, which is exactly the empty space we removed.
+  assert.doesNotMatch(page, /\["-",\s*"(Applied|Accepted|Paid|Revenue)"\]/);
+  assert.match(
+    page,
+    /\[\["Visitors",Number\(x\.visits\|\|0\)\],\["B2B leads",Number\(x\.b2b_leads\|\|0\)\]\]/
+  );
+
+  // Both components must span the full card. Without this they fall into the
+  // first of the legacy six-column grids and leave five dead columns beside them.
+  assert.match(page, /\.acqFunnel\{grid-column:1\/-1/);
+  assert.match(page, /\.acqPipe\{grid-column:1\/-1/);
+  assert.match(page, /\.row\{grid-template-columns:minmax\(0,1fr\) auto/);
+
+  // Every count the page has must still be reachable in the new layout.
+  for (const stage of [
+    "Visits",
+    "Masterclass",
+    "Applications",
+    "Accepted",
+    "Paid",
+  ]) {
+    assert.ok(page.includes(`"${stage}"`), `missing funnel stage ${stage}`);
+  }
+  assert.match(page, /\["Applied",Number\(x\.applications\|\|0\)\]/);
+  assert.match(page, /\["Accepted",Number\(x\.accepted\|\|0\)\]/);
+  assert.match(page, /\["Paid",Number\(x\.paid\|\|0\)\]/);
+  assert.match(page, /Revenue <b>\$/);
+
+  // Money must never be presented as a share of the visit count.
+  assert.match(page, /acqMoney/);
+  assert.match(page, /acqMoneyLabel/);
+});
+
 test("V3 is responsive, Manrope-only and reserves red for semantic states", () => {
   assert.match(v3, /@media \(max-width: 720px\)/);
   assert.match(v3, /@media \(max-width: 430px\)/);
