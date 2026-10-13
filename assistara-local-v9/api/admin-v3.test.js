@@ -29,6 +29,11 @@ test("Vercel builds and routes the shared V3 stylesheet as a static asset", () =
   assert.ok(vercel.routes.some((entry) => entry.src === "/admin-v3.css" && entry.dest === "/admin-v3.css"));
 });
 
+test("the canonical Dashboard URL survives a direct load and refresh", () => {
+  assert.ok(vercel.routes.some((entry) => entry.src === "/admin/overview" && entry.dest === "/admin.html"));
+  assert.ok(vercel.routes.some((entry) => entry.src === "/admin/overview/" && entry.dest === "/admin.html"));
+});
+
 test("search is inside the content toolbar beside section filters", () => {
   const toolbar = admin.slice(admin.indexOf('<div class="content-toolbar"'), admin.indexOf('<div id="signupGoal"'));
   assert.match(toolbar, /id="searchWrap"/);
