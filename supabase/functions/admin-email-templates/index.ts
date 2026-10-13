@@ -30,7 +30,12 @@ import { TEMPLATES, findTemplateDef } from "../_shared/email-template-registry.t
 const URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SITE = "https://www.getassistara.com";
-const TEST_INTERNAL = (Deno.env.get("TEMPLATE_TEST_EMAIL") || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+const INTERNAL_TEST_DOMAIN = "getassistara.com";
+const TEST_INTERNAL_DEFAULT = ["notifications@getassistara.com"];
+const TEST_INTERNAL = Array.from(new Set([
+  ...TEST_INTERNAL_DEFAULT,
+  ...(Deno.env.get("TEMPLATE_TEST_EMAIL") || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
+])).filter((a) => a.endsWith("@" + INTERNAL_TEST_DOMAIN));
 
 const allowed = new Set([
   "https://getassistara.com", "https://www.getassistara.com",
@@ -385,7 +390,8 @@ Deno.serve(async (req) => {
       const key = clean(body.key, 120);
       const to = clean(body.to, 254).toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return out({ ok: false, error: "Valid test address required" }, 400);
-      if (TEST_INTERNAL.length && !TEST_INTERNAL.includes(to)) {
+      // External recipients are never permitted; notifications@getassistara.com is always permitted.
+      if (!TEST_INTERNAL.includes(to)) {
         return out({ ok: false, error: "Test sends are limited to internal addresses." }, 403);
       }
 
