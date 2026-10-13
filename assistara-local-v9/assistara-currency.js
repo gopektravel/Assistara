@@ -1,6 +1,11 @@
 /* Shared Assistara currency display — display-only, never writes DB */
 const DISP_CURS = ["PHP","USD","EUR"];
 const DISP_SYM = {PHP:"₱",USD:"$",EUR:"€"};
+/* Defensive: reset any stale/invalid display preference (including old AUD) to PHP */
+(function resetInvalidPref(){ try{ const s=localStorage.getItem("assistara_currency_display"); if(s&&!["PHP","USD","EUR"].includes(s)){ localStorage.setItem("assistara_currency_display","PHP"); } }catch(e){} })();
+const DISP_KEY = "assistara_currency_display";
+let dispCur = (()=>{try{const s=localStorage.getItem(DISP_KEY); return DISP_CURS.includes(s)?s:"PHP";}catch{ return "PHP";}})();
+const dispRates = {PHP:1};
 let dispRateDate = new Date().toISOString().slice(0,10);
 async function fetchRate(cur){
   if(cur==="PHP"||dispRates[cur]>0) return true;
