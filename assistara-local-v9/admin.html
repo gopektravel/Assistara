@@ -3575,7 +3575,7 @@
         const acqEl = $("ovAcq");
         if (acqEl) {
           const webReg = web.filter((x) => !/^diag(?:nostic)?[-_]/i.test(String(x.email || "")) && !/diagnostic/i.test(String(x.name || "")) && !/diagnostic/i.test(String(x.source || ""))).length;
-          const leads = leadsAll.length;
+          const leads = Array.isArray(typeof b2b !== "undefined" ? b2b : null) ? b2b.length : 0;
           const apps = totalApplications();
           const conv = leads > 0 ? ((apps / leads) * 100) : null;
           const items = [];
