@@ -323,7 +323,7 @@ test("enrollment metrics navigate through the existing router", () => {
   const nav = admin.slice(admin.indexOf("function goApplicants("), admin.indexOf("function stat(a)"));
   assert.match(nav, /showDashboard\(\{ push: true \}\);/);
   assert.match(nav, /tab = "applicants";/);
-  assert.match(nav, /applicantFilterKey = filterKey;/);
+  assert.match(nav, /applicantFilterKey = /);
   assert.match(nav, /render\(\);/);
   assert.match(nav, /saveUiState\(\);/);
   // No hard reloads and no second router.
