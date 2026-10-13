@@ -323,3 +323,28 @@ test("shared CSS cannot overflow a narrow panel after the shrinkable-track fix",
     );
   }
 });
+
+test("the per-tab stats row can never show another tab's numbers", () => {
+  // resetTabScaffold() cleared every per-tab region except #stats, and the
+  // Applicants and Students branches returned before painting it. Visiting
+  // Coupons and going back to Applications therefore left coupon revenue on
+  // screen -- and if the display currency had changed in between, that stale
+  // money kept its old symbol while everything else had been converted.
+  assert.match(
+    admin,
+    /function resetTabScaffold\(\) \{[\s\S]*?\$\("stats"\)\.innerHTML = "";/,
+  );
+
+  // Both tabs that previously left the row blank must now paint real counts,
+  // derived from the canonical lifecycle/progress helpers.
+  assert.match(admin, /const appStageCounts = activeApps\(\)\.reduce/);
+  assert.match(admin, /\[totalApplications\(\), "Applications", "Every persisted record"\]/);
+  assert.match(admin, /\[appStageCounts\.new \|\| 0, "New \/ Unreviewed"/);
+  assert.match(admin, /const allProgress = students\.map\(/);
+  assert.match(admin, /\[startedCount, "Started", "Made curriculum progress"\]/);
+  assert.match(admin, /\[completedCount, "Completed", "Finished every class"\]/);
+
+  // Neither may invent a money figure, so no currency can go stale there.
+  assert.doesNotMatch(admin, /\[startedCount, "Started"[\s\S]{0,400}MONEY_PHP/);
+  assert.doesNotMatch(admin, /\[totalApplications\(\), "Applications"[\s\S]{0,400}MONEY_PHP/);
+});

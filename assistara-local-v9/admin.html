@@ -2485,6 +2485,10 @@
         $("capacityPanel").style.display = "none";
         $("signupGoal").innerHTML = "";
         $("pendingBox").innerHTML = "";
+        // Without this the previous tab's numbers stay on screen. The
+        // Applicants and Students tabs return before painting #stats, so a
+        // visit to Coupons left coupon revenue visible on Applications.
+        $("stats").innerHTML = "";
         const ap = $("appPipeline");
         if (ap) { ap.style.display = "none"; ap.innerHTML = ""; }
         const f = $("studentFilters");
@@ -2512,6 +2516,22 @@
           else sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
 
           paintApplicantsPipeline();
+          // Same canonical stage helper the enrollment tiles and the
+          // dashboard funnel use, so these can never disagree with them.
+          const appStageCounts = activeApps().reduce((acc, x) => {
+            const s = appStage(x);
+            acc[s] = (acc[s] || 0) + 1;
+            return acc;
+          }, {});
+          stat([
+            [totalApplications(), "Applications", "Every persisted record"],
+            [appStageCounts.new || 0, "New / Unreviewed", "Awaiting a decision"],
+            [appStageCounts.awaiting_payment || 0, "Accepted", "Decision accepted"],
+            [appStageCounts.payment_pending || 0, "Payment pending", "Awaiting verification"],
+            [appStageCounts.onboarding || 0, "Paid", "Payment confirmed"],
+            [appStageCounts.enrolled || 0, "Enrolled", "Active learners"],
+            [activeApps().filter(appNeedsAdmin).length, "Needs Admin Action", "Oldest action first"],
+          ]);
 
           const filterBar = $("appFilters");
           filterBar.hidden = false;
@@ -2556,8 +2576,30 @@
           }
           if (capacityDirty) { capacityDirty = false; renderCapacity(); }
           return;
-        }        if (tab === "students") {
+        }
+        if (tab === "students") {
           const s = students.filter(match);
+          // Learner counts from the same progress records the dashboard
+          // distribution chart reads, so the two always agree.
+          const allProgress = students.map(
+            (st) => st._progress || computeStudentProgress(st, studentProgress.find((p) => p.user_id === st.auth_user_id)),
+          );
+          const startedCount = allProgress.filter((p) => p && p.pct > 0).length;
+          const completedCount = allProgress.filter((p) => p && p.pct >= 100).length;
+          const stalledCount = allProgress.filter(
+            (p) => p && p.pct > 0 && p.pct < 100 && p.lastActivity && Date.now() - Date.parse(p.lastActivity) > 14 * 86400000,
+          ).length;
+          const avgPct = allProgress.length
+            ? Math.round(allProgress.reduce((sum, p) => sum + ((p && p.pct) || 0), 0) / allProgress.length)
+            : 0;
+          stat([
+            [students.length, "Enrolled Learners", "Every active student record"],
+            [students.filter((x) => !x.suspended_at).length, "Active", "Not suspended"],
+            [startedCount, "Started", "Made curriculum progress"],
+            [completedCount, "Completed", "Finished every class"],
+            [allProgress.length ? avgPct + "%" : "\u2014", "Average Progress", "Across all learners"],
+            [stalledCount, "Stalled 14+ days", "No recent activity"],
+          ]);
           // Apply status filter
           const statusFilter = $("studentFilter") ? $("studentFilter").value : "all";
           let filtered = s;
