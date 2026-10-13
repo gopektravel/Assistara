@@ -70,7 +70,6 @@
 .workspace-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-component);
   margin-bottom: var(--space-section);
 }
@@ -79,14 +78,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  max-width: 420px;
+  flex: 1 1 auto;
+  max-width: min(520px, 60vw);
   min-width: 0;
   border: 1px solid var(--line);
   background: #fff;
-  border-radius: var(--radius-md);
-  padding: 0 12px;
-  min-height: 40px;
+  border-radius: var(--radius-pill);
+  padding: 0 14px;
+  height: calc(var(--header-height) - 8px);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .workspace-search svg {
@@ -136,15 +137,21 @@
   }
 
   .workspace-top {
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
   }
 
   .workspace-search {
+    order: 3;
+    flex-basis: 100%;
     max-width: none;
+    width: 100%;
+    height: 40px;
   }
 
   .session-actions {
     width: 100%;
   }
 }
+\n.workspace-search:hover { border-color: #c9c4ba; }\n.workspace-search:focus-within { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(21,21,21,0.06); }\n

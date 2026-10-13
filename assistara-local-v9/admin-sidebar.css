@@ -313,11 +313,16 @@
 
 .sidebar-action:hover {
   background: var(--sidebar-border);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.sidebar-action:active {
+  transform: translateY(1px);
 }
 
 .sidebar-action:focus-visible {
-  outline: 2px solid var(--yellow);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .sidebar-action.primary {
@@ -328,6 +333,12 @@
 
 .sidebar-action.primary:hover {
   background: var(--yellow-hover);
+  box-shadow: 0 2px 4px rgba(21,21,21,0.12);
+}
+
+.sidebar-action.primary:active {
+  background: var(--yellow-active);
+  transform: translateY(1px);
 }
 
 /* ---------------------------------------------------------------- *
