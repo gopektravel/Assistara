@@ -845,11 +845,7 @@
             display currency to view them in PHP, USD or EUR.
           </div>
         </div>
-        <div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency">
-          <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
-          <button type="button" data-cur="USD" aria-pressed="false">USD</button>
-          <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
-        </div>
+
       </div>
 
       <div class="fnav" id="fnav">
@@ -938,9 +934,10 @@
     const displayRateDate = window.AssistaraCurrency ? window.AssistaraCurrency.getRateDate() : new Date().toISOString().slice(0, 10);
     let displayCurrency = (() => {
         try {
-          const saved = localStorage.getItem(DISPLAY_KEY);
+          const shared = window.AssistaraCurrency ? window.AssistaraCurrency.getDisplay() : null;
+          const saved = shared || localStorage.getItem(DISPLAY_KEY);
           if (saved && !DISPLAY_CURRENCIES.includes(saved)) {
-            localStorage.setItem(DISPLAY_KEY, "PHP");
+            try { localStorage.setItem(DISPLAY_KEY, "PHP"); } catch {}
             return "PHP";
           }
           return DISPLAY_CURRENCIES.includes(saved) ? saved : "PHP";
@@ -2158,7 +2155,7 @@
         return false;
       }
       function paintCurrencySwitch() {
-        document.querySelectorAll("#currencySwitch button").forEach((b) => {
+        document.querySelectorAll("#sidebarCurrencySwitch button").forEach((b) => {
           const on = b.dataset.cur === displayCurrency;
           b.classList.toggle("active", on);
           b.setAttribute("aria-pressed", on ? "true" : "false");
@@ -2174,7 +2171,8 @@
         displayCurrency = cur;
         if (window.AssistaraCurrency) window.AssistaraCurrency.setDisplay(cur);
         try {
-          localStorage.setItem(DISPLAY_KEY, cur);
+          const key = window.AssistaraCurrency ? window.AssistaraCurrency.DISP_KEY : DISPLAY_KEY;
+          localStorage.setItem(key, cur);
         } catch {}
         paintCurrencySwitch();
         render();
@@ -2257,13 +2255,20 @@
       $("rangeStart").addEventListener("change", () => { customStart = $("rangeStart").value; rangeUI(); render(); });
       $("rangeEnd").addEventListener("change", () => { customEnd = $("rangeEnd").value; rangeUI(); render(); });
 
-      document.querySelectorAll("#currencySwitch button").forEach((b) => {
+      document.querySelectorAll("#sidebarCurrencySwitch button").forEach((b) => {
         b.addEventListener("click", () => { setDisplayCurrency(b.dataset.cur); });
       });
       window.addEventListener("assistara:currencychange", async (event) => {
         const next = event.detail && DISPLAY_CURRENCIES.includes(event.detail.currency) ? event.detail.currency : "PHP";
-        if (next === displayCurrency) return;
+        if (!DISPLAY_CURRENCIES.includes(next)) {
+          if (window.AssistaraCurrency) window.AssistaraCurrency.setDisplay("PHP");
+          return;
+        }
         const ready = await ensureDisplayRate(next);
+        if (!ready && next !== "PHP") {
+          if (window.AssistaraCurrency) window.AssistaraCurrency.setDisplay("PHP");
+          return;
+        }
         displayCurrency = ready ? next : "PHP";
         paintCurrencySwitch();
         render();
@@ -2280,7 +2285,7 @@
         const ready = await ensureDisplayRate(displayCurrency);
         if (!ready && displayCurrency !== "PHP") {
           displayCurrency = "PHP";
-          try { localStorage.setItem(DISPLAY_KEY, "PHP"); } catch {}
+          try { const key = window.AssistaraCurrency ? window.AssistaraCurrency.DISP_KEY : DISPLAY_KEY; localStorage.setItem(key, "PHP"); } catch {}
           paintCurrencySwitch();
         }
         await loadAll().catch((e) => alert(e.message));

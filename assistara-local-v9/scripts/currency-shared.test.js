@@ -63,11 +63,12 @@ test("selectors exist only on Overview and Finance", () => {
   const root = path.join(__dirname, "..");
   const admin = fs.readFileSync(path.join(root, "admin.html"), "utf8");
   const finance = fs.readFileSync(path.join(root, "admin-finance.html"), "utf8");
-  assert.equal((admin.match(/id="currencySwitch"/g) || []).length, 1);
-  assert.equal((finance.match(/id="currencySwitch"/g) || []).length, 1);
+  assert.equal((admin.match(/id="sidebarCurrencySwitch"/g) || []).length, 1);
+  assert.equal((finance.match(/id="currencySwitch"/g) || []).length, 0);
   for (const file of ["admin-acquisition.html", "admin-email.html", "admin-masterclass-event.html"]) {
     const html = fs.readFileSync(path.join(root, file), "utf8");
     assert.equal(html.includes('id="currencySwitch"'), false, file);
+    assert.equal(html.includes('id="sidebarCurrencySwitch"'), false, file);
   }
 });
 

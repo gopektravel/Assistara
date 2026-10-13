@@ -1,7 +1,9 @@
-.currencySwitch { display: inline-flex; gap: 2px; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-family: "Manrope", sans-serif; }
-.currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 6px 10px; font: "Manrope", sans-serif; font-size: 11px; font-weight: 700; line-height: 1; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.currencySwitch { display: inline-flex; gap: 2px; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-family: "Manrope", sans-serif; box-shadow: 0 1px 1px rgba(21,21,21,0.03); }
+.currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 6px 10px; font: "Manrope", sans-serif; font-size: 11px; font-weight: 700; line-height: 1; color: var(--muted); cursor: pointer; white-space: nowrap; transition: background var(--transition-base), color var(--transition-base); }
 .currencySwitch button:not(.active):hover { background: #f1eee5; color: var(--ink); }
+.currencySwitch button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .currencySwitch button.active { background: #171717; color: #fff; }
+.currencySwitch--compact button { padding: 5px 8px; font-size: 10px; }
 
 /* Compact overview dashboard — clean premium hierarchy */
 #overviewView .card { padding: 16px; border-radius: 12px; }

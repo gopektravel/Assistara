@@ -45,7 +45,7 @@ test("tab, search, filters, expanded cards and scroll save their state", () => {
   assert.match(admin, /render\(\);\s*saveUiState\(\);/); // nav handler
   assert.match(admin, /\$\("search"\)\.oninput = \(\) => \{ render\(\); saveUiState\(\); \}/);
   assert.match(admin, /studentFilter\.onchange = \(\) => \{ render\(\); saveUiState\(\); \}/);
-  assert.match(admin, /studentSort\.onchange = \(\) => \{ render\(\); saveUiState\(\); \}/);
+  assert.match(admin, /studentSortControl\.onchange = \(\) => \{ render\(\); saveUiState\(\); \}/);
   assert.match(admin, /window\.addEventListener\("pagehide", saveUiState\)/);
   // expanded applicants + students persist
   assert.match(admin, /openApps\.add\(key\)[\s\S]*saveUiState\(\)/);
@@ -147,7 +147,7 @@ test("Admin pages use Manrope as the only font", () => {
   assert.doesNotMatch(tokens, /DM Sans|\bInter\b|\bArial\b|system-ui|-apple-system|Segoe UI|\bRoboto\b|\bHelvetica\b|\bmonospace\b/i);
   const lock = read("assistara-local-v9/manrope-lock.css");
   assert.match(lock, /family=Manrope:wght@400;500;600;700;800/);
-  assert.match(lock, /font-family:"Manrope",sans-serif!important/);
+  assert.match(lock, /font-family:\s*"Manrope",\s*sans-serif\s*!important/);
   assert.match(admin, /\.toolRoot \*,button,input,select,textarea,table,canvas\{font-family:"Manrope",sans-serif!important\}/);
 });
 
