@@ -3645,7 +3645,7 @@
         const pct = (v) =>
           v == null || !Number.isFinite(Number(v)) ? "Unavailable" : (Number(v) * 100).toFixed(1) + "%";
         $("ovEmail").innerHTML =
-          '<div class="card-header"><div><h3 class="card-title">Email delivery</h3><div class="card-subtitle">Last 30 days.</div></div></div>' +
+          '<div class="card-header"><div><h3 class="card-title">Email delivery</h3><div class="card-subtitle">Last 30 days. Provider-measured only.</div></div></div>' +
           (data.emailError
             ? '<div class="alert alert-warning"><div><div class="alert-title">Delivery status unavailable</div><p>' +
               esc(data.emailError.message || "Could not load email status.") +
@@ -3653,20 +3653,35 @@
             : !data.email
             ? '<div class="skeleton skeleton-card" aria-label="Loading email delivery"></div>'
             : '<div class="grid-stats-2">' +
-              ovStat(ovNum(totals.accepted), "Accepted (30d)", ovNum(totals.attempts) + " provider attempts") +
+              ovStat(ovNum(totals.accepted), "Accepted (30d)", "Provider accepted the send request · " + ovNum(totals.attempts) + " attempts") +
               ovStat(
                 av.deliveryEvents ? ovNum(measured.delivered) : "Unavailable",
                 "Delivered",
-                av.deliveryEvents ? "Delivery rate " + pct(rates.deliveryRate) : "Provider webhooks not configured",
+                av.deliveryEvents ? "Provider confirmed delivery · rate " + pct(rates.deliveryRate) : "Provider webhooks not configured",
               ) +
               ovStat(
                 av.deliveryEvents ? ovNum(measured.bounced) : "Unavailable",
                 "Bounced",
-                av.deliveryEvents ? "Bounce rate " + pct(rates.bounceRate) : "Provider webhooks not configured",
+                av.deliveryEvents ? "Provider reported non-delivery · rate " + pct(rates.bounceRate) : "Provider webhooks not configured",
               ) +
-              ovStat(ovNum(totals.failed), "Failed", "Definitive provider rejection") +
+              ovStat(ovNum(totals.failed), "Failed", "Provider rejected the send") +
+              ovStat(
+                av.openTracking ? ovNum(measured.uniqueOpens) : "Unavailable",
+                "Opened (unique)",
+                av.openTracking ? "Recipients who opened · rate " + pct(rates.openRate) : "Open tracking not enabled",
+              ) +
+              ovStat(
+                av.clickTracking ? ovNum(measured.uniqueClicks) : "Unavailable",
+                "Clicked (unique)",
+                av.clickTracking ? "Recipients who clicked · rate " + pct(rates.clickThroughRate) : "Click tracking not enabled",
+              ) +
+              ovStat(
+                av.deliveryEvents ? ovNum(measured.complained) : "Unavailable",
+                "Complained",
+                av.deliveryEvents ? "Recipients who marked spam" : "Provider webhooks not configured",
+              ) +
               "</div>" +
-              '<p class="sub" style="margin-top:12px">Acceptance is exact. Delivery, bounces, opens and clicks are measured only from provider webhook events — where webhooks are not configured the metric is shown as Unavailable rather than zero.</p>');
+              '<p class="sub" style="margin-top:12px"><b>Accepted</b> = provider took the send request. <b>Delivered</b> = provider confirmed arrival. Never identical. Opens, clicks, bounces and complaints come only from provider webhook events — shown as Unavailable where webhooks or tracking are not configured, never as zero.</p>');
 
         // Finance is reached from the KPI cards above; no separate summary block.
       }
