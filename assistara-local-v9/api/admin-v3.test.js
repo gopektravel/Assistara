@@ -63,11 +63,31 @@ test("dashboard sections are populated from real loaded records", () => {
 });
 
 test("delivery attention states remain accurate and actionable", () => {
-  const paint = admin.slice(admin.indexOf("const naItems = []"), admin.indexOf("if (naBox && naList)"));
-  assert.match(paint, /inviteFailed.*appAcceptanceEmail\(x\)\.failed/);
-  assert.match(paint, /openTool\(\\'email\\'\)/);
-  assert.match(paint, /inviteUnconfirmed.*appAcceptanceEmail\(x\)\.unresolved/);
+  // These indicators used to be duplicated in a separate "Needs attention"
+  // panel, which has been removed. The distinction it enforced still has to
+  // hold: a provider-confirmed failure is not the same as an unconfirmed send.
+  const paint = admin.slice(
+    admin.indexOf("function paintEnrollment(cap"),
+    admin.indexOf("function paintCapacityBits"),
+  );
+  assert.match(paint, /const emailFailed = invitation\.filter\(\(e\) => e\.failed\)\.length;/);
+  assert.match(paint, /const emailUnconfirmed = invitation\.filter\(\(e\) => e\.unresolved\)\.length;/);
+  assert.match(paint, /\[emailFailed, "invitation delivery failure", "needs_action"\]/);
+  assert.match(paint, /\[emailUnconfirmed, "unconfirmed invitation", "needs_action"\]/);
+  // Delayed is in-flight, never counted as an administrator failure.
+  assert.match(paint, /\[emailDelayed, "temporary invitation delay", "all"\]/);
   assert.doesNotMatch(paint, /!appAcceptanceEmail\(x\)\.delivered/);
+
+  // The classification itself must keep failure and unconfirmed apart.
+  const accept = admin.slice(
+    admin.indexOf("function appAcceptanceEmail(x)"),
+    admin.indexOf("function appNeedsAdmin(x)"),
+  );
+  assert.match(accept, /failed: state === "bounced" \|\| state === "failed",/);
+  assert.match(accept, /unresolved: state === "unresolved" \|\| state === "not_issued",/);
+
+  // The removed panel must not come back.
+  assert.doesNotMatch(admin, /ovNeedsAttention/);
 });
 
 test("every dashboard counter reads the canonical lifecycle helper", () => {
@@ -348,4 +368,62 @@ test("the per-tab stats row can never show another tab's numbers", () => {
   // Neither may invent a money figure, so no currency can go stale there.
   assert.doesNotMatch(admin, /\[startedCount, "Started"[\s\S]{0,400}MONEY_PHP/);
   assert.doesNotMatch(admin, /\[totalApplications\(\), "Applications"[\s\S]{0,400}MONEY_PHP/);
+});
+
+test("no CSS comment is ever written into HTML markup", () => {
+  // A /* ... */ comment in markup is not a comment: HTML renders it as visible
+  // text. One leaked into the sidebar footer this way and showed up as a wall
+  // of comment text above the currency control.
+  const htmlFiles = fs
+    .readdirSync(root)
+    .filter((f) => f.endsWith(".html"))
+    .map((f) => read(f));
+
+  for (const body of htmlFiles) {
+    // Blank out <script> and <style> so their real CSS/JS comments are ignored.
+    let masked = body.replace(/<script\b[\s\S]*?<\/script>/gi, (m) => " ".repeat(m.length));
+    masked = masked.replace(/<style\b[\s\S]*?<\/style>/gi, (m) => " ".repeat(m.length));
+    const leaks = masked.match(/\/\*[\s\S]{0,400}?\*\//g) || [];
+    assert.equal(leaks.length, 0, "CSS comment rendered as text in markup: " + (leaks[0] || "").slice(0, 80));
+  }
+});
+
+test("the dashboard grid fills every row instead of leaving empty columns", () => {
+  // Inserting a span-12 panel broke the 12-column packing: Applications
+  // pipeline (span 7) could not pair with anything, and Recent activity
+  // (span 6) plus Application status (span 7) each sat alone on a row, leaving
+  // six and five empty columns beside them.
+  const scaffold = admin.slice(
+    admin.indexOf('<div class="overview-grid">'),
+    admin.indexOf("function overviewRoute("),
+  );
+  const spans = [...scaffold.matchAll(/overview-span-(\d+)/g)].map((m) => Number(m[1]));
+  assert.ok(spans.length >= 8, "expected the full panel set, saw " + spans.length);
+
+  // Panels are laid out in document order, so the running total must land on a
+  // multiple of 12 at each row boundary.
+  let running = 0;
+  for (const span of spans) {
+    running += span;
+    if (running === 12) running = 0;
+    assert.ok(
+      running < 12,
+      "a row overflows 12 columns before wrapping (running total " + running + ")",
+    );
+  }
+  assert.equal(running, 0, "the final row does not fill 12 columns (residual " + running + ")");
+
+  // Short panels must not be inflated to match the tallest in their row.
+  assert.match(v3, /\.overview-grid \{[^}]*align-items: start/);
+});
+
+test("the dashboard no longer carries a Needs attention panel", () => {
+  // Removed as requested. Its content duplicated the enrollment indicator
+  // chips, the Needs Admin Action tile and the applicants filter counts, so
+  // nothing actionable is lost.
+  assert.doesNotMatch(admin, /ovNeedsAttention/);
+  assert.doesNotMatch(admin, /naItems/);
+  // The equivalents must still be present elsewhere.
+  assert.match(admin, /enrollmentIndicator/);
+  assert.match(admin, /Needs Admin Action/);
 });

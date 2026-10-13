@@ -1195,8 +1195,6 @@
           </div>
         </nav>
         <div class="sidebar-footer">
-          /* The sidebar currency control is the one control in the footer, so it sits
-           centred across the full footer width instead of hugging the left edge. */
           <div class="currencySelect">
             <span class="currencySelectLabel">Display currency</span>
             <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency">
@@ -2125,6 +2123,40 @@
           nextAction = "No action needed"; actionClass = "action-none";
         }
 
+        // A record whose state matches none of the branches above (an older
+        // record with a null status, for example) used to fall through to a
+        // bare em dash with no stage class, which rendered as an unstyled
+        // badge. Fall back to the canonical lifecycle helper instead.
+        if (!stageClass) {
+          const canonical = appStage(x);
+          const LABELS = {
+            new: "New / Unreviewed",
+            awaiting_payment: "Accepted — Awaiting Payment",
+            payment_pending: "Payment Pending",
+            onboarding: "Paid — Onboarding Pending",
+            enrolled: "Enrolled",
+            closed: "Closed",
+            suspended: "Suspended",
+          };
+          const CLASSES = {
+            new: "stage-new",
+            awaiting_payment: "stage-awaiting-payment",
+            payment_pending: "stage-payment-pending",
+            onboarding: "stage-onboarding",
+            enrolled: "stage-enrolled",
+            closed: "stage-declined",
+            suspended: "stage-suspended",
+          };
+          stage = LABELS[canonical] || "Unclassified";
+          stageClass = CLASSES[canonical] || "stage-declined";
+          nextAction = "Review this record";
+          actionClass = "action-admin";
+        }
+
+        // Resolved before the markup so the row only reserves space it uses.
+        const showNextAction = actionClass !== "action-none";
+        const actionButtons = applicationActions(x);
+
         let emailBadge = "";
         if (emailInfo.issued) {
           if (emailInfo.delivered) emailBadge = '<span class="badge badge-success">Email delivered</span>';
@@ -2151,12 +2183,19 @@
               '<div class="applicantSub">' + esc(x.email || "") + ' · ' + esc(submitted) + '</div>' +
             '</div>' +
             '<div class="applicantStage ' + stageClass + '">' + esc(stage) + '</div>' +
-            '<div class="applicantNextAction ' + actionClass + '">' +
-              '<span class="actionLabel">' + esc(nextAction) + '</span>' + emailBadge +
-            '</div>' +
+            // Only reserve the next-action column when there is an action to
+            // name. An enrolled row has none, and used to hold open a 200px
+            // right-aligned column saying "No action needed".
+            (showNextAction
+              ? '<div class="applicantNextAction ' + actionClass + '">' +
+                  '<span class="actionLabel">' + esc(nextAction) + '</span>' + emailBadge +
+                '</div>'
+              : (emailBadge ? '<div class="applicantNextAction">' + emailBadge + '</div>' : '')) +
             chevron +
           '</div>' +
-          '<div class="applicantActions">' + applicationActions(x) + '</div>' +
+          // The action strip carries a border-top, margin and padding, so an
+          // empty one drew a bare rule under rows that have no buttons.
+          (actionButtons ? '<div class="applicantActions">' + actionButtons + '</div>' : '') +
           panel +
         '</div>';
       }
@@ -3683,15 +3722,14 @@
             '<div class="enrollment" id="ovEnrollment"></div>' +
             '<div class="overview-panel overview-span-12"><h3>Enrollment funnel</h3><div id="ovEnrollFlow" class="overview-flow"></div></div>' +
             '<div class="overview-grid">' +
-              '<section class="overview-panel overview-span-7"><h3>Applications pipeline</h3><div id="ovPipeline" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-5"><h3>Applications pipeline</h3><div id="ovPipeline" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-7"><h3>Revenue &amp; payments</h3><div id="ovRevenue" class="overview-list"></div></section>' +
               '<section class="overview-panel overview-span-12"><h3>Applications &amp; payments \u2014 last 8 weeks</h3><div id="ovTrend" class="overview-chart"></div></section>' +
-              '<section class="overview-panel overview-span-5"><h3>Revenue &amp; payments</h3><div id="ovRevenue" class="overview-list"></div></section>' +
               '<section class="overview-panel overview-span-6"><h3>Student progress</h3><div id="ovStudents" class="overview-list"></div></section>' +
               '<section class="overview-panel overview-span-6"><h3>Recent activity</h3><div id="ovActivity" class="overview-list"></div></section>' +
-              '<section class="overview-panel overview-span-7"><h3>Application status</h3><div class="grid-stats-3" id="ovActionProgress"></div></section>' +
-              '<section id="ovNeedsAttention" class="overview-panel overview-span-5" hidden><h3>Needs attention</h3><div id="ovNeedsAttentionList" class="overview-list"></div></section>' +
-              '<section class="overview-panel overview-span-6"><h3>Acquisition &amp; Masterclass</h3><div id="ovAcq" class="overview-flow"></div></section>' +
-              '<section class="overview-panel overview-span-6" id="ovEmail"></section>' +
+              '<section class="overview-panel overview-span-4"><h3>Application status</h3><div class="grid-stats-3" id="ovActionProgress"></div></section>' +
+              '<section class="overview-panel overview-span-4"><h3>Acquisition &amp; Masterclass</h3><div id="ovAcq" class="overview-flow"></div></section>' +
+              '<section class="overview-panel overview-span-4" id="ovEmail"></section>' +
             '</div>' +
           '</div>';
       };
@@ -4051,50 +4089,6 @@
           '<div class="ovStatValue">' + ovNum(value) + '</div>' +
           '<div class="ovStatSub">' + esc(sub) + '</div></div>'
         ).join('') + '</div>';
-        // Populate compact Needs Attention list (real data only)
-        const naBox = $("ovNeedsAttention");
-        const naList = $("ovNeedsAttentionList");
-        const naItems = [];
-        // Pending reviews (no decision yet)
-        const reviewableNow = activeApps().filter((x) => !currentDecision(x));
-        if (reviewableNow.length) {
-          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'all\');">Review ' + ovNum(reviewableNow.length) + ' pending application' + (reviewableNow.length === 1 ? '' : 's') + '</a></div>');
-        }
-        // Provider telemetry keeps failures separate from missing confirmation.
-        // Temporary deferrals are in-flight, not administrator failures.
-        const acceptedNow = activeApps().filter((x) => appAcceptanceEmail(x).issued);
-        const inviteFailed = acceptedNow.filter((x) => appAcceptanceEmail(x).failed);
-        if (inviteFailed.length) {
-          naItems.push('<div><a href="#" onclick="event.preventDefault();openTool(\'email\');">' + ovNum(inviteFailed.length) + ' invitation delivery failure' + (inviteFailed.length === 1 ? '' : 's') + ' · review delivery telemetry</a></div>');
-        }
-        const inviteUnconfirmed = acceptedNow.filter((x) => appAcceptanceEmail(x).unresolved);
-        if (inviteUnconfirmed.length) {
-          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(inviteUnconfirmed.length) + ' unconfirmed invitation' + (inviteUnconfirmed.length === 1 ? '' : 's') + ' · confirm send status</a></div>');
-        }
-        // Payment verification/GCASH followup needs (infer via needsAdmin + awaiting/payment states)
-        const payNeeds = activeApps().filter((x) => {
-          const st = appStage(x);
-          if (st === "awaiting_payment") return appNeedsAdmin(x);
-          if (st === "payment_pending") return true;
-          return false;
-        });
-        if (payNeeds.length) {
-          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(payNeeds.length) + ' payment verification item' + (payNeeds.length === 1 ? '' : 's') + '</a></div>');
-        }
-        // Enrollment blockers: onboarding but missing auth/account setup
-        const blockers = activeApps().filter((x) => appStage(x) === "onboarding" && !x.auth_user_id);
-        if (blockers.length) {
-          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'paid\');">' + ovNum(blockers.length) + ' enrollment blocker' + (blockers.length === 1 ? '' : 's') + ' (missing account setup)</a></div>');
-        }
-        if (naBox && naList) {
-          if (naItems.length) {
-            naBox.style.display = "block";
-            naList.innerHTML = naItems.map((i) => i).join("");
-          } else {
-            naBox.style.display = "none";
-          }
-        }
-
         // Acquisition & Masterclass (real data only)
         const acqEl = $("ovAcq");
         if (acqEl) {

@@ -35,6 +35,21 @@ test("every collapsed applicant row shows identity, date, stage and next action"
   assert.equal(chevrons, 1, "exactly one expand chevron per row");
 });
 
+test("an applicant row only reserves the space it actually uses", () => {
+  const card = admin.slice(admin.indexOf("function appCard(x)"), admin.indexOf("function appStage(x)"));
+
+  // A record whose state matches none of the branches used to fall through to
+  // an em-dash stage with no stage class, rendering an unstyled bare badge.
+  assert.match(card, /if \(!stageClass\) \{/);
+  assert.match(card, /const canonical = appStage\(x\);/);
+  assert.match(card, /stage = LABELS\[canonical\] \|\| "Unclassified";/);
+
+  // The next-action column carries min-width: 200px, so it must not be
+  // emitted for a row with no action to name (an enrolled learner).
+  assert.match(card, /const showNextAction = actionClass !== "action-none";/);
+  assert.match(card, /showNextAction\s*\? '<div class="applicantNextAction/);
+});
+
 test("expanding an applicant row keeps every existing record section and action", () => {
   const card = admin.slice(admin.indexOf("function appCard(x)"), admin.indexOf("function appStage(x)"));
   for (const section of [
@@ -48,7 +63,10 @@ test("expanding an applicant row keeps every existing record section and action"
     assert.ok(card.includes(section), `expanded row must keep ${section}`);
   }
   // The full action set is unchanged and still rendered from the same guards.
-  assert.match(card, /applicantActions">' \+ applicationActions\(x\)/);
+  // The strip is now conditional: it carries a border-top, margin and padding,
+  // so an empty one drew a bare rule under rows that have no buttons.
+  assert.match(card, /const actionButtons = applicationActions\(x\);/);
+  assert.match(card, /actionButtons \? '<div class="applicantActions">' \+ actionButtons \+ '<\/div>' : ''/);
   for (const action of [
     "decision('",
     "approvePay('",

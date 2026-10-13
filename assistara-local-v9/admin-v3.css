@@ -69,7 +69,8 @@ body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !i
 
 /* Overview storytelling */
 .overview-stack { display: grid; gap: 10px; }
-.overview-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 10px; }
+.overview-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 10px; 
+  align-items: start;}
 .overview-span-8 { grid-column: span 8; } .overview-span-7 { grid-column: span 7; }
 .overview-span-6 { grid-column: span 6; } .overview-span-5 { grid-column: span 5; }
 .overview-span-4 { grid-column: span 4; } .overview-span-12 { grid-column: 1/-1; }
