@@ -329,8 +329,11 @@ test("enrollment metrics navigate through the existing router", () => {
   assert.match(nav, /saveUiState\(\);/);
   // No hard reloads and no second router.
   assert.doesNotMatch(nav, /location\.reload|location\.href/);
-  // The Students footnote link follows the same router pattern.
-  const paint = admin.slice(admin.indexOf("function paintEnrollment(cap"), admin.indexOf("function paintOverviewState"));
-  assert.match(paint, /View enrolled learners in Students/);
-  assert.match(paint, /tab=\\'students\\';render\(\);saveUiState\(\);/);
+  // The Enrollment card used to end in a "View enrolled learners in
+  // Students" footnote link. It duplicated navigation the sidebar and the
+  // KPI cards already provide, so it was removed; the card must not
+  // reintroduce a cross-tab link of its own.
+  const paint = admin.slice(admin.indexOf("function paintOverview(data)"), admin.indexOf("async function renderOverview("));
+  assert.doesNotMatch(paint, /View enrolled learners in Students/);
+  assert.doesNotMatch(paint, /enrollmentFootnote/);
 });

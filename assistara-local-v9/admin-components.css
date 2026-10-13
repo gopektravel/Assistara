@@ -1058,15 +1058,6 @@ textarea:focus-visible,
   text-decoration: none;
 }
 
-.enrollmentFootnote { margin-top: 10px; font-size: 12px; }
-.enrollmentFootnote a {
-  color: var(--ink);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-color: #c9c4b8;
-}
-.enrollmentFootnote a:hover { text-decoration-color: var(--ink); }
 
 /* Backstop: an <a> inside Admin content must never fall back to the browser
    default link blue. Buttons and cards set their own colour and win on

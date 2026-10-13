@@ -3445,8 +3445,7 @@
           '</div>' +
           (cap ? '<div class="seatProgress"><div class="seatProgressLabel"><span>Confirmed paid seats</span><span>' + ovNum(cap.paid || 0) + ' / ' + ovNum(cap.capacity || 0) + '</span></div><div class="progress-track"><div class="progress-fill success" id="seatProgressFill" style="width:' + progress + '%"></div></div></div>' : '') +
           '<div class="enrollmentIndicators" id="enrollmentIndicators">' + indicators.map(([n, label, filter]) => '<a class="enrollmentIndicator" href="#" onclick="event.preventDefault();goApplicants(\'' + filter + '\')">' + ovNum(n) + ' ' + esc(label) + (n === 1 ? '' : 's') + '</a>').join('') + '</div>' +
-          (!cap && !loading ? '<div class="alert alert-warning" style="margin-top:10px"><div><div class="alert-title">Capacity unavailable</div><p>Application counts are current; seat availability could not be loaded.</p><button class="btn btn-sm" type="button" onclick="renderOverview(true)">Retry</button></div></div>' : '') +
-          '<div class="enrollmentFootnote"><a href="#" onclick="event.preventDefault();showDashboard({push:true});tab=\'students\';render();saveUiState();">View enrolled learners in Students</a></div>';
+          (!cap && !loading ? '<div class="alert alert-warning" style="margin-top:10px"><div><div class="alert-title">Capacity unavailable</div><p>Application counts are current; seat availability could not be loaded.</p><button class="btn btn-sm" type="button" onclick="renderOverview(true)">Retry</button></div></div>' : '');
       }
       function paintCapacityBits() {
         const box = $("capacityIndicators");

@@ -206,7 +206,8 @@ test("the dashboard uses only brand colours: no off-brand blue", () => {
   assert.match(admin, /\.badge\.scheduled \{\s*background: var\(--warning-light\)/);
 
   // An anchor inside Admin content must never fall back to the UA link blue.
-  assert.match(components, /\.enrollmentFootnote a \{/);
+  // last unstyled anchor (the enrollment footnote) has been removed.
+  assert.doesNotMatch(components, /\.enrollmentFootnote/);
   assert.match(components, /\.workspace a:not\(\[class\]\)/);
 });
 
@@ -300,7 +301,7 @@ test("every admin surface is checked for off-brand colour, not just the shell", 
     assert.doesNotMatch(body, /var\(--info-dark\)/, file + " relies on the info token");
     // These are the shell-only classes whose behaviour changed; a tool page
     // using one would silently pick up the new styling.
-    for (const cls of ["stage-onboarding", "enrollmentFootnote", "ovStats"]) {
+    for (const cls of ["stage-onboarding", "ovStats"]) {
       assert.ok(!body.includes(cls), file + " uses shell-only class " + cls);
     }
   }
