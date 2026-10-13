@@ -193,14 +193,22 @@
 }
 
 .btn-success {
-  background: var(--success-light);
-  color: var(--success-dark);
-  border-color: var(--success-border);
+  background: var(--success-dark);
+  color: #fff;
+  border-color: var(--success-dark);
+  box-shadow: 0 1px 0 rgba(21,21,21,0.08);
 }
 
 .btn-success:hover {
-  background: #d4eedc;
-  border-color: #a5d8b8;
+  background: #0f5429;
+  border-color: #0f5429;
+  box-shadow: 0 2px 4px rgba(21,21,21,0.12);
+}
+
+.btn-success:active {
+  background: #0b3f1f;
+  border-color: #0b3f1f;
+  transform: translateY(1px);
 }
 
 .btn-warning {
@@ -985,13 +993,13 @@ textarea:focus-visible,
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 14px;
+  padding: 12px;
 }
 
 .enrollmentMetrics {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
 }
 
 .enrollmentTile {
@@ -1002,7 +1010,7 @@ textarea:focus-visible,
   background: #faf9f5;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 12px;
+  padding: 10px;
   transition: transform var(--transition), border-color var(--transition);
 }
 
@@ -1015,14 +1023,13 @@ textarea:focus-visible,
 .enrollmentTile span { display: block; font-size: 12px; font-weight: 700; margin-top: 4px; }
 .enrollmentTile small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-.seatProgress { margin-top: 10px; }
+.seatProgress { margin-top: 8px; }
 .seatProgressLabel {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .06em;
+  font-weight: 700;
+  letter-spacing: .01em;
   color: var(--muted);
   margin-bottom: 6px;
 }
@@ -1039,10 +1046,10 @@ textarea:focus-visible,
   border: 1px solid #e5d9b8;
   background: #fff8e6;
   color: #7a5b00;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   border-radius: 999px;
-  padding: 7px 12px;
+  padding: 5px 9px;
   text-decoration: none;
 }
 

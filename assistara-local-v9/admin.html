@@ -999,6 +999,7 @@
         .waitlistRow, .exceptionRow { grid-template-columns:1fr 1fr; }
       }
     </style>
+    <link rel="stylesheet" href="/admin-v3.css" />
 </head>
   <body>
     <script>try{if(localStorage.getItem("assistara_admin_token")||sessionStorage.getItem("assistara_admin_token"))document.documentElement.setAttribute("data-admin-session","1");}catch(e){}</script>
@@ -1087,11 +1088,12 @@
           </div>
         </nav>
         <div class="sidebar-footer">
-          <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency" style="margin-bottom: 10px; justify-content: center;">
-            <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
-            <button type="button" data-cur="USD" aria-pressed="false">USD</button>
-            <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
+          <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency" style="margin-bottom: 10px; justify-content: flex-start; padding-left: 4px; padding-right: 4px;">
+            <button type="button" data-cur="PHP" aria-pressed="true" style="padding:4px 6px;font-size:9px;">₱ PHP</button>
+            <button type="button" data-cur="USD" aria-pressed="false" style="padding:4px 6px;font-size:9px;">$ USD</button>
+            <button type="button" data-cur="EUR" aria-pressed="false" style="padding:4px 6px;font-size:9px;">€ EUR</button>
           </div>
+          <div style="border-top:1px solid rgba(255,255,255,0.08); margin-bottom:10px;"></div>
           <div class="sidebar-user">
             <div class="sidebar-user-avatar" aria-hidden="true">A</div>
             <div class="sidebar-user-info">
@@ -1122,10 +1124,6 @@
           <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
           </button>
-          <div class="workspace-search" id="searchWrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input id="search" placeholder="Search..." aria-label="Search applications, students and signups" />
-          </div>
         </div>
         <header class="page-header" id="pageHeader">
           <div class="page-header-main">
@@ -1142,6 +1140,11 @@
         <div id="overviewView" hidden></div>
         <div id="tabScaffold">
         <div id="pendingBox"></div>
+        <div class="content-toolbar" id="contentToolbar">
+          <div class="workspace-search" id="searchWrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="search" placeholder="Search this section…" aria-label="Search the current admin section" />
+          </div>
         <div class="studentFilters" id="studentFilters" style="display:none">
           <select id="studentFilter">
             <option value="all">All Students</option>
@@ -1178,9 +1181,10 @@
             <option value="revenue">Highest Revenue</option>
           </select>
         </div>
+        <div id="appFilters" class="filterBar" hidden></div>
+        </div>
         <div id="signupGoal"></div><div id="stats" class="grid-stats-4"></div>
         <div id="appPipeline" style="display:none"></div>
-        <div id="appFilters" class="filterBar" hidden></div>
         <div id="capacityPanel" style="display:none">
           <div class="capacity-section">
             <button class="capacityToggle" id="capacityToggle" type="button" aria-expanded="false">
@@ -2693,7 +2697,7 @@
         const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v) => "₱"+Number(v).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
         const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : php;
         if (val == null || !Number.isFinite(Number(val))) return fmt(php, "PHP") + " · conversion unavailable";
-        return (cur === "PHP" ? "" : "≈ ") + fmt(val, cur);
+        return fmt(val, cur);
       };
       const COUPON_STATUS_BADGE = {
         active: { label: 'Active', class: 'active' },
@@ -3188,16 +3192,16 @@
           : 0;
         box.style.display = "block";
         box.innerHTML =
-          '<div class="card" style="margin-bottom:12px;">' +
+          '<div class="card" style="margin-bottom:10px;">' +
           '<div class="card-header"><div><h3 class="card-title">Academy capacity</h3><div class="card-subtitle">Acceptance does not reserve a seat — only confirmed payment does. Backend enforces the limit.</div></div></div>' +
           (capPaid !== null
             ? '<div class="seatProgress"><div class="seatProgressLabel"><span>Confirmed paid seats</span><span>' + ovNum(capPaid) + ' / ' + ovNum(capTotal) + ' · ' + ovNum(capAvail !== null ? capAvail : Math.max(0, capTotal - capPaid)) + ' remaining</span></div><div class="progress-track"><div class="progress-fill success" style="width:' + progress + '%"></div></div></div>'
             : '<div class="alert alert-warning"><div><div class="alert-title">Capacity unavailable</div><p>Seat counts could not be loaded. Application counts below are current.</p><button class="btn btn-sm" type="button" onclick="capacityDirty=true;renderCapacity()">Retry</button></div></div>') +
           '</div>' +
-          '<div class="card" style="margin-bottom:12px;">' +
+          '<div class="card" style="margin-bottom:0;">' +
           '<div class="card-header"><div><h3 class="card-title">Application pipeline</h3><div class="card-subtitle">Application → acceptance → payment → onboarding. Click a stage to filter.</div></div></div>' +
           '<div class="enrollmentMetrics">' +
-          enrollmentTile(ovNum(allApps.length), "Total Applications", "Every persisted record", "all") +
+          enrollmentTile(ovNum(totalApplications()), "Total Applications", "Every persisted record", "all") +
           enrollmentTile(ovNum(newCount), "New / Unreviewed", "Awaiting a decision", "new") +
           enrollmentTile(ovNum(accepted), "Accepted", "Decision accepted (seat not reserved)", "awaiting_payment") +
           enrollmentTile(ovNum(awaiting + payPending), "Awaiting Payment", "Accepted, not confirmed paid", "awaiting_payment") +
@@ -3236,7 +3240,7 @@
         box.innerHTML =
           '<div class="card-header"><div><h3 class="card-title">Academy Enrollment</h3><div class="card-subtitle">Live application and cohort pipeline.</div></div></div>' +
           '<div class="enrollmentMetrics">' +
-            enrollmentTile(ovNum(allApps.length), "Total Applications", "Every persisted record", "all") +
+            enrollmentTile(ovNum(totalApplications()), "Total Applications", "Every persisted record", "all") +
             enrollmentTile(ovNum(newCount), "New / Unreviewed", "Awaiting a decision", "new") +
             enrollmentTile(ovNum(accepted.length), "Invited / Accepted", delivered.length + " invitations delivered", "awaiting_payment") +
             enrollmentTile(ovNum(needsAdmin), "Needs Admin Action", "Oldest action first", "needs_action") +
@@ -3392,9 +3396,14 @@
         const cur = (window.AssistaraCurrency && window.AssistaraCurrency.getDisplay) ? window.AssistaraCurrency.getDisplay() : "PHP";
         if (php == null || !Number.isFinite(Number(php))) return "Unavailable";
         const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v,c) => (c==="PHP"?"₱":"")+Number(v).toLocaleString("en-US");
-        const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : Number(php);
-        if (val == null || !Number.isFinite(Number(val))) return fmt(Number(php), "PHP") + " · conversion unavailable";
-        return (cur === "PHP" ? "" : "≈ ") + fmt(val, cur);
+        if (cur === "PHP") {
+          return fmt(Number(php), "PHP");
+        }
+        const val = (window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : null;
+        if (val == null || !Number.isFinite(Number(val))) {
+          return "Unavailable";
+        }
+        return fmt(val, cur);
       }
       function ovNum(n) {
         if (n == null || !Number.isFinite(Number(n))) return "Unavailable";
@@ -3464,54 +3473,27 @@
         const view = $("overviewView");
         if (!view || $("ovKpis")) return;
         view.innerHTML =
-          '<div class="grid-stats-4" id="ovKpis"></div>' +
-          '<div class="enrollment" id="ovEnrollment" style="margin-top:16px"></div>' +
-          '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Enrollment funnel</h4>' +
-          '<div id="ovEnrollFlow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;"></div>' +
-          '</div>' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;" class="ov-two-col">' +
-          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Applications pipeline</h4>' +
-          '<div id="ovPipeline" style="display:flex;flex-direction:column;gap:8px;"></div>' +
-          '</div>' +
-          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Revenue & payments</h4>' +
-          '<div id="ovRevenue" style="display:flex;flex-direction:column;gap:8px;"></div>' +
-          '</div>' +
-          '</div>' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;" class="ov-two-col">' +
-          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Student progress</h4>' +
-          '<div id="ovStudents" style="display:flex;flex-direction:column;gap:8px;"></div>' +
-          '</div>' +
-          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Recent activity</h4>' +
-          '<div id="ovActivity" style="display:flex;flex-direction:column;gap:8px;"></div>' +
-          '</div>' +
-          '</div>' +
-          '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Applicant Progress — Action Needed</h4>' +
-          '<div class="grid-stats-4" id="ovActionProgress" style="display:flex;gap:12px;flex-wrap:wrap;"></div>' +
-          '</div>' +
-          '<div id="ovNeedsAttention" class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;display:none;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Needs Attention</h4>' +
-          '<div id="ovNeedsAttentionList" style="display:flex;flex-direction:column;gap:8px;"></div>' +
-          '</div>' +
-          '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Acquisition & Masterclass</h4>' +
-          '<div id="ovAcq" style="display:flex;flex-wrap:wrap;gap:12px;"></div>' +
-          '</div>' +
-
-          '<div class="grid grid-cols-12 gap-16" style="margin-top:16px;gap:16px;">' +
-          '<div class="col-span-7"><div class="card" id="ovEmail"></div></div>' +
-          '<div class="col-span-5"></div>' +
-          "</div>";
+          '<div class="overview-stack">' +
+            '<div class="grid-stats-4" id="ovKpis"></div>' +
+            '<div class="enrollment" id="ovEnrollment"></div>' +
+            '<div class="overview-panel overview-span-12"><h3>Lead → Application funnel</h3><div id="ovEnrollFlow" class="overview-flow"></div></div>' +
+            '<div class="overview-grid">' +
+              '<section class="overview-panel overview-span-7"><h3>Applications pipeline</h3><div id="ovPipeline" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-5"><h3>Revenue &amp; payments</h3><div id="ovRevenue" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-6"><h3>Student progress</h3><div id="ovStudents" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-6"><h3>Recent activity</h3><div id="ovActivity" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-7"><h3>Application status</h3><div class="grid-stats-3" id="ovActionProgress"></div></section>' +
+              '<section id="ovNeedsAttention" class="overview-panel overview-span-5" hidden><h3>Needs attention</h3><div id="ovNeedsAttentionList" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-6"><h3>Acquisition &amp; Masterclass</h3><div id="ovAcq" class="overview-flow"></div></section>' +
+              '<section class="overview-panel overview-span-6" id="ovEmail"></section>' +
+            '</div>' +
+          '</div>';
       };
       let overviewCache = null;
       let overviewLoading = false;
       const OVERVIEW_TTL = 60000;
       async function fetchOverviewData() {
+        // Visit tracking lives in the Acquisition Tracker; not shown here.
         const [cap, fin, em] = await Promise.allSettled([
           req("overview", { cohort_code: "founding-2026" }, CAPACITY),
           req("list", {}, FINANCE),
@@ -3532,6 +3514,18 @@
           emailError: em.status === "rejected" ? em.reason : null,
         };
       }
+      function overviewRoute(action, filter) {
+        if (action === "finance" || action === "acquisition" || action === "email" || action === "masterclass") {
+          return openTool(action);
+        }
+        if (action === "applicants") return goApplicants(filter || "all");
+        if (["students", "webinar", "b2b", "coupons"].includes(action)) {
+          showDashboard({ push: true });
+          tab = action;
+          render();
+          saveUiState();
+        }
+      }
       function paintOverview(data) {
         // Academy + revenue KPIs (from already-loaded shell data).
         const reviewable = activeApps().filter((x) => !currentDecision(x));
@@ -3551,22 +3545,94 @@
             !/diagnostic/i.test(String(x.source || "")),
         );
         const pendingPayments = actionablePending().length;
+        const knownLeads = visibleSignups.length + b2b.length;
+        const acceptedApps = activeApps().filter((x) => currentDecision(x) === "accepted");
+        const declinedApps = activeApps().filter((x) => currentDecision(x) === "declined");
+        const enrolledApps = activeApps().filter((x) => appStage(x) === "enrolled");
+        const appsTotal = totalApplications();
+        const funnel = [
+          {label: "Leads / Signups", v: ovNum(knownLeads + visibleSignups.length)},
+          {label: "Applications", v: ovNum(appsTotal)},
+          {label: "Accepted", v: ovNum(acceptedApps.length)},
+          {label: "Paid", v: ovNum(paidApps.length)},
+          {label: "Enrolled", v: ovNum(enrolledApps.length)},
+        ];
+        const ef = $("ovEnrollFlow");
+        if (ef) ef.innerHTML = '<div class="overview-flow">' + funnel.map(f=>'<div class="funnelStep"><strong>'+f.v+'</strong><span>'+f.label+'</span></div>').join('<div class="funnelArrow">→</div>') + '</div>';
+        const delivered30d = data.email && data.email.overview && data.email.overview.availability && data.email.overview.availability.deliveryEvents
+          ? data.email.overview.measured.delivered
+          : null;
 
         // KPI cards — clickable through the existing router (no reload, no new router).
         const kpiCards = [
-          { v: ovNum(totalApplications()), l: "Applications", s: ovNum(reviewable.length) + " awaiting review" + (reviewable.length > 0 ? " • needs attention" : ""), a: "applicants", f: "all" },
-          { v: data.capacity ? ovNum(data.capacity.paid) : data.capacityError ? "Unavailable" : ovSkeleton(), l: "Paid enrollments", s: data.capacity ? ovNum(data.capacity.available) + " of " + ovNum(data.capacity.capacity) + " seats available" : data.capacityError ? "Capacity service unavailable" : "", a: "applicants", f: "paid" },
-          { v: ovMoney(revenue), l: "Gross revenue", s: paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded", a: "finance" },
-          { v: data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : data.expensesError ? "Unavailable" : ovSkeleton(), l: "Expenses this month", s: data.expenses ? ovNum(ovExpensesThisMonth(data.expenses).occurrences) + " occurrences across " + ovNum(ovExpensesThisMonth(data.expenses).schedules) + " schedules" : data.expensesError ? "Finance service unavailable" : "", a: "finance" },
+          { v: ovNum(knownLeads), l: "Known leads", s: ovNum(visibleSignups.length) + " masterclass · " + ovNum(b2b.length) + " B2B", a: "acquisition" },
+          { v: ovNum(totalApplications()), l: "Applications", s: ovNum(reviewable.length) + " awaiting review", a: "applicants", f: "all" },
+          { v: data.capacity ? ovNum(data.capacity.paid) : data.capacityError ? "Unavailable" : ovSkeleton(), l: "Paid enrollments", s: "Confirmed payments only", a: "applicants", f: "paid" },
+          { v: data.capacity ? ovNum(data.capacity.available) : data.capacityError ? "Unavailable" : ovSkeleton(), l: "Seats remaining", s: data.capacity ? "of " + ovNum(data.capacity.capacity) + " founding-cohort seats" : "Capacity service unavailable", a: "applicants", f: "all" },
+          { v: ovMoney(revenue), l: "Gross revenue", s: paidUnknown ? paidUnknown + " paid record" + (paidUnknown === 1 ? "" : "s") + " without amount" : "Recorded paid applications", a: "finance" },
+          { v: delivered30d == null ? (data.emailError ? "Unavailable" : ovSkeleton()) : ovNum(delivered30d), l: "Emails delivered", s: delivered30d == null ? "Provider-confirmed, last 30 days" : "Provider-confirmed · last 30 days", a: "email" },
         ];
         $("ovKpis").innerHTML = kpiCards.map((c) =>
           '<a class="stat-card card-interactive" href="#" data-action="' + c.a + '"' +
-          ' onclick="event.preventDefault();' + (c.a === "finance" ? "openTool('finance')" : "goApplicants('" + c.f + "')") + '">' +
+          ' onclick="event.preventDefault();overviewRoute(\'' + c.a + '\',\'' + (c.f || "") + '\')">' +
             '<div class="stat-value">' + c.v + '</div>' +
             '<div class="stat-label">' + c.l + '</div>' +
             '<div class="stat-sublabel">' + c.s + '</div>' +
           '</a>'
         ).join("");
+
+        // Five-second executive story: lead → application → acceptance → paid → enrolled.
+        const funnel = [
+          [knownLeads, "Known leads", "acquisition", ""],
+          [totalApplications(), "Applications", "applicants", "all"],
+          [acceptedApps.length, "Accepted", "applicants", "awaiting_payment"],
+          [data.capacity ? data.capacity.paid : null, "Paid", "applicants", "paid"],
+          [enrolledApps.length, "Enrolled", "students", ""],
+        ];
+        $("ovEnrollFlow").innerHTML = funnel.map(([value, label, action, filter], index) =>
+          (index ? '<span class="funnelArrow" aria-hidden="true">→</span>' : "") +
+          '<a class="funnelStep" href="#" onclick="event.preventDefault();overviewRoute(\'' + action + '\',\'' + filter + '\')">' +
+            '<strong>' + (value == null ? "Unavailable" : ovNum(value)) + '</strong><span>' + label + '</span>' +
+          '</a>'
+        ).join("");
+
+        const stageRows = [
+          [reviewable.length, "Pending review", "all"],
+          [acceptedApps.length, "Accepted", "awaiting_payment"],
+          [pendingPayments, "Awaiting payment / verification", "awaiting_payment"],
+          [declinedApps.length, "Declined", "closed"],
+        ];
+        $("ovPipeline").innerHTML = stageRows.map(([value, label, filter]) =>
+          '<a class="overviewRow" href="#" onclick="event.preventDefault();goApplicants(\'' + filter + '\')"><span>' + label + '</span><strong>' + ovNum(value) + '</strong></a>'
+        ).join("");
+
+        const monthExpense = data.expenses ? ovExpensesThisMonth(data.expenses) : null;
+        const recentPaid = paidApps.filter((x) => x.paid_at).sort((a, b) => Date.parse(b.paid_at) - Date.parse(a.paid_at))[0];
+        $("ovRevenue").innerHTML =
+          '<a class="overviewRow" href="#" onclick="event.preventDefault();openTool(\'finance\')"><span>Recorded gross revenue</span><strong>' + ovMoney(revenue) + '</strong></a>' +
+          '<a class="overviewRow" href="#" onclick="event.preventDefault();openTool(\'finance\')"><span>Expenses this month</span><strong>' + (monthExpense ? ovMoney(monthExpense.total) : data.expensesError ? "Unavailable" : ovSkeleton()) + '</strong></a>' +
+          '<div class="overviewNote">' + (recentPaid ? 'Latest payment: ' + esc(recentPaid.name || recentPaid.email || "Student") + ' · ' + esc(formatDate(recentPaid.paid_at)) : "No recorded paid activity yet.") + '</div>';
+
+        const progressRows = students.map((student) => student._progress || computeStudentProgress(student, studentProgress.find((p) => p.user_id === student.auth_user_id)));
+        const started = progressRows.filter((p) => p.pct > 0).length;
+        const completed = progressRows.filter((p) => p.pct >= 100).length;
+        const stalled = progressRows.filter((p) => p.pct > 0 && p.pct < 100 && p.lastActivity && Date.now() - Date.parse(p.lastActivity) > 14 * 86400000).length;
+        const average = progressRows.length ? Math.round(progressRows.reduce((sum, p) => sum + p.pct, 0) / progressRows.length) : 0;
+        $("ovStudents").innerHTML =
+          '<a class="overviewRow" href="#" onclick="event.preventDefault();overviewRoute(\'students\')"><span>Enrolled learners</span><strong>' + ovNum(students.length) + '</strong></a>' +
+          '<div class="overviewRow"><span>Average course progress</span><strong>' + (progressRows.length ? average + "%" : "No learners") + '</strong></div>' +
+          '<div class="overviewRow"><span>Started / completed</span><strong>' + ovNum(started) + ' / ' + ovNum(completed) + '</strong></div>' +
+          (stalled ? '<a class="overviewRow overviewRow--attention" href="#" onclick="event.preventDefault();overviewRoute(\'students\')"><span>Stalled 14+ days</span><strong>' + ovNum(stalled) + '</strong></a>' : "");
+
+        const recentEvents = [];
+        activeApps().forEach((app) => [
+          [app.paid_at, "Payment received"], [app.accepted_at, "Application accepted"],
+          [app.declined_at, "Application declined"], [app.created_at, "Application submitted"],
+        ].forEach(([at, label]) => { if (at && Number.isFinite(Date.parse(at))) recentEvents.push({ at, label, app }); }));
+        recentEvents.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+        $("ovActivity").innerHTML = recentEvents.length
+          ? recentEvents.slice(0, 5).map((event) => '<a class="activityRow" href="#" onclick="event.preventDefault();goApplicants(\'all\')"><span><strong>' + esc(event.label) + '</strong><small>' + esc(event.app.name || event.app.email || "Applicant") + '</small></span><time>' + esc(timeAgo(event.at)) + '</time></a>').join("")
+          : '<div class="overviewNote">No dated applicant activity is available.</div>';
         // Actionable applicant progress — needs attention / paid / enrolled
         const progApps = (typeof activeApps === "function") ? activeApps() : [];
         const needed = progApps.filter((x) => { const s = String(x.application_status || x.stage || x.status || "").toLowerCase(); return s === "new" || s === "awaiting_payment" || s === "payment_pending" || s === "onboarding"; });
@@ -3598,11 +3664,16 @@
         if (reviewableNow.length) {
           naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'all\');">Review ' + ovNum(reviewableNow.length) + ' pending application' + (reviewableNow.length === 1 ? '' : 's') + '</a></div>');
         }
-        // Invitation delivery failures (accepted but not delivered)
+        // Provider telemetry keeps failures separate from missing confirmation.
+        // Temporary deferrals are in-flight, not administrator failures.
         const acceptedNow = activeApps().filter((x) => appAcceptanceEmail(x).issued);
-        const deliveryFails = acceptedNow.filter((x) => !appAcceptanceEmail(x).delivered);
-        if (deliveryFails.length) {
-          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(deliveryFails.length) + ' invitation delivery issue' + (deliveryFails.length === 1 ? '' : 's') + '</a></div>');
+        const inviteFailed = acceptedNow.filter((x) => appAcceptanceEmail(x).failed);
+        if (inviteFailed.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();openTool(\'email\');">' + ovNum(inviteFailed.length) + ' invitation delivery failure' + (inviteFailed.length === 1 ? '' : 's') + ' · review delivery telemetry</a></div>');
+        }
+        const inviteUnconfirmed = acceptedNow.filter((x) => appAcceptanceEmail(x).unresolved);
+        if (inviteUnconfirmed.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(inviteUnconfirmed.length) + ' unconfirmed invitation' + (inviteUnconfirmed.length === 1 ? '' : 's') + ' · confirm send status</a></div>');
         }
         // Payment verification/GCASH followup needs (infer via needsAdmin + awaiting/payment states)
         const payNeeds = activeApps().filter((x) => {
@@ -4224,6 +4295,7 @@
          component styles. Component/header/chart CSS is injected later,
          per tool, as each is migrated off its duplicated inline styles. */
       let sharedTokensCss = null;
+      let sharedV3Css = null;
       async function loadSharedTokens() {
         if (sharedTokensCss != null) return sharedTokensCss;
         try {
@@ -4236,6 +4308,17 @@
           sharedTokensCss = "";
         }
         return sharedTokensCss;
+      }
+      async function loadSharedV3() {
+        if (sharedV3Css != null) return sharedV3Css;
+        try {
+          const res = await fetch("/admin-v3.css", { credentials: "same-origin" });
+          if (!res.ok) throw new Error("admin v3 " + res.status);
+          sharedV3Css = scopeToolCss(await res.text());
+        } catch {
+          sharedV3Css = "";
+        }
+        return sharedV3Css;
       }
 
       async function mountTool(name) {
@@ -4268,6 +4351,9 @@
         const tokens = document.createElement("style");
         tokens.textContent = await loadSharedTokens();
         shadow.appendChild(tokens);
+        const shared = document.createElement("style");
+        shared.textContent = await loadSharedV3();
+        shadow.appendChild(shared);
         const root = document.createElement("div");
         root.className = "toolRoot";
         root.innerHTML = src.markup;
