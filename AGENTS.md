@@ -31,69 +31,60 @@ For ANY Assistara email work — creating, editing, rendering, previewing, testi
 # Assistara browser automation rule
 
 All Assistara browser automation — in every current and future OpenCode session, for every
-agent — MUST use **one shared persistent browser profile**. Never create a temporary,
-isolated, incognito or per-session profile.
+agent — MUST use **the browser integrated into the OpenCode desktop interface** (the
+`browser.*` tools, one shared in-app context). Do **not** launch external Chrome, Edge or
+Chromium windows, and do **not** start a Playwright/MCP browser, for Assistara work.
 
-1. **Profile directory (single source of truth)**
-   `%USERPROFILE%\.cache\opencode\playwright-profile` (on this machine:
-   `C:\Users\jesse\.cache\opencode\playwright-profile`).
+1. **Preferred browser (single source of truth)**
 
-   It lives **outside** the Git repository on purpose and must never be committed, copied to
-   the repository, reset, or deleted.
+   The **OpenCode integrated browser**, driven exclusively by the `browser.*` tools. It runs
+   inside the desktop app and uses the app's own profile at `%APPDATA%\ai.opencode.desktop`.
+   It is the **only** approved browser for Assistara dashboards (Resend, Brevo, Supabase,
+   Sender.net) and for the Assistara Admin UI (Command Center, Template Studio).
 
-2. **Canonical configuration** — `%USERPROFILE%\.config\opencode\opencode.jsonc`, under the
-   top-level `mcp` key (server names are keys **directly** under `mcp`; there is no `servers`
-   wrapper). This is the one and only place the browser profile is declared:
+   A human may sign in to the Assistara Admin UI directly in this browser; that session is
+   stored client-side and is reused by the agent. Never ask for or accept a password in chat.
 
-   ```jsonc
-   "mcp": {
-     "playwright": {
-       "type": "local",
-       "command": [
-         "npx",
-         "@playwright/mcp@0.0.83",
-         "--executable-path",
-         "C:\\Users\\jesse\\AppData\\Local\\ms-playwright\\chromium-1248\\chrome-win64\\chrome.exe",
-         "--user-data-dir",
-         "C:\\Users\\jesse\\.cache\\opencode\\playwright-profile",
-         "--headed"
-       ]
-     }
-   }
-   ```
+2. **Never launch external browser windows**
 
-   The explicit absolute `--user-data-dir` is what makes every session and every working
-   directory reuse the same profile. Without it `@playwright/mcp` defaults to
-   `%USERPROFILE%\AppData\Local\ms-playwright\mcp-{channel}-{sha256(cwd)[0:7]}`, which
-   produces a **different profile per project**.
+   - No `npx @playwright/mcp … --headed`, no `--user-data-dir` Playwright launches, no
+     external Chromium remote-debugging windows.
+   - No `--isolated`, no incognito/temporary profiles, no `%TEMP%\playwright_chromiumdev_profile-*`.
+   - Rationale: external windows previously broke provider OAuth (Google) and produced a
+     different profile per working directory. Provider logins belong in the integrated browser.
 
-3. **Required rules for every session**
-   - Reuse `C:\Users\jesse\.cache\opencode\playwright-profile`. Never point automation at a
-     different, new, or per-session directory.
-   - NEVER pass `--isolated` (it keeps the profile in memory and creates a throwaway profile).
-   - NEVER use incognito/temporary profiles or `%TEMP%\playwright_chromiumdev_profile-*`.
-   - NEVER delete, reset, clear or "clean" the profile directory.
-   - Only ONE browser instance may hold the profile at a time. If it is already in use,
-     reuse the running browser (`--cdp-endpoint`) instead of launching a competing instance.
-   - NEVER copy cookies, sessions or credentials between profiles. Sign in again instead.
+3. **One browser, one profile**
+
+   - Only ONE browser instance may hold the profile at a time; reuse the running integrated
+     browser instead of launching a competing instance.
+   - Never create, reset, clear or "clean" a profile directory, and never delete cookies or
+     storage as a diagnostic.
+   - Never copy cookies, sessions or credentials between profiles or machines. Sign in again
+     instead.
    - Never write credentials, cookies or tokens into source, config or documentation.
 
-4. **Desktop app browser is not the persistent profile.** The `browser.*` tools in the
-   OpenCode desktop app drive the app's own embedded Electron browser, which uses
-   `%APPDATA%\ai.opencode.desktop` and keeps page storage **in memory** (its on-disk cookie
-   store is not written). Logins there do not survive an app restart. Durable provider
-   logins belong in the Playwright profile above.
+4. **Session persistence (what to expect)**
 
-5. **Verification** — the authentication health check:
+   - The integrated browser keeps page **localStorage** on disk for the running app, so
+     localStorage-backed sessions — Supabase dashboard and the Assistara Admin session
+     (`assistara_admin_token`, 2-hour server-side expiry) — survive page reloads and tab
+     close/reopen.
+   - Its Chromium **cookie** store is flushed lazily, so cookie-backed provider logins
+     (Resend, Brevo) may need re-authentication after an app restart. Do not make restarting an
+     authenticated browser a routine step; if a login is lost, sign in again in the integrated
+     browser — never by copying session data.
 
-   ```
-   node scripts/browser-auth-health.mjs            # report, exit 0
-   node scripts/browser-auth-health.mjs --strict   # exit 1 when a provider is signed out
-   node scripts/browser-auth-health.mjs --json     # machine readable
-   ```
+5. **Deprecated — do not use**
 
-   It is read-only: it loads each dashboard and reports the sign-in status. It never signs
-   in, never signs out, never changes settings, never clears cookies or storage, and never
-   prints credentials. Run it before provider-facing work, and after any OpenCode restart.
+   `scripts/browser-login.mjs`, `scripts/browser-auth-health.mjs` and the profile at
+   `%USERPROFILE%\.cache\opencode\playwright-profile` are **retired**: they drive an external
+   Playwright window. Do not run them for Assistara work. (Kept in the repo only for historical
+   reference; safe to delete.)
+
+6. **Verification**
+
+   Run the authentication health check by loading each dashboard in the integrated browser and
+   reading its sign-in state from the page. A health check never signs in, never signs out,
+   never changes settings, never clears cookies or storage, and never prints credentials.
 
 
