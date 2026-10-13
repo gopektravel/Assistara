@@ -203,7 +203,16 @@ export class EmailDelivery {
       return { success: false, provider: null, providerMessageId: null, status: 'expired', error: 'Deadline exceeded', errorCategory: 'unknown', attempts: 0 };
     }
 
-    // Atomic claim for exactly-once
+    // Ensure delivery log entry exists FIRST (required for claimDelivery FK constraint)
+    await this.ensureDeliveryLog(idempotencyKey, {
+      status: 'pending',
+      email_type: emailType,
+      recipient_email: to,
+      subject,
+      created_at: new Date().toISOString()
+    });
+
+    // Atomic claim for exactly-once (requires delivery_log entry to exist for FK)
     const claimed = await this.claimDelivery(idempotencyKey);
     if (!claimed) {
       // Check existing log for status
@@ -725,6 +734,24 @@ export class EmailDelivery {
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() })
+    });
+  }
+
+  private async ensureDeliveryLog(idempotencyKey: string, initialData: Record<string, unknown>): Promise<void> {
+    // Upsert delivery log entry (create if not exists)
+    await fetch(`${this.supabaseUrl}/rest/v1/email_delivery_log`, {
+      method: 'POST',
+      headers: { 
+        apikey: this.supabaseKey, 
+        Authorization: `Bearer ${this.supabaseKey}`, 
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ 
+        idempotency_key: idempotencyKey, 
+        ...initialData,
+        updated_at: new Date().toISOString() 
+      })
     });
   }
 

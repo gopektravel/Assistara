@@ -188,6 +188,14 @@ Deno.serve(async (req) => {
     }
 
     if (action === "providers") {
+      const update = body.update;
+      if (update && update.provider) {
+        const allowed = ["is_enabled", "priority", "tracking_open", "tracking_click", "daily_limit_override", "monthly_limit_override", "notes"];
+        const patch: Record<string, any> = { updated_at: new Date().toISOString() };
+        for (const k of allowed) if (update[k] !== undefined) patch[k] = update[k];
+        const { error } = await db.from("email_provider_config").update(patch).eq("provider", update.provider);
+        if (error) return out({ ok: false, error: error.message }, 500);
+      }
       const sync = body.sync === true;
       const [configs, quota, health, usage, failures] = await Promise.all([
         fetchConfigs(db, true),
@@ -250,6 +258,48 @@ Deno.serve(async (req) => {
 
     if (action === "reminder30_retry") {
       return await handleReminder30Retry(db, body, out);
+    }
+
+    if (action === "debug_claims") {
+      const { data: claims, error } = await db
+        .from("email_delivery_claim")
+        .select("idempotency_key, claimed_by, claimed_at, expires_at")
+        .order("claimed_at", { ascending: false })
+        .limit(50);
+      if (error) return out({ ok: false, error: error.message }, 500);
+      return out({ ok: true, claims });
+    }
+
+    if (action === "debug_release_claim") {
+      const key = clean(body.idempotency_key, 200);
+      const worker = clean(body.worker, 100) || "debug";
+      if (!key) return out({ ok: false, error: "idempotency_key required" }, 400);
+      await db.from("email_delivery_claim").delete().eq("idempotency_key", key).eq("claimed_by", worker);
+      return out({ ok: true, released: key });
+    }
+
+    if (action === "debug_test_claim") {
+      const key = clean(body.idempotency_key, 200) || `test-claim-${Date.now()}`;
+      const worker = clean(body.worker, 100) || "debug-test";
+      const response = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/email_claim_delivery`, {
+        method: "POST",
+        headers: { apikey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`, "Content-Type": "application/json", Prefer: "return=representation" },
+        body: JSON.stringify({ p_idempotency_key: key, p_claimed_by: worker, p_ttl_seconds: 300 })
+      });
+      const result = await response.json().catch(() => ({ error: "parse failed" }));
+      return out({ ok: true, rpcStatus: response.status, rpcResult: result, key, worker });
+    }
+
+    if (action === "debug_webhook_events") {
+      const since = clean(body.since, 40) || new Date(Date.now() - 3600000).toISOString();
+      const { data: events, error } = await db
+        .from("email_webhook_events")
+        .select("provider,event_type,verified,received_at,processing_error,payload")
+        .gt("received_at", since)
+        .order("received_at", { ascending: false })
+        .limit(20);
+      if (error) return out({ ok: false, error: error.message }, 500);
+      return out({ ok: true, events });
     }
 
     return out({ ok: false, error: "Unknown action" }, 400);
