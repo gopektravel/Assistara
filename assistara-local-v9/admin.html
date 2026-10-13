@@ -1042,9 +1042,9 @@
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
               <span class="nav-item-label">Acquisition Tracker</span>
             </button>
-            <button class="nav-item" type="button" data-tab="webinar" data-tooltip="Webinar Signups">
+            <button class="nav-item" type="button" data-tab="webinar" data-tooltip="Lead Tracker">
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/></svg></span>
-              <span class="nav-item-label">Webinar Signups</span>
+              <span class="nav-item-label">Lead Tracker</span>
             </button>
             <button class="nav-item" type="button" data-tool="masterclass" data-tooltip="Live Events">
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m10 15 5-3-5-3z"/></svg></span>
@@ -1375,9 +1375,9 @@
           search: false,
         },
         webinar: {
-          crumb: [["Marketing", "Webinar Signups"]],
-          title: "Webinar Signups",
-          sub: "Masterclass signups, attendance and acquisition attribution.",
+          crumb: [["Marketing", "Lead Tracker"]],
+          title: "Lead Tracker",
+          sub: "Leads, masterclass signups, source attribution and conversion to applications.",
           search: true,
         },
         b2b: {
@@ -2483,17 +2483,36 @@
           visibleWeb.forEach((x)=>{const s=sourceFor(x);attrCounts[s.status]=(attrCounts[s.status]||0)+1});
           // Total applications, read from the ONE canonical counter so this tab
           // and the Applications tab always show the exact same number.
+          const convertedCount = visibleWeb.filter((x) => x.email && applicationByEmail.has(normEmail(x.email))).length;
+          const signupConv = visibleWeb.length > 0 ? ((convertedCount / visibleWeb.length) * 100) : null;
           stat([
-            [visibleWeb.length, "Registered"],
+            [visibleWeb.length, "Masterclass Signups", "Webinar registrations"],
             [visibleWeb.filter((x) => x.attended).length, "Attended"],
             [totalApplications(), "Applications", "Total applications"],
+            [convertedCount, "Signup → Application", signupConv !== null && Number.isFinite(signupConv) ? signupConv.toFixed(1) + "% convert" : "No signups yet"],
             [visibleWeb.filter((x) => x.purchased).length, "Purchased"],
           ]);
           $("signupGoal").innerHTML += `<div class="attrSummary">Attribution · Tracked ${attrCounts.Tracked} · Recovered ${attrCounts.Recovered}${attrCounts.UTM?" · UTM "+attrCounts.UTM:""}${attrCounts.Direct?" · Direct "+attrCounts.Direct:""} · Untracked ${attrCounts.Untracked}</div>`;
+          // Per-source performance: signups, applications, conversion. Real data only.
+          const srcStats = {};
+          visibleWeb.forEach((x) => {
+            const s = sourceFor(x);
+            const key = String(s.display || "Unknown").slice(0, 48);
+            if (!srcStats[key]) srcStats[key] = { signups: 0, apps: 0 };
+            srcStats[key].signups++;
+            if (x.email && applicationByEmail.has(normEmail(x.email))) srcStats[key].apps++;
+          });
+          const srcRows = Object.entries(srcStats).sort((a, b) => b[1].signups - a[1].signups).slice(0, 10);
+          if (srcRows.length) {
+            $("signupGoal").innerHTML += '<div class="card" style="margin-top:12px;"><div class="card-header"><div><h3 class="card-title">Source performance</h3><div class="card-subtitle">Signups and signup → application conversion by source.</div></div></div>' +
+              '<div class="tableWrap"><table class="table"><thead><tr><th>Source</th><th>Signups</th><th>Applications</th><th>Conversion</th></tr></thead><tbody>' +
+              srcRows.map(([k, v]) => '<tr><td>' + esc(k) + '</td><td>' + ovNum(v.signups) + '</td><td>' + ovNum(v.apps) + '</td><td>' + (v.signups > 0 ? ((v.apps / v.signups) * 100).toFixed(1) + '%' : '—') + '</td></tr>').join("") +
+              '</tbody></table></div></div>';
+          }
           const w = visibleWeb.filter(match);
           $("cards").innerHTML = w.length
             ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="btn btn-destructive" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
-            : '<div class="empty">No webinar signups yet.</div>';
+            : '<div class="empty">No leads yet. Masterclass signups and direct leads appear here.</div>';
           return;
         }
         if (tab === "coupons") {
@@ -3594,7 +3613,7 @@
           items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
             '<div style="font-size:11px;font-weight:700;color:#171717;">Registered for Masterclass</div>' +
             '<div style="font-size:18px;font-weight:800;color:#171717;margin-top:4px;">' + ovNum(webReg) + '</div>' +
-            '<div style="font-size:11px;color:#746e65;"><a href="#" onclick="event.preventDefault();openTool(\'webinar\');">View Webinar Signups</a></div>' +
+            '<div style="font-size:11px;color:#746e65;"><a href="#" onclick="event.preventDefault();showDashboard({push:true});tab=\'webinar\';render();saveUiState();">View Lead Tracker</a></div>' +
             '</div>');
           items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
             '<div style="font-size:11px;font-weight:700;color:#171717;">Acquisition Leads</div>' +
