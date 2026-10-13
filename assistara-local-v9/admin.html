@@ -1150,6 +1150,8 @@
             <option value="completed">Completed</option>
             <option value="in_progress">In Progress</option>
             <option value="failed_exam">Failed Exam</option>
+            <option value="needs_attention">Needs Attention</option>
+            <option value="stalled">Stalled (14+ days)</option>
           </select>
           <select id="studentSort">
             <option value="recent">Most Recently Active</option>
@@ -2428,6 +2430,8 @@
           else if (statusFilter === "completed") filtered = s.filter(x => x._progress && x._progress.pct >= 100);
           else if (statusFilter === "in_progress") filtered = s.filter(x => x._progress && x._progress.pct > 0 && x._progress.pct < 100);
           else if (statusFilter === "failed_exam") filtered = s.filter(x => x._progress && x._progress.examsFailed > 0);
+          else if (statusFilter === "needs_attention") filtered = s.filter(x => x._progress && (x._progress.examsFailed > 0 || (x._progress.pct > 0 && x._progress.pct < 100 && x._progress.lastActivity && Date.now() - Date.parse(x._progress.lastActivity) > 14 * 86400000)));
+          else if (statusFilter === "stalled") filtered = s.filter(x => x._progress && x._progress.pct > 0 && x._progress.pct < 100 && x._progress.lastActivity && Date.now() - Date.parse(x._progress.lastActivity) > 14 * 86400000);
           // Apply sorting
           const sortBy = $("studentSort") ? $("studentSort").value : "recent";
           const sorted = [...filtered].sort((a, b) => {
@@ -2439,10 +2443,10 @@
             return 0;
           });
           stat([
-            [allApps.length, "Total Applications"],
-            [allApps.filter((x) => appNeedsAdmin(x)).length, "Needs Admin Action"],
-            [allApps.filter((x) => { const st = appStage(x); return st === "awaiting_payment" || st === "payment_pending"; }).length, "Awaiting Payment"],
-            [allApps.filter((x) => appStage(x) === "enrolled").length, "Enrolled"],
+            [s.length, "Total Students"],
+            [s.filter((x) => !x.suspended_at).length, "Active"],
+            [s.filter((x) => x._progress && x._progress.pct >= 100).length, "Completed"],
+            [s.filter((x) => x._progress && (x._progress.examsFailed > 0 || (x._progress.pct > 0 && x._progress.pct < 100 && x._progress.lastActivity && Date.now() - Date.parse(x._progress.lastActivity) > 14 * 86400000))).length, "Needs Attention"],
           ]);
           $("studentFilters").style.display = "flex";
           $("cards").innerHTML = sorted.length
@@ -2783,8 +2787,9 @@
         stat([
           [total, "Coupons"],
           [activeCount, "Active"],
-          [totalRedemptions, "Redemptions"],
+          [totalRedemptions, "Confirmed Redemptions"],
           [MONEY_PHP(totalRevenue), "Revenue"],
+          [MONEY_PHP(totalDiscounts), "Discounts Given"],
         ]);
         // Create coupon button
         const createCouponBtn = `<div class="actions" style="margin-bottom:14px"><button class="btn btn-success" onclick="createCoupon()">+ Create Coupon</button></div>`;
@@ -2799,11 +2804,18 @@
       }
       window.toggleCoupon = (id) => {
         const key = String(id);
+        const isOpen = openCoupons.has(key);
+        if (isOpen) openCoupons.delete(key); else openCoupons.add(key);
+        // Re-render the card immediately so details appear without delay.
+        const c = coupons.find((x) => String(x.id) === key);
         const e = $("coupon-" + key);
-        if (e) e.classList.toggle("open");
-        const isOpen = !!e && e.classList.contains("open");
-        if (isOpen) openCoupons.add(key); else openCoupons.delete(key);
-        if (isOpen) {
+        if (c && e) {
+          const tmp = document.createElement("div");
+          tmp.innerHTML = couponCard(c);
+          const fresh = tmp.firstElementChild;
+          if (fresh) e.replaceWith(fresh);
+        }
+        if (!isOpen) {
           const box = $("coupon-redemptions-" + key);
           if (box) loadCouponRedemptions(key, box);
         }
