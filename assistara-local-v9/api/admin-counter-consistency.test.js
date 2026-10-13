@@ -132,6 +132,31 @@ test("edge function returns non-enrolled applications and enrolled students sepa
     "Edge function must return enrolled as 'students'");
 });
 
+test("edge function derives invitation delivery from provider telemetry, never from a log row", () => {
+  // The acceptance invitation outcome is read from the provider delivery
+  // telemetry (email_delivery_log + email_events)...
+  assert.ok(contains(edgeFn, "from('email_delivery_log')"),
+    "the invitation outcome must read the provider delivery telemetry");
+  assert.ok(contains(edgeFn, "from('email_events')"),
+    "delivery, bounce and delay events must come from the provider webhooks");
+  assert.ok(contains(edgeFn, "'academy_acceptance'"),
+    "the acceptance invitation type is an explicit source");
+  // ...attached to every record...
+  assert.ok(contains(edgeFn, "z.acceptance_email = inviteOutcome(z)"),
+    "each application carries its invitation outcome");
+  // ...and 'delivered' requires real provider proof.
+  assert.ok(contains(edgeFn, "types.has('delivered')"),
+    "delivered must require a provider delivery signal");
+  // A missing signal is unresolved, never failed, and the activity log is not used.
+  const start = edgeFn.indexOf("const inviteOutcome = ");
+  const end = edgeFn.indexOf("const applicants = x.filter", start);
+  assert.ok(start !== -1 && end > start, "inviteOutcome must exist before the applicant split");
+  const outcome = edgeFn.slice(start, end);
+  assert.ok(contains(outcome, "'unresolved'"), "a sent-but-unconfirmed invitation is unresolved");
+  assert.ok(!contains(outcome, "admin_activity_log"),
+    "the invitation outcome must never be inferred from the activity log");
+});
+
 test("edge function returns all signups without filtering", () => {
   assert.ok(contains(edgeFn, "signups:W.data"),
     "Edge function must return all signups (filtering happens in frontend)");

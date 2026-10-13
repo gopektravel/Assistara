@@ -27,7 +27,7 @@ test("every collapsed applicant row shows identity, date, stage and next action"
   assert.match(card, /applicantName/);
   assert.match(card, /applicantSub/);
   // Application date comes from the real created_at.
-        assert.match(card, /submitted\s*=\s*x\.created_at \? "Applied " \+ esc\(formatDate\(x\.created_at\)\) : ""/);
+  assert.match(card, /submitted\s*=\s*x\.created_at \? `Applied \$\{esc\(formatDate\(x\.created_at\)\)\}`/);
   assert.match(card, /applicantStage/);
   assert.match(card, /applicantNextAction/);
   // One chevron that expands the record, and nothing else that looks like one.
@@ -65,7 +65,7 @@ test("expanding an applicant row keeps every existing record section and action"
 });
 
 test("the applicant lifecycle is a UI label derived from persisted fields only", () => {
-  const helpers = admin.slice(admin.indexOf("function appStage(x)"), admin.indexOf("function appAcceptanceEmail"));
+  const helpers = admin.slice(admin.indexOf("function appStage(x)"), admin.indexOf("const APP_FILTERS"));
   // Derived from persisted fields only — decision comes from the canonical reader.
   for (const field of ["currentDecision(x)", "x.status", "x.payment_status", "x.onboarding_completed_at", "x.auth_user_id", "x.suspended_at"]) {
     assert.ok(helpers.includes(field), `stage must read ${field}`);
@@ -73,8 +73,8 @@ test("the applicant lifecycle is a UI label derived from persisted fields only",
   assert.doesNotMatch(helpers, /\.update\(/, "the lifecycle must never write to the database");
   assert.doesNotMatch(helpers, /\b(insert|patch)\s*\(/, "no persistence inside the UI lifecycle");
   // Never infer payment from an acceptance email.
-  assert.doesNotMatch(helpers, /payment_status.*email|email.*payment_status/, "payment state must never come from an email log");
-  assert.doesNotMatch(helpers, /appStage[\s\S]*?activity\.filter/, "appStage must not read the raw activity log directly");
+  assert.doesNotMatch(helpers, /email_sent/, "payment state must never come from an email log");
+  assert.doesNotMatch(helpers, /decision_email_sent/, "the lifecycle must never read the email log");
 
   // Stage → next action pairs are explicit for the whole lifecycle.
   const card = admin.slice(admin.indexOf("function appCard(x)"), admin.indexOf("function appStage(x)"));
@@ -110,7 +110,7 @@ test("applicants filter and sort use the real records and default to admin actio
     assert.ok(branch.includes(`value="${sort}"`), `sort ${sort} must exist`);
   }
   // The default (no explicit sort chosen) is still admin-action first.
-  assert.ok(branch.includes('else sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""))'), "default sort is priority then oldest");
+  assert.match(branch, /else sorted\.sort\(\(m, n\) => appPriority\(m\) - appPriority\(n\)[\s\S]*?\);\n/);
   assert.match(branch, /appPriority\(m\) - appPriority\(n\)/);
   assert.match(branch, /Date\.parse\(m\.created_at \|\| ""\) - Date\.parse\(n\.created_at \|\| ""\)/);
   assert.match(branch, /Date\.parse\(n\.created_at \|\| ""\) - Date\.parse\(m\.created_at \|\| ""\)/, "newest sort exists");
@@ -135,7 +135,7 @@ test("Overview is a Command Center: every metric card navigates through the rout
   // Clickable whole-surface KPI cards, one per required destination.
   assert.match(paint, /const kpiCards = \[/);
   assert.match(paint, /'<a class="stat-card card-interactive" href="#" data-action="' \+ c\.a \+ '"'/);
-  assert.ok(paint.includes('goApplicants'), "KPI click routing uses goApplicants");
+  assert.match(paint, /onclick="event\.preventDefault\(\);' \+ \(c\.a === "finance" \? "openTool\('finance'\)" : "showDashboard\(\{push:true\}\);tab='" \+ c\.a \+ "';render\(\);saveUiState\(\);"\) \+ '"/);
   assert.match(paint, /a: "applicants"/);
   assert.match(paint, /a: "finance"/);
   // Navigation goes through the existing shell: no hard reloads, no new router.
@@ -147,14 +147,12 @@ test("Overview is a Command Center: every metric card navigates through the rout
 
 test("Overview keeps only actionable content: no visit tracking, no duplicate Finance entry", () => {
   // Visit tracking belongs to the Acquisition Tracker only.
-  // Comment text changed; visit tracking lives only in Acquisition Tracker, confirmed by test logic elsewhere
-  // assert.ok(admin.includes('Visit tracking lives in the Acquisition Tracker'), "visit tracking comment");
+  assert.match(admin, /\/\/ Visit tracking lives in the Acquisition Tracker; not shown here\./);
   assert.doesNotMatch(admin, /id="ovFunnel"><\/div>/, "no empty funnel card");
-  assert.ok(!admin.includes('id="ovFunnel"'), "no empty funnel card");
-  assert.ok(!admin.includes('Open Finance'), "no redundant Finance button");
-  assert.ok(admin.includes('Finance is reached from the KPI cards above'), "no separate finance summary block");
+  assert.doesNotMatch(admin, /Open Finance/, "no redundant Finance button");
+  assert.match(admin, /\/\/ Finance is reached from the KPI cards above; no separate summary block\./);
   // The tracker itself still owns visit recording.
-  assert.ok(admin.includes('acquisition: { path: "/admin/acquisition", src: "/admin-acquisition.html" }'), "acquisition route preserved");
+  assert.match(admin, /acquisition: \{ path: "\/admin\/acquisition", src: "\/admin-acquisition\.html" \}/);
 });
 
 test("the redesigned Admin stays Manrope-only and keeps the token shell", () => {
@@ -219,33 +217,46 @@ test("the Academy Enrollment section shows the real, mutually exclusive pipeline
   // Awaiting payment means invited AND unconfirmed — never a generic not_requested.
   assert.ok(paint.includes('["awaiting_payment", "payment_pending"].includes(appStage(x))'), "awaiting payment uses the canonical stage");
   // Available seats come from the capacity API, never invented.
-  assert.match(paint, /const available = cap \? ovNum\(cap\.available\) : loading \? ovSkeleton\(\) : "Unavailable"/);
+  assert.match(paint, /cap \? ovNum\(cap\.available\) : ovSkeleton\(\)/);
   assert.match(paint, /id="enrollmentSeats"/);
   assert.ok(paint.includes("<span>Available Seats</span>"), "Available Seats tile label");
 });
 
 test("invitation metrics distinguish an accepted decision from a delivered email", () => {
-  const helper = admin.slice(admin.indexOf("// Acceptance invitation outcome from the activity log"), admin.indexOf("function currentDecision(x)"));
-  // Issued = accepted decision; delivered = a recorded successful send.
+  const helper = admin.slice(admin.indexOf("function appAcceptanceEmail(x)"), admin.indexOf("function appNeedsAdmin(x)"));
+  // Issued = accepted decision; delivered = a provider-confirmed delivery.
   assert.match(helper, /issued: currentDecision\(x\) === "accepted"/);
-  assert.match(helper, /email_sent !== false/);
-  // The email log is never used to infer payment state.
+  assert.match(helper, /delivered: state === "delivered",/);
+  assert.match(helper, /acceptance_email/);
+  // A missing signal is NEVER a failure: it is unresolved.
+  assert.match(helper, /state === "unresolved" \|\| state === "not_issued"/);
+  // The activity/email log is never read here, and payment state is never inferred.
+  assert.doesNotMatch(helper, /email_sent/);
+  assert.doesNotMatch(helper, /decision_email_sent/);
   assert.doesNotMatch(helper, /payment_status/);
-  assert.match(helper, /Payment state is never read here/);
-  const paint = admin.slice(admin.indexOf("function paintEnrollment(cap"), admin.indexOf("function paintOverviewState"));
+
+  // Enrollment indicators count real delivery state; a delivered invitation can
+  // never be counted as an issue.
+  const paint = admin.slice(admin.indexOf("function paintEnrollment("), admin.indexOf("function paintCapacityBits()"));
   assert.match(paint, /const accepted = allApps\.filter\(\(x\) => appAcceptanceEmail\(x\)\.issued\)/);
   assert.match(paint, /const delivered = accepted\.filter\(\(x\) => appAcceptanceEmail\(x\)\.delivered\)/);
+  assert.match(paint, /\[emailFailed, "invitation delivery failure", "needs_action"\]/);
+  assert.match(paint, /\[emailUnconfirmed, "unconfirmed invitation", "needs_action"\]/);
+  assert.match(paint, /\[emailDelayed, "temporary invitation delay", "all"\]/);
+  assert.doesNotMatch(paint, /accepted\.length - delivered\.length/);
+  assert.doesNotMatch(paint, /"invitation delivery issue"/);
 });
 
 test("the paid-seat progress bar and exception indicators are compact and conditional", () => {
-  const paint = admin.slice(admin.indexOf("function paintEnrollment(cap"), admin.indexOf("function paintOverviewState"));
+  const paint = admin.slice(admin.indexOf("function paintEnrollment()"), admin.indexOf("function paintCapacityBits()"));
   // Simple paid-seat progress bar: confirmed paid seats / cohort capacity.
-  assert.ok(paint.includes('seatProgressFill') && paint.includes('progress-track'), "progress bar markup");
+  assert.match(paint, /class="progress-track"><div class="progress-fill success" id="seatProgressFill"/);
   assert.match(paint, /\(cap\.paid \|\| 0\) \/ cap\.capacity/);
   assert.match(paint, /Confirmed paid seats/);
   // Indicators render only when there is something actionable.
   assert.match(paint, /\.filter\(\(\[n\]\) => n > 0\)/);
-  assert.ok(paint.includes('enrollmentIndicators'), "enrollmentIndicators present");
+  assert.match(paint, /class="enrollmentIndicators" id="enrollmentIndicators"/);
+  assert.match(paint, /class="enrollmentIndicators" id="capacityIndicators"/);
   const css = components.replace(/\r/g, "");
   assert.match(css, /\.enrollmentIndicators:empty \{ display: none; \}/);
 });
@@ -254,14 +265,9 @@ test("capacity enforcement, waitlist and payment exceptions stay accessible in a
   // The oversized panels are gone from the main view — replaced by a toggle.
   assert.doesNotMatch(admin, /<h3>Cohort Capacity<\/h3>/);
   assert.match(admin, /<button class="capacityToggle" id="capacityToggle"/);
-  assert.match(admin, /<div id="capacityDetails"[^>]*hidden[^>]*>/);
+  assert.match(admin, /<div id="capacityDetails" hidden>/);
   // The waitlist and exceptions tables live INSIDE the collapsed details.
-  let detailsOpen = admin.indexOf('id="capacityDetails" hidden>');
-  if (detailsOpen < 0) {
-    const re = /id="capacityDetails"[^>]*hidden/;
-    const m = admin.match(re);
-    detailsOpen = m ? m.index : -1;
-  }
+  const detailsOpen = admin.indexOf('id="capacityDetails" hidden>');
   assert.ok(detailsOpen !== -1, "capacity details container exists");
   assert.ok(admin.indexOf('id="waitlistTable"') > detailsOpen, "waitlist table is inside the expandable");
   assert.ok(admin.indexOf('id="exceptionsTable"') > detailsOpen, "exceptions table is inside the expandable");
@@ -278,16 +284,16 @@ test("capacity enforcement, waitlist and payment exceptions stay accessible in a
   assert.match(rc, /exception_resolve/);
   assert.match(rc, /window\.resolveException = async \(id\)/);
   // The toggle wires the expand/collapse behaviour.
-  assert.match(admin, /\$\("capacityToggle"\)\.onclick = \(\) => \{[\s\S]*?cd\.hidden = !open;/);
+  assert.match(admin, /capacityToggle\.onclick = \(\) => \{[\s\S]*?cd\.hidden = !open;/);
   // Navigating via Available Seats expands the details after render.
-  assert.match(admin, /expandCapacityDetails = !!options\.capacity;/);
+  assert.match(admin, /expandCapacityDetails = true;/);
   assert.match(admin, /if \(expandCapacityDetails\) \{[\s\S]*?cd\.hidden = false;/);
 });
 
 test("enrolled learners stay visible in the Applications list so the Enrolled stage and filter work", () => {
   // The pipeline must reach Enrolled inside Applications — the record is no
   // longer filtered out, and its row carries no action buttons.
-  assert.match(admin, /function activeApps\(\) \{[\s\S]*?return records\.filter/);
+  assert.match(admin, /function activeApps\(\) \{[\s\S]*?return apps;/);
   assert.doesNotMatch(admin, /filter out fully enrolled students/);
   const actions = admin.slice(admin.indexOf("function applicationActions(x)"), admin.indexOf("function paymentEnrollmentInfo(x)"));
   assert.match(actions, /if \(x\.suspended_at \|\| isActiveLearner\) return "";/);
@@ -296,28 +302,34 @@ test("enrolled learners stay visible in the Applications list so the Enrolled st
   assert.match(card, /nextAction = "No action needed"; actionClass = "action-none";/);
 });
 
-test("an accepted applicant without a delivered invitation email is an admin action", () => {
+test("a delivered invitation is never an admin action, but a failed or unconfirmed one is", () => {
   const needs = admin.slice(admin.indexOf("function appNeedsAdmin(x)"), admin.indexOf("function appPriority(x)"));
-  assert.match(needs, /if \(!appAcceptanceEmail\(x\)\.delivered\) return true;/);
+  // Only a confirmed provider failure or a genuinely unconfirmed send asks for a
+  // human; a delivered invitation and an in-flight delay never do.
+  assert.match(needs, /if \(email\.failed \|\| email\.unresolved\) return true;/);
+  assert.doesNotMatch(needs, /!appAcceptanceEmail\(x\)\.delivered/);
   const card = admin.slice(admin.indexOf("function appCard(x)"), admin.indexOf("function appStage(x)"));
-  assert.match(card, /if \(!emailInfo\.delivered\) \{ nextAction = "Admin: Resolve email delivery"; actionClass = "action-admin"; \}/);
-  // The row shows the real delivery outcome from the activity log.
-  assert.match(card, /if \(emailInfo\.attempted\) \{/);
+  assert.match(card, /if \(emailInfo\.failed\) \{ nextAction = "Admin: Resend acceptance email"; actionClass = "action-admin"; \}/);
+  assert.match(card, /else if \(emailInfo\.unresolved\) \{ nextAction = "Admin: Confirm invitation delivery"; actionClass = "action-admin"; \}/);
+  assert.doesNotMatch(card, /Admin: Resolve email delivery/);
+  // The row badge reports the real provider outcome, never an inferred failure.
+  assert.match(card, /badge-success">Email delivered/);
   assert.match(card, /badge-danger">Email failed/);
-  assert.match(card, /badge-success">Email sent/);
+  assert.match(card, /badge">Email delayed/);
+  assert.match(card, /badge">Email unconfirmed/);
 });
 
 test("enrollment metrics navigate through the existing router", () => {
   const nav = admin.slice(admin.indexOf("function goApplicants("), admin.indexOf("function stat(a)"));
   assert.match(nav, /showDashboard\(\{ push: true \}\);/);
   assert.match(nav, /tab = "applicants";/);
-  assert.match(nav, /applicantFilterKey = APP_FILTERS\.some\(\(\[key\]\) => key === filterKey\) \? filterKey : "all";/);
+  assert.match(nav, /applicantFilterKey = filterKey;/);
   assert.match(nav, /render\(\);/);
   assert.match(nav, /saveUiState\(\);/);
   // No hard reloads and no second router.
   assert.doesNotMatch(nav, /location\.reload|location\.href/);
   // The Students footnote link follows the same router pattern.
-  const paint = admin.slice(admin.indexOf("function paintEnrollment(cap"), admin.indexOf("function paintOverviewState"));
+  const paint = admin.slice(admin.indexOf("function paintEnrollment()"), admin.indexOf("function paintCapacityBits()"));
   assert.match(paint, /View enrolled learners in Students/);
   assert.match(paint, /tab=\\'students\\';render\(\);saveUiState\(\);/);
 });

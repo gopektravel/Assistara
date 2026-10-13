@@ -101,6 +101,80 @@ Deno.serve(async req => {
     if (B.error) return out({ ok: false, error: 'B2B: ' + B.error.message }, 500);
     const x = A.data || [];
     const isEnrolled = (z: any) => z.status === 'onboarded' && z.payment_status === 'paid' && !!z.onboarding_completed_at && !!z.auth_user_id && !z.suspended_at;
+    // Acceptance invitation outcome, derived from the provider email telemetry
+    // (email_delivery_log + email_events) -- the only measured source of truth.
+    // A missing signal is never reported as a failure; it is 'unresolved'.
+    const inviteTypes = ['academy_acceptance', 'academy_enrollment_link_fixed'];
+    const inviteEmails = [...new Set(x.flatMap((z: any) => {
+      const e = String((z && z.email) || '').trim();
+      return e ? [e, e.toLowerCase()] : [];
+    }))];
+    const inviteByEmail = new Map<string, any>();
+    if (inviteEmails.length) {
+      const inv = await db.from('email_delivery_log')
+        .select('recipient_email,email_type,campaign_key,provider,provider_message_id,status,created_at,sent_at,delivered_at,bounced_at')
+        .in('recipient_email', inviteEmails)
+        .in('email_type', inviteTypes)
+        .order('created_at', { ascending: false });
+      const invRows = inv.error ? [] : (inv.data || []);
+      const invIds = [...new Set(invRows.map((r: any) => String((r && r.provider_message_id) || '')).filter(Boolean))];
+      const invEvents = invIds.length
+        ? await db.from('email_events').select('provider_message_id,event_type').in('provider_message_id', invIds)
+        : ({ data: [] } as any);
+      const eventsByMessage = new Map<string, Set<string>>();
+      for (const e of (invEvents && !invEvents.error ? invEvents.data || [] : [])) {
+        const k = String((e && e.provider_message_id) || '');
+        if (!k) continue;
+        if (!eventsByMessage.has(k)) eventsByMessage.set(k, new Set<string>());
+        eventsByMessage.get(k)!.add(String((e && e.event_type) || ''));
+      }
+      for (const r of invRows) {
+        const k = String((r && r.recipient_email) || '').trim().toLowerCase();
+        if (!k) continue;
+        const types = eventsByMessage.get(String((r && r.provider_message_id) || '')) || new Set<string>();
+        const info = inviteByEmail.get(k) || { recorded: true, delivered: false, bounced: false, failed: false, deferred: false, provider: null, provider_message_id: null, status: null, email_type: null, campaign_key: null, sent_at: null, delivered_at: null, bounced_at: null };
+        if (r.delivered_at || types.has('delivered')) info.delivered = true;
+        if (r.bounced_at || types.has('bounced')) info.bounced = true;
+        if (String(r.status) === 'failed' || types.has('failed')) info.failed = true;
+        if (types.has('deferred')) info.deferred = true;
+        if (info.provider_message_id === null) {
+          info.provider = r.provider || null;
+          info.provider_message_id = r.provider_message_id || null;
+          info.status = r.status || null;
+          info.email_type = r.email_type || null;
+          info.campaign_key = r.campaign_key || null;
+          info.sent_at = r.sent_at || null;
+          info.delivered_at = r.delivered_at || null;
+          info.bounced_at = r.bounced_at || null;
+        }
+        inviteByEmail.set(k, info);
+      }
+    }
+    const inviteOutcome = (z: any) => {
+      const info = inviteByEmail.get(String((z && z.email) || '').trim().toLowerCase());
+      if (!info) return { recorded: false, state: 'not_issued', verified: false };
+      const state = info.delivered ? 'delivered'
+        : info.bounced ? 'bounced'
+        : info.failed ? 'failed'
+        : info.deferred ? 'deferred'
+        : 'unresolved';
+      return {
+        recorded: true,
+        state,
+        verified: state === 'delivered' || state === 'bounced' || state === 'failed',
+        provider: info.provider,
+        provider_message_id: info.provider_message_id,
+        status: info.status,
+        email_type: info.email_type,
+        campaign_key: info.campaign_key,
+        sent_at: info.sent_at,
+        delivered_at: info.delivered_at,
+        bounced_at: info.bounced_at,
+      };
+    };
+    // Decorate every record with its acceptance-invitation outcome (the same
+    // rows feed both the applications list and the enrolled-students list).
+    x.forEach((z: any) => { z.acceptance_email = inviteOutcome(z); });
     const applicants = x.filter((z: any) => !isEnrolled(z));
     const students = x.filter(isEnrolled);
     const visitIds = [...new Set([...x, ...(W.data || [])].map((r: any) => String(r && r.acquisition_visit_id || '')).filter(Boolean))];
