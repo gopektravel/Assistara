@@ -45,7 +45,7 @@ test("tab, search, filters, expanded cards and scroll save their state", () => {
   assert.match(admin, /render\(\);\s*saveUiState\(\);/); // nav handler
   assert.match(admin, /\$\("search"\)\.oninput = \(\) => \{ render\(\); saveUiState\(\); \}/);
   assert.match(admin, /studentFilter\.onchange = \(\) => \{ render\(\); saveUiState\(\); \}/);
-  assert.match(admin, /studentSortControl\.onchange = \(\) => \{ render\(\); saveUiState\(\); \}/);
+  assert.match(admin, /studentSort\.onchange = \(\) => \{ render\(\); saveUiState\(\); \}/);
   assert.match(admin, /window\.addEventListener\("pagehide", saveUiState\)/);
   // expanded applicants + students persist
   assert.match(admin, /openApps\.add\(key\)[\s\S]*saveUiState\(\)/);
