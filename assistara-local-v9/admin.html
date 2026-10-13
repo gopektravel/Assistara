@@ -669,6 +669,9 @@
         .studentGrid {
           grid-template-columns: 1fr;
         }
+        .ov-two-col {
+          grid-template-columns: 1fr !important;
+        }
       }
       .empty {
         background: #fff;
@@ -1084,6 +1087,11 @@
           </div>
         </nav>
         <div class="sidebar-footer">
+          <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency" style="margin-bottom: 10px; justify-content: center;">
+            <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
+            <button type="button" data-cur="USD" aria-pressed="false">USD</button>
+            <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
+          </div>
           <div class="sidebar-user">
             <div class="sidebar-user-avatar" aria-hidden="true">A</div>
             <div class="sidebar-user-info">
@@ -1169,16 +1177,17 @@
           </select>
         </div>
         <div id="signupGoal"></div><div id="stats" class="grid-stats-4"></div>
+        <div id="appPipeline" style="display:none"></div>
         <div id="appFilters" class="filterBar" hidden></div>
         <div id="capacityPanel" style="display:none">
           <div class="capacity-section">
             <button class="capacityToggle" id="capacityToggle" type="button" aria-expanded="false">
-              <span class="capacityToggleTitle">Capacity details</span>
-              <span class="capacityToggleSub">Seat enforcement, waitlist and payment exceptions</span>
+              <span class="capacityToggleTitle">Capacity</span>
+              <span class="capacityToggleSub">Available seats & warnings. Expand for detailed exceptions, waitlist & payment exceptions.</span>
               <span class="capacityToggleChevron" aria-hidden="true">⌄</span>
             </button>
-            <div class="enrollmentIndicators" id="capacityIndicators"></div>
-            <div id="capacityDetails" hidden>
+            <div class="enrollmentIndicators enrollmentIndicators--compact" id="capacityIndicators"></div>
+            <div id="capacityDetails" class="capacityDetails" hidden>
               <div class="capacity-grid" id="capacityGrid"></div>
               <div class="capacityDetailGroup">
                 <h3>Priority Waitlist</h3>
@@ -1334,15 +1343,15 @@
        * ---------------------------------------------------------------- */
       const DASH_VIEW_META = {
         overview: {
-          crumb: [["Overview", "Dashboard"]],
+          crumb: [["Dashboard"]],
           title: "Dashboard",
-          sub: "Business command center — applications, enrollment, revenue, acquisition and urgent actions.",
+          sub: "Applications, enrollment, revenue, acquisition and urgent actions.",
           search: false,
         },
         applicants: {
           crumb: [["Academy", "Applications"]],
           title: "Applications",
-          sub: "Review applications, payments and cohort capacity.",
+          sub: "Review and process applications with clear lifecycle stages and next actions.",
           search: true,
         },
         students: {
@@ -1399,11 +1408,20 @@
         },
       };
       function renderBreadcrumbs(crumb) {
-        $("pageBreadcrumbs").innerHTML = crumb
+        const trail = Array.isArray(crumb) ? crumb : [];
+        // A crumb entry is either [group, label] or a single [label].
+        const labelOf = (c) => (Array.isArray(c) ? (c.length > 1 ? c[1] : c[0]) : String(c));
+        const groupOf = (c) => (Array.isArray(c) && c.length > 1 ? c[0] : "");
+        // A single crumb is just the page itself — no trail, so avoid repeating the title.
+        if (trail.length <= 1) {
+          $("pageBreadcrumbs").innerHTML = "";
+          return;
+        }
+        $("pageBreadcrumbs").innerHTML = trail
           .map((c, i) =>
-            i === crumb.length - 1
-              ? '<span aria-current="page">' + esc(c[1]) + "</span>"
-              : '<a href="/admin">' + esc(c[0]) + '</a><span class="separator" aria-hidden="true">/</span>',
+            i === trail.length - 1
+              ? '<span aria-current="page">' + esc(labelOf(c)) + "</span>"
+              : '<a href="/admin">' + esc(groupOf(c) || labelOf(c)) + '</a><span class="separator" aria-hidden="true">/</span>',
           )
           .join("");
       }
@@ -1656,12 +1674,12 @@
       function paymentRow(x) {
         const f = x.gcash_followup_status || "";
         let status = "Payment pending",
-          buttons = `<button class="success" onclick="approvePay('${x.id}')">✓ Approve payment</button>`;
+          buttons = `<button class="btn btn-success" onclick="approvePay('${x.id}')">✓ Approve payment</button>`;
         if (!f)
-          buttons += `<button class="danger" onclick="rejectPay('${x.id}')">✕ Could not verify</button>`;
+          buttons += `<button class="btn btn-destructive" onclick="rejectPay('${x.id}')">✕ Could not verify</button>`;
         else if (f === "screenshot_requested") {
           status = "Screenshot requested";
-          buttons += `<button onclick="noResponsePay('${x.id}')">No response</button>`;
+          buttons += `<button class="btn btn-secondary" onclick="noResponsePay('${x.id}')">No response</button>`;
         }
         return `<div class="payment"><div><b>${esc(x.name)}</b><div class="sub">GCash · ${ovMoney(6900)} · Ref: <strong>${esc(x.gcash_reference || "Not provided")}</strong><br><strong>Status: ${esc(status)}</strong>${x.gcash_submitted_at ? "<br>" + new Date(x.gcash_submitted_at).toLocaleString() : ""}</div></div><div class="actions">${buttons}</div></div>`;
       }
@@ -2031,11 +2049,10 @@
         if (enrolled) return "enrolled";
         if (payment === "paid") return "onboarding";
         if (payment === "pending") return "payment_pending";
-        if (decision === "accepted") {
-          const invite = appAcceptanceEmail(x);
-          if (invite && invite.latest) return "invitation_sent";
-          return "accepted";
-        }
+        // Accepted applicants await payment. The invitation email distinction
+        // (issued vs delivered) lives in appAcceptanceEmail, not here, so the
+        // lifecycle never reads the activity log.
+        if (decision === "accepted") return "awaiting_payment";
         return "new";
       }
       // Acceptance invitation outcome from the activity log. Payment state is never read here.
@@ -2104,17 +2121,17 @@
         const isTestRecord = String(x.payment_method || "").toLowerCase() === "paymongo_qrph" || /^(internal_.*(qa|test)|sandbox)/i.test(String(x.source || "")) || /(^|\b)test(\b|$)/i.test(String(x.name || "")) || String(x.email || "").toLowerCase() === "paymongo-qa@getassistara.com";
         const isReviewable = !decision && ["new", "reviewing"].includes(status) && ["", "none", "not_requested"].includes(payment) && !x.auth_user_id && !x.onboarding_completed_at && !x.suspended_at;
         if (isReviewable) {
-          return `<button class="accept" onclick="decision('${esc(x.id)}','accepted',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Accept + email</button><button onclick="decision('${esc(x.id)}','declined',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Decline + email</button><button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
+          return `<button class="btn btn-primary" onclick="decision('${esc(x.id)}','accepted',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Accept + email</button><button class="btn btn-secondary" onclick="decision('${esc(x.id)}','declined',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Decline + email</button><button class="btn btn-destructive btn-destructive--subtle" onclick="if(confirm('Delete application for ${esc(x.name||'Unknown')}? This cannot be undone.')) deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
-        if (decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected") return `<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Permanently delete</button>`;
+        if (decision === "declined" || decision === "waitlisted" || status === "waitlisted" || status === "rejected") return `<button class="btn btn-destructive" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Permanently delete</button>`;
         if (x.suspended_at || isActiveLearner) return "";
         if (decision === "accepted" && payment !== "paid") {
-          return `<button onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="danger" onclick="deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
+          return `<button class="btn btn-secondary" onclick="decision('${esc(x.id)}','accepted',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Resend acceptance/payment email</button>${isGcashPending ? `<button class="btn btn-success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="btn btn-destructive" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button class="btn btn-secondary" onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : ""}<button class="btn btn-destructive btn-destructive--subtle" onclick="if(confirm('Delete application for ${esc(x.name||'Unknown')}? This cannot be undone.')) deleteApplication('${esc(x.id)}',false,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete application</button>`;
         }
         if (payment === "pending") {
-          return isGcashPending ? `<button class="success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="danger" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
+          return isGcashPending ? `<button class="btn btn-success" onclick="approvePay('${esc(x.id)}')">✓ Verify GCash payment</button><button class="btn btn-destructive" onclick="rejectPay('${esc(x.id)}')">✕ Could not verify</button>${x.gcash_followup_status === "screenshot_requested" ? `<button class="btn btn-secondary" onclick="noResponsePay('${esc(x.id)}')">No response</button>` : ""}` : "";
         }
-        if (payment === "paid") return `<button class="success" onclick="onboard('${esc(x.id)}')">Resend account-setup link</button>${isTestRecord && !x.auth_user_id && !x.onboarding_completed_at ? `<button class="danger" onclick="deleteApplication('${esc(x.id)}',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete test record</button>` : ""}`;
+        if (payment === "paid") return `<button class="btn btn-secondary" onclick="onboard('${esc(x.id)}')">Resend account-setup link</button>${isTestRecord && !x.auth_user_id && !x.onboarding_completed_at ? `<button class="btn btn-destructive btn-destructive--subtle" onclick="if(confirm('Delete test record for ${esc(x.name||'Unknown')}? This cannot be undone.')) deleteApplication('${esc(x.id)}',true,'${esc(x.name||'Unknown')}','${esc(x.email||'No email')}')">Delete test record</button>` : ""}`;
         return "";
       }
       function paymentEnrollmentInfo(x) {
@@ -2319,7 +2336,7 @@
         const statusBadge = suspended ? '<span class="badge suspended">Suspended</span>' : '<span class="badge active_account">Active</span>';
         const phaseLabel = prog.currentPhase !== null ? `Phase ${prog.currentPhase + 1} → Module ${prog.currentModule + 1} → Class ${prog.currentClass + 1}` : "Not started";
         const examSummary = `${prog.examsPassed} Passed · ${prog.examsFailed} Failed · ${prog.examsPending} Pending`;
-        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">⌄</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button onclick="resetPw('${x.id}')">Password reset</button><button onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="danger" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
+        return `<div class="student" id="student-${x.id}"><div class="studentHead" onclick="toggleStudent('${x.id}')"><div><div class="name">${esc(x.name || "Student")}</div><div class="sub">${esc(x.email || "")}</div></div><div class="studentHeadRight"><div class="badges">${statusBadge}</div><span class="expandArrow">⌄</span></div></div><div class="studentBody"><div class="studentGrid"><div class="studentCol"><div class="studentLabel">Progress</div><div class="studentPct">${prog.pct}%</div>${progressBar(prog.pct)}<div class="studentSub">${prog.totalCompleted} / ${TOTAL_CLASSES} classes</div></div><div class="studentCol"><div class="studentLabel">Current Position</div><div class="studentPosition">${esc(phaseLabel)}</div></div><div class="studentCol"><div class="studentLabel">Assessments</div><div class="studentExams">${esc(examSummary)}</div></div><div class="studentCol"><div class="studentLabel">Last Active</div><div class="studentLastActive">${esc(timeAgo(prog.lastActivity))}</div></div></div><div class="studentDetail" id="student-detail-${x.id}"></div><div class="actions"><button class="btn btn-secondary" onclick="resetPw('${x.id}')">Password reset</button><button class="btn btn-secondary" onclick="suspend('${x.id}',${suspended ? "false" : "true"})">${suspended ? "Reactivate" : "Suspend"} account</button><button class="btn btn-destructive" onclick="deleteAccount('${x.id}')">Delete account</button></div></div></div>`;
       }
       // Every tab-scoped container is reset here, before the active tab renders,
       // so components from a previous tab (capacity overview, waitlist, payment
@@ -2330,6 +2347,8 @@
         $("capacityPanel").style.display = "none";
         $("signupGoal").innerHTML = "";
         $("pendingBox").innerHTML = "";
+        const ap = $("appPipeline");
+        if (ap) { ap.style.display = "none"; ap.innerHTML = ""; }
         const f = $("studentFilters");
         if (f) f.style.display = "none";
         const cf = $("couponFilters");
@@ -2354,27 +2373,32 @@
           else if (sortKey === "stage") sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
           else sorted.sort((m, n) => appPriority(m) - appPriority(n) || Date.parse(m.created_at || "") - Date.parse(n.created_at || ""));
 
-          paintEnrollment();
+          paintApplicantsPipeline();
 
           const filterBar = $("appFilters");
           filterBar.hidden = false;
+          filterBar.className = "filterBar app-toolbar";
           filterBar.innerHTML =
-            '<div class="filter-group">' +
-              '<label class="field-label" for="applicantFilter">Filter</label>' +
-              '<select id="applicantFilter" class="field-select">' +
-              APP_FILTERS.map(([key, label]) =>
-                '<option value="' + key + '"' + (key === filterKey ? " selected" : "") + '>' + label + ' (' + counts[key] + ')</option>'
-              ).join("") +
-              '</select>' +
+            '<div class="app-toolbar__group">' +
+              '<label class="app-toolbar__label" for="applicantFilter">Filter</label>' +
+              '<div class="app-select-wrap">' +
+                '<select id="applicantFilter" class="app-select">' +
+                APP_FILTERS.map(([key, label]) =>
+                  '<option value="' + key + '"' + (key === filterKey ? " selected" : "") + '>' + label + ' (' + counts[key] + ')</option>'
+                ).join("") +
+                '</select>' +
+              '</div>' +
             '</div>' +
-            '<div class="filter-group">' +
-              '<label class="field-label" for="applicantSort">Sort</label>' +
-              '<select id="applicantSort" class="field-select">' +
-              '<option value="action"' + (sortKey === "action" ? " selected" : "") + '>Priority (admin action first)</option>' +
-              '<option value="newest"' + (sortKey === "newest" ? " selected" : "") + '>Newest first</option>' +
-              '<option value="oldest"' + (sortKey === "oldest" ? " selected" : "") + '>Oldest first</option>' +
-              '<option value="stage"' + (sortKey === "stage" ? " selected" : "") + '>By stage</option>' +
-              '</select>' +
+            '<div class="app-toolbar__group">' +
+              '<label class="app-toolbar__label" for="applicantSort">Sort</label>' +
+              '<div class="app-select-wrap">' +
+                '<select id="applicantSort" class="app-select">' +
+                '<option value="action"' + (sortKey === "action" ? " selected" : "") + '>Priority (admin action first)</option>' +
+                '<option value="newest"' + (sortKey === "newest" ? " selected" : "") + '>Newest first</option>' +
+                '<option value="oldest"' + (sortKey === "oldest" ? " selected" : "") + '>Oldest first</option>' +
+                '<option value="stage"' + (sortKey === "stage" ? " selected" : "") + '>By stage</option>' +
+                '</select>' +
+              '</div>' +
             '</div>';
           $("applicantFilter").onchange = (e) => { applicantFilterKey = e.target.value; render(); saveUiState(); };
           $("applicantSort").onchange = (e) => { applicantSortKey = e.target.value; render(); saveUiState(); };
@@ -2415,10 +2439,10 @@
             return 0;
           });
           stat([
-            [s.length, "Students"],
-            [s.filter((x) => !x.suspended_at).length, "Active"],
-            [s.filter((x) => x.suspended_at).length, "Suspended"],
-            [s.filter((x) => x._progress && x._progress.pct >= 100).length, "Completed"],
+            [allApps.length, "Total Applications"],
+            [allApps.filter((x) => appNeedsAdmin(x)).length, "Needs Admin Action"],
+            [allApps.filter((x) => { const st = appStage(x); return st === "awaiting_payment" || st === "payment_pending"; }).length, "Awaiting Payment"],
+            [allApps.filter((x) => appStage(x) === "enrolled").length, "Enrolled"],
           ]);
           $("studentFilters").style.display = "flex";
           $("cards").innerHTML = sorted.length
@@ -2464,7 +2488,7 @@
           $("signupGoal").innerHTML += `<div class="attrSummary">Attribution · Tracked ${attrCounts.Tracked} · Recovered ${attrCounts.Recovered}${attrCounts.UTM?" · UTM "+attrCounts.UTM:""}${attrCounts.Direct?" · Direct "+attrCounts.Direct:""} · Untracked ${attrCounts.Untracked}</div>`;
           const w = visibleWeb.filter(match);
           $("cards").innerHTML = w.length
-            ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="danger" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
+            ? w.map((x,i) => {const s=sourceFor(x);const source=s.display;return `<div class="student signupSource" id="signup-${i}"><div class="studentHead" onclick="document.getElementById('signup-${i}').classList.toggle('open')"><div><div class="name">${esc(x.name || "Website signup")}</div><div class="sub">${esc(source)}</div></div><span>⌄</span></div><div class="studentBody"><div class="detail"><b>Email:</b> ${esc(x.email||"—")}${x.phone?"<br><b>Phone:</b> "+esc(x.phone):""}<br><b>Registered:</b> ${x.created_at?new Date(x.created_at).toLocaleString():"—"}<br><b>Source:</b> ${esc(source)}</div>${attributionDetailHTML(s)}<div class="actions"><button class="btn btn-destructive" onclick="event.stopPropagation();deleteWebinarSignup('${x.id}',decodeURIComponent('${encodeURIComponent(String(x.name||"Website signup"))}'),decodeURIComponent('${encodeURIComponent(String(x.email||""))}'))">Delete signup</button></div></div></div>`}).join("")
             : '<div class="empty">No webinar signups yet.</div>';
           return;
         }
@@ -2681,13 +2705,13 @@
             </div>
           </div>
           <div class="actions">
-            <button onclick="toggleCoupon('${c.id}')">${openCoupons.has(c.id) ? 'Collapse' : 'Expand'}</button>
-            <button onclick="editCoupon('${c.id}')">Edit</button>
-            <button onclick="duplicateCoupon('${c.id}')">Duplicate</button>
-            <button class="${c.active ? 'danger' : 'success'}" onclick="toggleCouponActive('${c.id}', ${!c.active})">
+            <button class="btn btn-secondary" onclick="toggleCoupon('${c.id}')">${openCoupons.has(c.id) ? 'Collapse' : 'Expand'}</button>
+            <button class="btn btn-secondary" onclick="editCoupon('${c.id}')">Edit</button>
+            <button class="btn btn-secondary" onclick="duplicateCoupon('${c.id}')">Duplicate</button>
+            <button class="btn btn-secondary ${c.active ? 'danger' : 'success'}" onclick="toggleCouponActive('${c.id}', ${!c.active})">
               ${c.active ? 'Deactivate' : 'Activate'}
             </button>
-            <button class="danger" onclick="deleteCoupon('${c.id}')">Delete</button>
+            <button class="btn btn-destructive" onclick="deleteCoupon('${c.id}')">Delete</button>
           </div>
           ${openCoupons.has(c.id) ? `
           <div class="appPanel open">
@@ -2763,7 +2787,7 @@
           [MONEY_PHP(totalRevenue), "Revenue"],
         ]);
         // Create coupon button
-        const createCouponBtn = `<div class="actions" style="margin-bottom:14px"><button class="success" onclick="createCoupon()">+ Create Coupon</button></div>`;
+        const createCouponBtn = `<div class="actions" style="margin-bottom:14px"><button class="btn btn-success" onclick="createCoupon()">+ Create Coupon</button></div>`;
         $("cards").innerHTML = createCouponBtn + (sorted.length
           ? sorted.map(couponCard).join("")
           : '<div class="empty">No coupons found. Click "Create Coupon" to get started.</div>');
@@ -3083,9 +3107,54 @@
         } catch (e) { alert(e.message); }
       };
       function enrollmentTile(value, label, sub, filterKey) {
-        return '<a class="enrollmentTile" href="#" onclick="event.preventDefault();goApplicants(\'' + filterKey + '\')">' +
+        if (!filterKey) {
+          return '<div class="enrollmentTile">' +
+            '<b>' + value + '</b><span>' + esc(label) + '</span>' +
+            (sub ? '<small>' + esc(sub) + '</small>' : "") + '</div>';
+        }
+        return '<a class="enrollmentTile card-interactive" href="#" onclick="event.preventDefault();goApplicants(\'' + filterKey + '\')">' +
           '<b>' + value + '</b><span>' + esc(label) + '</span>' +
           (sub ? '<small>' + esc(sub) + '</small>' : "") + '</a>';
+      }
+      function paintApplicantsPipeline() {
+        const box = $("appPipeline");
+        if (!box) return;
+        const allApps = activeApps();
+        const cap = typeof capacityOverview !== "undefined" ? capacityOverview : null;
+        const newCount = allApps.filter((x) => appStage(x) === "new").length;
+        const awaiting = allApps.filter((x) => appStage(x) === "awaiting_payment").length;
+        const payPending = allApps.filter((x) => appStage(x) === "payment_pending").length;
+        const accepted = allApps.filter((x) => appAcceptanceEmail(x).issued).length;
+        const declined = allApps.filter((x) => appStage(x) === "closed").length;
+        const paid = allApps.filter((x) => appStage(x) === "onboarding").length;
+        const enrolled = allApps.filter((x) => appStage(x) === "enrolled").length;
+        const needsAdmin = allApps.filter(appNeedsAdmin).length;
+        const capPaid = cap && Number.isFinite(Number(cap.paid)) ? Number(cap.paid) : null;
+        const capTotal = cap && Number.isFinite(Number(cap.capacity)) ? Number(cap.capacity) : 15;
+        const capAvail = cap && Number.isFinite(Number(cap.available)) ? Number(cap.available) : null;
+        const progress = capPaid !== null && capTotal > 0
+          ? Math.max(0, Math.min(100, Math.round((capPaid / capTotal) * 100)))
+          : 0;
+        box.style.display = "block";
+        box.innerHTML =
+          '<div class="card" style="margin-bottom:12px;">' +
+          '<div class="card-header"><div><h3 class="card-title">Academy capacity</h3><div class="card-subtitle">Acceptance does not reserve a seat — only confirmed payment does. Backend enforces the limit.</div></div></div>' +
+          (capPaid !== null
+            ? '<div class="seatProgress"><div class="seatProgressLabel"><span>Confirmed paid seats</span><span>' + ovNum(capPaid) + ' / ' + ovNum(capTotal) + ' · ' + ovNum(capAvail !== null ? capAvail : Math.max(0, capTotal - capPaid)) + ' remaining</span></div><div class="progress-track"><div class="progress-fill success" style="width:' + progress + '%"></div></div></div>'
+            : '<div class="alert alert-warning"><div><div class="alert-title">Capacity unavailable</div><p>Seat counts could not be loaded. Application counts below are current.</p><button class="btn btn-sm" type="button" onclick="capacityDirty=true;renderCapacity()">Retry</button></div></div>') +
+          '</div>' +
+          '<div class="card" style="margin-bottom:12px;">' +
+          '<div class="card-header"><div><h3 class="card-title">Application pipeline</h3><div class="card-subtitle">Application → acceptance → payment → onboarding. Click a stage to filter.</div></div></div>' +
+          '<div class="enrollmentMetrics">' +
+          enrollmentTile(ovNum(allApps.length), "Total Applications", "Every persisted record", "all") +
+          enrollmentTile(ovNum(newCount), "New / Unreviewed", "Awaiting a decision", "new") +
+          enrollmentTile(ovNum(accepted), "Accepted", "Decision accepted (seat not reserved)", "awaiting_payment") +
+          enrollmentTile(ovNum(awaiting + payPending), "Awaiting Payment", "Accepted, not confirmed paid", "awaiting_payment") +
+          enrollmentTile(ovNum(paid), "Paid / Onboarding", "Payment confirmed", "paid") +
+          enrollmentTile(ovNum(enrolled), "Enrolled", "Active learners", "enrolled") +
+          enrollmentTile(ovNum(declined), "Declined / Closed", "No further action", "closed") +
+          enrollmentTile(ovNum(needsAdmin), "Needs Admin Action", "Oldest action first", "needs_action") +
+          '</div></div>';
       }
       function paintEnrollment(cap, loading = false) {
         const box = $("ovEnrollment");
@@ -3147,6 +3216,7 @@
           capacityOverview = ov;
           paintCapacityBits();
           if (agentView === "overview") paintEnrollment(capacityOverview);
+          if (tab === "applicants" && $("appPipeline") && $("appPipeline").style.display !== "none") paintApplicantsPipeline();
           const { capacity, paid, reservations, stale_pending, available, waitlist_waiting, waitlist_invited, exceptions_open, cohort_name, is_open } = ov;
           /* Payment-exception amounts are stored in PHP; conversion is display-only. */
           const money = (n) => ovMoney(Number(n));
@@ -3337,16 +3407,48 @@
         const view = $("overviewView");
         if (!view || $("ovKpis")) return;
         view.innerHTML =
-          '<div class="currency-switch-bar" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px;"><div class="currencySwitch" id="currencySwitch" role="group" aria-label="Display currency"><button type="button" data-cur="PHP" aria-pressed="true">PHP</button><button type="button" data-cur="USD" aria-pressed="false">USD</button><button type="button" data-cur="EUR" aria-pressed="false">EUR</button></div></div>' +
           '<div class="grid-stats-4" id="ovKpis"></div>' +
           '<div class="enrollment" id="ovEnrollment" style="margin-top:16px"></div>' +
+          '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Enrollment funnel</h4>' +
+          '<div id="ovEnrollFlow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;"></div>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;" class="ov-two-col">' +
+          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Applications pipeline</h4>' +
+          '<div id="ovPipeline" style="display:flex;flex-direction:column;gap:8px;"></div>' +
+          '</div>' +
+          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Revenue & payments</h4>' +
+          '<div id="ovRevenue" style="display:flex;flex-direction:column;gap:8px;"></div>' +
+          '</div>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;" class="ov-two-col">' +
+          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Student progress</h4>' +
+          '<div id="ovStudents" style="display:flex;flex-direction:column;gap:8px;"></div>' +
+          '</div>' +
+          '<div class="actionable-progress" style="padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Recent activity</h4>' +
+          '<div id="ovActivity" style="display:flex;flex-direction:column;gap:8px;"></div>' +
+          '</div>' +
+          '</div>' +
           '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
           '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Applicant Progress — Action Needed</h4>' +
           '<div class="grid-stats-4" id="ovActionProgress" style="display:flex;gap:12px;flex-wrap:wrap;"></div>' +
           '</div>' +
+          '<div id="ovNeedsAttention" class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;display:none;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Needs Attention</h4>' +
+          '<div id="ovNeedsAttentionList" style="display:flex;flex-direction:column;gap:8px;"></div>' +
+          '</div>' +
+          '<div class="actionable-progress" style="margin-top:12px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
+          '<h4 style="font-size:14px;font-weight:700;color:#171717;margin:0 0 10px">Acquisition & Masterclass</h4>' +
+          '<div id="ovAcq" style="display:flex;flex-wrap:wrap;gap:12px;"></div>' +
+          '</div>' +
 
-          '<div class="grid" style="margin-top:16px">' +
-          '<div class="col-5"><div class="card" id="ovEmail"></div></div>' +
+          '<div class="grid grid-cols-12 gap-16" style="margin-top:16px;gap:16px;">' +
+          '<div class="col-span-7"><div class="card" id="ovEmail"></div></div>' +
+          '<div class="col-span-5"></div>' +
           "</div>";
       };
       let overviewCache = null;
@@ -3395,7 +3497,7 @@
 
         // KPI cards — clickable through the existing router (no reload, no new router).
         const kpiCards = [
-          { v: ovNum(totalApplications()), l: "Applications", s: ovNum(reviewable.length) + " awaiting review", a: "applicants", f: "all" },
+          { v: ovNum(totalApplications()), l: "Applications", s: ovNum(reviewable.length) + " awaiting review" + (reviewable.length > 0 ? " • needs attention" : ""), a: "applicants", f: "all" },
           { v: data.capacity ? ovNum(data.capacity.paid) : data.capacityError ? "Unavailable" : ovSkeleton(), l: "Paid enrollments", s: data.capacity ? ovNum(data.capacity.available) + " of " + ovNum(data.capacity.capacity) + " seats available" : data.capacityError ? "Capacity service unavailable" : "", a: "applicants", f: "paid" },
           { v: ovMoney(revenue), l: "Gross revenue", s: paidUnknown ? paidUnknown + " paid without a recorded amount" : "All paid amounts recorded", a: "finance" },
           { v: data.expenses ? ovMoney(ovExpensesThisMonth(data.expenses).total) : data.expensesError ? "Unavailable" : ovSkeleton(), l: "Expenses this month", s: data.expenses ? ovNum(ovExpensesThisMonth(data.expenses).occurrences) + " occurrences across " + ovNum(ovExpensesThisMonth(data.expenses).schedules) + " schedules" : data.expensesError ? "Finance service unavailable" : "", a: "finance" },
@@ -3430,6 +3532,77 @@
             '<div style="font-size:11px;color:#746e65;">Active in program</div>' +
           '</div>',
         ].join("");
+        // Populate compact Needs Attention list (real data only)
+        const naBox = $("ovNeedsAttention");
+        const naList = $("ovNeedsAttentionList");
+        const naItems = [];
+        // Pending reviews (no decision yet)
+        const reviewableNow = activeApps().filter((x) => !currentDecision(x));
+        if (reviewableNow.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'all\');">Review ' + ovNum(reviewableNow.length) + ' pending application' + (reviewableNow.length === 1 ? '' : 's') + '</a></div>');
+        }
+        // Invitation delivery failures (accepted but not delivered)
+        const acceptedNow = activeApps().filter((x) => appAcceptanceEmail(x).issued);
+        const deliveryFails = acceptedNow.filter((x) => !appAcceptanceEmail(x).delivered);
+        if (deliveryFails.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(deliveryFails.length) + ' invitation delivery issue' + (deliveryFails.length === 1 ? '' : 's') + '</a></div>');
+        }
+        // Payment verification/GCASH followup needs (infer via needsAdmin + awaiting/payment states)
+        const payNeeds = activeApps().filter((x) => {
+          const st = appStage(x);
+          if (st === "awaiting_payment") return appNeedsAdmin(x);
+          if (st === "payment_pending") return true;
+          return false;
+        });
+        if (payNeeds.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(payNeeds.length) + ' payment verification item' + (payNeeds.length === 1 ? '' : 's') + '</a></div>');
+        }
+        // Enrollment blockers: onboarding but missing auth/account setup
+        const blockers = activeApps().filter((x) => appStage(x) === "onboarding" && !x.auth_user_id);
+        if (blockers.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'paid\');">' + ovNum(blockers.length) + ' enrollment blocker' + (blockers.length === 1 ? '' : 's') + ' (missing account setup)</a></div>');
+        }
+        if (naBox && naList) {
+          if (naItems.length) {
+            naBox.style.display = "block";
+            naList.innerHTML = naItems.map((i) => i).join("");
+          } else {
+            naBox.style.display = "none";
+          }
+        }
+
+        // Acquisition & Masterclass (real data only)
+        const acqEl = $("ovAcq");
+        if (acqEl) {
+          const webReg = web.filter((x) => !/^diag(?:nostic)?[-_]/i.test(String(x.email || "")) && !/diagnostic/i.test(String(x.name || "")) && !/diagnostic/i.test(String(x.source || ""))).length;
+          const leads = leadsAll.length;
+          const apps = totalApplications();
+          const conv = leads > 0 ? ((apps / leads) * 100) : null;
+          const items = [];
+          items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#171717;">Registered for Masterclass</div>' +
+            '<div style="font-size:18px;font-weight:800;color:#171717;margin-top:4px;">' + ovNum(webReg) + '</div>' +
+            '<div style="font-size:11px;color:#746e65;"><a href="#" onclick="event.preventDefault();openTool(\'webinar\');">View Webinar Signups</a></div>' +
+            '</div>');
+          items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
+            '<div style="font-size:11px;font-weight:700;color:#171717;">Acquisition Leads</div>' +
+            '<div style="font-size:18px;font-weight:800;color:#171717;margin-top:4px;">' + ovNum(leads) + '</div>' +
+            '<div style="font-size:11px;color:#746e65;"><a href="#" onclick="event.preventDefault();openTool(\'acquisition\');">View Acquisition Tracker</a></div>' +
+            '</div>');
+          if (conv !== null && Number.isFinite(conv)) {
+            items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
+              '<div style="font-size:11px;font-weight:700;color:#171717;">Lead→Application</div>' +
+              '<div style="font-size:18px;font-weight:800;color:#171717;margin-top:4px;">' + conv.toFixed(1) + '%</div>' +
+              '<div style="font-size:11px;color:#746e65;">Leads (' + ovNum(leads) + ') → Applications (' + ovNum(apps) + ')</div>' +
+              '</div>');
+          }
+          if (items.length) {
+            acqEl.innerHTML = items.join("");
+          } else {
+            acqEl.innerHTML = '<div style="font-size:12px;color:#746e65;">No acquisition data available.</div>';
+          }
+        }
+
         paintEnrollment(data.capacity, !data.capacity && !data.capacityError);
 
         // Email delivery status (30 days).
@@ -3505,10 +3678,10 @@
           overviewLoading = false;
         }
       }
-      /* Currency switch — delegated because Overview is rendered after login. */
+      /* Currency switch — moved to sidebar; single shared control. */
       if (window.AssistaraCurrency) {
         const paintSharedCurrency = (cur) => {
-          document.querySelectorAll("#currencySwitch button").forEach((button) => {
+          document.querySelectorAll("#sidebarCurrencySwitch button, #currencySwitch button").forEach((button) => {
             const on = button.dataset.cur === cur;
             button.classList.toggle("active", on);
             button.setAttribute("aria-pressed", on ? "true" : "false");
@@ -3516,7 +3689,7 @@
           document.querySelectorAll(".toolRoot").forEach((host) => host.setAttribute("data-currency", cur));
         };
         document.addEventListener("click", async (event) => {
-          const button = event.target.closest("#currencySwitch button[data-cur]");
+          const button = event.target.closest("#sidebarCurrencySwitch button[data-cur], #currencySwitch button[data-cur]");
           if (!button) return;
           const cur = button.dataset.cur;
           if (!window.AssistaraCurrency.DISP_CURS.includes(cur)) return;
@@ -3733,7 +3906,7 @@
             '</div></div><div class="badges">' +
             badge(x.pipeline_status) +
             badge(x.cal_booking_status) +
-            '</div></div><div class="actions"><button onclick="toggleCall(\'' +
+            '</div></div><div class="actions"><button class="btn btn-secondary" onclick="toggleCall(\'' +
             x.id +
             '\')">Open prospect</button></div><div class="callDetail"><div class="callGrid"><div class="callFact"><b>Phone</b><br>' +
             esc(x.contact_phone || "Not supplied") +
@@ -3778,7 +3951,7 @@
             x.id +
             '">' +
             esc(x.internal_notes || "") +
-            '</textarea></label><div class="actions"><button class="accept" onclick="saveCall(\'' +
+            '</textarea></label><div class="actions"><button class="btn btn-secondary accept" onclick="saveCall(\'' +
             x.id +
             "')\">Save changes</button></div></div></div>"
           );
