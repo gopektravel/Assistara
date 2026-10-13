@@ -42,6 +42,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-v3.css",
+      "use": "@vercel/static"
+    },
+    {
       "src": "admin-acquisition.html",
       "use": "@vercel/static"
     },
@@ -553,6 +557,10 @@
     {
       "src": "/admin-header.css",
       "dest": "/admin-header.css"
+    },
+    {
+      "src": "/admin-v3.css",
+      "dest": "/admin-v3.css"
     },
     {
       "src": "/mobile-polish.css",

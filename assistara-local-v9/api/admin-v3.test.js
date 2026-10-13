@@ -7,6 +7,7 @@ const root = path.join(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const admin = read("admin.html");
 const v3 = read("admin-v3.css");
+const vercel = JSON.parse(read("vercel.json"));
 
 test("every admin surface loads the shared V3 visual system", () => {
   for (const file of [
@@ -21,6 +22,11 @@ test("every admin surface loads the shared V3 visual system", () => {
   }
   assert.match(admin, /fetch\("\/admin-v3\.css"/);
   assert.match(admin, /shared\.textContent = await loadSharedV3\(\)/);
+});
+
+test("Vercel builds and routes the shared V3 stylesheet as a static asset", () => {
+  assert.ok(vercel.builds.some((entry) => entry.src === "admin-v3.css" && entry.use === "@vercel/static"));
+  assert.ok(vercel.routes.some((entry) => entry.src === "/admin-v3.css" && entry.dest === "/admin-v3.css"));
 });
 
 test("search is inside the content toolbar beside section filters", () => {
