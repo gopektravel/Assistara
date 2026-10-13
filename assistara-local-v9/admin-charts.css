@@ -9,7 +9,7 @@
  * ---------------------------------------------------------------- */
 .chart-dual {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(52px, 100%), 1fr));
   gap: 10px;
   align-items: end;
   min-height: 160px;
@@ -306,4 +306,219 @@
   .chart-category-label { grid-area: label; }
   .chart-category-value { grid-area: value; }
   .chart-category-track { grid-area: track; }
+}
+
+/* ==================================================================== *
+ * Overview charts
+ *
+ * The dashboard previously rendered most panels as label/number row
+ * pairs, which read as a wall of numbers. These rules give the chart
+ * helpers a compact, dense visual language that matches the rest of V3.
+ * ==================================================================== */
+
+/* KPI share bar: ties the row of stat cards together. */
+.statShare {
+  margin-top: 8px;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: #ebe8df;
+  overflow: hidden;
+}
+.statShare i {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+}
+.stat-card:hover .statShare i { background: var(--admin-green, #156b35); }
+
+/* Funnel + distribution: one continuous tapering bar, dense legend. */
+.ovFunnel { display: grid; gap: 7px; min-width: 0; }
+.ovFunnelBar {
+  display: flex;
+  gap: 1px;
+  height: 11px;
+  border-radius: var(--radius-pill);
+  background: #f0ede5;
+  overflow: hidden;
+}
+.ovFunnelBar > span { display: block; height: 100%; min-width: 2px; }
+.ovFunnelLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 13px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.ovFunnelLegend em {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-style: normal;
+  white-space: nowrap;
+}
+.ovFunnelLegend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  display: inline-block;
+  background: var(--muted);
+}
+.ovFunnelLegend b {
+  color: var(--ink);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.ovStep {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  color: var(--muted);
+  background: #f2f1ed;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+/* Grouped column chart (weekly applications vs payments). */
+.ovColumns { display: grid; gap: 8px; min-width: 0; }
+.ovColumnChart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 6px;
+  align-items: end;
+  min-height: 116px;
+}
+.ovColGroup {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 3px;
+  align-items: end;
+  min-width: 0;
+  height: 100%;
+}
+.ovColStack {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  min-height: 74px;
+}
+.ovCol {
+  display: block;
+  width: 100%;
+  max-width: 22px;
+  min-height: 0;
+  border-radius: 3px 3px 0 0;
+}
+.ovColLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ovColTotal {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--ink);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ovColumnKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.ovColumnKey em {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-style: normal;
+}
+.ovColumnKey i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* Money comparison cells (revenue vs expenses vs net). */
+.ovMoneyPair {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.ovMoneyCell {
+  display: grid;
+  gap: 1px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--admin-subtle, #faf9f5);
+  text-decoration: none;
+  color: inherit;
+}
+.ovMoneyCell span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ovMoneyCell strong {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+.ovMoneyCell.is-static { background: #fff; }
+.card-interactive.ovMoneyCell:hover { border-color: var(--ink); }
+
+/* Compact stat strip (student progress headline figures). */
+.ovStatStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(104px, 100%), 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ovStatStrip > div {
+  display: grid;
+  gap: 1px;
+  padding: 7px 9px;
+  border-radius: 9px;
+  background: var(--admin-subtle, #faf9f5);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+.ovStatStrip span {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.ovStatStrip strong {
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.ovStatStrip .is-attention strong { color: var(--danger-dark); }
+
+@media (max-width: 720px) {
+  .ovMoneyPair { grid-template-columns: 1fr; }
+  .ovColumnChart { min-height: 96px; }
+  .ovColStack { min-height: 58px; }
+  .ovColLabel { font-size: 8px; }
 }

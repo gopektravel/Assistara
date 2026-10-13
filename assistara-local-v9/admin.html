@@ -419,10 +419,11 @@
         color: var(--muted);
         border: 1px solid var(--line);
       }
+      /* Scheduled is upcoming, not a problem: warm amber, not Google blue. */
       .badge.scheduled {
-        background: #e8f0fe;
-        color: #1a73e8;
-        border: 1px solid #a8c7fa;
+        background: var(--warning-light);
+        color: var(--warning-dark);
+        border: 1px solid var(--warning-border);
       }
       .badge.expired {
         background: #fce8e6;
@@ -434,7 +435,113 @@
         color: #856404;
         border: 1px solid #ffeeba;
       }
-      .couponCard .cardtop {
+      /* Collapsed coupon card: identity + status + redemption facts on one dense
+   row, with a usage bar underneath. Replaces a wide empty gap to the right
+   of the campaign name. */
+.couponCard .cpRow {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  align-items: baseline;
+  gap: 6px 16px;
+}
+.couponCard .cpFacts { justify-content: flex-start; }
+.couponCard .cpRow--bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.couponCard .cpId {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0;
+}
+.couponCard .cpCode {
+  background: #f2f1ed;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font: 800 13px/1.4 var(--font-family);
+  white-space: nowrap;
+}
+.couponCard .cpCampaign {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.couponCard .cpMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px 14px;
+  flex-wrap: wrap;
+}
+.couponCard .cpDiscount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.couponCard .cpFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.couponCard .cpFacts em {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-style: normal;
+  white-space: nowrap;
+}
+.couponCard .cpFacts b {
+  color: var(--ink);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.couponCard .cpBarLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.couponCard .cpBarLabel b {
+  color: var(--ink);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.couponCard .cpBarTrack {
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: #f0ede5;
+  overflow: hidden;
+}
+.couponCard .cpBarTrack i {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--success-dark);
+}
+.couponCard .actions {
+  margin-top: 11px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+@media (max-width: 900px) {
+  .couponCard .cpRow { grid-template-columns: 1fr; }
+  .couponCard .cpRow--bar { grid-template-columns: 1fr; }
+}
+.couponCard .cardtop {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -1088,10 +1195,15 @@
           </div>
         </nav>
         <div class="sidebar-footer">
-          <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency" style="margin-bottom: 10px; justify-content: flex-start; padding-left: 4px; padding-right: 4px;">
-            <button type="button" data-cur="PHP" aria-pressed="true" style="padding:4px 6px;font-size:9px;">₱ PHP</button>
-            <button type="button" data-cur="USD" aria-pressed="false" style="padding:4px 6px;font-size:9px;">$ USD</button>
-            <button type="button" data-cur="EUR" aria-pressed="false" style="padding:4px 6px;font-size:9px;">€ EUR</button>
+          /* The sidebar currency control is the one control in the footer, so it sits
+           centred across the full footer width instead of hugging the left edge. */
+          <div class="currencySelect">
+            <span class="currencySelectLabel">Display currency</span>
+            <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency">
+              <button type="button" data-cur="PHP" aria-pressed="true">₱ PHP</button>
+              <button type="button" data-cur="USD" aria-pressed="false">$ USD</button>
+              <button type="button" data-cur="EUR" aria-pressed="false">€ EUR</button>
+            </div>
           </div>
           <div style="border-top:1px solid rgba(255,255,255,0.08); margin-bottom:10px;"></div>
           <div class="sidebar-user">
@@ -2741,16 +2853,39 @@
         const discountValueDisplay = c.discount_type === 'fixed_php' || c.discount_type === 'target_price'
           ? MONEY_PHP(c.discount_value)
           : (c.discount_value / 100).toFixed(1) + '%';
+        /* Redemption reality, shown without expanding the card. The bar is
+           confirmed redemptions against the cap, so a half-used code is
+           obvious at a glance instead of hiding behind an Expand button. */
+        const confirmed = Number(c.confirmed_redemptions || 0);
+        const pending = Number(c.pending_redemptions || 0);
+        const failed = Number(c.failed_redemptions || 0);
+        const refunded = Number(c.refunded_redemptions || 0);
+        const capCount = Number(c.max_redemptions || 0);
+        const usedTotal = confirmed + pending + failed + refunded;
+        const capDenom = capCount > 0 ? capCount : usedTotal;
+        const usedPct = capDenom > 0 ? Math.max(0, Math.min(100, (confirmed / capDenom) * 100)) : 0;
         return `<div class="card couponCard${openCoupons.has(c.id) ? ' open' : ''}" id="coupon-${c.id}">
-          <div class="cardtop">
-            <div>
-              <div class="name"><code style="background:#f5f3ee;padding:2px 6px;border-radius:4px;font-family:Manrope,sans-serif;font-size:14px">${esc(c.code)}</code></div>
-              <div class="sub">${esc(c.campaign_name || 'No campaign name')}</div>
+          <div class="cpRow">
+            <div class="cpId">
+              <code class="cpCode">${esc(c.code)}</code>
+              <span class="cpCampaign">${esc(c.campaign_name || 'No campaign name')}</span>
             </div>
-            <div class="cardMeta">
+            <div class="cpFacts">
+              <em>Confirmed <b>${confirmed}</b></em>
+              <em>Pending <b>${pending}</b></em>
+              <em>Failed <b>${failed}</b></em>
+              <em>Refunded <b>${refunded}</b></em>
+              <em>Revenue <b>${MONEY_PHP(c.revenue_php || 0)}</b></em>
+              <em>Last used <b>${c.last_redemption_at ? formatDateShort(c.last_redemption_at) : 'Never'}</b></em>
+            </div>
+            <div class="cpMeta">
               ${couponStatusBadge(c)}
-              <span class="sub" style="color:var(--muted)">${discountTypeLabel}: ${discountValueDisplay}</span>
+              <span class="cpDiscount">${discountTypeLabel}: ${discountValueDisplay}</span>
             </div>
+          </div>
+          <div class="cpRow cpRow--bar">
+            <div class="cpBarLabel">Redemptions <b>${confirmed}</b> of ${capCount > 0 ? capCount : "unlimited"}</div>
+            <div class="cpBarTrack"><i style="width:${usedPct.toFixed(1)}%"></i></div>
           </div>
           <div class="actions">
             <button class="btn btn-secondary" onclick="toggleCoupon('${c.id}')">${openCoupons.has(c.id) ? 'Collapse' : 'Expand'}</button>
@@ -3299,17 +3434,19 @@
           /* Payment-exception amounts are stored in PHP; conversion is display-only. */
           const money = (n) => ovMoney(Number(n));
           const badge = (txt, cls) => '<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:'+cls+'">'+txt+'</span>';
+          /* Colour carries meaning, never decoration: green = money in, red =
+             genuinely stuck, everything else stays ink/muted. */
           const grid = `
             <div class="capacityCard"><div class="capacityLabel">Cohort</div><div class="capacityValue">${esc(cohort_name||'Founding Cohort')}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Status</div><div class="capacityValue">${is_open?badge('Open','var(--green)'):badge('Closed','#982b2b')}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Capacity</div><div class="capacityValue">${capacity||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Paid Enrollments</div><div class="capacityValue" style="color:#16734a;font-size:28px">${paid||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Active Reservations (30 min)</div><div class="capacityValue" style="color:#0a58b0;font-size:28px">${reservations||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Stale Pending (>31 min)</div><div class="capacityValue" style="color:#982b2b;font-size:28px">${stale_pending||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Paid Enrollments</div><div class="capacityValue" style="color:var(--success-dark);font-size:28px">${paid||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Active Reservations (30 min)</div><div class="capacityValue" style="font-size:28px">${reservations||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Stale Pending (&gt;31 min)</div><div class="capacityValue" style="color:var(--danger-dark);font-size:28px">${stale_pending||0}</div></div>
             <div class="capacityCard"><div class="capacityLabel">Available Seats</div><div class="capacityValue" style="font-size:28px;font-weight:800">${available||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Waitlisted (waiting)</div><div class="capacityValue" style="color:#5d3a9b;font-size:28px">${waitlist_waiting||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Waitlisted (invited)</div><div class="capacityValue" style="color:#0a58b0;font-size:28px">${waitlist_invited||0}</div></div>
-            <div class="capacityCard"><div class="capacityLabel">Payment Exceptions (open)</div><div class="capacityValue" style="color:#982b2b;font-size:28px">${exceptions_open||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Waitlisted (waiting)</div><div class="capacityValue" style="font-size:28px">${waitlist_waiting||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Waitlisted (invited)</div><div class="capacityValue" style="font-size:28px">${waitlist_invited||0}</div></div>
+            <div class="capacityCard"><div class="capacityLabel">Payment Exceptions (open)</div><div class="capacityValue" style="color:var(--danger-dark);font-size:28px">${exceptions_open||0}</div></div>
           `;
           $("capacityGrid").innerHTML = grid;
         } catch (e) {
@@ -3324,11 +3461,11 @@
           else {
             const rows = wl.rows.map(r => {
               const app = r.applicant;
-              const statusBadge = r.status==='waiting'?'<span style="background:#f0e9ff;color:#5d3a9b">Waiting</span>':
-                r.status==='invited'?'<span style="background:#d7eaff;color:#0878f9">Invited</span>':
-                r.status==='enrolled'?'<span style="background:#e8f7ed;color:#176638">Enrolled</span>':
+              const statusBadge = r.status==='waiting'?'<span style="background:var(--neutral-light);color:var(--neutral-dark)">Waiting</span>':
+                r.status==='invited'?'<span style="background:var(--warning-light);color:var(--warning-dark)">Invited</span>':
+                r.status==='enrolled'?'<span style="background:var(--success-light);color:var(--success-dark)">Enrolled</span>':
                 r.status==='declined'?'<span style="background:#fff4c5;color:#765700">Declined</span>':
-                '<span style="background:#f5f5f5;color:#999">Removed</span>';
+                '<span style="background:var(--neutral-light);color:var(--neutral-dark)">Removed</span>';
               const prio = r.priority===1?'<b>Priority (CTA)</b>':r.priority===2?'Auto-captured':r.priority===3?'Admin-added':'';
               return `<div class="waitlistRow"><div><b>${esc(r.name||'')}</b><br><small>${esc(r.email||'')}</small></div><div>${statusBadge}</div><div>${prio}</div><div>Pos: ${r.position}</div><div>${new Date(r.created_at).toLocaleString()}</div></div>`;
             }).join('');
@@ -3474,10 +3611,17 @@
         }
         return { total, occurrences, schedules };
       }
+      // A stat value that is not a number (Unavailable, Not yet, ...) is longer
+      // than a 4-up grid track at display size and used to spill outside its card,
+      // overlapping whatever sat next to it. Render those as wrapped text.
+      const ovValueIsText = (v) =>
+        !/^[\u20b1$€]?\s*-?[\d][\d,.\s]*$/.test(String(v == null ? "" : v).trim());
       const ovStat = (value, label, sub, cls) =>
         '<div class="stat-card' +
         (cls ? " " + cls : "") +
-        '"><div class="stat-value">' +
+        '"><div class="stat-value' +
+        (ovValueIsText(value) ? " is-text" : "") +
+        '">' +
         value +
         '</div><div class="stat-label">' +
         label +
@@ -3496,6 +3640,7 @@
             '<div class="overview-panel overview-span-12"><h3>Enrollment funnel</h3><div id="ovEnrollFlow" class="overview-flow"></div></div>' +
             '<div class="overview-grid">' +
               '<section class="overview-panel overview-span-7"><h3>Applications pipeline</h3><div id="ovPipeline" class="overview-list"></div></section>' +
+              '<section class="overview-panel overview-span-12"><h3>Applications &amp; payments \u2014 last 8 weeks</h3><div id="ovTrend" class="overview-chart"></div></section>' +
               '<section class="overview-panel overview-span-5"><h3>Revenue &amp; payments</h3><div id="ovRevenue" class="overview-list"></div></section>' +
               '<section class="overview-panel overview-span-6"><h3>Student progress</h3><div id="ovStudents" class="overview-list"></div></section>' +
               '<section class="overview-panel overview-span-6"><h3>Recent activity</h3><div id="ovActivity" class="overview-list"></div></section>' +
@@ -3543,6 +3688,150 @@
           saveUiState();
         }
       }
+/* ------------------------------------------------------------------ *
+       * Overview charts
+       *
+       * Small, dependency-free CSS charts. They exist so the dashboard
+       * stops reading as a wall of numbers. Every chart below is built from
+       * the same loaded records the tiles use, so a chart can never disagree
+       * with a number shown beside it.
+       * ------------------------------------------------------------------ */
+      const ovInk = "#171717";
+      const ovMid = "#6b665e";
+      const ovGood = "#156b35";
+      const ovWarn = "#8a4b00";
+      const ovBad = "#8b2825";
+      function ovRamp(rows, i) {
+        const ramp = [ovInk, "#45423d", "#6b665e", "#9a948a"];
+        return i === rows.length - 1 && rows.length > 3 ? ovGood : ramp[i] || ovMid;
+      }
+
+      /* One continuous tapering bar plus a dense legend carrying the value and
+         the step conversion. Replaces label/number row pairs. */
+      function ovFunnel(stages) {
+        const rows = stages.filter(function (s) { return Number.isFinite(Number(s[1])); });
+        if (!rows.length) return '<div class="overviewNote">No data to chart yet.</div>';
+        let sum = 0;
+        for (const r of rows) sum += Math.max(0, Number(r[1]));
+        if (sum <= 0) sum = 1;
+        const bar = rows
+          .map(function (s, i) {
+            const share = Math.max(0, Number(s[1])) / sum;
+            return (
+              '<span style="flex:' + share.toFixed(4) + ' 1 0;background:' + ovRamp(rows, i) +
+              '" title="' + esc(s[0]) + ': ' + ovNum(s[1]) + '"></span>'
+            );
+          })
+          .join("");
+        const legend = rows
+          .map(function (s, i) {
+            let step;
+            if (i === 0) step = "entry";
+            else {
+              const prev = Number(rows[i - 1][1]);
+              step = prev > 0 ? ((Number(s[1]) / prev) * 100).toFixed(1) + "%" : "0%";
+            }
+            return (
+              '<em><i style="background:' + ovRamp(rows, i) + '"></i>' + esc(s[0]) +
+              ' <b>' + ovNum(s[1]) + '</b><span class="ovStep">' + step + '</span></em>'
+            );
+          })
+          .join("");
+        return '<div class="ovFunnel"><div class="ovFunnelBar">' + bar +
+          '</div><div class="ovFunnelLegend">' + legend + '</div></div>';
+      }
+
+      /* Grouped column chart. series = [{ name, color, values: [] }] */
+      function ovColumns(categories, series, opts) {
+        opts = opts || {};
+        let max = 1;
+        for (const s of series) {
+          for (const v of s.values) {
+            const n = Number(v);
+            if (Number.isFinite(n) && n > max) max = n;
+          }
+        }
+        const groups = categories
+          .map(function (cat, ci) {
+            const cols = series
+              .map(function (s) {
+                const v = Number(s.values[ci]);
+                const safe = Number.isFinite(v) && v > 0 ? v : 0;
+                const h = safe === 0 ? 0 : Math.max(3, (safe / max) * 100);
+                return (
+                  '<span class="ovCol" style="height:' + h.toFixed(2) + '%;background:' + s.color +
+                  '" title="' + esc(cat) + " \\u00b7 " + esc(s.name) + ": " + ovNum(safe) + '"></span>'
+                );
+              })
+              .join("");
+            let total = 0;
+            for (const s of series) total += Number(s.values[ci]) || 0;
+            return (
+              '<div class="ovColGroup"><div class="ovColStack">' + cols + '</div>' +
+              '<span class="ovColLabel">' + esc(cat) + '</span>' +
+              (opts.showTotals && total > 0 ? '<span class="ovColTotal">' + ovNum(total) + '</span>' : "") +
+              '</div>'
+            );
+          })
+          .join("");
+        const key = series
+          .map(function (s) { return '<em><i style="background:' + s.color + '"></i>' + esc(s.name) + '</em>'; })
+          .join("");
+        return '<div class="ovColumns"><div class="ovColumnChart">' + groups +
+          '</div>' + (key ? '<div class="ovColumnKey">' + key + '</div>' : "") + '</div>';
+      }
+
+      /* Stacked distribution bar, e.g. how learners spread across the course. */
+      function ovDistribution(buckets, opts) {
+        opts = opts || {};
+        const rows = buckets.filter(function (b) { return Number.isFinite(Number(b[1])); });
+        let total = 0;
+        for (const b of rows) total += Math.max(0, Number(b[1]));
+        if (!rows.length || total <= 0) {
+          return '<div class="overviewNote">' + esc(opts.empty || "No data to chart yet.") + '</div>';
+        }
+        const fmt = typeof opts.format === "function" ? opts.format : ovNum;
+        const bar = rows
+          .map(function (b) {
+            const share = Math.max(0, Number(b[1])) / total;
+            return '<span style="flex:' + share.toFixed(4) + ' 1 0;background:' + (b[2] || ovMid) +
+              '" title="' + esc(b[0]) + ': ' + esc(String(fmt(b[1]))) + '"></span>';
+          })
+          .join("");
+        const legend = rows
+          .map(function (b) {
+            return '<em><i style="background:' + (b[2] || ovMid) + '"></i>' + esc(b[0]) +
+              ' <b>' + esc(String(fmt(b[1]))) + '</b></em>';
+          })
+          .join("");
+        return '<div class="ovFunnel"><div class="ovFunnelBar">' + bar +
+          '</div><div class="ovFunnelLegend">' + legend + '</div></div>';
+      }
+
+      /* Bucket records into whole weeks for a real trend, oldest first. */
+      function ovWeekly(records, field, weeks) {
+        const out = [];
+        const now = Date.now();
+        const weekMs = 7 * 86400000;
+        for (let w = weeks - 1; w >= 0; w--) {
+          const from = now - (w + 1) * weekMs;
+          const to = now - w * weekMs;
+          let n = 0;
+          for (const r of records) {
+            const t = Date.parse(r && r[field]);
+            if (Number.isFinite(t) && t > from && t <= to) n++;
+          }
+          out.push({ from: from, to: to, n: n });
+        }
+        return out;
+      }
+      function ovWeekLabel(week) {
+        return new Date(week.to).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        });
+      }
       function paintOverview(data) {
         // Academy + revenue KPIs (from already-loaded shell data).
         const reviewable = activeApps().filter((x) => !currentDecision(x));
@@ -3566,9 +3855,18 @@
         const acceptedApps = activeApps().filter((x) => currentDecision(x) === "accepted");
         const declinedApps = activeApps().filter((x) => currentDecision(x) === "declined");
         const enrolledApps = activeApps().filter((x) => appStage(x) === "enrolled");
-        const delivered30d = data.email && data.email.overview && data.email.overview.availability && data.email.overview.availability.deliveryEvents
-          ? data.email.overview.measured.delivered
-          : null;
+        // `measured` is declared further down, so read the delivered count directly
+        // from the payload here. Any missing link in the chain yields null,
+        // which renders as "Unavailable" rather than throwing.
+        const delivered30d =
+          data.email &&
+          data.email.overview &&
+          data.email.overview.availability &&
+          data.email.overview.availability.deliveryEvents &&
+          data.email.overview.measured &&
+          data.email.overview.measured.delivered != null
+            ? data.email.overview.measured.delivered
+            : null;
 
         // KPI cards — clickable through the existing router (no reload, no new router).
         const kpiCards = [
@@ -3579,14 +3877,25 @@
           { v: ovMoney(revenue), l: "Gross revenue", s: paidUnknown ? paidUnknown + " paid record" + (paidUnknown === 1 ? "" : "s") + " without amount" : "Recorded paid applications", a: "finance" },
           { v: delivered30d == null ? (data.emailError ? "Unavailable" : ovSkeleton()) : ovNum(delivered30d), l: "Emails delivered", s: delivered30d == null ? "Provider-confirmed, last 30 days" : "Provider-confirmed · last 30 days", a: "email" },
         ];
-        $("ovKpis").innerHTML = kpiCards.map((c) =>
-          '<a class="stat-card card-interactive" href="#" data-action="' + c.a + '"' +
-          ' onclick="event.preventDefault();overviewRoute(\'' + c.a + '\',\'' + (c.f || "") + '\')">' +
-            '<div class="stat-value">' + c.v + '</div>' +
+        // A share bar ties the six cards together so the row reads as one set
+// instead of six unrelated numbers. It is each card against the largest
+// KPI on the row - a comparison aid, not a second measurement.
+        const kpiNumber = (v) => parseFloat(String(v).replace(/[^0-9.\-]/g, ""));
+        const kpiMax = Math.max(1, ...kpiCards.map((c) => {
+          const n = kpiNumber(c.v);
+          return Number.isFinite(n) ? n : 0;
+        }));
+        $("ovKpis").innerHTML = kpiCards.map((c) => {
+          const n = kpiNumber(c.v);
+          const share = Number.isFinite(n) ? Math.max(0, Math.min(100, (n / kpiMax) * 100)) : 0;
+          return '<a class="stat-card card-interactive" href="#" data-action="' + c.a + '"' +
+            ' onclick="event.preventDefault();overviewRoute(\'' + c.a + '\',\'' + (c.f || "") + '\')">' +
+            '<div class="stat-value' + (ovValueIsText(c.v) ? " is-text" : "") + '">' + c.v + '</div>' +
             '<div class="stat-label">' + c.l + '</div>' +
             '<div class="stat-sublabel">' + c.s + '</div>' +
-          '</a>'
-        ).join("");
+            '<div class="statShare"><i style="width:' + share.toFixed(1) + '%"></i></div>' +
+          '</a>';
+        }).join("");
 
         // Five-second executive story: lead → application → acceptance → paid → enrolled.
         const funnel = [
@@ -3609,15 +3918,26 @@
           [pendingPayments, "Awaiting payment / verification", "awaiting_payment"],
           [declinedApps.length, "Declined", "closed"],
         ];
-        $("ovPipeline").innerHTML = stageRows.map(([value, label, filter]) =>
-          '<a class="overviewRow" href="#" onclick="event.preventDefault();goApplicants(\'' + filter + '\')"><span>' + label + '</span><strong>' + ovNum(value) + '</strong></a>'
-        ).join("");
+// One funnel instead of four label/number rows: the bar shows the shape,
+// the legend shows every count plus the conversion between stages.
+        $("ovPipeline").innerHTML = ovFunnel(stageRows.map((r) => [r[1], r[0]]));
 
         const monthExpense = data.expenses ? ovExpensesThisMonth(data.expenses) : null;
         const recentPaid = paidApps.filter((x) => x.paid_at).sort((a, b) => Date.parse(b.paid_at) - Date.parse(a.paid_at))[0];
+        const expenseTotal = monthExpense ? Number(monthExpense.total) : null;
+        const netRecorded = expenseTotal != null ? Number(revenue) - expenseTotal : null;
         $("ovRevenue").innerHTML =
-          '<a class="overviewRow" href="#" onclick="event.preventDefault();openTool(\'finance\')"><span>Recorded gross revenue</span><strong>' + ovMoney(revenue) + '</strong></a>' +
-          '<a class="overviewRow" href="#" onclick="event.preventDefault();openTool(\'finance\')"><span>Expenses this month</span><strong>' + (monthExpense ? ovMoney(monthExpense.total) : data.expensesError ? "Unavailable" : ovSkeleton()) + '</strong></a>' +
+          '<div class="ovMoneyPair">' +
+            '<a class="ovMoneyCell" href="#" onclick="event.preventDefault();openTool(\'finance\')"><span>Recorded gross revenue</span><strong>' + ovMoney(revenue) + '</strong></a>' +
+            '<a class="ovMoneyCell" href="#" onclick="event.preventDefault();openTool(\'finance\')"><span>Expenses this month</span><strong>' + (expenseTotal != null ? ovMoney(expenseTotal) : data.expensesError ? "Unavailable" : ovSkeleton()) + '</strong></a>' +
+            '<div class="ovMoneyCell is-static"><span>Recorded minus expenses</span><strong>' + (netRecorded != null ? ovMoney(netRecorded) : data.expensesError ? "Unavailable" : ovSkeleton()) + '</strong></div>' +
+          '</div>' +
+          (revenue > 0 && expenseTotal != null
+            ? ovDistribution(
+                [['Gross revenue', revenue, ovInk], ['Expenses this month', Math.min(expenseTotal, revenue), expenseTotal > revenue ? ovBad : ovMid]],
+                { format: ovMoney },
+              )
+            : '') +
           '<div class="overviewNote">' + (recentPaid ? 'Latest payment: ' + esc(recentPaid.name || recentPaid.email || "Student") + ' · ' + esc(formatDate(recentPaid.paid_at)) : "No recorded paid activity yet.") + '</div>';
 
         const progressRows = students.map((student) => student._progress || computeStudentProgress(student, studentProgress.find((p) => p.user_id === student.auth_user_id)));
@@ -3625,12 +3945,39 @@
         const completed = progressRows.filter((p) => p.pct >= 100).length;
         const stalled = progressRows.filter((p) => p.pct > 0 && p.pct < 100 && p.lastActivity && Date.now() - Date.parse(p.lastActivity) > 14 * 86400000).length;
         const average = progressRows.length ? Math.round(progressRows.reduce((sum, p) => sum + p.pct, 0) / progressRows.length) : 0;
+// Where learners actually sit in the course, not just how many finished.
+        const progressBuckets = [
+          ['Not started', progressRows.filter((p) => !(p.pct > 0)).length, '#d6d2c9'],
+          ['1\u201325%', progressRows.filter((p) => p.pct > 0 && p.pct < 25).length, '#c2bcb0'],
+          ['26\u201350%', progressRows.filter((p) => p.pct >= 25 && p.pct < 50).length, '#9a948a'],
+          ['51\u201375%', progressRows.filter((p) => p.pct >= 50 && p.pct < 75).length, '#6b665e'],
+          ['76\u201399%', progressRows.filter((p) => p.pct >= 75 && p.pct < 100).length, '#45423d'],
+          ['Complete', progressRows.filter((p) => p.pct >= 100).length, ovGood],
+        ];
         $("ovStudents").innerHTML =
-          '<a class="overviewRow" href="#" onclick="event.preventDefault();overviewRoute(\'students\')"><span>Enrolled learners</span><strong>' + ovNum(students.length) + '</strong></a>' +
-          '<div class="overviewRow"><span>Average course progress</span><strong>' + (progressRows.length ? average + "%" : "No learners") + '</strong></div>' +
-          '<div class="overviewRow"><span>Started / completed</span><strong>' + ovNum(started) + ' / ' + ovNum(completed) + '</strong></div>' +
-          (stalled ? '<a class="overviewRow overviewRow--attention" href="#" onclick="event.preventDefault();overviewRoute(\'students\')"><span>Stalled 14+ days</span><strong>' + ovNum(stalled) + '</strong></a>' : "");
+          '<div class="ovStatStrip">' +
+            '<div><span>Enrolled learners</span><strong>' + ovNum(students.length) + '</strong></div>' +
+            '<div><span>Average progress</span><strong>' + (progressRows.length ? average + '%' : 'No learners') + '</strong></div>' +
+            '<div><span>Started / completed</span><strong>' + ovNum(started) + ' / ' + ovNum(completed) + '</strong></div>' +
+            (stalled ? '<div class="is-attention"><span>Stalled 14+ days</span><strong>' + ovNum(stalled) + '</strong></div>' : '') +
+          '</div>' +
+          ovDistribution(progressBuckets, { empty: "No learner progress recorded yet." });
 
+// A real weekly trend from the loaded records: applications received
+// against payments confirmed. This is the chart that shows whether the
+// funnel is moving, rather than restating today's totals.
+        const trendApps = activeApps();
+        const appWeeks = ovWeekly(trendApps, "created_at", 8);
+        const paidWeeks = ovWeekly(trendApps, "paid_at", 8);
+        $("ovTrend").innerHTML =
+          ovColumns(
+            appWeeks.map(ovWeekLabel),
+            [
+              { name: 'Applications received', color: ovInk, values: appWeeks.map((w) => w.n) },
+              { name: 'Payments confirmed', color: ovGood, values: paidWeeks.map((w) => w.n) },
+            ],
+            { showTotals: true },
+          );
         const recentEvents = [];
         activeApps().forEach((app) => [
           [app.paid_at, "Payment received"], [app.accepted_at, "Application accepted"],
@@ -3762,11 +4109,14 @@
         paintEnrollment(data.capacity, !data.capacity && !data.capacityError);
 
         // Email delivery status (30 days).
+        // Each field is guarded on its own: an email payload that carries
+        // `overview` but omits `totals`/`measured`/`rates` must not be able to
+        // take down the whole Overview dashboard.
         const ov = data.email ? data.email.overview : null;
-        const av = ov ? ov.availability : {};
-        const totals = ov ? ov.totals : {};
-        const measured = ov ? ov.measured : {};
-        const rates = ov ? ov.rates : {};
+        const av = (ov && ov.availability) || {};
+        const totals = (ov && ov.totals) || {};
+        const measured = (ov && ov.measured) || {};
+        const rates = (ov && ov.rates) || {};
         const pct = (v) =>
           v == null || !Number.isFinite(Number(v)) ? "Unavailable" : (Number(v) * 100).toFixed(1) + "%";
         $("ovEmail").innerHTML =

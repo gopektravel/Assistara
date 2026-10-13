@@ -1,3 +1,14 @@
+/* Sidebar currency control: a labelled, full-width segmented control. Centred
+   across the footer so it reads as one deliberate group rather than a small
+   control left-hugging the corner. */
+.currencySelect { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 12px; }
+.currencySelectLabel { font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #7d786f; text-align: center; }
+.currencySelect .currencySwitch { display: flex; width: 100%; justify-content: center; gap: 3px; padding: 3px; background: #111; border: 1px solid #2a2a2a; border-radius: 999px; }
+.currencySelect .currencySwitch button { flex: 1 1 0; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px; font: "Manrope", sans-serif; font-size: 10px; font-weight: 700; line-height: 1; letter-spacing: .02em; color: #aaa59d; background: transparent; border: 1px solid transparent; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: background var(--transition-base), color var(--transition-base); }
+.currencySelect .currencySwitch button.active { background: #24211c; color: #fff; border-color: #3a3a3a; }
+.currencySelect .currencySwitch button:not(.active):hover { background: #1c1c1c; color: #fff; }
+.currencySelect .currencySwitch button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255,213,31,0.3); }
+
 .currencySwitch { display: inline-flex; gap: 2px; padding: 2px; background: #111; border: 1px solid #2a2a2a; border-radius: 999px; font-family: "Manrope", sans-serif; box-shadow: none; }
 .currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 4px 8px; font: "Manrope", sans-serif; font-size: 10px; font-weight: 650; line-height: 1; color: #aaa59d; cursor: pointer; white-space: nowrap; transition: background var(--transition-base), color var(--transition-base); }
 .currencySwitch button:not(.active):hover { background: #1a1a1a; color: #fff; }

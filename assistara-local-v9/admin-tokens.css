@@ -39,9 +39,12 @@
   --danger-dark: #8b2825;
   --danger-border: #efb8b3;
 
-  --info-light: #e8f4fd;
-  --info-dark: #0878f9;
-  --info-border: #bedbf9;
+  /* Informational is deliberately a warm neutral, not blue. The Assistara
+     palette is yellow / green / red, so a blue "info" state read as an
+     off-brand link colour wherever it leaked into text. */
+  --info-light: #f2f1ed;
+  --info-dark: #4a4741;
+  --info-border: #dcd9d2;
 
   --neutral-light: #efede8;
   --neutral-dark: #66625f;

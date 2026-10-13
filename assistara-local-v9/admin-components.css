@@ -873,10 +873,14 @@ textarea:focus-visible,
   text-transform: uppercase;
 }
 
-.stage-new { background: var(--info-light); color: var(--info-dark); border: 1px solid var(--info-border); }
+/* Stage colours follow the brand palette only: neutral for "no opinion",
+   amber for waiting on someone, green for enrolled, red for genuinely broken. */
+.stage-new { background: var(--neutral-light); color: var(--neutral-dark); border: 1px solid var(--neutral-border); }
 .stage-awaiting-payment { background: var(--warning-light); color: var(--warning-dark); border: 1px solid var(--warning-border); }
 .stage-payment-pending { background: var(--warning-light); color: var(--warning-dark); border: 1px solid var(--warning-border); }
-.stage-onboarding { background: var(--info-light); color: var(--info-dark); border: 1px solid var(--info-border); }
+/* Paid and waiting on onboarding: progress, not a failure. Solid ink reads as
+   "in flight" and keeps it distinct from both the neutral and amber stages. */
+.stage-onboarding { background: #e7e5df; color: #2f2c28; border: 1px solid #cfccc3; }
 .stage-enrolled { background: var(--success-light); color: var(--success-dark); border: 1px solid var(--success-border); }
 .stage-declined { background: var(--neutral-light); color: var(--neutral-dark); border: 1px solid var(--neutral-border); }
 .stage-suspended { background: var(--danger-light); color: var(--danger-dark); border: 1px solid var(--danger-border); }
@@ -892,7 +896,8 @@ textarea:focus-visible,
 }
 
 .action-admin .actionLabel { color: var(--warning-dark); font-weight: 600; }
-.action-applicant .actionLabel { color: var(--info-dark); font-weight: 600; }
+/* Waiting on the applicant is a normal state, not an alert. */
+.action-applicant .actionLabel { color: var(--muted); font-weight: 600; }
 .action-none .actionLabel { color: var(--muted); }
 .action-closed .actionLabel { color: var(--muted); }
 
@@ -998,7 +1003,7 @@ textarea:focus-visible,
 
 .enrollmentMetrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
   gap: 8px;
 }
 
@@ -1054,6 +1059,23 @@ textarea:focus-visible,
 }
 
 .enrollmentFootnote { margin-top: 10px; font-size: 12px; }
+.enrollmentFootnote a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: #c9c4b8;
+}
+.enrollmentFootnote a:hover { text-decoration-color: var(--ink); }
+
+/* Backstop: an <a> inside Admin content must never fall back to the browser
+   default link blue. Buttons and cards set their own colour and win on
+   specificity, so this only affects anchors that styled nothing at all. */
+.workspace a:not([class]):not(.btn):not(.card-interactive) {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 /* Capacity Details expandable */
 .capacityToggle {
@@ -1235,4 +1257,25 @@ textarea:focus-visible,
 }
 .table td {
   font-family: var(--font-family);
+}
+
+/* ---------------------------------------------------------------- *
+ * Stat values
+ *
+ * A value like "Unavailable" is longer than a 4-up grid track at display
+ * size. Without these rules the word spilled out of its card and overlapped
+ * whatever sat beside it, so text values shrink and wrap, and no value of
+ * any kind is allowed to widen its track.
+ * ---------------------------------------------------------------- */
+.stat-value {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+
+.stat-value.is-text {
+  font-size: 15px;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: var(--muted);
 }

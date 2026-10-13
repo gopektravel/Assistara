@@ -8,6 +8,11 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const admin = read("admin.html");
 const v3 = read("admin-v3.css");
 const vercel = JSON.parse(read("vercel.json"));
+const components = read("admin-components.css");
+const charts = read("admin-charts.css");
+const tokens = read("admin-tokens.css");
+const layout = read("admin-layout.css");
+const currency = read("admin-currency.css");
 
 test("every admin surface loads the shared V3 visual system", () => {
   for (const file of [
@@ -142,4 +147,128 @@ test("V3 is responsive, Manrope-only and reserves red for semantic states", () =
   assert.match(v3, /\.btn-success[\s\S]*background: var\(--admin-green\)/);
   assert.match(v3, /\.overview-grid/);
   assert.match(v3, /\.content-toolbar/);
+});
+
+test("Overview charts replace label/number rows with real visualisations", () => {
+  // Chart helpers must exist and be used by the painters.
+  for (const fn of ["ovFunnel", "ovColumns", "ovDistribution", "ovWeekly"]) {
+    assert.ok(admin.includes("function " + fn), "missing chart helper " + fn);
+  }
+  assert.match(admin, /\$\("ovPipeline"\)\.innerHTML = ovFunnel\(/);
+  assert.match(admin, /\$\("ovTrend"\)\.innerHTML =/);
+  assert.match(admin, /ovDistribution\(progressBuckets/);
+  assert.match(admin, /Applications &amp; payments/);
+
+  // The label/number row pairs are gone.
+  assert.doesNotMatch(admin, /<div class="overviewRow"><span>Average course progress/);
+  assert.doesNotMatch(admin, /<div class="overviewRow"><span>Started \/ completed/);
+
+  // Every chart has styling, so a new panel is never unstyled markup.
+  for (const cls of [
+    ".ovFunnelBar",
+    ".ovFunnelLegend",
+    ".ovColumnChart",
+    ".ovCol",
+    ".ovMoneyPair",
+    ".ovStatStrip",
+    ".statShare",
+  ]) {
+    assert.ok(charts.includes(cls), "chart CSS missing " + cls);
+  }
+
+  // Money inside a chart must render in the display currency, never raw PHP.
+  assert.match(admin, /\{ format: ovMoney \}/);
+  assert.match(admin, /typeof opts\.format === "function" \? opts\.format : ovNum/);
+});
+
+test("the dashboard uses only brand colours: no off-brand blue", () => {
+  // The Google-blue info tokens were the source of the blue text. The
+  // categorical chart palette stays multi-hue on purpose, so only the
+  // status/info tokens are constrained here.
+  assert.match(tokens, /--info-dark: #4a4741;/);
+  assert.doesNotMatch(tokens, /--info-dark: #08/);
+  assert.doesNotMatch(tokens, /--info-light: #e8f4fd/);
+  // Applicant stages must not reach for a blue information tone.
+  assert.doesNotMatch(components, /\.stage-new \{[^}]*--info-dark/);
+  assert.doesNotMatch(components, /\.stage-onboarding \{[^}]*--info-dark/);
+  assert.doesNotMatch(components, /\.action-applicant \.actionLabel \{ color: var\(--info-dark\)/);
+
+  for (const file of ["admin.html", "admin-components.css", "admin-currency.css"]) {
+    const body = read(file);
+    assert.doesNotMatch(body, /#0a58b0/, file + " still has a blue capacity value");
+    assert.doesNotMatch(body, /#1a73e8/, file + " still has a blue badge");
+    assert.doesNotMatch(body, /#d7eaff/, file + " still has a blue waitlist badge");
+    assert.doesNotMatch(body, /#5d3a9b/, file + " still has a purple badge");
+    assert.doesNotMatch(body, /#a8c7fa/, file + " still has a blue border");
+  }
+
+  // Scheduled coupons are upcoming, not a problem: amber.
+  assert.match(admin, /\.badge\.scheduled \{\s*background: var\(--warning-light\)/);
+
+  // An anchor inside Admin content must never fall back to the UA link blue.
+  assert.match(components, /\.enrollmentFootnote a \{/);
+  assert.match(components, /\.workspace a:not\(\[class\]\)/);
+});
+
+test("a stat value can never widen its card and overlap a neighbour", () => {
+  // "Unavailable" is longer than a 4-up grid track and used to spill outside
+  // its card, overlapping whatever sat next to it.
+  assert.match(admin, /const ovValueIsText = \(v\) =>/);
+  assert.match(admin, /<div class="stat-value' \+/);
+  assert.match(components, /\.stat-value\.is-text \{/);
+  assert.match(components, /\.stat-value \{\s*overflow-wrap: anywhere/);
+});
+
+test("auto-fit grid tracks can shrink instead of overflowing a narrow panel", () => {
+  // minmax(140px, 1fr) cannot collapse below 140px, so it overflowed a 6-column
+  // overview span on a tablet. The minimum must be capped by the container.
+  for (const file of ["admin-charts.css", "admin-v3.css", "admin-components.css", "admin-layout.css"]) {
+    assert.doesNotMatch(
+      read(file),
+      /repeat\(auto-fit,\s*minmax\(\d+px,\s*1fr\)\)/,
+      file + " has an uncapped auto-fit track",
+    );
+  }
+  assert.match(v3, /repeat\(auto-fit, minmax\(min\(140px, 100%\), 1fr\)\)/);
+});
+
+test("a text-truncating label is a block so the ellipsis actually applies", () => {
+  // text-overflow has no effect on an inline element, so the label overflowed.
+  assert.match(charts, /\.ovStatStrip span \{\s*display: block;/);
+});
+
+test("the sidebar currency control is centred and labelled", () => {
+  assert.match(admin, /class="currencySelect"/);
+  assert.match(admin, /currencySelectLabel/);
+  // No inline alignment override left over from the old left-hugging control.
+  assert.doesNotMatch(admin, /id="sidebarCurrencySwitch"[^>]*style="[^"]*justify-content/);
+  assert.match(currency, /\.currencySelect \{[^}]*align-items: center/);
+  assert.match(currency, /\.currencySelect \.currencySwitch \{[^}]*width: 100%/);
+});
+
+test("collapsed coupon cards carry redemption facts and fill the row", () => {
+  // The collapsed card used to be identity plus five buttons, leaving a wide
+  // empty gap and hiding the redemption data behind an Expand button.
+  for (const part of ["cpCode", "cpCampaign", "cpFacts", "cpMeta", "cpBarTrack"]) {
+    assert.ok(admin.includes(part), "coupon card missing " + part);
+  }
+  assert.match(admin, /<em>Confirmed <b>\$\{confirmed\}<\/b><\/em>/);
+  assert.match(admin, /<em>Revenue <b>\$\{MONEY_PHP\(c\.revenue_php \|\| 0\)\}<\/b><\/em>/);
+  // Three columns so the facts absorb the slack instead of leaving a gap.
+  assert.match(
+    admin,
+    /\.couponCard \.cpRow \{\s*display: grid;\s*grid-template-columns: minmax\(0, auto\) minmax\(0, 1fr\) minmax\(0, auto\)/,
+  );
+});
+
+test("the Overview email panel survives a partial email payload", () => {
+  // An email response carrying an overview but no totals used to throw and
+  // take the whole dashboard down, because each field was guarded only against
+  // the overview being null and not against its own property being missing.
+  assert.match(admin, /const totals = \(ov && ov\.totals\) \|\| \{\};/);
+  assert.match(admin, /const measured = \(ov && ov\.measured\) \|\| \{\};/);
+  assert.match(admin, /const rates = \(ov && ov\.rates\) \|\| \{\};/);
+  assert.match(admin, /const av = \(ov && ov\.availability\) \|\| \{\};/);
+  // delivered30d reads the payload directly rather than a later binding.
+  assert.match(admin, /data\.email\.overview\.measured &&\s*data\.email\.overview\.measured\.delivered != null/);
 });
