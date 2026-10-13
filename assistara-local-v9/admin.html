@@ -1088,11 +1088,12 @@
           </div>
         </nav>
         <div class="sidebar-footer">
-          <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency" style="margin-bottom: 10px; justify-content: center;">
-            <button type="button" data-cur="PHP" aria-pressed="true">PHP</button>
-            <button type="button" data-cur="USD" aria-pressed="false">USD</button>
-            <button type="button" data-cur="EUR" aria-pressed="false">EUR</button>
+          <div class="currencySwitch currencySwitch--compact" id="sidebarCurrencySwitch" role="group" aria-label="Display currency" style="margin-bottom: 10px; justify-content: flex-start; padding-left: 4px; padding-right: 4px;">
+            <button type="button" data-cur="PHP" aria-pressed="true" style="padding:4px 6px;font-size:9px;">₱ PHP</button>
+            <button type="button" data-cur="USD" aria-pressed="false" style="padding:4px 6px;font-size:9px;">$ USD</button>
+            <button type="button" data-cur="EUR" aria-pressed="false" style="padding:4px 6px;font-size:9px;">€ EUR</button>
           </div>
+          <div style="border-top:1px solid rgba(255,255,255,0.08); margin-bottom:10px;"></div>
           <div class="sidebar-user">
             <div class="sidebar-user-avatar" aria-hidden="true">A</div>
             <div class="sidebar-user-info">
@@ -2694,9 +2695,10 @@
         const cur = (window.AssistaraCurrency && window.AssistaraCurrency.getDisplay) ? window.AssistaraCurrency.getDisplay() : "PHP";
         const php = Number(centavos) / 100;
         const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v) => "₱"+Number(v).toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2});
-        const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : php;
-        if (val == null || !Number.isFinite(Number(val))) return fmt(php, "PHP") + " · conversion unavailable";
-        return (cur === "PHP" ? "" : "≈ ") + fmt(val, cur);
+        if (cur === "PHP") return fmt(php, "PHP");
+        const val = (window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : null;
+        if (val == null || !Number.isFinite(Number(val))) return "Unavailable";
+        return fmt(val, cur);
       };
       const COUPON_STATUS_BADGE = {
         active: { label: 'Active', class: 'active' },
@@ -3191,14 +3193,30 @@
           : 0;
         box.style.display = "block";
         box.innerHTML =
-          '<div class="card" style="margin-bottom:12px;">' +
+          '<div class="card" style="margin-bottom:10px;">' +
           '<div class="card-header"><div><h3 class="card-title">Academy capacity</h3><div class="card-subtitle">Acceptance does not reserve a seat — only confirmed payment does. Backend enforces the limit.</div></div></div>' +
           (capPaid !== null
             ? '<div class="seatProgress"><div class="seatProgressLabel"><span>Confirmed paid seats</span><span>' + ovNum(capPaid) + ' / ' + ovNum(capTotal) + ' · ' + ovNum(capAvail !== null ? capAvail : Math.max(0, capTotal - capPaid)) + ' remaining</span></div><div class="progress-track"><div class="progress-fill success" style="width:' + progress + '%"></div></div></div>'
             : '<div class="alert alert-warning"><div><div class="alert-title">Capacity unavailable</div><p>Seat counts could not be loaded. Application counts below are current.</p><button class="btn btn-sm" type="button" onclick="capacityDirty=true;renderCapacity()">Retry</button></div></div>') +
           '</div>' +
-          '<div class="card" style="margin-bottom:12px;">' +
+          '<div class="card" style="margin-bottom:0;">' +
           '<div class="card-header"><div><h3 class="card-title">Application pipeline</h3><div class="card-subtitle">Application → acceptance → payment → onboarding. Click a stage to filter.</div></div></div>' +
+          (function () {
+            const segs = [
+              [newCount, "New / Unreviewed", "#c9c4b8"],
+              [awaiting + payPending, "Awaiting Payment", "#e0a53a"],
+              [paid, "Paid / Onboarding", "#4f8f6a"],
+              [enrolled, "Enrolled", "#156b35"],
+              [declined, "Declined / Closed", "#ddd9d0"],
+            ].filter(([n]) => n > 0);
+            const segTotal = segs.reduce((sum, [n]) => sum + n, 0) || 1;
+            if (!segs.length) return '<div class="overviewNote">No applications to chart yet.</div>';
+            return '<div class="pipelineBar" role="img" aria-label="Application stage distribution">' +
+              segs.map(([n, label, color]) => '<span style="width:' + ((n / segTotal) * 100).toFixed(2) + '%;background:' + color + '" title="' + esc(label) + ': ' + n + '"></span>').join("") +
+              '</div><div class="pipelineLegend">' +
+              segs.map(([n, label, color]) => '<span><i style="background:' + color + '"></i>' + esc(label) + ' <strong>' + ovNum(n) + '</strong></span>').join("") +
+              '</div>';
+          })() +
           '<div class="enrollmentMetrics">' +
           enrollmentTile(ovNum(totalApplications()), "Total Applications", "Every persisted record", "all") +
           enrollmentTile(ovNum(newCount), "New / Unreviewed", "Awaiting a decision", "new") +
@@ -3395,9 +3413,14 @@
         const cur = (window.AssistaraCurrency && window.AssistaraCurrency.getDisplay) ? window.AssistaraCurrency.getDisplay() : "PHP";
         if (php == null || !Number.isFinite(Number(php))) return "Unavailable";
         const fmt = (window.AssistaraCurrency && window.AssistaraCurrency.fmtMoney) ? window.AssistaraCurrency.fmtMoney : (v,c) => (c==="PHP"?"₱":"")+Number(v).toLocaleString("en-US");
-        const val = (cur !== "PHP" && window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : Number(php);
-        if (val == null || !Number.isFinite(Number(val))) return fmt(Number(php), "PHP") + " · conversion unavailable";
-        return (cur === "PHP" ? "" : "≈ ") + fmt(val, cur);
+        if (cur === "PHP") {
+          return fmt(Number(php), "PHP");
+        }
+        const val = (window.AssistaraCurrency && window.AssistaraCurrency.displayValue) ? window.AssistaraCurrency.displayValue(php, cur) : null;
+        if (val == null || !Number.isFinite(Number(val))) {
+          return "Unavailable";
+        }
+        return fmt(val, cur);
       }
       function ovNum(n) {
         if (n == null || !Number.isFinite(Number(n))) return "Unavailable";
@@ -3622,23 +3645,15 @@
         const needed = progApps.filter((x) => { const s = String(x.application_status || x.stage || x.status || "").toLowerCase(); return s === "new" || s === "awaiting_payment" || s === "payment_pending" || s === "onboarding"; });
         const paid = progApps.filter((x) => String(x.payment_status || "").toLowerCase() === "paid" && !x.enrollment);
         const enrolled = progApps.filter((x) => x.enrollment || String(x.application_status || "").toLowerCase() === "enrolled");
-        $("ovActionProgress").innerHTML = [
-          '<div style="flex:1;min-width:140px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-            '<div style="font-size:11px;font-weight:700;color:#171717;">Needs Attention</div>' +
-            '<div style="font-size:20px;font-weight:800;color:#171717;margin-top:4px;">' + needed.length + '</div>' +
-            '<div style="font-size:11px;color:#746e65;">New / Awaiting payment / Onboarding</div>' +
-          '</div>',
-          '<div style="flex:1;min-width:140px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-            '<div style="font-size:11px;font-weight:700;color:#171717;">Paid</div>' +
-            '<div style="font-size:20px;font-weight:800;color:#171717;margin-top:4px;">' + paid.length + '</div>' +
-            '<div style="font-size:11px;color:#746e65;">Payment received</div>' +
-          '</div>',
-          '<div style="flex:1;min-width:140px;padding:12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;font-family:Manrope,sans-serif;">' +
-            '<div style="font-size:11px;font-weight:700;color:#171717;">Enrolled</div>' +
-            '<div style="font-size:20px;font-weight:800;color:#171717;margin-top:4px;">' + enrolled.length + '</div>' +
-            '<div style="font-size:11px;color:#746e65;">Active in program</div>' +
-          '</div>',
-        ].join("");
+        $("ovActionProgress").innerHTML = '<div class="ovStats">' + [
+          ['Needs Attention', needed.length, 'New / awaiting payment / onboarding'],
+          ['Paid', paid.length, 'Payment received'],
+          ['Enrolled', enrolled.length, 'Active in program'],
+        ].map(([label, value, sub]) =>
+          '<div class="ovStatCard"><div class="ovStatLabel">' + esc(label) + '</div>' +
+          '<div class="ovStatValue">' + ovNum(value) + '</div>' +
+          '<div class="ovStatSub">' + esc(sub) + '</div></div>'
+        ).join('') + '</div>';
         // Populate compact Needs Attention list (real data only)
         const naBox = $("ovNeedsAttention");
         const naList = $("ovNeedsAttentionList");
@@ -3686,33 +3701,53 @@
         // Acquisition & Masterclass (real data only)
         const acqEl = $("ovAcq");
         if (acqEl) {
-          const webReg = web.filter((x) => !/^diag(?:nostic)?[-_]/i.test(String(x.email || "")) && !/diagnostic/i.test(String(x.name || "")) && !/diagnostic/i.test(String(x.source || ""))).length;
+          const visibleSignups = web.filter((x) => !/^diag(?:nostic)?[-_]/i.test(String(x.email || "")) && !/diagnostic/i.test(String(x.name || "")) && !/diagnostic/i.test(String(x.source || "")));
+          const webReg = visibleSignups.length;
           const leads = Array.isArray(typeof b2b !== "undefined" ? b2b : null) ? b2b.length : 0;
           const apps = totalApplications();
           const conv = leads > 0 ? ((apps / leads) * 100) : null;
-          const items = [];
-          items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
-            '<div style="font-size:11px;font-weight:700;color:#171717;">Registered for Masterclass</div>' +
-            '<div style="font-size:18px;font-weight:800;color:#171717;margin-top:4px;">' + ovNum(webReg) + '</div>' +
-            '<div style="font-size:11px;color:#746e65;"><a href="#" onclick="event.preventDefault();showDashboard({push:true});tab=\'webinar\';render();saveUiState();">View Lead Tracker</a></div>' +
-            '</div>');
-          items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
-            '<div style="font-size:11px;font-weight:700;color:#171717;">Acquisition Leads</div>' +
-            '<div style="font-size:18px;font-weight:800;color:#171717;margin-top:4px;">' + ovNum(leads) + '</div>' +
-            '<div style="font-size:11px;color:#746e65;"><a href="#" onclick="event.preventDefault();openTool(\'acquisition\');">View Acquisition Tracker</a></div>' +
-            '</div>');
+          const cards = [
+            ['Registered for Masterclass', ovNum(webReg), 'View Lead Tracker', "showDashboard({push:true});tab='webinar';render();saveUiState();"],
+            ['Acquisition Leads', ovNum(leads), 'View Acquisition Tracker', "openTool('acquisition');"],
+          ];
           if (conv !== null && Number.isFinite(conv)) {
-            items.push('<div style="flex:1;min-width:140px;padding:10px 12px;background:#fff;border:1px solid #e2ded4;border-radius:8px;">' +
-              '<div style="font-size:11px;font-weight:700;color:#171717;">Lead→Application</div>' +
-              '<div style="font-size:18px;font-weight:800;color:#171717;margin-top:4px;">' + conv.toFixed(1) + '%</div>' +
-              '<div style="font-size:11px;color:#746e65;">Leads (' + ovNum(leads) + ') → Applications (' + ovNum(apps) + ')</div>' +
-              '</div>');
+            cards.push(['Lead → Application', conv.toFixed(1) + '%', ovNum(leads) + ' leads → ' + ovNum(apps) + ' applications', '']);
           }
-          if (items.length) {
-            acqEl.innerHTML = items.join("");
-          } else {
-            acqEl.innerHTML = '<div style="font-size:12px;color:#746e65;">No acquisition data available.</div>';
-          }
+          // Top acquisition sources (real signups only, resolved through the
+          // Acquisition Tracker's own attribution resolver).
+          let sourceHTML = '';
+          try {
+            const resolve = window.AssistaraAttribution && window.AssistaraAttribution.resolve;
+            if (resolve && visibleSignups.length) {
+              const counts = {};
+              visibleSignups.forEach((x) => {
+                const s = resolve(x, { kind: "signup", links: acquisitionLinks, visits: acquisitionVisits, signups: web });
+                const key = String((s && s.display) || "Untracked").slice(0, 40);
+                counts[key] = (counts[key] || 0) + 1;
+              });
+              const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+              const max = rows.length ? rows[0][1] : 0;
+              if (rows.length && max > 0) {
+                sourceHTML = '<div class="ovSourceList">' + rows.map(([label, n]) =>
+                  '<div class="ovSourceRow"><span class="ovSourceName">' + esc(label) + '</span>' +
+                  '<span class="ovSourceBar"><i style="width:' + Math.max(4, Math.round((n / max) * 100)) + '%"></i></span>' +
+                  '<strong>' + ovNum(n) + '</strong></div>'
+                ).join('') + '</div>';
+              }
+            }
+          } catch { sourceHTML = ''; }
+          acqEl.innerHTML =
+            (cards.length
+              ? '<div class="ovStats">' + cards.map(([label, value, sub, action]) =>
+                  '<div class="ovStatCard"><div class="ovStatLabel">' + esc(label) + '</div>' +
+                  '<div class="ovStatValue">' + value + '</div>' +
+                  (sub
+                    ? (action ? '<a class="ovStatLink" href="#" onclick="event.preventDefault();' + action + '">' + esc(sub) + '</a>' : '<div class="ovStatSub">' + sub + '</div>')
+                    : '') +
+                  '</div>'
+                ).join('') + '</div>'
+              : '<div class="overviewNote">No acquisition data available.</div>') +
+            sourceHTML;
         }
 
         paintEnrollment(data.capacity, !data.capacity && !data.capacityError);

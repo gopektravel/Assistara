@@ -1,10 +1,11 @@
-.currencySwitch { display: inline-flex; gap: 2px; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 999px; font-family: "Manrope", sans-serif; box-shadow: 0 1px 1px rgba(21,21,21,0.03); }
-.currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 6px 10px; font: "Manrope", sans-serif; font-size: 11px; font-weight: 700; line-height: 1; color: var(--muted); cursor: pointer; white-space: nowrap; transition: background var(--transition-base), color var(--transition-base); }
-.currencySwitch button:not(.active):hover { background: #f1eee5; color: var(--ink); }
-.currencySwitch button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.currencySwitch button.active { background: #171717; color: #fff; }
-/* Legacy compact variant (superseded by the dark sidebar section styles). */
-.currencySwitch--compact button { padding: 5px 8px; font-size: 10px; }
+.currencySwitch { display: inline-flex; gap: 2px; padding: 2px; background: #111; border: 1px solid #2a2a2a; border-radius: 999px; font-family: "Manrope", sans-serif; box-shadow: none; }
+.currencySwitch button { border: 0; background: none; border-radius: 999px; padding: 4px 8px; font: "Manrope", sans-serif; font-size: 10px; font-weight: 650; line-height: 1; color: #aaa59d; cursor: pointer; white-space: nowrap; transition: background var(--transition-base), color var(--transition-base); }
+.currencySwitch button:not(.active):hover { background: #1a1a1a; color: #fff; }
+.currencySwitch button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255,213,31,0.3); }
+.currencySwitch button.active { background: #1f1f1f; color: #fff; border: 1px solid #3a3a3a; }
+.currencySwitch--compact button { padding: 4px 6px; font-size: 9px; letter-spacing: 0.02em; background: transparent; color: #aaa59d; border: 1px solid transparent; }
+.currencySwitch--compact button.active { background: #1f1f1f; color: #fff; border-color: #3a3a3a; }
+.currencySwitch--compact button:not(.active):hover { background: #1a1a1a; color: #fff; }
 
 /* Compact overview dashboard — clean premium hierarchy */
 #overviewView .card { padding: 16px; border-radius: 12px; }

@@ -20,10 +20,10 @@ html, body, button, input, select, textarea, table, canvas,
 body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !important; }
 
 /* Shell and page hierarchy */
-.workspace { max-width: 1680px; width: 100%; padding: 22px clamp(20px,2.4vw,40px) 48px; }
+.workspace { max-width: 1680px; width: 100%; padding: 16px clamp(16px,2.2vw,32px) 36px; }
 .workspace-inner { gap: 18px; }
 .workspace-top { min-height: 40px; margin: 0 0 12px; }
-.page-header { align-items: center; margin-bottom: 18px; padding: 0 0 16px; }
+.page-header { align-items: center; margin-bottom: 14px; padding: 0 0 14px; border-bottom: 1px solid var(--admin-line); }
 .page-title { font-size: clamp(24px,2.2vw,32px); letter-spacing: -.035em; }
 .page-subtitle { max-width: 760px; font-size: 13px; line-height: 1.55; }
 .page-breadcrumbs { margin-bottom: 5px; }
@@ -33,7 +33,7 @@ body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !i
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 .content-toolbar {
-  position: sticky; top: 0; z-index: 12; margin: 0 0 14px; padding: 10px;
+  position: sticky; top: 0; z-index: 12; margin: 0 0 10px; padding: 8px;
   border: 1px solid var(--admin-line); border-radius: 13px;
   background: rgba(255,255,255,.94); box-shadow: 0 4px 16px rgba(20,20,18,.04);
   backdrop-filter: blur(10px);
@@ -49,10 +49,11 @@ body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !i
 .actionable-progress, .enrollment, .capacity-section {
   border-color: var(--admin-line) !important; border-radius: var(--admin-radius) !important;
   background: var(--admin-surface) !important; box-shadow: var(--admin-shadow);
+  padding: 14px;
 }
-.card, .tool, .box, .section { padding: clamp(16px,1.7vw,22px); }
-.card + .card { margin-top: 14px; }
-.card-header, .head { align-items: center; margin-bottom: 14px; }
+.card, .tool, .box, .section { padding: clamp(14px,1.6vw,18px); }
+.card + .card { margin-top: 8px; }
+.card-header, .head { align-items: center; margin-bottom: 10px; }
 .card-title, .head h2, .head h3, .tool h2 { font-size: 16px !important; letter-spacing: -.015em; }
 .grid-stats-4 { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
 .grid-stats-3 { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
@@ -67,16 +68,17 @@ body, :host { background: var(--admin-bg) !important; color: var(--admin-ink) !i
 .stat-sublabel { margin-top: 4px; line-height: 1.45; }
 
 /* Overview storytelling */
-.overview-stack { display: grid; gap: 14px; }
-.overview-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 14px; }
+.overview-stack { display: grid; gap: 10px; }
+.overview-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: 10px; }
 .overview-span-8 { grid-column: span 8; } .overview-span-7 { grid-column: span 7; }
 .overview-span-6 { grid-column: span 6; } .overview-span-5 { grid-column: span 5; }
 .overview-span-4 { grid-column: span 4; } .overview-span-12 { grid-column: 1/-1; }
 .overview-panel {
-  min-width: 0; padding: 17px; border: 1px solid var(--admin-line);
+  min-width: 0; padding: 14px; border: 1px solid var(--admin-line);
   border-radius: var(--admin-radius); background: #fff; box-shadow: var(--admin-shadow);
+  margin-bottom: 2px;
 }
-.overview-panel > h3, .overview-panel > h4 { margin: 0 0 12px !important; font-size: 14px !important; }
+.overview-panel > h3, .overview-panel > h4 { margin: 0 0 10px !important; font-size: 14px !important; }
 .overview-panel a { color: var(--admin-ink); text-underline-offset: 3px; }
 .overview-flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
 .overview-list { display: grid; gap: 8px; }
@@ -99,16 +101,47 @@ a.overviewRow:hover, a.activityRow:hover { border-color: var(--admin-line-strong
 .overviewRow strong { font-size: 13px; text-align: right; }
 .overviewRow--attention { border-left: 3px solid #d97706; }
 .overviewNote { padding: 6px 3px; color: var(--admin-muted); font-size: 11px; line-height: 1.5; }
+
+/* Compact stat cards used inside overview panels (no inline styles) */
+.ovStats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.ovStatCard {
+  min-width: 0; padding: 10px 12px; border: 1px solid var(--admin-line);
+  border-radius: 10px; background: var(--admin-subtle);
+}
+.ovStatLabel { font-size: 11px; font-weight: 700; color: var(--admin-muted); }
+.ovStatValue { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin-top: 3px; }
+.ovStatSub { font-size: 11px; color: var(--admin-muted); margin-top: 2px; }
+.ovStatLink { font-size: 11px; color: var(--admin-ink); text-underline-offset: 2px; }
+
+/* Top acquisition sources — compact bars */
+.ovSourceList { margin-top: 10px; display: grid; gap: 6px; }
+.ovSourceRow { display: grid; grid-template-columns: minmax(0,1fr) 90px 34px; align-items: center; gap: 8px; }
+.ovSourceName { font-size: 11px; color: var(--admin-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ovSourceBar { height: 6px; border-radius: 999px; background: #ece9e1; overflow: hidden; }
+.ovSourceBar i { display: block; height: 100%; border-radius: 999px; background: var(--admin-ink); }
+.ovSourceRow strong { font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Stacked application-stage bar (Applications page) */
+.pipelineBar {
+  display: flex; height: 10px; border-radius: 999px; overflow: hidden;
+  background: #ece9e1; margin: 2px 0 10px;
+}
+.pipelineBar span { display: block; height: 100%; }
+.pipelineBar span + span { box-shadow: inset 1px 0 0 rgba(255,255,255,.55); }
+.pipelineLegend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 12px; }
+.pipelineLegend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--admin-muted); }
+.pipelineLegend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+.pipelineLegend strong { color: var(--admin-ink); }
 .activityRow span { display: grid; gap: 2px; }
 .activityRow strong { font-size: 12px; }
 .activityRow small, .activityRow time { color: var(--admin-muted); font-size: 10px; }
 #ovNeedsAttention { border-left: 4px solid #d97706 !important; }
 #ovEmail .grid-stats-2 { grid-template-columns: repeat(4,minmax(0,1fr)); }
-.progress-track { height: 8px; background: #ebe8df; }
+.progress-track { height: 6px; background: #ebe8df; }
 
 /* Controls */
 .btn, button.btn, .primary, button.main {
-  min-height: 38px; padding: 9px 14px; border-radius: var(--admin-radius-sm) !important;
+  min-height: 36px; padding: 8px 12px; border-radius: var(--admin-radius-sm) !important;
   font-size: 12px; font-weight: 750; letter-spacing: .01em; box-shadow: none;
 }
 .btn-success { background: var(--admin-green) !important; color: #fff !important; border-color: var(--admin-green) !important; }
@@ -140,7 +173,7 @@ table tbody tr:hover td { background: #fbfaf6; }
 
 /* Records and empty states */
 .applicationCard, .studentCard, .couponCard, .b2bCard {
-  margin-bottom: 10px !important; border-color: var(--admin-line) !important;
+  margin-bottom: 6px !important; border-color: var(--admin-line) !important;
   border-radius: var(--admin-radius) !important; box-shadow: 0 1px 2px rgba(20,20,18,.035); overflow: hidden;
 }
 .applicationCard:hover, .studentCard:hover, .couponCard:hover, .b2bCard:hover { border-color: var(--admin-line-strong) !important; }
@@ -152,7 +185,7 @@ table tbody tr:hover td { background: #fbfaf6; }
 .toolRoot, .shell { width: 100% !important; max-width: none !important; }
 .toolRoot .shell { padding: 0 !important; }
 .toolRoot .top, .toolRoot .shell > .head { display: none !important; }
-.toolRoot .tool, .toolRoot .card { margin: 0 0 14px !important; }
+.toolRoot .tool, .toolRoot .card { margin: 0 0 10px !important; }
 .toolRoot .stats, .toolRoot .cards, .toolRoot .grid.cards { gap: 12px !important; }
 .toolRoot .tabs { gap: 4px; padding: 4px; border: 1px solid var(--admin-line); border-radius: 11px; background: #ebe9e2; }
 .toolRoot .tab, .toolRoot .tabs button { border-radius: 8px !important; }
@@ -168,11 +201,6 @@ table tbody tr:hover td { background: #fbfaf6; }
 .nav-item.active { background: #30302d; box-shadow: inset 3px 0 0 var(--admin-yellow); }
 .sidebar-footer { background: #111; }
 .currencySwitch { width: 100%; }
-.currencySwitch::before {
-  content: "Display currency"; display: block; width: 100%; margin-bottom: 6px;
-  color: #aaa59d; font-size: 9px; font-weight: 800; letter-spacing: .08em;
-  text-align: left; text-transform: uppercase;
-}
 
 @media (max-width: 1180px) {
   .grid-stats-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }

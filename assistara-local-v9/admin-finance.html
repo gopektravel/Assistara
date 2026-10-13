@@ -1197,7 +1197,10 @@
       }
       function phpDisplay(value) {
         const rate = displayRates[displayCurrency];
-        return value == null || !Number.isFinite(Number(value)) || !(rate > 0) ? null : cents(Number(value) / rate) / 100;
+        if (value == null || !Number.isFinite(Number(value))) return null;
+        if (displayCurrency === "PHP") return cents(Number(value)) / 100;
+        if (!(rate > 0)) return null;
+        return cents(Number(value) / rate) / 100;
       }
       function expenseDisplay(e) {
         if (!DISPLAY_CURRENCIES.includes(e.currency) || e.amount == null || !Number.isFinite(Number(e.amount))) return null;
@@ -1205,7 +1208,9 @@
         if (displayCurrency === e.currency) return cents(amount) / 100;
         const sourceRate = e.currency === "PHP" ? 1 : Number(e.fx_rate_php);
         const targetRate = displayRates[displayCurrency];
-        if (!(sourceRate > 0) || !Number.isFinite(sourceRate) || !(targetRate > 0) || !Number.isFinite(targetRate)) return null;
+        if (!(sourceRate > 0) || !Number.isFinite(sourceRate)) return null;
+        if (displayCurrency === "PHP") return cents(amount * sourceRate) / 100;
+        if (!(targetRate > 0) || !Number.isFinite(targetRate)) return null;
         return cents(amount * sourceRate / targetRate) / 100;
       }
       function expenseTotal(mat) {
@@ -1857,7 +1862,7 @@
             const currencySymbol = CURRENCY_SYMBOL[currency];
             const phpSymbol = CURRENCY_SYMBOL.PHP;
             display.innerHTML = `<span class="auto">Automatic rate: 1 ${currencySymbol}1 = ${phpSymbol}${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` +
-              (amount > 0 ? ` · ${currencySymbol}${amount.toLocaleString()} ≈ ${phpSymbol}${amountPhp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "") +
+              (amount > 0 ? ` · ${phpSymbol}${amountPhp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in PHP` : "") +
               ` <span class="hint">(Frankfurter, ${date})</span></span>`;
             // Store the auto rate in the hidden input for form submission
             $("f-fx").value = String(rate);
