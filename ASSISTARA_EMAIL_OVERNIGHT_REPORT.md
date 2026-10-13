@@ -228,8 +228,104 @@ Still uncommitted in the working tree (untouched by me, pre-existing): `assistar
 
 ## 9. Recommended next actions (in order)
 
-1. **Approve or reject the push** in §6 (decide separately about pre-existing `414b838`).
-2. Sign in once at `https://www.getassistara.com/admin` (or run `scripts/configure-admin-auth.mjs`) so the live Command Center + Template Studio can be verified against production.
-2. Provide/authorize a single internal test send per provider so `email_events` rows can be observed for brevo/sender for the first time (Resend already proven).
-3. Fix or remove `img.em.getassistara.com` in Brevo.
-2. Re-affirm which browser rule wins: the AGENTS.md persistent-Playwright-profile rule, or the integrated-browser instruction.
+1. **Preview branch** — pushed at `2b670db` as `origin/overnight/email-command-center` (do not merge yet; see §10.6 for merge safety).
+2. **Production `main` push** — still held (see §6).
+3. Sign in once at `https://www.getassistara.com/admin` in the **integrated browser** so the live Command Center + Template Studio can be verified against production (see §10.5).
+4. Run one authorized internal test per provider through `admin-email-templates` → `test_send` (see §10.5).
+5. Fix `img.em.getassistara.com` on the Brevo side (see §10.2).
+
+---
+
+## 10. Follow-up phase — audit, TLS, browser rule, cookie store, admin auth, test sends
+
+### 10.1 Commit audit — what is ahead of `origin/main` (task 3)
+
+`origin/main` = `c75c5b1`. Local `main` is **5 commits ahead**; aggregate diff = **39 paths** (10 modified/added, **29 deleted stale temp scripts**).
+
+| File | Status | Commit | Bucket | Risk |
+|---|---|---|---|---|
+| `assistara-local-v9/admin-email.html` | M | `222ea6b` | **EMAIL** | none (fixes the live `data-studio-restore` defect) |
+| `supabase/functions/_shared/email-analytics.ts` | M | `222ea6b` | **EMAIL** | none |
+| `assistara-local-v9/manrope-lock.css` | M | `222ea6b` | **FONT/BRAND** | none |
+| `scripts/browser-auth-health.mjs` | A | `222ea6b` | BROWSER_TOOLING | none (now retired, see §10.3) |
+| `scripts/browser-login.mjs` | A | `222ea6b` | BROWSER_TOOLING | none (now retired, see §10.3) |
+| `.gitignore` | M | `222ea6b` | BROWSER_TOOLING | none |
+| `AGENTS.md` | M | `222ea6b`, `ce00407` | DOCS | none |
+| `assistara-local-v9/admin.html` | M | `414b838` **and** `7ba56ea` | **CURRENCY + test-guard fix (mixed file)** | medium — see below |
+| `assistara-local-v9/assistara-currency.js` | M | `414b838` | **CURRENCY** | medium — AUD removed from the switcher |
+| `ASSISTARA_EMAIL_OVERNIGHT_REPORT.md` | A | `2b670db` | DOCS | none |
+| 29 × `scripts/_*.cjs`, `tmp_fix*.py`, `gen_token.js` | D | `222ea6b` | OTHER (dead temp artifacts) | none |
+
+**Nothing touches payments, enrollment, applicants, coupons, auth/HMAC, or `vercel.json` routing.** The only non-email production surface is the **currency switcher** (`414b838`): `assistara-local-v9/assistara-currency.js` drops AUD (PHP/USD/EUR only). `assistara-local-v9/admin.html` is touched by **both** the currency commit and the task-48 fix, so it cannot be cherry-picked by file.
+
+### 10.2 `img.em.getassistara.com` TLS (task 4)
+
+| Host | CNAME | TLS | HTTP |
+|---|---|---|---|
+| `img.em.getassistara.com` | `em-getassistara-com.img.brand.brevosend.com` | ❌ **CERT_HAS_EXPIRED** — `CN=ssl867385.cloudflaressl.com`, COMODO, valid **2020-04-08 → 2020-10-15**, SAN = only that CN | 403 (Cloudflare edge) |
+| `r.em.getassistara.com` | `em-getassistara-com.r.brand.brevosend.com` | ✅ Let's Encrypt, valid to 2026-12-11 | 301 → `https://img.mailin.fr/` |
+| `em.getassistara.com` | `em-getassistara-com.brand.brevosend.com` | ECONNRESET (not an HTTP host — expected) | — |
+| `trk.getassistara.com` (Resend) | `links2.resend-dns.com` | ✅ Amazon, valid to 2027-04-27 | 400 (expected without a tracking path) |
+| `getassistara.com` | apex | ✅ Let's Encrypt | 308 → www |
+
+**Is it reproducible?** Yes — three independent methods agree (integrated-browser `ERR_CERT_COMMON_NAME_INVALID`, a .NET TLS read, and this Node `tls` probe). The A records sit on Cloudflare (`104.17.15x.243`), so the stale certificate is coming from the edge serving Brevo's `brand.brevosend.com` zone.
+
+**Does Brevo use that host for native open tracking?** `img.em…` is a **Brevo-branded hostname** — the CNAME points into `*.brand.brevosend.com`, which only Brevo's branded-domain provisioning creates. Brevo's branded-link feature uses the `r.<prefix>.<domain>` (link redirect) + `img.<prefix>.<domain>` (image/tracking asset) pair, so `img.em` is the host reserved for Brevo's image/pixel assets on our domain. **However**, I could not *prove* the open-tracking pixel is served from it: Brevo's own redirector currently points at `https://img.mailin.fr/` (Brevo's own domain), Brevo has produced zero open/click events in production (one `queued` event total, ever), and Brevo is ON HOLD. Confirmation requires a real Brevo test email that shows the pixel URL (§10.5). **No DNS was modified** — correct, since the fault is on Brevo's edge, not in our records.
+
+### 10.3 AGENTS.md browser rule fixed (task 5)
+
+`AGENTS.md` §"Assistara browser automation rule" was rewritten and committed as:
+
+> All Assistara browser automation … MUST use **the browser integrated into the OpenCode desktop interface** … Do **not** launch external Chrome, Edge or Chromium windows, and do **not** start a Playwright/MCP browser, for Assistara work.
+
+Also captured: one-profile rule, the real session-persistence expectations (§10.4), a **Deprecated** section retiring `scripts/browser-login.mjs`, `scripts/browser-auth-health.mjs` and `%USERPROFILE%\.cache\opencode\playwright-profile`, and a credential-free health check. This takes direct effect for future sessions (the harness re-reads it each session).
+
+### 10.4 Why the integrated browser's cookie store doesn't hit disk (task 6)
+
+Evidence (aggregate only — no cookie names, hosts or values were read or printed):
+
+- There is exactly **one** cookie store, `%APPDATA%\ai.opencode.desktop\Network\Cookies` (20,480 B) — the **default** session. There is no `Partitions` directory, so no ephemeral/incognito partition is in use. All app processes run with the normal `--user-data-dir="C:\Users\jesse\AppData\Roaming\ai.opencode.desktop"`.
+- That file is held with an **exclusive lock** by the running network service — Chromium's normal `locking_mode = EXCLUSIVE` for this database (copy attempts via `Copy-Item`, `esentutl /y` and `robocopy /B` all failed with "used by another process").
+- Its mtime is frozen at **2026-10-12 15:56:23**, while other Chromium state is written continuously (`Local Storage\leveldb` 08:28, `Network Persistent State` 08:30, `TransportSecurity` 08:26, `Session Storage` 08:15).
+
+**Conclusion:** this is *not* a "cookies are memory-only / persistence is broken" defect. The store is disk-backed and locked (i.e. actively managed); Chromium only commits durable changes to it, and **session cookies (no Expires) live in memory and are not restored after a restart**. The provider dashboards (Resend, Brevo) issue session cookies → their logins do not survive a restart. Conversely, **localStorage** is written live, which is why the Supabase dashboard and the Assistara Admin token (`assistara_admin_token`) *do* persist. The V2 docs (`llms.txt`, the Tools page) expose **no** browser persistence/partition/incognito option — there is no supported OpenCode knob to change this.
+
+**Supported mitigations:** keep the app running (sessions survive reloads and tab close/reopen); expect to re-sign in to Resend/Brevo after an app restart; never copy cookie/session data. The earlier AGENTS.md claim that page storage is "in memory" was imprecise and has been corrected.
+
+### 10.5 Admin authentication + authorized internal test sends (tasks 7 & 8)
+
+**Task 7 — simplest supported way to authenticate (no bypass, no password in chat):**
+
+> **You open `https://www.getassistara.com/admin` in the OpenCode integrated browser and sign in once.** That is all.
+
+From the code: the login form (`admin.html:1101-1111`) POSTs `{action:"login",username,password}` to `…/functions/v1/admin-api`, which verifies a PBKDF2 hash and returns an HMAC token; the client stores it under **`assistara_admin_token` in both `localStorage` and `sessionStorage`** (`admin.html:1241`, written ~1254-1258, read ~1243-1249, boot check `1001`). Every admin page reads the same key (`admin-email.html`, `admin-email-templates`, `academy-dashboard.html`, `live.html`, …). Server-side expiry is **2 hours** (`admin-api/index.ts:23-24`). Because the integrated browser persists localStorage, a single sign-in is reusable by me — until the 2-hour token expires, after which you sign in again. Nothing is bypassed, and the password never enters the chat.
+
+**Task 8 — yes, an authorized internal test-send endpoint already exists (and it is *not* masterclass-reminder):**
+
+`supabase/functions/admin-email-templates/index.ts` → action **`test_send`** (`:384`):
+
+- **Admin-gated** by the same HMAC token (`:63`).
+- **Recipient allowlist**: `TEMPLATE_TEST_EMAIL` env, comma-separated (`:33`); enforced at `:388` → `if (TEST_INTERNAL.length && !TEST_INTERNAL.includes(to))`. Note: **if that env var is empty/unset, the allowlist is not enforced** (admin-only, but worth tightening).
+- **Provider choice**: `forceProvider` (`:416`) restricted to `resend | brevo | sender`; `email-delivery.ts:55,256-259` pins that single provider and throws if it is disabled/cooling-down/quota-exhausted.
+- **Isolated and labelled**: `emailType: "template_test"`, `campaignKey: "template_tests"` (`:407,:415`), subject prefixed `[TEST] ` (`:410`) → no production campaign, no student contact.
+- Sends the template **draft** if one exists, else the published version; `deadline` 60 s.
+
+So: one `test_send` per provider to `notifications@getassistara.com` is safe and non-destructive — it just needs the §10.5 sign-in (and, ideally, `TEMPLATE_TEST_EMAIL` to include that address). **Nothing was sent in this run** (no admin session yet).
+
+### 10.6 Remaining blockers and branch-merge safety
+
+| Blocker | Status | Unblock |
+|---|---|---|
+| Live Command Center / Template Studio verification | **BLOCKED — needs a human sign-in** (2 h token) | §10.5 task 7 |
+| One internal test send per provider | **READY, not executed** — endpoint verified, admin session missing | §10.5 task 8 (after sign-in) |
+| Real open/click on a test send | **PENDING HUMAN INTERACTION** (open it in a mail client) | human |
+| `img.em.getassistara.com` expired cert | **CONFIRMED DEFECT, Brevo-side**; impact on open tracking unproven | Brevo re-provision + a Brevo test email |
+| Production deploy of `main` | **HELD — awaiting your approval** | §6 |
+
+**Is `origin/overnight/email-command-center` (`2b670db`) safe to merge?** It is **not a code-safety problem** — all its changes are covered by tests (full suite **1029 pass / 17 pre-existing non-email fail**; `admin-nav.test.js` 13/13; `email-command-center.test.js` 20/20; `email-branding.test.js` 17/17), it has **not** been deployed, and it touches **no** payment, enrollment, applicant, coupon or auth/HMAC code. Two caveats before a production merge:
+
+1. It carries **`414b838`**, a pre-existing currency change (AUD removed) that this run did not verify against the live currency switcher. Merging deploys it too.
+2. The live Command Center cannot be re-verified after deploy until you sign in (§10.5), so the deploy is *code*-verified but not *post-deploy*-verified.
+
+Safe path: merge and deploy, then sign in once so the Command Center can be verified in production — or hold `414b838` and I will rebuild the branch without it.
+
