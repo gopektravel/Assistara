@@ -3642,9 +3642,15 @@
           : '<div class="overviewNote">No dated applicant activity is available.</div>';
         // Actionable applicant progress — needs attention / paid / enrolled
         const progApps = (typeof activeApps === "function") ? activeApps() : [];
-        const needed = progApps.filter((x) => { const s = String(x.application_status || x.stage || x.status || "").toLowerCase(); return s === "new" || s === "awaiting_payment" || s === "payment_pending" || s === "onboarding"; });
-        const paid = progApps.filter((x) => String(x.payment_status || "").toLowerCase() === "paid" && !x.enrollment);
-        const enrolled = progApps.filter((x) => x.enrollment || String(x.application_status || "").toLowerCase() === "enrolled");
+        // Every count below comes from the SAME canonical lifecycle helper the
+        // enrollment tiles and the funnel use, so these three numbers can never
+        // disagree with the panels above them.
+        const stageOf = (x) => {
+          try { return appStage(x); } catch { return String(x.application_status || x.stage || x.status || "").toLowerCase(); }
+        };
+        const needed = progApps.filter((x) => ["new", "awaiting_payment", "payment_pending", "onboarding"].includes(stageOf(x)));
+        const paid = progApps.filter((x) => stageOf(x) === "onboarding");
+        const enrolled = progApps.filter((x) => stageOf(x) === "enrolled");
         $("ovActionProgress").innerHTML = '<div class="ovStats">' + [
           ['Needs Attention', needed.length, 'New / awaiting payment / onboarding'],
           ['Paid', paid.length, 'Payment received'],
@@ -3703,15 +3709,18 @@
         if (acqEl) {
           const visibleSignups = web.filter((x) => !/^diag(?:nostic)?[-_]/i.test(String(x.email || "")) && !/diagnostic/i.test(String(x.name || "")) && !/diagnostic/i.test(String(x.source || "")));
           const webReg = visibleSignups.length;
-          const leads = Array.isArray(typeof b2b !== "undefined" ? b2b : null) ? b2b.length : 0;
+          const b2bLeads = Array.isArray(typeof b2b !== "undefined" ? b2b : null) ? b2b.length : 0;
+          // "Leads" means the same figure the enrollment funnel counts, so the
+          // conversion rate here can never contradict the funnel step above.
+          const leads = knownLeads;
           const apps = totalApplications();
           const conv = leads > 0 ? ((apps / leads) * 100) : null;
           const cards = [
             ['Registered for Masterclass', ovNum(webReg), 'View Lead Tracker', "showDashboard({push:true});tab='webinar';render();saveUiState();"],
-            ['Acquisition Leads', ovNum(leads), 'View Acquisition Tracker', "openTool('acquisition');"],
+            ['Acquisition Leads', ovNum(b2bLeads), 'View Acquisition Tracker', "openTool('acquisition');"],
           ];
           if (conv !== null && Number.isFinite(conv)) {
-            cards.push(['Lead → Application', conv.toFixed(1) + '%', ovNum(leads) + ' leads → ' + ovNum(apps) + ' applications', '']);
+            cards.push(['Lead → Application', conv.toFixed(1) + '%', ovNum(leads) + ' known leads → ' + ovNum(apps) + ' applications', '']);
           }
           // Top acquisition sources (real signups only, resolved through the
           // Acquisition Tracker's own attribution resolver).

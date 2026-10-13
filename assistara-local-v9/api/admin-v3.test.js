@@ -65,6 +65,31 @@ test("delivery attention states remain accurate and actionable", () => {
   assert.doesNotMatch(paint, /!appAcceptanceEmail\(x\)\.delivered/);
 });
 
+test("every dashboard counter reads the canonical lifecycle helper", () => {
+  // A panel that derives its own stage from ad-hoc fields silently disagrees
+  // with the enrollment tiles and the funnel (this shipped once: "Enrolled 0"
+  // while the tiles and funnel both said 2). All counts must go through
+  // appStage(), and the lead->application denominator must be the same
+  // `knownLeads` figure the funnel's first step counts.
+  const paint = admin.slice(admin.indexOf("function paintOverview(data)"), admin.indexOf("function paintOverviewState"));
+  const progress = paint.slice(paint.indexOf("const progApps"), paint.indexOf('id="ovActionProgress"'));
+  assert.match(progress, /const stageOf = \(x\) =>/);
+  assert.match(progress, /return appStage\(x\)/);
+  assert.match(progress, /stageOf\(x\) === "onboarding"/);
+  assert.match(progress, /stageOf\(x\) === "enrolled"/);
+  // The old, drift-prone derivations must be gone from the filters. The
+  // `stageOf` fallback may still read raw fields, but no filter may.
+  assert.doesNotMatch(progress, /x\.enrollment/);
+  assert.doesNotMatch(progress, /progApps\.filter\(\(x\) => \{ const s = String/);
+  assert.doesNotMatch(progress, /payment_status\)\.toLowerCase\(\) === "paid"/);
+
+  const acq = paint.slice(paint.indexOf('const acqEl = $("ovAcq")'), paint.indexOf('paintEnrollment(data.capacity'));
+  assert.match(acq, /const leads = knownLeads/);
+  assert.match(acq, /known leads/);
+  // The B2B-only figure must no longer be presented as the lead denominator.
+  assert.doesNotMatch(acq, /const leads = Array\.isArray/);
+});
+
 test("V3 is responsive, Manrope-only and reserves red for semantic states", () => {
   assert.match(v3, /@media \(max-width: 720px\)/);
   assert.match(v3, /@media \(max-width: 430px\)/);
