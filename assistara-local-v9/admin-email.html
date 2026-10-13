@@ -108,6 +108,7 @@
   .studio-item:hover{border-color:#c9c4ba}
   .studio-item .pill{flex-shrink:0}
     </style>
+    <link rel="stylesheet" href="/admin-v3.css" />
 </head>
 <body>
   <div class="top">
@@ -277,7 +278,7 @@ async function renderCampaigns() {
     <div class="card">
       <div class="head" style="margin:0 0 10px"><div><h1 style="font-size:20px">Campaigns &amp; automated email</h1>
       <div class="sub">Grouped by the campaign key each sender already records. "Campaign" = audience sends (masterclass, Academy follow-up); "automated" = one-to-one transactional email.</div></div>
-      <div class="controls"><button class="btn" id="open-reminder30">30-Min Reminder</button><select class="btn" id="kindfilter"><option value="">All kinds</option><option value="campaign">Campaigns</option><option value="automated">Automated</option></select></div></div>
+      <div class="controls"><select class="btn" id="kindfilter"><option value="">All kinds</option><option value="campaign">Campaigns</option><option value="automated">Automated</option></select></div></div>
       <div class="scroll"><table>
         <thead><tr><th>Campaign</th><th>Kind</th><th>Recipients</th><th>Accepted</th><th>Failed</th><th>Delivered</th><th>Unique opens</th><th>Unique clicks</th><th>Bounces</th><th>Providers</th><th>Last sent</th><th>Preview</th></tr></thead>
         <tbody id="campbody"></tbody>
@@ -302,8 +303,6 @@ async function renderCampaigns() {
       : `<tr><td colspan="12" class="muted">No campaigns in this range.</td></tr>`;
   };
   $("kindfilter").addEventListener("change", draw);
-  const r30 = $("open-reminder30");
-  if (r30) r30.addEventListener("click", () => { state.prevTab = state.tab; state.tab = "reminder30"; renderReminder30(); });
   draw();
 }
 
@@ -534,120 +533,6 @@ async function renderAcquisition() {
     </div>`;
 }
 
-/* ------------------------------ 30-Minute Reminder Verification ------------------------------ */
-async function renderReminder30() {
-  let j;
-  try { j = await req("reminder30_verify"); } catch (e) { $("view").innerHTML = `<div class="banner bad">${esc(e.message)}</div>`; return; }
-
-  const t = j.totals;
-  const exec = j.execution;
-  const elig = j.eligible;
-  const provs = j.providers || [];
-  const recips = j.recipients || [];
-
-  // Status pill for recipient rows
-  const rstatus = (r) => {
-    if (r.status === "failed") return `<span class="pill bad">Failed</span>`;
-    if (r.status === "unknown") return `<span class="pill warn">Unknown</span>`;
-    if (r.status === "pending") return `<span class="pill">Pending</span>`;
-    if (r.delivered) return `<span class="pill good">Delivered</span>`;
-    if (r.status === "sent") return `<span class="pill good">Accepted</span>`;
-    return `<span class="pill">${esc(r.status)}</span>`;
-  };
-
-  // Provider breakdown table
-  const provTable = provs.length ? provs.map((p) => `<tr>
-    <td><strong>${esc(p.provider)}</strong></td>
-    <td class="num">${num(p.accepted)}</td>
-    <td class="num">${num(p.delivered)}</td>
-    <td class="num">${num(p.failed)}</td>
-    <td class="num">${num(p.unknown)}</td>
-    <td class="num">${num(p.bounced)}</td>
-  </tr>`).join("") : `<tr><td colspan="6" class="muted">No provider data.</td></tr>`;
-
-  // Recipient rows (show first 100, with note if more)
-  const recipRows = recips.slice(0, 100).map((r) => `<tr>
-    <td class="small">${esc(r.email)}</td>
-    <td>${rstatus(r)}</td>
-    <td class="small">${esc(r.provider || "—")}</td>
-    <td class="small muted">${esc(r.provider_message_id || "—")}</td>
-    <td class="small muted">${esc(dt(r.sent_at || r.created_at))}</td>
-    <td class="small muted">${r.last_error ? esc(r.last_error.slice(0, 60)) : "—"}</td>
-  </tr>`).join("");
-  const moreNote = recips.length > 100 ? `<div class="small muted" style="margin-top:8px">Showing 100 of ${num(recips.length)} recipients. Use recipient search for specific addresses.</div>` : "";
-
-  // Failed recipients for retry button
-  const failedRecips = recips.filter((r) => r.status === "failed" || r.status === "unknown");
-  const retryBtn = failedRecips.length ? `<button class="btn primary" id="retry-failed">Retry ${num(failedRecips.length)} failed/unknown</button>` : "";
-
-  $("view").innerHTML = `
-    <div class="banner">
-      <span class="pill good">30-Minute Reminder</span> Campaign <strong>${esc(j.campaign)}</strong> · Target <strong>${esc(dt(exec.target_utc))}</strong> (UTC)
-      ${j.event ? `<br>Event: <strong>${esc(j.event.title)}</strong> scheduled ${esc(dt(j.event.scheduled_at))}` : ""}
-      <div style="margin-top:6px;font-size:12px">Accepted = provider API accepted the message. Delivered = confirmed by provider webhook. These are NOT the same.</div>
-    </div>
-
-    <div class="grid cards">
-      ${metricCard("Eligible recipients", num(elig.total), `${num(elig.unsubscribed_excluded)} unsubscribed excluded`, true)}
-      ${metricCard("Skipped (no log)", num(elig.skipped), "Eligible but no delivery log entry", elig.skipped > 0)}
-      ${metricCard("Accepted by provider", num(t.accepted), "Provider API accepted the send", true)}
-      ${metricCard("Confirmed delivered", num(t.delivered), "Verified by provider webhook", true)}
-      ${metricCard("Failed", num(t.failed), "Definitive provider rejection", true)}
-      ${metricCard("Unknown", num(t.unknown), "Ambiguous result — not confirmed", true)}
-      ${metricCard("Pending", num(t.pending), "Awaiting result", true)}
-      ${metricCard("Bounced", num(t.bounced), "Webhook-confirmed bounce", true)}
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <h3>Execution timeline</h3>
-      <dl class="kv">
-        <dt>Target (UTC)</dt><dd>${esc(exec.target_utc)}</dd>
-        <dt>First sent</dt><dd>${esc(dt(exec.first_sent_at))}</dd>
-        <dt>Last sent</dt><dd>${esc(dt(exec.last_sent_at))}</dd>
-        <dt>Total logs</dt><dd>${num(exec.total_logs)}</dd>
-      </dl>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <h3>By provider</h3>
-      <div class="scroll"><table>
-        <thead><tr><th>Provider</th><th>Accepted</th><th>Delivered</th><th>Failed</th><th>Unknown</th><th>Bounced</th></tr></thead>
-        <tbody>${provTable}</tbody>
-      </table></div>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <div class="head" style="margin:0 0 10px"><div><h3 style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800">Recipient-level detail</h3>
-      <div class="sub" style="font-size:12.5px;color:var(--muted);margin-top:4px">Provider message IDs and per-recipient status. "Accepted" means the provider API accepted; "Delivered" is webhook-confirmed.</div></div>
-      <div class="controls">${retryBtn}</div></div>
-      <div class="scroll"><table style="font-size:12px">
-        <thead><tr><th>Recipient</th><th>Status</th><th>Provider</th><th>Message ID</th><th>Sent</th><th>Error</th></tr></thead>
-        <tbody>${recipRows || `<tr><td colspan="6" class="muted">No recipients found.</td></tr>`}</tbody>
-      </table></div>
-      ${moreNote}
-    </div>
-
-    <div class="small muted" style="margin-top:10px">Generated ${esc(dt(j.generatedAt))}. Delivery confirmation requires provider webhooks. Missing webhook data means "Unknown", not "Delivered".</div>`;
-
-  const retryBtnEl = $("retry-failed");
-  if (retryBtnEl) {
-    retryBtnEl.addEventListener("click", async () => {
-      retryBtnEl.disabled = true;
-      retryBtnEl.textContent = "Retrying…";
-      try {
-        const ids = failedRecips.map((r) => r.id);
-        const result = await req("reminder30_retry", { ids });
-        toast(`Retry queued for ${num(ids.length)} recipients`);
-        renderReminder30();
-      } catch (e) {
-        toast("Retry failed: " + e.message);
-        retryBtnEl.disabled = false;
-        retryBtnEl.textContent = `Retry ${num(failedRecips.length)} failed/unknown`;
-      }
-    });
-  }
-}
-
 /* ------------------------------ Router ------------------------------ */
 async function previewMessage(id) {
   show("Message preview");
@@ -702,7 +587,7 @@ async function previewMessage(id) {
           <div class="small muted" style="margin-top:2px">${esc(t.key)} · ${esc(t.category)} · v${t.version || 0}</div>
         </div>
         <span class="pill ${t.status === "published" ? "good" : t.status === "deleted" ? "warn" : "warn"}">${esc(t.status)}</span>
-        ${isDeleted ? `<button class="btn" onclick="event.stopPropagation(); studioRestore('${esc(t.key)}')" style="margin-left:6px;color:#b3261e;border-color:#b3261e;background:transparent">Restore</button>` : ''}
+        ${isDeleted ? `<button class="btn studio-restore-btn" data-studio-restore="${esc(t.key)}" style="margin-left:6px;color:#b3261e;border-color:#b3261e;background:transparent">Restore</button>` : ''}
       </div>`;
     }).join("");
     $("view").innerHTML = `
@@ -714,14 +599,18 @@ async function previewMessage(id) {
           </div>
           <button class="btn" id="studio-import">Import legacy</button>
           <div style="display:flex;gap:6px;margin-left:auto">
-            <button class="btn ghost" onclick="studio.filter='active';studioRenderList()">Active</button>
-            <button class="btn ghost" onclick="studio.filter='deleted';studioRenderList()">Deleted</button>
-            <button class="btn ghost" onclick="studio.filter='all';studioRenderList()">All</button>
+            <button class="btn ghost studio-filter-btn" data-studio-filter="active">Active</button>
+            <button class="btn ghost studio-filter-btn" data-studio-filter="deleted">Deleted</button>
+            <button class="btn ghost studio-filter-btn" data-studio-filter="all">All</button>
           </div>
         </div>
         ${rows || '<div class="empty">No templates yet. Import the legacy set to begin.</div>'}
       </div>`;
     $("studio-import").addEventListener("click", studioImport);
+    // Filter buttons
+    $$(".studio-filter-btn").forEach((btn) => btn.addEventListener("click", () => { studio.filter = btn.dataset.studioFilter; studioRenderList(); }));
+    // Restore buttons (delegated)
+    $$(".studio-restore-btn").forEach((btn) => btn.addEventListener("click", (e) => { e.stopPropagation(); studioRestore(btn.dataset.studioRestore); }));
   }
 
   window.studioRestore = function(key) {
@@ -820,8 +709,8 @@ async function previewMessage(id) {
           <button class="btn" id="studio-reload">Reload original</button>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button class="btn" id="studio-mode-visual" onclick="setStudioMode('visual')">Visual</button>
-          <button class="btn ghost" id="studio-mode-html" onclick="setStudioMode('html')">HTML</button>
+          <button class="btn studio-mode-btn" id="studio-mode-visual" data-studio-mode="visual">Visual</button>
+          <button class="btn ghost studio-mode-btn" id="studio-mode-html" data-studio-mode="html">HTML</button>
         </div>
         <div id="studio-preview-panel" style="border:1px solid #ece9e2;border-radius:10px;padding:12px;background:#fff;min-height:260px;margin-bottom:10px;font-family:'Manrope',sans-serif">
           <iframe id="studio-preview-frame" style="width:100%;height:280px;border:none;background:#fff" srcdoc="${esc(studio.draftHtml)}"></iframe>
@@ -841,6 +730,8 @@ async function previewMessage(id) {
         <button class="btn" id="studio-delete" style="color:#b3261e;border-color:#b3261e;background:transparent">Delete</button>
       </div>`;
     $("studio-back").addEventListener("click", () => { studio.view = "list"; studioLoadList(); });
+    // Studio mode toggle (Visual/HTML)
+    $$(".studio-mode-btn").forEach((btn) => btn.addEventListener("click", () => setStudioMode(btn.dataset.studioMode)));
     $("studio-reload").addEventListener("click", async () => {
       try {
         const j = await studioReq("get", { key: studio.active });
@@ -971,7 +862,7 @@ async function previewMessage(id) {
     await studioLoadList();
   }
 
-const RENDER = { overview: renderOverview, reminder30: renderReminder30, campaigns: renderCampaigns, recipients: renderRecipients, providers: () => renderProviders(false), activity: renderActivity, setup: renderSetup, acquisition: renderAcquisition, "template-studio": renderTemplateStudio };;
+const RENDER = { overview: renderOverview, campaigns: renderCampaigns, recipients: renderRecipients, providers: () => renderProviders(false), activity: renderActivity, setup: renderSetup, acquisition: renderAcquisition, "template-studio": renderTemplateStudio };
 
 async function draw() {
   renderTabs();

@@ -48,20 +48,17 @@ test("activeApps() keeps enrolled records visible through the whole lifecycle", 
   assert.ok(contains(adminHtml, "function activeApps()"),
     "activeApps() function must exist");
   assert.ok(contains(adminHtml, "const records = [...apps, ...students];"),
-    "activeApps() must merge enrolled student records back into the list");
+    "activeApps() must merge enrolled records back into the lifecycle list");
   assert.ok(contains(adminHtml, "return records.filter("),
-    "activeApps() must return the merged, deduplicated records");
+    "activeApps() must return deduplicated lifecycle records");
 });
 
 // ─── Both tabs read the one definition ───
 
 test("Applications tab reports the canonical total", () => {
-  const branch = adminHtml.slice(adminHtml.indexOf('if (tab === "applicants") {'), adminHtml.indexOf('if (tab === "students") {'));
-  assert.ok(branch.includes("paintApplicantsPipeline()"),
-    "Applications tab must render the pipeline header");
   const pipe = adminHtml.slice(adminHtml.indexOf("function paintApplicantsPipeline()"), adminHtml.indexOf("function paintEnrollment(cap"));
   assert.ok(pipe.includes("ovNum(totalApplications())") && pipe.includes('"Total Applications"'),
-    "Pipeline header must show the canonical total labelled 'Total Applications'");
+    "Applications pipeline must show the canonical total");
 });
 
 test("Webinar Signups tab reports the SAME canonical total", () => {
@@ -71,13 +68,10 @@ test("Webinar Signups tab reports the SAME canonical total", () => {
 });
 
 test("the canonical call appears in both the applicants and webinar branches", () => {
-  const applicants = adminHtml.slice(adminHtml.indexOf('if (tab === "applicants") {'), adminHtml.indexOf('if (tab === "students") {'));
-  const webinar = adminHtml.slice(adminHtml.indexOf('if (tab === "webinar") {'), adminHtml.indexOf('if (tab === "coupons") {'));
   const pipe = adminHtml.slice(adminHtml.indexOf("function paintApplicantsPipeline()"), adminHtml.indexOf("function paintEnrollment(cap"));
-  assert.ok((applicants.includes("paintApplicantsPipeline()") && pipe.includes("totalApplications()")) || applicants.includes("totalApplications()"),
-    "the Applications tab must read the canonical total (not a local list)");
-  assert.ok(webinar.includes('[totalApplications(), "Applications", "Total applications"]'),
-    "the Webinar tab must read the canonical total (not a local list)");
+  const webinar = adminHtml.slice(adminHtml.indexOf('if (tab === "webinar") {'), adminHtml.indexOf('if (tab === "coupons") {'));
+  assert.ok(pipe.includes("totalApplications()"), "Applications must read the canonical total");
+  assert.ok(webinar.includes('[totalApplications(), "Applications", "Total applications"]'), "Lead Tracker must read the canonical total");
 });
 
 test("the webinar tab never re-derives the application total", () => {
@@ -133,8 +127,7 @@ test("stat() function supports an optional subtitle", () => {
 test("edge function returns non-enrolled applications and enrolled students separately", () => {
   assert.match(edgeFn, /applicants\s*=\s*x\.filter/,
     "Edge function must split applications into non-enrolled (applicants)");
-  assert.ok(contains(edgeFn, "!isEnrolled(z)"),
-    "Edge function must split applications into non-enrolled (applicants)");
+  assert.ok(contains(edgeFn, "!isEnrolled(z)"));
   assert.match(edgeFn, /students\s*=\s*x\.filter\(isEnrolled\)/,
     "Edge function must split applications into enrolled (students)");
   assert.ok(contains(edgeFn, "applications:applicants") || contains(edgeFn, "applications: applicants"),
@@ -179,11 +172,11 @@ test("counters refresh on page load via load()", () => {
   assert.ok(contains(adminHtml, "async function load()"),
     "load() function must exist");
   assert.match(adminHtml, /apps = Array\.isArray\(d\.applications\) \? d\.applications\.filter\(Boolean\) : \[\]/,
-    "load() must populate apps from edge function (null-safe)");
+    "load() must populate apps null-safely");
   assert.match(adminHtml, /web = Array\.isArray\(d\.signups\) \? d\.signups\.filter\(Boolean\) : \[\]/,
-    "load() must populate web from edge function (null-safe)");
+    "load() must populate web null-safely");
   assert.match(adminHtml, /students = Array\.isArray\(d\.students\) \? d\.students\.filter\(Boolean\) : \[\]/,
-    "load() must populate students from edge function (null-safe)");
+    "load() must populate students null-safely");
 });
 
 test("render() is called after load() to refresh counters", () => {

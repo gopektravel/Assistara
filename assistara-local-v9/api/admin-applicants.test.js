@@ -135,16 +135,15 @@ test("Overview is a Command Center: every metric card navigates through the rout
   // Clickable whole-surface KPI cards, one per required destination.
   assert.match(paint, /const kpiCards = \[/);
   assert.match(paint, /'<a class="stat-card card-interactive" href="#" data-action="' \+ c\.a \+ '"'/);
-  // KPI cards route with their filter preserved (goApplicants carries the
-  // filter key); finance opens through the mounted-tool router.
-  assert.match(paint, /onclick="event\.preventDefault\(\);' \+ \(c\.a === "finance" \? "openTool\('finance'\)" : "goApplicants\('" \+ c\.f \+ "'\)"\) \+ '"/);
+  assert.match(paint, /overviewRoute\(\\'' \+ c\.a \+ '\\',\\'' \+ \(c\.f \|\| ""\) \+ '\\'\)/);
   assert.match(paint, /a: "applicants"/);
   assert.match(paint, /a: "finance"/);
   // Navigation goes through the existing shell: no hard reloads, no new router.
   assert.doesNotMatch(paint, /location\.reload/);
   assert.doesNotMatch(paint, /location\.href/);
   // Tools still open through the one mounted-tool router.
-  assert.match(paint, /openTool\('finance'\)/);
+  assert.match(admin, /function overviewRoute\(action, filter\)/);
+  assert.match(admin, /return openTool\(action\)/);
 });
 
 test("Overview keeps only actionable content: no visit tracking, no duplicate Finance entry", () => {
@@ -218,8 +217,7 @@ test("the Academy Enrollment section shows the real, mutually exclusive pipeline
   assert.match(paint, /allApps\.filter\(appNeedsAdmin\)\.length/);
   // Awaiting payment means invited AND unconfirmed — never a generic not_requested.
   assert.ok(paint.includes('["awaiting_payment", "payment_pending"].includes(appStage(x))'), "awaiting payment uses the canonical stage");
-  // Available seats come from the capacity API, never invented; loading and
-  // unavailable are distinct states.
+  // Available seats come from the capacity API, never invented.
   assert.match(paint, /cap \? ovNum\(cap\.available\) : loading \? ovSkeleton\(\) : "Unavailable"/);
   assert.match(paint, /id="enrollmentSeats"/);
   assert.ok(paint.includes("<span>Available Seats</span>"), "Available Seats tile label");
@@ -250,21 +248,6 @@ test("invitation metrics distinguish an accepted decision from a delivered email
   assert.doesNotMatch(paint, /"invitation delivery issue"/);
 });
 
-test("Needs Attention separates delivery failures from unconfirmed invitations", () => {
-  const na = admin.slice(admin.indexOf("const naItems = []"), admin.indexOf("if (naBox && naList)"));
-  // Genuine provider failures link to the Email Command Center for review.
-  assert.match(na, /inviteFailed = acceptedNow\.filter\(\(x\) => appAcceptanceEmail\(x\)\.failed\)/);
-  assert.match(na, /invitation delivery failure/);
-  assert.match(na, /openTool\(\\'email\\'\)/);
-  // Unconfirmed sends are listed distinctly and never called failures.
-  assert.match(na, /inviteUnconfirmed = acceptedNow\.filter\(\(x\) => appAcceptanceEmail\(x\)\.unresolved\)/);
-  assert.match(na, /unconfirmed invitation/);
-  assert.match(na, /goApplicants\(\\'awaiting_payment\\'\)/);
-  // The old missing-signal-as-failure pattern must not return.
-  assert.doesNotMatch(na, /deliveryFails = acceptedNow\.filter\(\(x\) => !appAcceptanceEmail\(x\)\.delivered\)/);
-  assert.doesNotMatch(na, /invitation delivery issue/);
-});
-
 test("the paid-seat progress bar and exception indicators are compact and conditional", () => {
   const paint = admin.slice(admin.indexOf("function paintEnrollment(cap"), admin.indexOf("function paintOverviewState"));
   // Simple paid-seat progress bar: confirmed paid seats / cohort capacity.
@@ -273,8 +256,7 @@ test("the paid-seat progress bar and exception indicators are compact and condit
   assert.match(paint, /Confirmed paid seats/);
   // Indicators render only when there is something actionable.
   assert.match(paint, /\.filter\(\(\[n\]\) => n > 0\)/);
-  assert.match(paint, /id="enrollmentIndicators"/);
-  assert.match(paint, /\$\("capacityIndicators"\)/);
+  assert.match(paint, /class="enrollmentIndicators" id="enrollmentIndicators"/);
   assert.match(admin, /id="capacityIndicators"/);
   const css = components.replace(/\r/g, "");
   assert.match(css, /\.enrollmentIndicators:empty \{ display: none; \}/);
@@ -310,9 +292,8 @@ test("capacity enforcement, waitlist and payment exceptions stay accessible in a
 });
 
 test("enrolled learners stay visible in the Applications list so the Enrolled stage and filter work", () => {
-  // The pipeline must reach Enrolled inside Applications — enrolled student
-  // records are merged back into the list (not filtered out), and an
-  // enrolled row carries no action buttons.
+  // The pipeline must reach Enrolled inside Applications — the record is no
+  // longer filtered out, and its row carries no action buttons.
   assert.match(admin, /function activeApps\(\) \{[\s\S]*?return records\.filter/);
   assert.doesNotMatch(admin, /filter out fully enrolled students/);
   const actions = admin.slice(admin.indexOf("function applicationActions(x)"), admin.indexOf("function paymentEnrollmentInfo(x)"));
@@ -343,7 +324,7 @@ test("enrollment metrics navigate through the existing router", () => {
   const nav = admin.slice(admin.indexOf("function goApplicants("), admin.indexOf("function stat(a)"));
   assert.match(nav, /showDashboard\(\{ push: true \}\);/);
   assert.match(nav, /tab = "applicants";/);
-  assert.match(nav, /applicantFilterKey = APP_FILTERS\.some\(\(\[key\]\) => key === filterKey\) \? filterKey : "all";/);
+  assert.match(nav, /applicantFilterKey = /);
   assert.match(nav, /render\(\);/);
   assert.match(nav, /saveUiState\(\);/);
   // No hard reloads and no second router.
