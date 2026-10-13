@@ -3582,6 +3582,9 @@
           occurrences = 0,
           schedules = 0;
         for (const e of expenses) {
+          // A sparse or partially-null expense list must degrade to zero,
+          // not throw and take the whole Overview down with it.
+          if (!e || typeof e !== "object") continue;
           const amount = Number(e.amount);
           if (!Number.isFinite(amount)) continue;
           const php =
@@ -3668,7 +3671,7 @@
           capacity: cap.status === "fulfilled" ? cap.value : null,
           capacityError: cap.status === "rejected" ? cap.reason : null,
           expenses:
-            fin.status === "fulfilled" && Array.isArray(fin.value.expenses)
+            fin.status === "fulfilled" && Array.isArray(fin.value && fin.value.expenses)
               ? fin.value.expenses
               : null,
           expensesError: fin.status === "rejected" ? fin.reason : null,

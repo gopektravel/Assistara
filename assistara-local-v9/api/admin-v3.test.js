@@ -272,3 +272,54 @@ test("the Overview email panel survives a partial email payload", () => {
   // delivered30d reads the payload directly rather than a later binding.
   assert.match(admin, /data\.email\.overview\.measured &&\s*data\.email\.overview\.measured\.delivered != null/);
 });
+
+test("a sparse or partial expenses payload cannot take the Overview down", () => {
+  // A null/undefined entry in the expense list threw
+  // "Cannot read properties of null (reading 'amount')" and replaced the whole
+  // dashboard with "Overview could not be rendered".
+  assert.match(
+    admin,
+    /for \(const e of expenses\) \{\s*\/\/ A sparse or partially-null expense list must degrade to zero,[\s\S]*?if \(!e \|\| typeof e !== "object"\) continue;/,
+  );
+  // And a non-array finance payload must not be walked at all.
+  assert.match(admin, /Array\.isArray\(fin\.value && fin\.value\.expenses\)/);
+});
+
+test("every admin surface is checked for off-brand colour, not just the shell", () => {
+  // The tool pages load admin-tokens.css and admin-v3.css through the shell, so
+  // a token change reaches them. None of them may rely on the old blue info
+  // tone for meaning.
+  for (const file of [
+    "admin-acquisition.html",
+    "admin-email.html",
+    "admin-finance.html",
+    "admin-masterclass-event.html",
+    "admin-template-studio.html",
+  ]) {
+    const body = read(file);
+    assert.doesNotMatch(body, /var\(--info-dark\)/, file + " relies on the info token");
+    // These are the shell-only classes whose behaviour changed; a tool page
+    // using one would silently pick up the new styling.
+    for (const cls of ["stage-onboarding", "enrollmentFootnote", "ovStats"]) {
+      assert.ok(!body.includes(cls), file + " uses shell-only class " + cls);
+    }
+  }
+});
+
+test("shared CSS cannot overflow a narrow panel after the shrinkable-track fix", () => {
+  // Every auto-fit grid in the shared sheets must cap its minimum by the
+  // container, otherwise it overflows instead of collapsing to fewer columns.
+  for (const file of [
+    "admin-charts.css",
+    "admin-v3.css",
+    "admin-components.css",
+    "admin-layout.css",
+  ]) {
+    const body = read(file);
+    assert.doesNotMatch(
+      body,
+      /repeat\(auto-fit,\s*minmax\(\d+px,\s*1fr\)\)/,
+      file + " still has an uncapped auto-fit track",
+    );
+  }
+});
