@@ -7,36 +7,36 @@ const SRC = fs.readFileSync(
   path.join(__dirname, "..", "supabase", "functions", "admin-email-templates", "index.ts"),
   "utf8",
 );
+const STUDIO = fs.readFileSync(
+  path.join(__dirname, "..", "assistara-local-v9", "admin-template-studio.html"),
+  "utf8",
+);
 
-// Pure mirror of the allowlist logic in index.ts (kept in sync by assertions 1-3).
-function buildAllowlist(envValue) {
-  const INTERNAL_TEST_DOMAIN = "getassistara.com";
-  const TEST_INTERNAL_DEFAULT = ["notifications@getassistara.com"];
-  return Array.from(
-    new Set([
-      ...TEST_INTERNAL_DEFAULT,
-      ...(envValue || "")
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean),
-    ]),
-  ).filter((a) => a.endsWith("@" + INTERNAL_TEST_DOMAIN));
-}
-function isAllowed(to, envValue) {
-  return buildAllowlist(envValue).includes(to.toLowerCase());
+// Pure mirror of the allowlist logic in index.ts (kept in sync by the source assertions below).
+const TEST_INTERNAL = ["notifications@getassistara.com"];
+function isAllowed(to) {
+  return TEST_INTERNAL.includes(to.toLowerCase());
 }
 
 describe("test_send allowlist source", () => {
-  it("TEST_INTERNAL is built from TEST_INTERNAL_DEFAULT containing notifications@getassistara.com and filtered to INTERNAL_TEST_DOMAIN", () => {
-    assert.match(SRC, /const\s+INTERNAL_TEST_DOMAIN\s*=\s*["']getassistara\.com["']/);
-    assert.match(SRC, /const\s+TEST_INTERNAL_DEFAULT\s*=\s*\[[^\]]*notifications@getassistara\.com[^\]]*\]/);
-    assert.match(SRC, /TEST_INTERNAL_DEFAULT/);
-    assert.match(SRC, /TEMPLATE_TEST_EMAIL/);
-    assert.match(SRC, /endsWith\(\s*"@"\s*\+\s*INTERNAL_TEST_DOMAIN\s*\)/);
+  it("TEST_INTERNAL is exactly [\"notifications@getassistara.com\"]", () => {
+    assert.ok(SRC.includes('["notifications@getassistara.com"]'), "single-element literal must be present");
+    assert.match(SRC, /const\s+TEST_INTERNAL\s*=\s*\[\s*"notifications@getassistara\.com"\s*\]/);
+  });
+
+  it("TEMPLATE_TEST_EMAIL is not used to build or widen TEST_INTERNAL", () => {
+    const lines = SRC.split("\n");
+    const declLine = lines.find((l) => /const\s+TEST_INTERNAL\s*=/.test(l));
+    assert.ok(declLine, "TEST_INTERNAL declaration must exist");
+    assert.ok(!declLine.includes("TEMPLATE_TEST_EMAIL"), "declaration line must not reference TEMPLATE_TEST_EMAIL");
+    // No spread/concat of env values into the allowlist anywhere.
+    assert.ok(!/TEST_INTERNAL.*TEMPLATE_TEST_EMAIL/.test(SRC));
+    assert.ok(!/TEST_INTERNAL_DEFAULT/.test(SRC), "no default-constant widening path");
+    assert.ok(!/INTERNAL_TEST_DOMAIN/.test(SRC), "no domain-constant widening path");
   });
 
   it("the test_send allowlist guard is unconditional (no TEST_INTERNAL.length && skip)", () => {
-    assert.ok(!SRC.includes("TEST_INTERNAL.length &&"), "guard must not be skipped when the env var is empty");
+    assert.ok(!SRC.includes("TEST_INTERNAL.length &&"), "guard must always run");
     assert.match(SRC, /if\s*\(\s*!TEST_INTERNAL\.includes\(to\)\s*\)/);
   });
 
@@ -46,18 +46,24 @@ describe("test_send allowlist source", () => {
   });
 });
 
+describe("Template Studio test-send recipient", () => {
+  it("testSend() targets notifications@getassistara.com, not admin@getassistara.com", () => {
+    assert.ok(STUDIO.includes("notifications@getassistara.com"), "studio must target notifications@getassistara.com");
+    assert.ok(!STUDIO.includes("admin@getassistara.com"), "studio must not contain admin@getassistara.com");
+    assert.match(STUDIO, /test_send.*notifications@getassistara\.com/);
+  });
+});
+
 describe("test_send allowlist behaviour", () => {
   const cases = [
-    ["notifications@getassistara.com", "", true, "default notifications address allowed with empty env"],
-    ["someone@evil.com", "", false, "external address denied with empty env"],
-    ["someone@gmail.com", "", false, "gmail address denied with empty env"],
-    ["anything@elsewhere.com", "anything@elsewhere.com", false, "env-set external address still denied"],
-    ["ops@getassistara.com", "ops@getassistara.com", true, "env-set internal address allowed"],
-    ["notifications@getassistara.com", "anything@elsewhere.com", true, "default notifications address allowed even when env is external-only"],
+    ["notifications@getassistara.com", true, "the only permitted recipient"],
+    ["admin@getassistara.com", false, "other internal address denied"],
+    ["ops@getassistara.com", false, "other internal address denied"],
+    ["someone@evil.com", false, "external address denied"],
   ];
-  for (const [to, env, expected, name] of cases) {
-    it(`${to} (env=${JSON.stringify(env)}) → ${expected ? "allowed" : "denied"}: ${name}`, () => {
-      assert.equal(isAllowed(to, env), expected);
+  for (const [to, expected, name] of cases) {
+    it(`${to} → ${expected ? "allowed" : "denied"}: ${name}`, () => {
+      assert.equal(isAllowed(to), expected);
     });
   }
 });

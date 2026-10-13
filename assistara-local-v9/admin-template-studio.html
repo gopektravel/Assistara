@@ -312,7 +312,7 @@ async function testSend() {
   const d = await saveDraft();
   if(!d.ok) return d;
   try {
-    return await apiCall({action:'test_send', key:active, to:'admin@getassistara.com'});
+    return await apiCall({action:'test_send', key:active, to:'notifications@getassistara.com'});
   } catch(e) { return {ok:false, error:e.message}; }
 }
 
