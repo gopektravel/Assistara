@@ -11,17 +11,54 @@ let dispCur = (()=>{
 })();
 const dispRates = {PHP: 1};
 let dispRateDate = new Date().toISOString().slice(0,10);
+/* Exchange-rate sources, in order. The edge function performs the same
+   Frankfurter lookup server-side (authenticated, no third-party exposure),
+   so it works even when the browser cannot reach the public API. */
+const FX_DIRECT = [
+  "https://api.frankfurter.dev/v1/latest?from=PHP&to=",
+  "https://api.frankfurter.app/latest?from=PHP&to=",
+];
+const FIN_FX_URL = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-finance";
+function adminToken(){
+  try{
+    return localStorage.getItem("assistara_admin_token") ||
+      sessionStorage.getItem("assistara_admin_token") || "";
+  }catch{return "";}
+}
+async function fetchDirectRate(cur){
+  for (const base of FX_DIRECT) {
+    try{
+      const r=await fetch(base+encodeURIComponent(cur),{cache:"no-store"});
+      if(!r.ok) continue;
+      const j=await r.json();
+      const targetPerPhp = j.rates && j.rates[cur] ? Number(j.rates[cur]) : null;
+      if(targetPerPhp && targetPerPhp>0) return { phpPerUnit: 1/targetPerPhp, date: j.date || new Date().toISOString().slice(0,10) };
+    }catch(e){ /* try next source */ }
+  }
+  return null;
+}
+async function fetchEdgeRate(cur){
+  const token = adminToken();
+  if(!token) return null;
+  try{
+    const r=await fetch(FIN_FX_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+token },
+      body: JSON.stringify({ action:"fx", currency:cur, date: dispRateDate }),
+    });
+    const j=await r.json().catch(()=>({}));
+    if(r.ok && j.ok && Number(j.fx_rate_php)>0) return { phpPerUnit: Number(j.fx_rate_php), date: dispRateDate };
+  }catch(e){ /* unavailable */ }
+  return null;
+}
 async function fetchRate(cur){
   if(cur==="PHP"||dispRates[cur]>0) return true;
-  try{
-    const r=await fetch("https://api.frankfurter.app/latest?from=PHP&to="+encodeURIComponent(cur),{cache:"no-store"});
-    if(!r.ok) throw new Error("Rate fetch failed");
-    const j=await r.json();
-    const targetPerPhp = j.rates && j.rates[cur] ? Number(j.rates[cur]) : null;
-    /* Store PHP per one display-currency unit. This matches Finance and means
-       PHP values convert by division rather than by changing only a symbol. */
-    if(targetPerPhp && targetPerPhp>0){ dispRates[cur]=1/targetPerPhp; dispRateDate=j.date||new Date().toISOString().slice(0,10); return true; }
-  }catch(e){ /* unavailable — leave as unavailable */ }
+  /* Store PHP per one display-currency unit. This matches Finance and means
+     PHP values convert by division rather than by changing only a symbol. */
+  const direct = await fetchDirectRate(cur);
+  if (direct) { dispRates[cur]=direct.phpPerUnit; dispRateDate=direct.date; return true; }
+  const edge = await fetchEdgeRate(cur);
+  if (edge) { dispRates[cur]=edge.phpPerUnit; dispRateDate=edge.date; return true; }
   return false;
 }
 function fmtMoney(v,cur){

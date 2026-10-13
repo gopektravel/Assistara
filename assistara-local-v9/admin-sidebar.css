@@ -246,6 +246,74 @@
 }
 
 /* ---------------------------------------------------------------- *
+ * Sidebar currency section — separated from the account footer, dark
+ * segmented control matching the navigation aesthetic.
+ * ---------------------------------------------------------------- */
+.sidebar-currency {
+  padding: 12px 16px;
+  border-top: 1px solid var(--sidebar-divider);
+}
+
+.sidebar-currency-label {
+  font: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sidebar-muted);
+  margin-bottom: 8px;
+}
+
+.sidebar-currency .currencySwitch--sidebar {
+  display: flex;
+  width: 100%;
+  gap: 2px;
+  padding: 3px;
+  background: var(--sidebar-hover);
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.sidebar-currency .currencySwitch--sidebar button {
+  flex: 1;
+  padding: 7px 4px;
+  font-size: 11px;
+  color: var(--sidebar-muted);
+  border-radius: calc(var(--radius-md) - 2px);
+}
+
+.sidebar-currency .currencySwitch--sidebar button:not(.active):hover {
+  background: var(--sidebar-border);
+  color: #fff;
+}
+
+.sidebar-currency .currencySwitch--sidebar button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--yellow);
+}
+
+.sidebar-currency .currencySwitch--sidebar button.active {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.sidebar.collapsed .sidebar-currency {
+  padding: 12px 8px;
+}
+
+.sidebar.collapsed .sidebar-currency-label {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-currency .currencySwitch--sidebar {
+  flex-direction: column;
+}
+
+.sidebar.collapsed .sidebar-currency .currencySwitch--sidebar button {
+  padding: 5px 2px;
+  font-size: 9px;
+}
+
+/* ---------------------------------------------------------------- *
  * Sidebar footer (user + actions)
  * ---------------------------------------------------------------- */
 .sidebar-footer {

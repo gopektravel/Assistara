@@ -3,6 +3,7 @@
 .currencySwitch button:not(.active):hover { background: #f1eee5; color: var(--ink); }
 .currencySwitch button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .currencySwitch button.active { background: #171717; color: #fff; }
+/* Legacy compact variant (superseded by the dark sidebar section styles). */
 .currencySwitch--compact button { padding: 5px 8px; font-size: 10px; }
 
 /* Compact overview dashboard — clean premium hierarchy */

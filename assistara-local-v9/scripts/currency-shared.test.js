@@ -6,15 +6,28 @@ const path = require("node:path");
 
 const source = fs.readFileSync(path.join(__dirname, "..", "assistara-currency.js"), "utf8");
 
-function load(saved = null, rates = { USD: 0.01592, EUR: 0.01421 }) {
+function load(saved = null, rates = { USD: 0.01592, EUR: 0.01421 }, opts = {}) {
   const store = new Map(saved == null ? [] : [["assistara_currency_display", saved]]);
+  if (opts.token) store.set("assistara_admin_token", opts.token);
   const events = [];
+  const directOk = opts.directOk !== false;
   const context = {
     localStorage: {
       getItem: (key) => store.has(key) ? store.get(key) : null,
       setItem: (key, value) => store.set(key, String(value)),
     },
-    fetch: async () => ({ ok: true, json: async () => ({ date: "2026-10-09", rates }) }),
+    sessionStorage: {
+      getItem: (key) => store.has(key) ? store.get(key) : null,
+      setItem: (key, value) => store.set(key, String(value)),
+    },
+    fetch: async (url) => {
+      if (String(url).includes("admin-finance")) {
+        if (opts.edgeRate > 0) return { ok: true, json: async () => ({ ok: true, fx_rate_php: opts.edgeRate }) };
+        return { ok: false, json: async () => ({ ok: false }) };
+      }
+      if (!directOk) return { ok: false, json: async () => ({}) };
+      return { ok: true, json: async () => ({ date: "2026-10-09", rates }) };
+    },
     CustomEvent: class CustomEvent { constructor(type, init) { this.type = type; this.detail = init.detail; } },
     window: {
       addEventListener() {},
@@ -57,6 +70,18 @@ test("shared preference persists and emits synchronization event", () => {
 test("unavailable rates never fabricate a converted value", () => {
   const { currency } = load();
   assert.equal(currency.displayValue(6900, "USD"), null);
+});
+
+test("edge-function fallback resolves rates when direct fetch fails", async () => {
+  const { currency } = load(null, {}, { directOk: false, token: "test-token", edgeRate: 62.5 });
+  assert.equal(await currency.fetchRate("USD"), true);
+  assert.equal(currency.displayValue(6250, "USD"), 100);
+});
+
+test("genuine failure without token stays unavailable, never fabricated", async () => {
+  const { currency } = load(null, {}, { directOk: false });
+  assert.equal(await currency.fetchRate("USD"), false);
+  assert.equal(currency.displayValue(6250, "USD"), null);
 });
 
 test("selectors exist only on Overview and Finance", () => {
