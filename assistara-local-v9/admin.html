@@ -2000,7 +2000,8 @@
           stage = "Accepted — Awaiting Payment"; stageClass = "stage-awaiting-payment";
           nextAction = "Applicant: Complete payment";
           actionClass = "action-applicant";
-          if (!emailInfo.delivered) { nextAction = "Admin: Resolve email delivery"; actionClass = "action-admin"; }
+          if (emailInfo.failed) { nextAction = "Admin: Resend acceptance email"; actionClass = "action-admin"; }
+          else if (emailInfo.unresolved) { nextAction = "Admin: Confirm invitation delivery"; actionClass = "action-admin"; }
         } else if (isPaidOnboarding) {
           stage = "Paid — Onboarding Pending"; stageClass = "stage-onboarding";
           const needsApplicant = !!x.auth_user_id && !x.onboarding_completed_at;
@@ -2012,8 +2013,11 @@
         }
 
         let emailBadge = "";
-        if (emailInfo.attempted) {
-          emailBadge = emailInfo.delivered ? '<span class="badge badge-success">Email sent</span>' : '<span class="badge badge-danger">Email failed</span>';
+        if (emailInfo.issued) {
+          if (emailInfo.delivered) emailBadge = '<span class="badge badge-success">Email delivered</span>';
+          else if (emailInfo.failed) emailBadge = '<span class="badge badge-danger">Email failed</span>';
+          else if (emailInfo.delayed) emailBadge = '<span class="badge">Email delayed</span>';
+          else if (emailInfo.attempted) emailBadge = '<span class="badge">Email unconfirmed</span>';
         }
 
         const chevron = expandable ? '<button class="expandArrow" type="button" data-toggle-app="' + esc(key) + '" aria-label="' + (open ? "Collapse" : "Expand") + ' applicant record" aria-controls="app-panel-' + esc(key) + '" aria-expanded="' + (open ? "true" : "false") + '">' + (open ? "⌃" : "⌄") + '</button>' : "";
@@ -2060,25 +2064,41 @@
         if (decision === "accepted") return "awaiting_payment";
         return "new";
       }
-      // Acceptance invitation outcome from the activity log. Payment state is never read here.
+      // Acceptance invitation outcome.
+      //
+      // Source of truth is the provider email telemetry attached to the record
+      // as `acceptance_email` (built from email_delivery_log + email_events by
+      // the admin-applications API). A missing signal is never reported as a
+      // failure — it is "unresolved" (unconfirmed). States:
+      //   delivered  — a provider confirmed delivery
+      //   deferred   — the provider reported a temporary delay, no delivery yet
+      //   bounced / failed — a permanent provider failure
+      //   unresolved — accepted but no delivery confirmation recorded
+      //   not_issued — no acceptance email recorded for this applicant
+      // Payment state is never read here, and the activity/email log is never
+      // read here: with no telemetry the state is "unresolved", never "failed".
       function appAcceptanceEmail(x) {
-        const activity = Array.isArray(x && x.activity) ? x.activity : [];
-        const attempts = activity.filter((event) =>
-          event && event.action === "decision_email_sent" &&
-          event.details && String(event.details.decision || "").toLowerCase() === "accepted"
-        );
-        const latest = attempts[0] || null;
+        const info = x && x.acceptance_email;
+        const state = info && typeof info === "object" && typeof info.state === "string" ? info.state : "unresolved";
         return {
           issued: currentDecision(x) === "accepted",
-          attempted: !!latest,
-          delivered: !!latest && latest.details.email_sent !== false,
+          attempted: state !== "not_issued",
+          delivered: state === "delivered",
+          delayed: state === "deferred",
+          failed: state === "bounced" || state === "failed",
+          unresolved: state === "unresolved" || state === "not_issued",
+          verified: state === "delivered" || state === "bounced" || state === "failed",
+          state,
         };
       }
       function appNeedsAdmin(x) {
         const stage = appStage(x);
         if (stage === "new" || stage === "payment_pending") return true;
         if (stage === "awaiting_payment") {
-          if (!appAcceptanceEmail(x).delivered) return true;
+          const email = appAcceptanceEmail(x);
+          // Only a confirmed provider failure or a genuinely unconfirmed send
+          // needs a human. A temporary delay that is still in flight does not.
+          if (email.failed || email.unresolved) return true;
           return x.payment_method === "gcash" && !["followup_sent", "no_response"].includes(x.gcash_followup_status || "");
         }
         if (stage === "onboarding") return !x.auth_user_id;
@@ -3156,8 +3176,7 @@
         const allApps = activeApps();
         const cap = typeof capacityOverview !== "undefined" ? capacityOverview : null;
         const newCount = allApps.filter((x) => appStage(x) === "new").length;
-        const awaiting = allApps.filter((x) => appStage(x) === "awaiting_payment").length;
-        const payPending = allApps.filter((x) => appStage(x) === "payment_pending").length;
+        const awaiting = allApps.filter((x) => ["awaiting_payment", "payment_pending"].includes(appStage(x))).length;
         const accepted = allApps.filter((x) => appAcceptanceEmail(x).issued).length;
         const declined = allApps.filter((x) => appStage(x) === "closed").length;
         const paid = allApps.filter((x) => appStage(x) === "onboarding").length;
@@ -3180,11 +3199,11 @@
           '<div class="card" style="margin-bottom:12px;">' +
           '<div class="card-header"><div><h3 class="card-title">Application pipeline</h3><div class="card-subtitle">Application → acceptance → payment → onboarding. Click a stage to filter.</div></div></div>' +
           '<div class="enrollmentMetrics">' +
-          enrollmentTile(ovNum(allApps.length), "Total Applications", "Every persisted record", "all") +
+          enrollmentTile(ovNum(totalApplications()), "Total Applications", "Total applications", "all") +
           enrollmentTile(ovNum(newCount), "New / Unreviewed", "Awaiting a decision", "new") +
           enrollmentTile(ovNum(accepted), "Accepted", "Decision accepted (seat not reserved)", "awaiting_payment") +
-          enrollmentTile(ovNum(awaiting + payPending), "Awaiting Payment", "Accepted, not confirmed paid", "awaiting_payment") +
-          enrollmentTile(ovNum(paid), "Paid / Onboarding", "Payment confirmed", "paid") +
+          enrollmentTile(ovNum(awaiting), "Awaiting Payment", "Accepted, not confirmed paid", "awaiting_payment") +
+          enrollmentTile(ovNum(paid), "Paid / Confirmed", "Payment confirmed", "paid") +
           enrollmentTile(ovNum(enrolled), "Enrolled", "Active learners", "enrolled") +
           enrollmentTile(ovNum(declined), "Declined / Closed", "No further action", "closed") +
           enrollmentTile(ovNum(needsAdmin), "Needs Admin Action", "Oldest action first", "needs_action") +
@@ -3196,6 +3215,10 @@
         const allApps = activeApps();
         const accepted = allApps.filter((x) => appAcceptanceEmail(x).issued);
         const delivered = accepted.filter((x) => appAcceptanceEmail(x).delivered);
+        const invitation = accepted.map((x) => appAcceptanceEmail(x));
+        const emailFailed = invitation.filter((e) => e.failed).length;
+        const emailDelayed = invitation.filter((e) => e.delayed).length;
+        const emailUnconfirmed = invitation.filter((e) => e.unresolved).length;
         const newCount = allApps.filter((x) => appStage(x) === "new").length;
         const awaiting = allApps.filter((x) => ["awaiting_payment", "payment_pending"].includes(appStage(x))).length;
         const onboarding = allApps.filter((x) => appStage(x) === "onboarding").length;
@@ -3206,7 +3229,9 @@
           ? Math.max(0, Math.min(100, Math.round(((cap.paid || 0) / cap.capacity) * 100)))
           : 0;
         const indicators = [
-          [accepted.length - delivered.length, "invitation delivery issue", "needs_action"],
+          [emailFailed, "invitation delivery failure", "needs_action"],
+          [emailUnconfirmed, "unconfirmed invitation", "needs_action"],
+          [emailDelayed, "temporary invitation delay", "all"],
           [actionablePending().length, "payment verification", "needs_action"],
           [cap ? Number(cap.exceptions_open || 0) : 0, "payment exception", "all"],
         ].filter(([n]) => n > 0);
@@ -3489,6 +3514,7 @@
       let overviewLoading = false;
       const OVERVIEW_TTL = 60000;
       async function fetchOverviewData() {
+        // Visit tracking lives in the Acquisition Tracker; not shown here.
         const [cap, fin, em] = await Promise.allSettled([
           req("overview", { cohort_code: "founding-2026" }, CAPACITY),
           req("list", {}, FINANCE),
@@ -3575,11 +3601,18 @@
         if (reviewableNow.length) {
           naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'all\');">Review ' + ovNum(reviewableNow.length) + ' pending application' + (reviewableNow.length === 1 ? '' : 's') + '</a></div>');
         }
-        // Invitation delivery failures (accepted but not delivered)
+        // Invitation delivery state from provider telemetry (never inferred
+        // from a missing signal). Genuine failures link to the Email Command
+        // Center; unconfirmed sends link to the applicants awaiting payment.
+        // In-flight delays are not issues and are not listed here.
         const acceptedNow = activeApps().filter((x) => appAcceptanceEmail(x).issued);
-        const deliveryFails = acceptedNow.filter((x) => !appAcceptanceEmail(x).delivered);
-        if (deliveryFails.length) {
-          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(deliveryFails.length) + ' invitation delivery issue' + (deliveryFails.length === 1 ? '' : 's') + '</a></div>');
+        const inviteFailed = acceptedNow.filter((x) => appAcceptanceEmail(x).failed);
+        if (inviteFailed.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();openTool(\'email\');">' + ovNum(inviteFailed.length) + ' invitation delivery failure' + (inviteFailed.length === 1 ? '' : 's') + ' — review in Email Command Center</a></div>');
+        }
+        const inviteUnconfirmed = acceptedNow.filter((x) => appAcceptanceEmail(x).unresolved);
+        if (inviteUnconfirmed.length) {
+          naItems.push('<div><a href="#" onclick="event.preventDefault();goApplicants(\'awaiting_payment\');">' + ovNum(inviteUnconfirmed.length) + ' unconfirmed invitation' + (inviteUnconfirmed.length === 1 ? '' : 's') + ' — confirm delivery status</a></div>');
         }
         // Payment verification/GCASH followup needs (infer via needsAdmin + awaiting/payment states)
         const payNeeds = activeApps().filter((x) => {

@@ -44,18 +44,24 @@ test("totalApplications() is the non-enrolled application count", () => {
     "totalApplications() must return activeApps().length");
 });
 
-test("activeApps() still filters out fully enrolled students", () => {
+test("activeApps() keeps enrolled records visible through the whole lifecycle", () => {
   assert.ok(contains(adminHtml, "function activeApps()"),
     "activeApps() function must exist");
-  assert.ok(contains(adminHtml, 'x.status === "onboarded" && x.payment_status === "paid" && x.onboarding_completed_at && x.auth_user_id && !x.suspended_at'),
-    "activeApps() must filter out fully enrolled students");
+  assert.ok(contains(adminHtml, "const records = [...apps, ...students];"),
+    "activeApps() must merge enrolled student records back into the list");
+  assert.ok(contains(adminHtml, "return records.filter("),
+    "activeApps() must return the merged, deduplicated records");
 });
 
 // ─── Both tabs read the one definition ───
 
 test("Applications tab reports the canonical total", () => {
-  assert.ok(contains(adminHtml, '[totalApplications(), "Applications", "Total applications"]'),
-    "Applications tab must show the canonical total labelled 'Applications'");
+  const branch = adminHtml.slice(adminHtml.indexOf('if (tab === "applicants") {'), adminHtml.indexOf('if (tab === "students") {'));
+  assert.ok(branch.includes("paintApplicantsPipeline()"),
+    "Applications tab must render the pipeline header");
+  const pipe = adminHtml.slice(adminHtml.indexOf("function paintApplicantsPipeline()"), adminHtml.indexOf("function paintEnrollment(cap"));
+  assert.ok(pipe.includes("ovNum(totalApplications())") && pipe.includes('"Total Applications"'),
+    "Pipeline header must show the canonical total labelled 'Total Applications'");
 });
 
 test("Webinar Signups tab reports the SAME canonical total", () => {
@@ -65,10 +71,13 @@ test("Webinar Signups tab reports the SAME canonical total", () => {
 });
 
 test("the canonical call appears in both the applicants and webinar branches", () => {
-  const call = '[totalApplications(), "Applications", "Total applications"]';
-  const count = adminHtml.split(call).length - 1;
-  assert.equal(count, 2,
-    "both the Applications tab and the Webinar tab must read the canonical total (expected 2 call sites)");
+  const applicants = adminHtml.slice(adminHtml.indexOf('if (tab === "applicants") {'), adminHtml.indexOf('if (tab === "students") {'));
+  const webinar = adminHtml.slice(adminHtml.indexOf('if (tab === "webinar") {'), adminHtml.indexOf('if (tab === "coupons") {'));
+  const pipe = adminHtml.slice(adminHtml.indexOf("function paintApplicantsPipeline()"), adminHtml.indexOf("function paintEnrollment(cap"));
+  assert.ok((applicants.includes("paintApplicantsPipeline()") && pipe.includes("totalApplications()")) || applicants.includes("totalApplications()"),
+    "the Applications tab must read the canonical total (not a local list)");
+  assert.ok(webinar.includes('[totalApplications(), "Applications", "Total applications"]'),
+    "the Webinar tab must read the canonical total (not a local list)");
 });
 
 test("the webinar tab never re-derives the application total", () => {
@@ -122,18 +131,45 @@ test("stat() function supports an optional subtitle", () => {
 // ─── Edge function data shape ───
 
 test("edge function returns non-enrolled applications and enrolled students separately", () => {
-  assert.ok(contains(edgeFn, "applicants=x.filter") && contains(edgeFn, "!isEnrolled(z)"),
+  assert.match(edgeFn, /applicants\s*=\s*x\.filter/,
     "Edge function must split applications into non-enrolled (applicants)");
-  assert.ok(contains(edgeFn, "students=x.filter(isEnrolled)"),
+  assert.ok(contains(edgeFn, "!isEnrolled(z)"),
+    "Edge function must split applications into non-enrolled (applicants)");
+  assert.match(edgeFn, /students\s*=\s*x\.filter\(isEnrolled\)/,
     "Edge function must split applications into enrolled (students)");
-  assert.ok(contains(edgeFn, "applications:applicants"),
+  assert.ok(contains(edgeFn, "applications:applicants") || contains(edgeFn, "applications: applicants"),
     "Edge function must return non-enrolled as 'applications'");
-  assert.ok(contains(edgeFn, "students,") || contains(edgeFn, "students:students"),
+  assert.ok(contains(edgeFn, "students,") || contains(edgeFn, "students:students") || contains(edgeFn, "students: students"),
     "Edge function must return enrolled as 'students'");
 });
 
+test("edge function derives invitation delivery from provider telemetry, never from a log row", () => {
+  // The acceptance invitation outcome is read from the provider delivery
+  // telemetry (email_delivery_log + email_events)...
+  assert.ok(contains(edgeFn, "from('email_delivery_log')"),
+    "the invitation outcome must read the provider delivery telemetry");
+  assert.ok(contains(edgeFn, "from('email_events')"),
+    "delivery, bounce and delay events must come from the provider webhooks");
+  assert.ok(contains(edgeFn, "'academy_acceptance'"),
+    "the acceptance invitation type is an explicit source");
+  // ...attached to every record...
+  assert.ok(contains(edgeFn, "z.acceptance_email = inviteOutcome(z)"),
+    "each application carries its invitation outcome");
+  // ...and 'delivered' requires real provider proof.
+  assert.ok(contains(edgeFn, "types.has('delivered')"),
+    "delivered must require a provider delivery signal");
+  // A missing signal is unresolved, never failed, and the activity log is not used.
+  const start = edgeFn.indexOf("const inviteOutcome = ");
+  const end = edgeFn.indexOf("const applicants = x.filter", start);
+  assert.ok(start !== -1 && end > start, "inviteOutcome must exist before the applicant split");
+  const outcome = edgeFn.slice(start, end);
+  assert.ok(contains(outcome, "'unresolved'"), "a sent-but-unconfirmed invitation is unresolved");
+  assert.ok(!contains(outcome, "admin_activity_log"),
+    "the invitation outcome must never be inferred from the activity log");
+});
+
 test("edge function returns all signups without filtering", () => {
-  assert.ok(contains(edgeFn, "signups:W.data"),
+  assert.match(edgeFn, /signups:\s*W\.data/,
     "Edge function must return all signups (filtering happens in frontend)");
 });
 
@@ -142,12 +178,12 @@ test("edge function returns all signups without filtering", () => {
 test("counters refresh on page load via load()", () => {
   assert.ok(contains(adminHtml, "async function load()"),
     "load() function must exist");
-  assert.ok(contains(adminHtml, "apps = d.applications || []"),
-    "load() must populate apps from edge function");
-  assert.ok(contains(adminHtml, "web = d.signups || []"),
-    "load() must populate web from edge function");
-  assert.ok(contains(adminHtml, "students = d.students || []"),
-    "load() must populate students from edge function");
+  assert.match(adminHtml, /apps = Array\.isArray\(d\.applications\) \? d\.applications\.filter\(Boolean\) : \[\]/,
+    "load() must populate apps from edge function (null-safe)");
+  assert.match(adminHtml, /web = Array\.isArray\(d\.signups\) \? d\.signups\.filter\(Boolean\) : \[\]/,
+    "load() must populate web from edge function (null-safe)");
+  assert.match(adminHtml, /students = Array\.isArray\(d\.students\) \? d\.students\.filter\(Boolean\) : \[\]/,
+    "load() must populate students from edge function (null-safe)");
 });
 
 test("render() is called after load() to refresh counters", () => {
