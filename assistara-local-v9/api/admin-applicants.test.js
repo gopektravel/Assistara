@@ -108,11 +108,19 @@ test("the applicant lifecycle is a UI label derived from persisted fields only",
     assert.ok(card.includes(cls), `missing stage ${cls}`);
   }
   assert.ok(card.includes("Admin: Verify GCash payment"), "a pending GCash payment is an admin action");
-  assert.ok(card.includes("Applicant: Complete onboarding"), "a learner without onboarding is an applicant action");
+assert.ok(card.includes("Admin: Verify GCash payment"), "a pending GCash payment is an admin action");
+  assert.ok(card.includes("Admin: Resend onboarding link"), "a paid record still names the admin action");
 
-  // An applicant owing a payment is not an administrator action, so the row
-  // names no next action at all; the stage badge carries that information.
-  assert.doesNotMatch(card, /Applicant: Complete payment/);
+  // A row may only name an action the administrator can take. Anything that
+  // reads "Applicant: ..." is applicant-owned work that the stage badge already
+  // communicates, so it is noise here.
+  assert.doesNotMatch(card, /Applicant: /, "no Applicant: label may remain");
+  assert.doesNotMatch(card, /action-applicant/, "the applicant action class may no longer be used");
+  assert.doesNotMatch(card, /needsApplicant/);
+
+  // An applicant owing a payment names no next action at all.
+  assert.match(card, /nextAction = isGcashPending \? "Admin: Verify GCash payment" : "";/);
+  assert.match(card, /nextAction = "Admin: Resend onboarding link";/);
   assert.match(card, /nextAction = isGcashPending \? "Admin: Verify GCash payment" : "";/);
   assert.match(card, /actionClass = isGcashPending \? "action-admin" : "action-none";/);
   // The email overrides in the accepted-unpaid branch stay admin actions.

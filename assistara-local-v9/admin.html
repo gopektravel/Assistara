@@ -2121,9 +2121,11 @@
           else if (emailInfo.unresolved) { nextAction = "Admin: Confirm invitation delivery"; actionClass = "action-admin"; }
         } else if (isPaidOnboarding) {
           stage = "Paid — Onboarding Pending"; stageClass = "stage-onboarding";
-          const needsApplicant = !!x.auth_user_id && !x.onboarding_completed_at;
-          nextAction = needsApplicant ? "Applicant: Complete onboarding" : "Admin: Resend onboarding link";
-          actionClass = needsApplicant ? "action-applicant" : "action-admin";
+          // Whether the learner still owes onboarding is not an
+          // administrator action, and the stage badge already says the
+          // payment landed. Name only what the administrator can do.
+          nextAction = "Admin: Resend onboarding link";
+          actionClass = "action-admin";
         } else if (isActiveLearner) {
           stage = "Enrolled"; stageClass = "stage-enrolled";
           nextAction = "No action needed"; actionClass = "action-none";
