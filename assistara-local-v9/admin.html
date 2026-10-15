@@ -2105,12 +2105,18 @@
           nextAction = "Account suspended"; actionClass = "action-admin";
         } else if (isPaymentPending) {
           stage = "Payment Pending"; stageClass = "stage-payment-pending";
-          nextAction = isGcashPending ? "Admin: Verify GCash payment" : "Applicant: Complete payment";
-          actionClass = isGcashPending ? "action-admin" : "action-applicant";
+          // Only a GCash payment is something the administrator does.
+          // Otherwise the applicant owes the payment and the stage badge
+          // already says so, so no next action is named.
+          nextAction = isGcashPending ? "Admin: Verify GCash payment" : "";
+          actionClass = isGcashPending ? "action-admin" : "action-none";
         } else if (isAcceptedUnpaid) {
           stage = "Accepted — Awaiting Payment"; stageClass = "stage-awaiting-payment";
-          nextAction = "Applicant: Complete payment";
-          actionClass = "action-applicant";
+          // The applicant owes the payment; the stage badge says so. An email
+          // problem still makes it an administrator action, and those two
+          // overrides below are deliberately kept.
+          nextAction = "";
+          actionClass = "action-none";
           if (emailInfo.failed) { nextAction = "Admin: Resend acceptance email"; actionClass = "action-admin"; }
           else if (emailInfo.unresolved) { nextAction = "Admin: Confirm invitation delivery"; actionClass = "action-admin"; }
         } else if (isPaidOnboarding) {
@@ -2154,7 +2160,7 @@
         }
 
         // Resolved before the markup so the row only reserves space it uses.
-        const showNextAction = actionClass !== "action-none";
+        const showNextAction = actionClass !== "action-none" && !!nextAction && nextAction !== "\u2014";
         const actionButtons = applicationActions(x);
 
         let emailBadge = "";

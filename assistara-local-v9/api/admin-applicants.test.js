@@ -46,7 +46,7 @@ test("an applicant row only reserves the space it actually uses", () => {
 
   // The next-action column carries min-width: 200px, so it must not be
   // emitted for a row with no action to name (an enrolled learner).
-  assert.match(card, /const showNextAction = actionClass !== "action-none";/);
+  assert.match(card, /const showNextAction = actionClass !== "action-none" && !!nextAction/);
   assert.match(card, /showNextAction\s*\? '<div class="applicantNextAction/);
 });
 
@@ -96,20 +96,30 @@ test("the applicant lifecycle is a UI label derived from persisted fields only",
 
   // Stage → next action pairs are explicit for the whole lifecycle.
   const card = admin.slice(admin.indexOf("function appCard(x)"), admin.indexOf("function appStage(x)"));
-  const pairs = [
-    ["stage-new", "Admin: Review application"],
-    ["stage-awaiting-payment", "Applicant: Complete payment"],
-    ["stage-payment-pending", "Applicant: Complete payment"],
-    ["stage-onboarding", "Admin: Resend onboarding link"],
-    ["stage-enrolled", "No action needed"],
-    ["stage-declined", "Closed"],
-    ["stage-suspended", "Account suspended"],
-  ];
-  for (const [cls, action] of pairs) {
+  for (const cls of [
+    "stage-new",
+    "stage-awaiting-payment",
+    "stage-payment-pending",
+    "stage-onboarding",
+    "stage-enrolled",
+    "stage-declined",
+    "stage-suspended",
+  ]) {
     assert.ok(card.includes(cls), `missing stage ${cls}`);
   }
   assert.ok(card.includes("Admin: Verify GCash payment"), "a pending GCash payment is an admin action");
   assert.ok(card.includes("Applicant: Complete onboarding"), "a learner without onboarding is an applicant action");
+
+  // An applicant owing a payment is not an administrator action, so the row
+  // names no next action at all; the stage badge carries that information.
+  assert.doesNotMatch(card, /Applicant: Complete payment/);
+  assert.match(card, /nextAction = isGcashPending \? "Admin: Verify GCash payment" : "";/);
+  assert.match(card, /actionClass = isGcashPending \? "action-admin" : "action-none";/);
+  // The email overrides in the accepted-unpaid branch stay admin actions.
+  assert.match(card, /if \(emailInfo\.failed\) \{ nextAction = "Admin: Resend acceptance email"; actionClass = "action-admin"; \}/);
+  assert.match(card, /else if \(emailInfo\.unresolved\) \{ nextAction = "Admin: Confirm invitation delivery"; actionClass = "action-admin"; \}/);
+  // An empty next action must not reserve the 200px column.
+  assert.match(card, /const showNextAction = actionClass !== "action-none" && !!nextAction/);
 });
 
 test("applicants filter and sort use the real records and default to admin action first", () => {
