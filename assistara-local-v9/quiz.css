@@ -1301,3 +1301,417 @@
 }
 
 
+
+/* ----------------------------------------------------------------------------
+   Premium conversion redesign
+   Same brand system (Manrope, yellow, charcoal, cream) with a stronger
+   hierarchy on the landing, animated questions/progress, and a result reveal
+   that reads as a reward. All animation is neutered by the site-wide
+   prefers-reduced-motion block above, so nothing here can trap a visitor
+   who asked for less motion.
+   ---------------------------------------------------------------------------- */
+
+/* The Academy header component on the quiz page: wordmark beside the logo. */
+.brand-text {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: inherit;
+}
+
+@media (max-width: 900px) {
+  .brand-text { display: none; }
+}
+
+/* --------------------------------------------------------------- landing */
+
+/* The headline accent now matches the Academy hero instead of reading grey. */
+.quiz-landing h1 span {
+  color: var(--ink, #151515);
+  background: linear-gradient(transparent 70%, #fff0a0 0);
+}
+
+/* One unmistakable, exciting CTA. */
+.quiz-cta {
+  min-height: 62px;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  box-shadow: 0 14px 34px rgba(255, 203, 31, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.quiz-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(255, 203, 31, 0.42);
+}
+
+.quiz-cta span {
+  transition: transform 0.18s ease;
+}
+
+.quiz-cta:hover span {
+  transform: translateX(4px);
+}
+
+/* The teaser: a shrunken, illustrative version of the real report, so the
+   reward is visible before the first question. Decorative only (aria-hidden
+   on the container). */
+.quiz-teaser {
+  position: relative;
+  z-index: 1;
+  background: var(--white, #fff);
+  border: 1px solid var(--line, #dedbd3);
+  border-radius: 26px;
+  box-shadow: 0 30px 80px rgba(18, 18, 18, 0.12);
+  overflow: hidden;
+  animation: quizTeaserIn 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes quizTeaserIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+
+.quiz-teaser > * {
+  animation: quizTeaserRow 0.5s both;
+}
+
+.quiz-teaser > *:nth-child(2) { animation-delay: 0.12s; }
+.quiz-teaser > *:nth-child(3) { animation-delay: 0.2s; }
+.quiz-teaser > *:nth-child(4) { animation-delay: 0.28s; }
+.quiz-teaser > *:nth-child(5) { animation-delay: 0.36s; }
+
+@keyframes quizTeaserRow {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.quiz-teaser-top {
+  background: #171717;
+  color: #fff;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+}
+
+.quiz-teaser-top .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--yellow, #ffd51f);
+  box-shadow: 0 0 0 4px rgba(255, 213, 31, 0.25);
+}
+
+.quiz-teaser-top b { font-weight: 700; }
+
+.quiz-teaser-top small {
+  margin-left: auto;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: #b9b3a8;
+  font-weight: 700;
+}
+
+.quiz-teaser-match {
+  padding: 20px 20px 18px;
+  background: linear-gradient(160deg, #1f1f1c 0%, #171717 72%);
+  color: #fff;
+}
+
+.quiz-teaser-match small {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--yellow, #ffd51f);
+  font-weight: 800;
+}
+
+.quiz-teaser-match b {
+  display: block;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-top: 6px;
+  color: #fff;
+}
+
+.quiz-teaser-match b::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--yellow, #ffd51f);
+  margin-top: 9px;
+}
+
+.quiz-teaser-match > span {
+  display: block;
+  font-size: 12.5px;
+  color: #b9b3a8;
+  margin-top: 9px;
+  font-weight: 600;
+}
+
+.quiz-teaser-money {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line, #dedbd3);
+}
+
+.quiz-teaser-money > small {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: #a09a94;
+  font-weight: 800;
+}
+
+.quiz-teaser-figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.quiz-teaser-figures div {
+  background: #fdfcfa;
+  border: 1px solid var(--line, #dedbd3);
+  border-radius: 12px;
+  padding: 10px 6px;
+  text-align: center;
+}
+
+.quiz-teaser-figures b {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.quiz-teaser-figures span {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted, #66625f);
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.quiz-teaser-plan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line, #dedbd3);
+}
+
+.quiz-teaser-dots {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.quiz-teaser-dots span {
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  background: var(--yellow, #ffd51f);
+}
+
+.quiz-teaser-dots span:last-child {
+  background: #ece9e2;
+  border: 1.5px dashed #c9c4bc;
+}
+
+.quiz-teaser-plan b {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.quiz-teaser-plan-copy span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted, #66625f);
+  margin-top: 1px;
+  font-weight: 600;
+}
+
+.quiz-teaser-foot {
+  padding: 12px 20px;
+  background: #faf9f5;
+}
+
+.quiz-teaser-foot small {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #8a8480;
+  font-weight: 800;
+}
+
+/* ------------------------------------------------------------------ play */
+
+/* Question transitions: out, then in. Driven by quiz.js, skipped entirely for
+   reduced motion (the global block above collapses the durations). */
+@keyframes quizCardOut {
+  to { opacity: 0; transform: translateY(-10px) scale(0.985); }
+}
+
+@keyframes quizCardIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.quiz-card.q-anim-out {
+  animation: quizCardOut 0.16s ease-in forwards;
+}
+
+.q-anim-in {
+  animation: quizCardIn 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* Animated progress: brand gradient with a slow travelling sheen. */
+.quiz-progress-fill {
+  background: linear-gradient(90deg, #ffc91f, #ffd51f 55%, #ffe27a);
+  position: relative;
+}
+
+.quiz-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: quizSheen 2.6s ease-in-out infinite;
+}
+
+@keyframes quizSheen {
+  0% { transform: translateX(-100%); }
+  55%, 100% { transform: translateX(100%); }
+}
+
+/* Varied, grown-up microcopy between questions; display-only. */
+.quiz-micro {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a8480;
+  min-height: 1.3em;
+}
+
+/* A chosen option gives a small physical acknowledgement. */
+@keyframes quizOptPop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+.quiz-option:has(input:checked) {
+  animation: quizOptPop 0.22s ease;
+}
+
+/* --------------------------------------------------------------- result */
+
+/* The hero becomes an award plate: yellow hairline, top-right glow, and the
+   matched career named large before anything else on the report. */
+.quiz-result-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 213, 31, 0.25);
+  box-shadow: 0 30px 80px rgba(18, 18, 18, 0.18);
+  animation: quizHeroIn 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes quizHeroIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.quiz-result-hero::before {
+  content: "";
+  position: absolute;
+  top: -70px;
+  right: -70px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 213, 31, 0.22), transparent 70%);
+  pointer-events: none;
+}
+
+.quiz-result-career {
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  animation: quizHeroIn 0.6s 0.12s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.quiz-result-career small {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--yellow, #ffd51f);
+  font-weight: 800;
+}
+
+.quiz-result-career b {
+  display: block;
+  font-size: clamp(24px, 6vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  margin-top: 5px;
+  line-height: 1.1;
+}
+
+.quiz-result-career span {
+  display: block;
+  font-size: 13px;
+  color: #b9b3a8;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.quiz-result-tags .quiz-tag {
+  animation: quizTagIn 0.5s both;
+}
+
+.quiz-result-tags .quiz-tag:nth-child(2) { animation-delay: 0.08s; }
+.quiz-result-tags .quiz-tag:nth-child(3) { animation-delay: 0.16s; }
+
+@keyframes quizTagIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Report blocks fade up as the visitor reads down. The class is added by
+   quiz-report.js, so with JS off or broken the report simply appears. */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.reveal-up.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* The 30-day plan reads as a progression, not a list. */
+.rweek {
+  position: relative;
+  padding-left: 19px;
+  border-left: 3px solid var(--yellow, #ffd51f);
+}
+
+.rweek-head small {
+  background: var(--yellow, #ffd51f);
+  color: #151515;
+  padding: 4px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.06em;
+}

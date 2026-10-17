@@ -64,6 +64,45 @@
     requestAnimationFrame(function () { el.focus(); });
   }
 
+  function reducedMotion() {
+    return !!(window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  // Question transitions: the card animates out, the next question renders,
+  // then the card animates in. Purely presentational — navigation state has
+  // already changed before this runs, and reduced motion skips it entirely.
+  var navToken = 0;
+
+  function transitionTo(next) {
+    var card = $("quizCard");
+    var my = ++navToken;
+    if (!card || reducedMotion()) { next(); return; }
+    card.classList.remove("q-anim-in");
+    card.classList.add("q-anim-out");
+    window.setTimeout(function () {
+      if (my !== navToken) return; // a newer navigation superseded this one
+      card.classList.remove("q-anim-out");
+      next();
+      card.classList.add("q-anim-in");
+    }, 150);
+  }
+
+  // Varied, grown-up microcopy under the progress bar. Display-only: it never
+  // touches scoring, answers or tracking. Index-aligned with the 10 questions.
+  var Q_MICRO = [
+    "First one. Two seconds.",
+    "This one shapes your income model.",
+    "There is no wrong answer here.",
+    "Halfway is closer than it feels.",
+    "Good. The interesting half starts now.",
+    "Your answers are starting to pattern-match.",
+    "A few people change their answer here. That is fine.",
+    "Second to last. You are nearly there.",
+    "Last question, then your result.",
+    "Done. Building your result now.",
+  ];
+
   function clientKey() {
     if (state.clientKey) return state.clientKey;
     var k = "";
@@ -206,6 +245,9 @@
     $("progressFill").style.width = pct + "%";
     $("progressBar").setAttribute("aria-valuenow", String(n));
     $("progressBar").setAttribute("aria-valuetext", "Question " + n + " of " + TOTAL);
+
+    var micro = $("qMicro");
+    if (micro) micro.textContent = Q_MICRO[state.index] || "";
 
     var box = $("qOptions");
     box.innerHTML = "";
@@ -438,16 +480,20 @@
     }
     state.index += 1;
     saveProgress();
-    renderQuestion();
-    renderOptionsA11y();
+    transitionTo(function () {
+      renderQuestion();
+      renderOptionsA11y();
+    });
   }
 
   function goBack() {
     if (state.index === 0) return;
     state.index -= 1;
     saveProgress();
-    renderQuestion();
-    renderOptionsA11y();
+    transitionTo(function () {
+      renderQuestion();
+      renderOptionsA11y();
+    });
   }
 
   // Announce the current question to a screen reader once it has changed,

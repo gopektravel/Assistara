@@ -21,14 +21,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/mobile-polish.css?v=3" />
-  <link rel="stylesheet" href="/quiz.css?v=20261017-1" />
+  <link rel="stylesheet" href="/quiz.css?v=20261017-2" />
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Quiz","name":"Assistara Remote Income Potential Quiz","description":"A 10-question Assistara Academy assessment that matches you to a remote virtual assistant career and shows an illustrative income model for the hours you actually have.","url":"https://www.getassistara.com/academy/quiz","publisher":{"@type":"Organization","name":"Assistara Academy","url":"https://www.getassistara.com/academy"}}</script>
 </head>
 <body class="quiz-body">
   <div class="announcement"><span>Buy back your time. More room to grow. More freedom to live.</span><a href="https://cal.com/assistara/assistara-discovery-call">Book a Discovery Call →</a></div>
 
-  <header class="site-header"><nav class="nav shell"><a class="brand" href="/academy" aria-label="Assistara Academy home"><img src="/assistara-logo.svg" alt="Assistara" style="width:152px;height:36px;object-fit:contain;object-position:left center" /></a><div class="nav-links"><a href="/academy#academy">The program</a><a href="/academy#checkout">Pricing</a><a href="/academy#free-masterclass">Free masterclass</a></div><a class="btn btn-dark btn-small mobile-top-academy" href="/academy/apply">Apply</a></nav></header>
+  <!-- The exact Academy header component from /academy (shared styles.css), so
+       the quiz reads as part of the Academy rather than a separate microsite. -->
+  <header class="site-header"><nav class="nav shell"><a class="brand" href="/academy" aria-label="Assistara Academy home"><img src="/assistara-logo.svg" alt="Assistara" style="width:132px;height:31px;object-fit:contain;object-position:left center" /><span class="brand-text">Assistara Academy</span></a><div class="nav-links"><a href="/academy#why">Why this path</a><a href="/academy#clients">Get clients</a><a href="/academy#academy">The Academy</a><a href="/academy#talent-network">Talent Network</a></div><a class="btn btn-dark btn-small" href="/login">Log in</a></nav></header>
 
   <!-- The quiz always sits inside the Academy, so the trail is visible on
        every screen including the result. -->
@@ -46,12 +48,12 @@
     <section class="quiz-landing shell" id="quizLanding">
       <div class="quiz-landing-copy">
         <div class="section-kicker">REMOTE INCOME POTENTIAL QUIZ</div>
-        <h1>Ten questions.<br><span>One clear next step.</span></h1>
-        <p class="quiz-lead">Find the remote career path that actually fits how you work, see the income maths laid out plainly for the hours you have, and leave with a 30-day plan you can start this week.</p>
+        <h1>How Much Could You Earn<br><span>Working From Home?</span></h1>
+        <p class="quiz-lead">Answer 10 quick questions and get your remote career match, income scenarios built from the hours you actually have, and a 30-day plan you can start this week. Completely free, and no email is needed to see your result.</p>
         <div class="quiz-facts">
-          <div><b>10</b><span>questions, one at a time</span></div>
-          <div><b>7</b><span>career paths compared</span></div>
-          <div><b>~4</b><span>minutes to finish</span></div>
+          <div><b>7</b><span>real career paths compared</span></div>
+          <div><b>~3</b><span>minutes, one question at a time</span></div>
+          <div><b>₱0</b><span>free, no email required</span></div>
         </div>
         <ul class="quiz-benefits">
           <li><span>✓</span><div><b>A career match, not a personality label</b><small>See exactly which answers pointed to your result.</small></div></li>
@@ -60,7 +62,7 @@
           <li><span>✓</span><div><b>No email needed to see your result</b><small>Answer the questions and it appears. That is all.</small></div></li>
         </ul>
         <div class="quiz-landing-actions">
-          <button class="btn btn-yellow quiz-cta" type="button" id="startQuiz">Calculate my remote income potential <span>→</span></button>
+          <button class="btn btn-yellow quiz-cta" type="button" id="startQuiz">Find My Remote Career &amp; Income Potential <span>→</span></button>
           <a class="text-link" href="/academy#academy">See what the Academy teaches →</a>
         </div>
         <p class="quiz-honesty">This is a careers assessment, not a psychometric test, and it is part of Assistara Academy. Income figures are illustrative examples based on your answers, not predictions or guarantees. Nothing here is required to see your result.</p>
@@ -69,12 +71,28 @@
       <div class="quiz-landing-visual" aria-hidden="true">
         <div class="glow glow-a"></div>
         <div class="glow glow-b"></div>
-        <div class="quiz-preview-card">
-          <div class="quiz-preview-top"><span class="dot"></span><b>Your result preview</b><small>STEP 10 OF 10</small></div>
-          <div class="quiz-preview-row"><span class="qp-num">01</span><div><b>Career match</b><small>Compared across seven paths</small></div><span class="qp-tag">MATCH</span></div>
-          <div class="quiz-preview-row"><span class="qp-num">02</span><div><b>Income scenarios</b><small>Hours × rate, worked out openly</small></div><span class="qp-tag">MATHS</span></div>
-          <div class="quiz-preview-row"><span class="qp-num">03</span><div><b>30-day roadmap</b><small>Four weeks, scaled to your time</small></div><span class="qp-tag">PLAN</span></div>
-          <div class="quiz-preview-foot"><small>ILLUSTRATIVE EXAMPLES ONLY</small></div>
+        <!-- A teaser shaped like the real report, so the reward is visible before
+             the first question. Decorative and illustrative only. -->
+        <div class="quiz-teaser">
+          <div class="quiz-teaser-top"><span class="dot"></span><b>Your result</b><small>PERSONALIZED &middot; FREE</small></div>
+          <div class="quiz-teaser-match">
+            <small>CAREER MATCH</small>
+            <b>The Master Organizer</b>
+            <span>Administrative VA / Executive Assistant &middot; one of seven paths</span>
+          </div>
+          <div class="quiz-teaser-money">
+            <small>YOUR INCOME SCENARIOS</small>
+            <div class="quiz-teaser-figures">
+              <div><b>&#8776;&#8202;₱10,800</b><span>10 hrs / week</span></div>
+              <div><b>&#8776;&#8202;₱34,700</b><span>20 hrs / week</span></div>
+              <div><b>&#8776;&#8202;₱78,000</b><span>30 hrs / week</span></div>
+            </div>
+          </div>
+          <div class="quiz-teaser-plan">
+            <div class="quiz-teaser-dots"><span></span><span></span><span></span><span></span></div>
+            <div class="quiz-teaser-plan-copy"><b>Your 30-day plan</b><span>Four weeks of actions, scaled to your time</span></div>
+          </div>
+          <div class="quiz-teaser-foot"><small>ILLUSTRATIVE EXAMPLES ONLY &middot; NEVER A GUARANTEE</small></div>
         </div>
       </div>
     </section>
@@ -91,6 +109,7 @@
         <div class="quiz-progress-track" role="progressbar" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1" aria-labelledby="progressLabel" id="progressBar">
           <div class="quiz-progress-fill" id="progressFill"></div>
         </div>
+        <p class="quiz-micro" id="qMicro" aria-hidden="true"></p>
       </div>
 
       <div class="quiz-card" id="quizCard">
@@ -175,6 +194,11 @@
         <div class="quiz-result-hero">
           <div class="section-kicker">YOUR RESULT</div>
           <h2 id="rHeading" tabindex="-1">Here is your remote career profile</h2>
+          <div class="quiz-result-career" id="rCareerWrap" hidden>
+            <small>YOUR PRIMARY MATCH</small>
+            <b id="rCareerName"></b>
+            <span id="rCareerCat"></span>
+          </div>
           <div class="quiz-result-tags">
             <span class="quiz-tag quiz-tag-primary" id="rPrimaryTag"></span>
             <span class="quiz-tag" id="rSecondaryTag"></span>
@@ -201,7 +225,7 @@
        existing Assistara modules so the quiz attributes exactly like an
        Academy application does. -->
   <script src="/app.js?v=20260917-USD-FIX"></script>
-  <script src="/quiz.js?v=20261017-1"></script>
-  <script src="/quiz-report.js?v=20261017-1"></script>
+  <script src="/quiz.js?v=20261017-2"></script>
+  <script src="/quiz-report.js?v=20261017-2"></script>
 </body>
 </html>

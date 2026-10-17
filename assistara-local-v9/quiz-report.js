@@ -54,7 +54,14 @@
 
   function goReveal() {
     hide($("quizPlay"));
-    show($("quizReveal"));
+    var card = $("quizReveal");
+    if (card) {
+      // Restart the enter animation even if this step was shown before.
+      card.classList.remove("q-anim-in");
+      void card.offsetWidth;
+      card.classList.add("q-anim-in");
+    }
+    show(card);
     window.__quizFocus($("revealTitle"));
     try { $("quizReveal").scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { }
     startedAt = startedAt || Date.now();
@@ -195,6 +202,15 @@
     $("rSecondaryTag").textContent = "Also worth exploring: " + r.secondary.title;
     $("rReadinessTag").textContent = "Stage: " + r.readiness.title;
 
+    // The matched career named large in the hero so the result reads as the
+    // reward it is. Same server values as the tag above; nothing new invented.
+    var careerWrap = $("rCareerWrap");
+    if (careerWrap && r.primary) {
+      $("rCareerName").textContent = r.primary.title || "";
+      $("rCareerCat").textContent = r.primary.category || "";
+      careerWrap.hidden = false;
+    }
+
     var html = "";
 
     // A. Personal introduction --------------------------------------------
@@ -292,6 +308,7 @@
 
     wireShare(r.share);
     wireCta();
+    revealOnScroll(body);
 
     hide($("quizLanding"));
     hide($("quizPlay"));
@@ -403,6 +420,34 @@
         track("academy_cta_clicked", { tone: lastReport && lastReport.nextStep ? lastReport.nextStep.tone : "" });
       });
     });
+  }
+
+  // Report blocks fade up as they enter the viewport. The reveal-up class is
+  // only ever added here, so with JS off or broken the report simply renders
+  // visible; if anything about the observer fails we reveal everything.
+  function revealOnScroll(root) {
+    var nodes = Array.prototype.slice.call(root.querySelectorAll(".rblock"));
+    if (!nodes.length) return;
+    var reduced = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || typeof IntersectionObserver !== "function") {
+      nodes.forEach(function (n) { n.classList.add("reveal-up", "is-visible"); });
+      return;
+    }
+    try {
+      nodes.forEach(function (n) { n.classList.add("reveal-up"); });
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-visible");
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0, rootMargin: "0px 0px -40px 0px" });
+      nodes.forEach(function (n) { io.observe(n); });
+    } catch (e) {
+      nodes.forEach(function (n) { n.classList.add("is-visible"); });
+    }
   }
 
   // ------------------------------------------------- stored result (?t=)
