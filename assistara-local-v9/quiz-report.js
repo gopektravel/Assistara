@@ -343,8 +343,27 @@
     hide($("quizPlay"));
     hide($("quizReveal"));
     show($("quizResult"));
-    try { $("quizResult").scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { }
-    window.__quizFocus($("rHeading"));
+    if (prefsRequested()) {
+      // A "manage preferences" link should land on the preferences panel, not
+      // at the top of a report the visitor has already read. Focus without
+      // scrolling first, so focusing the heading cannot fight the jump.
+      window.__quizFocus($("rHeading"), true);
+      var jumpToPrefs = function () {
+        var panel = $("rPrefs");
+        if (panel) { try { panel.scrollIntoView({ block: "center" }); } catch (e) { } }
+      };
+      requestAnimationFrame(function () {
+        requestAnimationFrame(jumpToPrefs);
+        // The web font swaps in after first paint and changes the page height,
+        // which would carry the panel off screen, so jump again once it is in.
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(jumpToPrefs).catch(function () { });
+        }
+      });
+    } else {
+      try { $("quizResult").scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { }
+      window.__quizFocus($("rHeading"));
+    }
 
     if (opts.stored === false) {
       // Honest note when storage was unavailable and the report was computed
@@ -476,13 +495,6 @@
     }
     show(panel);
 
-    // A link with &prefs=1 should land the visitor on this panel, not leave it
-    // scrolling past it.
-    var prefs = new URLSearchParams(location.search).get("prefs");
-    if (prefs === "1" || prefs === "true") {
-      try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { }
-    }
-
     btn.onclick = function () {
       if (marketingOptIn !== true || !lastToken) return;
       btn.disabled = true;
@@ -510,6 +522,18 @@
           text.innerHTML = "We could not reach the server. Please try again, or use the unsubscribe link in any email.";
         });
     };
+  }
+
+  // A "manage preferences" link should land the visitor on the preferences
+  // panel, not at the top of a report they have already read. The scroll
+  // itself runs at the end of render(), once the result section is on screen.
+  function prefsRequested() {
+    try {
+      var p = new URLSearchParams(location.search).get("prefs");
+      return p === "1" || p === "true";
+    } catch (e) {
+      return false;
+    }
   }
 
   // Report blocks fade up as they enter the viewport. The reveal-up class is

@@ -1002,6 +1002,29 @@ test("the strengths block never labels a none answer as something already held",
   );
 });
 
+test("a prefs deep link lands on the panel, not at the top of the report", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const report = fs.readFileSync(path.join(__dirname, "..", "quiz-report.js"), "utf8");
+
+  // The jump must run in render(), after the result section is shown, because
+  // render() also scrolls to the top of the report. A scroll inside wirePrefs
+  // would be silently overridden and the panel would never come into view.
+  const renderBody = report.slice(report.indexOf("function render("), report.indexOf("function incomeBlock("));
+  assert.match(renderBody, /if \(prefsRequested\(\)\) \{/, "render() must branch on the prefs flag");
+  assert.match(
+    renderBody,
+    /if \(prefsRequested\(\)\) \{[\s\S]{0,500}scrollIntoView\(\{ block: "center" \}\)/,
+    "the prefs panel must be centred into view from within that branch",
+  );
+
+  const wirePrefsBody = report.slice(report.indexOf("function wirePrefs()"), report.indexOf("function prefsRequested()"));
+  assert.ok(!/scrollIntoView/.test(wirePrefsBody), "wirePrefs must only render the panel state, never scroll");
+
+  // Focusing the heading must not fight the jump.
+  assert.match(renderBody, /__quizFocus\(\$\("rHeading"\), true\)/, "focus must not scroll when a deep link jumps");
+});
+
 test("every analytics event the page can emit is one the server accepts", async () => {
   const fs = require("node:fs");
   const path = require("node:path");

@@ -58,10 +58,13 @@
   function show(el) { if (el) el.hidden = false; }
   function hide(el) { if (el) el.hidden = true; }
 
-  function focusHeading(el) {
+  function focusHeading(el, preventScroll) {
     if (!el) return;
     // Defer so the section is visible before focus lands on it.
-    requestAnimationFrame(function () { el.focus(); });
+    requestAnimationFrame(function () {
+      try { el.focus({ preventScroll: !!preventScroll }); }
+      catch (e) { el.focus(); }
+    });
   }
 
   function reducedMotion() {
