@@ -980,3 +980,50 @@ test("the reveal controls are wired exactly once, so one click cannot submit twi
     "consent is only overwritten when the server actually said something",
   );
 });
+
+test("every analytics event the page can emit is one the server accepts", async () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+
+  const pageSrc = ["quiz.js", "quiz-report.js", "academy-quiz.html"]
+    .map((f) => {
+      try { return fs.readFileSync(path.join(__dirname, "..", f), "utf8"); } catch { return ""; }
+    })
+    .join("\n");
+  const emitted = [...pageSrc.matchAll(/track\("([a-z_]+)"/g)].map((m) => m[1]);
+  assert.ok(emitted.length >= 8, `expected the page to emit funnel events, found ${emitted.length}`);
+
+  const funnel = fs.readFileSync(path.join(__dirname, "quiz-funnel.js"), "utf8");
+  const block = funnel.match(/const EVENTS = \[([\s\S]*?)\]/);
+  assert.ok(block, "the server must keep a readable event whitelist");
+  const allowed = [...block[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
+
+  for (const name of [...new Set(emitted)]) {
+    assert.ok(allowed.includes(name), `the page emits "${name}" but the server answers 400 for it`);
+  }
+
+  // Prove it end to end for each one, with the storage call stubbed out.
+  const { restore } = captureFetch();
+  try {
+    for (const name of [...new Set(emitted)]) {
+      const res = fakeRes();
+      await handler(
+        fakeReq({ method: "POST", body: { action: "event", event: name, clientKey: "qz_0123456789abcdef0123456789abcdef" }, headers: { origin: "https://getassistara.com" } }),
+        res,
+      );
+      assert.notEqual(res.statusCode, 400, `"${name}" must be an accepted event`);
+      assert.notEqual(res.statusCode, 404, `"${name}" must be an accepted event`);
+      assert.ok(res.statusCode < 400, `"${name}" was refused with ${res.statusCode}`);
+    }
+
+    // An event name nobody declared is still refused.
+    const res = fakeRes();
+    await handler(
+      fakeReq({ method: "POST", body: { action: "event", event: "invented_event" }, headers: { origin: "https://getassistara.com" } }),
+      res,
+    );
+    assert.equal(res.statusCode, 400, "unknown events must still be refused");
+  } finally {
+    restore();
+  }
+});

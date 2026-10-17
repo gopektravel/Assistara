@@ -438,6 +438,10 @@ async function actionEvent(req, res, cfg, body) {
     "lead_submitted",
     "email_failed",
     "email_sent",
+    // Withdrawing the promotional opt-in from the saved result page. The
+    // preference itself is the consent PATCH; this is only the funnel record
+    // that the visitor used the control rather than an unsubscribe link.
+    "consent_withdrawn",
     "shared",
     "academy_cta_clicked",
     "abandoned",
