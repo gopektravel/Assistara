@@ -189,12 +189,28 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json(405, { ok: false, error: "Method not allowed" });
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-  // Called only by the quiz API. A deployed function must not become an open
-  // relay that anyone can point at an address of their choosing.
+  // Called only by the quiz API, which presents the project's service
+  // credential.
+  //
+  // That credential is configured in two independent places - the Vercel
+  // function's environment and this function's environment - and the two copies
+  // can drift apart. A project migrated to the new API keys can hold the
+  // sb_secret_ key on one side and the legacy service_role JWT on the other, so
+  // comparing the two strings (as this function used to) refuses a caller that
+  // is genuinely privileged. That is exactly how the report email went missing
+  // while every other part of the flow kept working.
+  //
+  // So do not compare secrets here. Take the credential the caller presents and
+  // let the database be the authority: quiz_results is granted to service_role
+  // alone, so a credential without that role reads nothing and is refused
+  // below. The function stays closed to the public without keeping a second
+  // copy of any secret, and neither side has to be rotated to repair the link.
   const auth = String(req.headers.get("authorization") || "");
-  if (!SERVICE_KEY || !auth.endsWith(SERVICE_KEY)) {
+  const presented =
+    auth.replace(/^Bearer\s+/i, "").trim() ||
+    String(req.headers.get("apikey") || "").trim();
+  if (!presented) {
     return json(401, { ok: false, error: "Unauthorized" });
   }
 
@@ -209,10 +225,13 @@ Deno.serve(async (req: Request) => {
   const token = clean(body.result_token, 128);
   if (!resultId) return json(400, { ok: false, error: "result_id is required" });
 
+  // Every privileged read and write below runs with the caller's own
+  // credential, so a caller without service_role gains nothing by getting this
+  // far.
   const headers = {
     "Content-Type": "application/json",
-    apikey: SERVICE_KEY,
-    Authorization: `Bearer ${SERVICE_KEY}`,
+    apikey: presented,
+    Authorization: `Bearer ${presented}`,
   };
 
   let row: AnyRecord | null = null;
@@ -222,6 +241,11 @@ Deno.serve(async (req: Request) => {
         `&select=id,email,first_name,report,primary_career,email_state,marketing_consent&limit=1`,
       { headers, cache: "no-store" },
     );
+    // PostgREST refuses a credential that is not service_role, so the authority
+    // check happens here. Nothing is read and nothing is leaked.
+    if (res.status === 401 || res.status === 403) {
+      return json(401, { ok: false, error: "Unauthorized" });
+    }
     const rows = await res.json().catch(() => []);
     row = Array.isArray(rows) && rows[0] ? rows[0] : null;
   } catch (error) {

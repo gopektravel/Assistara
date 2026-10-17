@@ -8,9 +8,13 @@ const COOKIE_TTL_SECONDS = 30 * 60;
 const QA_COOKIE_TTL_SECONDS = 10 * 60;
 
 function config() {
-  const url = process.env.SUPABASE_URL;
-  const anon = process.env.SUPABASE_ANON_KEY;
-  const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Leading or trailing whitespace pasted into an env var survives the round
+  // trip into a request header and silently breaks an exact-match check on the
+  // other side. These three are a URL and two credentials, so whitespace in
+  // them is never intentional.
+  const url = String(process.env.SUPABASE_URL || "").trim();
+  const anon = String(process.env.SUPABASE_ANON_KEY || "").trim();
+  const service = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
   const cookieSecret = process.env.ACADEMY_COOKIE_SECRET;
   if (!url || !anon || !service || !cookieSecret || cookieSecret.length < 32) {
     throw new Error("Missing server-side Academy gate configuration");
