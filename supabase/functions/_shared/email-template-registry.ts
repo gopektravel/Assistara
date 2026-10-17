@@ -577,6 +577,88 @@ export const TEMPLATES: TemplateDef[] = [
       senderName: "Assistara Academy",
     }),
   },
+
+  // Quiz: Remote Income Potential result (transactional, requested by the lead)
+  {
+    key: "quiz_result_report",
+    name: "Quiz: personalised result",
+    category: "transactional",
+    subject: "Your quiz result: {{primary_career}} is your match",
+    previewText: "Your personalised remote career report is ready.",
+    // Delivers what the visitor explicitly asked for, so it does not require
+    // marketing consent. Unsubscribe and suppression still apply.
+    isCritical: false,
+    requiredVars: ["first_name", "primary_career", "result_url"],
+    requiredLinks: [{ label: "Result link", test: /\/academy\/quiz\?t=/ }],
+    vars: [
+      { name: "first_name", label: "First name", description: "Quiz lead's first name, or 'there'", type: "string", required: true, sample: "Maria", dynamic: true },
+      { name: "primary_career", label: "Primary career match", description: "Top-scoring VA career", type: "string", required: true, sample: "Executive Support Specialist", dynamic: true },
+      { name: "primary_tagline", label: "Match tagline", description: "One-line description of the primary match", type: "string", required: false, sample: "The calm centre of a busy person's week", dynamic: true },
+      { name: "secondary_career", label: "Secondary match", description: "Second career worth exploring", type: "string", required: false, sample: "Operations Coordinator", dynamic: true },
+      { name: "readiness", label: "Readiness stage", description: "Career readiness stage from q7", type: "string", required: false, sample: "Exploring", dynamic: true },
+      { name: "weekly_hours", label: "Weekly hours", description: "Paid hours a week the lead has", type: "string", required: false, sample: "20", dynamic: true },
+      { name: "goal_income", label: "Monthly income goal", description: "Target monthly income, peso formatted", type: "string", required: false, sample: "\u20b130,000", dynamic: true },
+      { name: "required_rate", label: "Required hourly rate", description: "Rate implied by the goal and hours", type: "string", required: false, sample: "\u20b1433", dynamic: true },
+      { name: "next_step_heading", label: "Next step heading", description: "Timeline-appropriate next step", type: "string", required: false, sample: "Start with the foundations", dynamic: true },
+      { name: "next_step_body", label: "Next step body", description: "Why this step fits the stage", type: "string", required: false, sample: "A structured start saves months.", dynamic: true },
+      { name: "next_step_cta", label: "Next step button", description: "CTA label", type: "string", required: false, sample: "Explore the Academy", dynamic: true },
+      { name: "next_step_url", label: "Next step link", description: "Academy or application link", type: "url", required: false, sample: `${SITE}/academy`, dynamic: true },
+      { name: "result_url", label: "Result link", description: "Token link to the saved report", type: "url", required: true, sample: `${SITE}/academy/quiz?t=sample-token`, dynamic: true },
+      { name: "site_url", label: "Site URL", description: "Canonical site origin", type: "url", required: false, sample: SITE, dynamic: false },
+    ],
+    samples: {
+      first_name: "Maria",
+      primary_career: "Executive Support Specialist",
+      primary_tagline: "The calm centre of a busy person's week",
+      secondary_career: "Operations Coordinator",
+      readiness: "Exploring",
+      weekly_hours: "20",
+      goal_income: "\u20b130,000",
+      required_rate: "\u20b1433",
+      next_step_heading: "Start with the foundations",
+      next_step_body: "A structured start saves months of guessing.",
+      next_step_cta: "Explore the Academy",
+      next_step_url: `${SITE}/academy`,
+      result_url: `${SITE}/academy/quiz?t=sample-token`,
+      site_url: SITE,
+    },
+    render: (v) => {
+      const name = esc(FIRST(v));
+      const result = esc(String(v.result_url ?? `${SITE}/academy/quiz`));
+      const nextUrl = esc(String(v.next_step_url ?? `${SITE}/academy`));
+      const nextCta = esc(String(v.next_step_cta ?? "Explore the Academy"));
+      const rows: [string, string][] = [
+        ["Primary match", String(v.primary_career ?? "Your matched career")],
+        ["Also worth exploring", String(v.secondary_career ?? "-")],
+        ["Where you are starting from", String(v.readiness ?? "-")],
+      ];
+      if (v.weekly_hours) rows.push(["Hours you have each week", `${v.weekly_hours} hrs`]);
+      if (v.goal_income) rows.push(["Monthly income you are aiming for", String(v.goal_income)]);
+      const card = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f5;border:1px solid #ece9e2;border-radius:14px"><tr><td style="padding:14px 18px">${rows.map(([l, val]) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0"><span style="color:#77716a;font-size:13px">${esc(l)}</span><b style="color:#151515;font-size:14px">${esc(val)}</b></div>`).join("")}</td></tr></table>`;
+      const rateLine = v.required_rate
+        ? `<p>For the goal you set, that works out at about <strong>${esc(String(v.required_rate))}</strong> per paid hour at the hours you told us you have. That is arithmetic you can check, not a forecast.</p>`
+        : `<p>Open your result to see the income arithmetic laid out for the hours you actually have.</p>`;
+      return {
+        subject: `Your quiz result: ${v.primary_career} is your match`,
+        html: appShell(
+          "Your remote career result is ready",
+          `<p>Hi ${name},</p><p>Thanks for taking the Remote Income Potential Quiz. Your result is ready, and it is built entirely from the ten answers you gave.</p>${card}${rateLine}<p><strong>${esc(String(v.next_step_heading ?? "Your next step"))}</strong></p><p>${esc(String(v.next_step_body ?? ""))}</p><p style="color:#77716a;font-size:12px;line-height:1.6">Income figures in your report are illustrative calculations based on your answers and example hourly rates. They are not earnings predictions or guarantees, and completing Assistara Academy does not guarantee employment.</p>`,
+          { label: nextCta, href: result },
+        ),
+        text: [
+          `Hi ${FIRST(v)},`,
+          `Thanks for taking the Remote Income Potential Quiz. Your result is ready.`,
+          `Primary match: ${v.primary_career}`,
+          v.secondary_career ? `Also worth exploring: ${v.secondary_career}` : "",
+          v.required_rate ? `That works out at about ${v.required_rate} per paid hour.` : "",
+          `Open your result: ${result}`,
+          `Next step: ${nextCta} ${nextUrl}`,
+          `Income figures are illustrative calculations, not earnings predictions or guarantees.`,
+        ].filter(Boolean).join("\n\n"),
+        senderName: "Assistara Academy",
+      };
+    },
+  },
 ];
 
 // --- website-form frame() copied verbatim (masterclass registration email) --

@@ -45,10 +45,21 @@ const EXPECTED_SENDERS = [
   "masterclass-reminder",
   "payment-complete",
   "paymongo-webhook",
+  "quiz-results",           // quiz result delivery (canonical shared shell)
   "review-gcash-payment",
   "submit-gcash-payment",
   "website-form",
 ];
+
+// Functions that render through the canonical shared shell inherit its brand
+// mark instead of carrying their own copy of it. That shell is verified
+// separately (official logo, absolute HTTPS, no recreated letter), so exempting
+// them here is not a loophole: it is the same guarantee, checked at its single
+// source of truth. Anything that does NOT import the shell must still declare
+// the mark itself.
+function usesCanonicalShell(fn) {
+  return fn.code.includes("_shared/email-brand");
+}
 
 function sender(name) {
   const fn = EMAIL_SOURCES.find((entry) => entry.name === name);
@@ -110,12 +121,28 @@ test("every email shell carries the email-safe brand mark", () => {
   for (const fn of EMAIL_SOURCES) {
     if (fn.name === "masterclass-reminder") continue; // personal-email design, no header shell
     if (fn.name === "admin-email-templates") continue; // test sends use raw template HTML, no branded shell
+    if (usesCanonicalShell(fn)) continue; // mark inherited from _shared/email-brand.ts
     assert.match(
       fn.code,
       /background:\s*#ffd51f\s*;\s*border-radius:\s*12px/i,
       `${fn.name} is missing the yellow Assistara brand mark`
     );
     assert.match(fn.code, /font-weight:\s*900/i, `${fn.name} is missing the bold brand-mark glyph`);
+  }
+});
+
+test("a sender that inherits the brand mark really does import the canonical shell", () => {
+  for (const fn of EMAIL_SOURCES) {
+    if (fn.name === "masterclass-reminder" || fn.name === "admin-email-templates") continue;
+    if (!usesCanonicalShell(fn)) continue;
+    // Merely mentioning the module is not enough: the shell must actually be
+    // rendered into the outgoing HTML.
+    assert.match(
+      fn.code,
+      /import\s*\{[^}]*\bbrandedEmail\b[^}]*\}\s*from\s*["']\.\.\/_shared\/email-brand\.ts["']/,
+      `${fn.name} mentions the shared shell but does not import brandedEmail from it`
+    );
+    assert.match(fn.code, /brandedEmail\s*\(/, `${fn.name} never calls brandedEmail`);
   }
 });
 

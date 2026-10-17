@@ -1145,6 +1145,13 @@
             </button>
           </div>
           <div class="nav-group">
+            <div class="nav-group-title">Leads</div>
+            <button class="nav-item" type="button" data-tab="leads" data-tooltip="Leads">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+              <span class="nav-item-label">Leads</span>
+            </button>
+          </div>
+          <div class="nav-group">
             <div class="nav-group-title">Marketing</div>
             <button class="nav-item" type="button" data-tool="acquisition" data-tooltip="Acquisition Tracker">
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
@@ -1295,6 +1302,7 @@
         </div>
         <div id="signupGoal"></div><div id="stats" class="grid-stats-4"></div>
         <div id="appPipeline" style="display:none"></div>
+        <div id="leadsPanel" style="display:none"></div>
         <div id="capacityPanel" style="display:none">
           <div class="capacity-section">
             <button class="capacityToggle" id="capacityToggle" type="button" aria-expanded="false">
@@ -1488,6 +1496,12 @@
           sub: "Discount codes, redemptions and revenue impact.",
           search: false,
         },
+        leads: {
+          crumb: [["Leads", "All Leads"]],
+          title: "Leads",
+          sub: "Quiz visitors, applicants and enrolments as one view of each prospective student.",
+          search: true,
+        },
         webinar: {
           crumb: [["Marketing", "Lead Tracker"]],
           title: "Lead Tracker",
@@ -1577,7 +1591,7 @@
       }
       function applyUiState(s) {
         if (!s) return;
-        if (["applicants", "students", "webinar", "b2b", "coupons"].includes(s.tab)) tab = s.tab;
+        if (["applicants", "students", "webinar", "b2b", "coupons", "leads"].includes(s.tab)) tab = s.tab;
         if ($("search") && typeof s.q === "string") $("search").value = s.q;
         if ($("studentFilter") && typeof s.studentFilter === "string") $("studentFilter").value = s.studentFilter;
         if ($("studentSort") && typeof s.studentSort === "string") $("studentSort").value = s.studentSort;
@@ -2528,6 +2542,216 @@
       // exceptions, webinar attribution/points, the pending-payment alert, the
       // student filters) can never remain visible in another tab. This is the
       // single place that owns tab isolation — no scattered per-branch resets.
+      // ------------------------------------------------------------------------
+      // Leads: one record per prospective student, merging the quiz funnel with
+      // the existing application pipeline. Views are filters over that single
+      // dataset, never separate lists, so a person can only appear once.
+      // ------------------------------------------------------------------------
+      let leadsData = null;
+      let leadsView = "all";
+      let leadsCareer = "";
+      let leadsSelectedEmail = "";
+      const escHtml = (v) =>
+        String(v ?? "").replace(/[&<>"']/g, (c) =>
+          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      const leadInitials = (l) => ((l.first_name || l.email || "?").trim()[0] || "?").toUpperCase();
+      const fmtDate = (v) => {
+        if (!v) return "";
+        const d = new Date(v);
+        return Number.isNaN(d.getTime())
+          ? ""
+          : d.toLocaleDateString("en-PH", { day: "numeric", month: "short", year: "numeric" });
+      };
+      const LEAD_VIEWS = [
+        ["all", "All Leads"],
+        ["quiz", "Quiz Leads"],
+        ["applied", "Academy Applicants"],
+        ["accepted", "Accepted"],
+        ["paid", "Paid / Enrolled"],
+      ];
+      const leadStage = (l) => {
+        const a = l.application;
+        if (a && (a.payment_status === "paid" || a.paid_at)) return "paid";
+        if (a && (a.decision === "accepted" || a.status === "accepted")) return "accepted";
+        if (a) return "applied";
+        return l.quiz ? "quiz" : "unconverted";
+      };
+      const leadMatchesView = (l) => {
+        if (leadsView === "all") return true;
+        if (leadsView === "quiz") return !!l.quiz;
+        return leadStage(l) === leadsView;
+      };
+      // Only events that genuinely happened are listed, in order.
+      function leadJourney(l) {
+        const ev = [];
+        if (l.application && l.application.created_at)
+          ev.push([l.application.created_at, "Submitted Academy application"]);
+        if (l.quiz) {
+          ev.push([l.quiz.completed_at, "Completed the Remote Income Potential Quiz"]);
+          if (l.quiz.email_state === "sent" && l.quiz.email_sent_at)
+            ev.push([l.quiz.email_sent_at, "Personalised result email sent"]);
+        }
+        const a = l.application;
+        if (a) {
+          if (a.accepted_at || a.decision === "accepted")
+            ev.push([a.accepted_at, "Accepted into Assistara Academy"]);
+          if (a.paid_at || a.payment_status === "paid") ev.push([a.paid_at, "Payment completed"]);
+          if (a.onboarding_completed_at) ev.push([a.onboarding_completed_at, "Student onboarding completed"]);
+        }
+        return ev.filter((e) => e[0]).sort((x, y) => String(x[0]).localeCompare(String(y[0])));
+      }
+      function renderLeadDetail(l) {
+        const q = l.quiz, a = l.application;
+        const answers = (q && q.answers) || {};
+        const journey = leadJourney(l);
+        const ansRows = Object.keys(answers)
+          .sort()
+          .map((k) => {
+            const v = answers[k];
+            const shown = Array.isArray(v) ? v.join(", ") : v;
+            return `<tr><td>${escHtml(k.toUpperCase())}</td><td>${escHtml(shown)}</td></tr>`;
+          })
+          .join("");
+        const report = (q && q.report) || {};
+        const primary = report.primary || {};
+        const secondary = report.secondary || {};
+        return `
+          <div class="lead-detail">
+            <div class="lead-detail-head">
+              <b>${escHtml(l.first_name || l.email)}</b>
+              <span>${escHtml(l.email)}</span>
+            </div>
+            <h4>Journey</h4>
+            ${journey.length
+              ? `<ol class="lead-journey">${journey.map(([d, t]) => `<li><b>${escHtml(fmtDate(d))}</b><span>${escHtml(t)}</span></li>`).join("")}</ol>`
+              : `<p class="lead-empty">No events recorded yet.</p>`}
+            ${q ? `
+            <h4>Quiz result</h4>
+            <div class="lead-kv">
+              <div><span>Primary match</span><b>${escHtml(primary.title || q.primary || "-")}</b></div>
+              <div><span>Secondary match</span><b>${escHtml(secondary.title || q.secondary || "-")}</b></div>
+              <div><span>Readiness stage</span><b>${escHtml(q.readiness_key || "-")}</b></div>
+              <div><span>Monthly income goal</span><b>${q.goal ? "PHP " + escHtml(q.goal) : "-"}</b></div>
+              <div><span>Weekly availability</span><b>${q.weekly_hours ? escHtml(q.weekly_hours) + " hrs" : "-"}</b></div>
+              <div><span>Main obstacle</span><b>${escHtml(q.obstacle || "-")}</b></div>
+              <div><span>Start timeline</span><b>${escHtml(q.timeline || "-")}</b></div>
+              <div><span>Lead priority</span><b>${q.priority ? escHtml(q.priority.score) + " / 100 (" + escHtml(q.priority.band) + ")" : "-"}</b></div>
+              <div><span>Result email</span><b>${escHtml(q.email_state || "-")}</b></div>
+              <div><span>Marketing consent</span><b>${q.consent ? "Given" + (q.consent_at ? " (" + escHtml(fmtDate(q.consent_at)) + ")" : "") : "Not given"}</b></div>
+            </div>
+            ${q.priority && (q.priority.reasons || []).length ? `
+            <p class="lead-note">Priority is an operational follow-up ranking, not a validated score. It is built only from what this person said about timing, experience and available hours. A high income goal alone never raises it.</p>
+            <ul class="lead-priority">${q.priority.reasons.map((r) => `<li><span>${escHtml(r.label)}</span><b>+${escHtml(r.points)}</b></li>`).join("")}</ul>` : ""}
+            ${ansRows ? `<h4>Ten answers</h4><table class="lead-answers"><tbody>${ansRows}</tbody></table>` : ""}` : `
+            <h4>Quiz result</h4><p class="lead-empty">This person has not taken the quiz.</p>`}
+            ${a ? `
+            <h4>Academy conversion</h4>
+            <div class="lead-kv">
+              <div><span>Application</span><b>${escHtml(fmtDate(a.created_at)) || "-"}</b></div>
+              <div><span>Review status</span><b>${escHtml(a.decision || a.status || "-")}</b></div>
+              <div><span>Accepted</span><b>${escHtml(fmtDate(a.accepted_at)) || "-"}</b></div>
+              <div><span>Payment</span><b>${escHtml(a.payment_status || "-")}</b></div>
+              <div><span>Paid</span><b>${escHtml(fmtDate(a.paid_at)) || "-"}</b></div>
+              <div><span>Onboarding</span><b>${escHtml(fmtDate(a.onboarding_completed_at)) || "-"}</b></div>
+            </div>` : ""}
+            ${l.attribution && (l.attribution.token || l.attribution.visitor) ? `
+            <h4>Acquisition</h4>
+            <div class="lead-kv"><div><span>Tracking token</span><b>${escHtml(l.attribution.token || "-")}</b></div></div>` : ""}
+            ${!a && !q ? `<p class="lead-empty">Nothing recorded for this address yet.</p>` : ""}
+          </div>`;
+      }
+      async function renderLeads() {
+        const panel = $("leadsPanel");
+        if (!panel) return;
+        panel.style.display = "";
+        if (!leadsData) {
+          panel.innerHTML = `<div class="lead-loading">Loading leads…</div>`;
+          try {
+            leadsData = await req("quiz-leads", {}, LOGIN);
+          } catch (e) {
+            panel.innerHTML = `<div class="lead-empty">Could not load leads: ${escHtml(e.message)}</div>`;
+            return;
+          }
+        }
+        const d = leadsData || {};
+        const rows = d.leads || [];
+        const f = d.funnel || {};
+        const filtered = rows.filter((l) => {
+          if (!leadMatchesView(l)) return false;
+          if (leadsCareer && String(l.quiz && l.quiz.primary) !== leadsCareer) return false;
+          return match(l);
+        });
+        const careers = [...new Set(rows.map((l) => l.quiz && l.quiz.primary).filter(Boolean))].sort();
+        const stages = [
+          ["Captured quiz leads", f.captured_leads || 0],
+          ["Quiz completions", f.quiz_completions || 0],
+          ["Academy applications", f.applications || 0],
+          ["Accepted", f.accepted || 0],
+          ["Paid enrolments", f.paid || 0],
+        ];
+        const max = Math.max(1, ...stages.map((s) => Number(s[1]) || 0));
+        panel.innerHTML = `
+          <div class="lead-metrics">
+            <div class="stat"><b>${escHtml(f.quiz_completions || 0)}</b><span>Quiz completions</span></div>
+            <div class="stat"><b>${escHtml(f.captured_leads || 0)}</b><span>Captured leads</span><small>Left an email address</small></div>
+            <div class="stat"><b>${escHtml(f.applications || 0)}</b><span>Academy applications</span></div>
+            <div class="stat"><b>${escHtml(f.accepted || 0)}</b><span>Accepted</span></div>
+            <div class="stat"><b>${escHtml(f.paid || 0)}</b><span>Paid enrolments</span></div>
+            <div class="stat"><b>${escHtml(f.quiz_to_paid || 0)}%</b><span>Quiz to paid</span><small>Captured leads that paid</small></div>
+          </div>
+          <div class="lead-funnel">
+            ${stages.map(([label, n]) => `
+              <div class="lead-funnel-row">
+                <span class="lead-funnel-label">${escHtml(label)}</span>
+                <span class="lead-funnel-track"><span class="lead-funnel-fill" style="width:${Math.round((Number(n) / max) * 100)}%"></span></span>
+                <b class="lead-funnel-num">${escHtml(n)}</b>
+              </div>`).join("")}
+            <p class="lead-defs">${escHtml(d.definitions && d.definitions.captured_leads || "")} ${escHtml(d.definitions && d.definitions.quiz_to_paid || "")}</p>
+          </div>
+          <div class="lead-bar">
+            <div class="lead-chips">
+              ${LEAD_VIEWS.map(([k, label]) => `<button type="button" class="lead-chip${k === leadsView ? " is-on" : ""}" data-lead-view="${k}">${escHtml(label)}</button>`).join("")}
+            </div>
+            <select id="leadCareerFilter" aria-label="Filter by career match">
+              <option value="">All career matches</option>
+              ${careers.map((c) => `<option value="${escHtml(c)}"${c === leadsCareer ? " selected" : ""}>${escHtml(c)}</option>`).join("")}
+            </select>
+          </div>
+          ${d.quizAvailable === false ? `<p class="lead-empty">The quiz tables are not available yet, so only applicants are shown.</p>` : ""}
+          <table class="lead-table">
+            <thead><tr><th>Name</th><th>Career match</th><th>Priority</th><th>Stage</th><th>Application</th><th>Payment</th><th>Last activity</th></tr></thead>
+            <tbody>
+              ${filtered.map((l) => {
+                const a = l.application;
+                const pr = (l.quiz && l.quiz.priority) || null;
+                return `<tr data-lead-email="${escHtml(l.email)}"${l.email === leadsSelectedEmail ? ' class="is-open"' : ""}>
+                  <td><b>${escHtml(l.first_name || l.email)}</b><small>${escHtml(l.email)}</small></td>
+                  <td>${escHtml((l.quiz && l.quiz.primary) || "—")}</td>
+                  <td>${pr ? `<b>${escHtml(pr.score)}</b><small>${escHtml(pr.band)}</small>` : "—"}</td>
+                  <td>${escHtml(leadStage(l))}</td>
+                  <td>${escHtml(a ? (a.decision || a.status || "submitted") : "—")}</td>
+                  <td>${escHtml(a ? (a.payment_status || "—") : "—")}</td>
+                  <td>${escHtml(fmtDate(l.last_seen))}</td>
+                </tr>`;
+              }).join("") || `<tr><td colspan="7" class="lead-empty">No leads match this view.</td></tr>`}
+            </tbody>
+          </table>
+          ${leadsSelectedEmail && rows.some((l) => l.email === leadsSelectedEmail)
+            ? renderLeadDetail(rows.find((l) => l.email === leadsSelectedEmail))
+            : ""}`;
+        panel.querySelectorAll("[data-lead-view]").forEach((chip) => {
+          chip.onclick = () => { leadsView = chip.dataset.leadView; renderLeads(); };
+        });
+        const cf = panel.querySelector("#leadCareerFilter");
+        if (cf) cf.onchange = () => { leadsCareer = cf.value; renderLeads(); };
+        panel.querySelectorAll("[data-lead-email]").forEach((tr) => {
+          tr.onclick = () => {
+            const em = tr.dataset.leadEmail;
+            leadsSelectedEmail = leadsSelectedEmail === em ? "" : em;
+            renderLeads();
+          };
+        });
+      }
       function resetTabScaffold() {
         $("capacityPanel").style.display = "none";
         $("signupGoal").innerHTML = "";
@@ -2538,6 +2762,8 @@
         $("stats").innerHTML = "";
         const ap = $("appPipeline");
         if (ap) { ap.style.display = "none"; ap.innerHTML = ""; }
+        const lp = $("leadsPanel");
+        if (lp) { lp.style.display = "none"; lp.innerHTML = ""; }
         const f = $("studentFilters");
         if (f) f.style.display = "none";
         const cf = $("couponFilters");
@@ -2548,6 +2774,7 @@
       async function render() {
         resetTabScaffold();
         drawPending();
+        if (tab === "leads") return renderLeads();
         if (tab === "applicants") {
           const filterKey = applicantFilterKey;
           const sortKey = applicantSortKey;
@@ -3771,6 +3998,13 @@
           return openTool(action);
         }
         if (action === "applicants") return goApplicants(filter || "all");
+        if (action === "leads") {
+          showDashboard({ push: true });
+          tab = "leads";
+          render();
+          saveUiState();
+          return;
+        }
         if (["students", "webinar", "b2b", "coupons"].includes(action)) {
           showDashboard({ push: true });
           tab = action;
