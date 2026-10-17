@@ -677,7 +677,23 @@ async function queueResultEmail(cfg, resultId, token) {
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
-    return r.ok;
+    if (!r.ok) {
+      // The gateway answered but refused or failed. The status and a short
+      // body snippet are the only way to tell an auth mismatch from a
+      // template or provider failure after the fact; the function's error
+      // responses carry nothing sensitive (never the token, the report or
+      // the address), so both are safe to log. Returning the boolean is
+      // unchanged: the visitor's result never depends on this.
+      let detail = "";
+      try {
+        detail = (await r.text()).slice(0, 200);
+      } catch {
+        detail = "(no body)";
+      }
+      console.error("quiz-funnel email queue", r.status, detail);
+      return false;
+    }
+    return true;
   } catch (error) {
     console.error("quiz-funnel email queue", error.message);
     return false;
