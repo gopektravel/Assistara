@@ -101,6 +101,37 @@ a.overviewRow:hover, a.activityRow:hover { border-color: var(--admin-line-strong
 .overviewRow strong { font-size: 13px; text-align: right; }
 .overviewRow--attention { border-left: 3px solid #d97706; }
 .overviewNote { padding: 6px 3px; color: var(--admin-muted); font-size: 11px; line-height: 1.5; }
+
+/* Compact stat cards used inside overview panels (no inline styles) */
+.ovStats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.ovStatCard {
+  min-width: 0; padding: 10px 12px; border: 1px solid var(--admin-line);
+  border-radius: 10px; background: var(--admin-subtle);
+}
+.ovStatLabel { font-size: 11px; font-weight: 700; color: var(--admin-muted); }
+.ovStatValue { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin-top: 3px; }
+.ovStatSub { font-size: 11px; color: var(--admin-muted); margin-top: 2px; }
+.ovStatLink { font-size: 11px; color: var(--admin-ink); text-underline-offset: 2px; }
+
+/* Top acquisition sources — compact bars */
+.ovSourceList { margin-top: 10px; display: grid; gap: 6px; }
+.ovSourceRow { display: grid; grid-template-columns: minmax(0,1fr) 90px 34px; align-items: center; gap: 8px; }
+.ovSourceName { font-size: 11px; color: var(--admin-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ovSourceBar { height: 6px; border-radius: 999px; background: #ece9e1; overflow: hidden; }
+.ovSourceBar i { display: block; height: 100%; border-radius: 999px; background: var(--admin-ink); }
+.ovSourceRow strong { font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Stacked application-stage bar (Applications page) */
+.pipelineBar {
+  display: flex; height: 10px; border-radius: 999px; overflow: hidden;
+  background: #ece9e1; margin: 2px 0 10px;
+}
+.pipelineBar span { display: block; height: 100%; }
+.pipelineBar span + span { box-shadow: inset 1px 0 0 rgba(255,255,255,.55); }
+.pipelineLegend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 12px; }
+.pipelineLegend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--admin-muted); }
+.pipelineLegend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+.pipelineLegend strong { color: var(--admin-ink); }
 .activityRow span { display: grid; gap: 2px; }
 .activityRow strong { font-size: 12px; }
 .activityRow small, .activityRow time { color: var(--admin-muted); font-size: 10px; }
@@ -199,4 +230,69 @@ table tbody tr:hover td { background: #fbfaf6; }
   #ovEmail .grid-stats-2 { grid-template-columns: 1fr; }
   .page-title { font-size: 24px; }
   .btn, button.btn, .primary, button.main { white-space: normal; }
+}
+
+/* ------------------------------------------------------------------ Leads */
+/* The unified prospective-student view: quiz funnel merged with the existing
+   application pipeline. Tokens come from the admin theme, nothing new. */
+.lead-metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.lead-metrics .stat { background: var(--admin-subtle); border: 1px solid var(--admin-line); border-radius: var(--admin-radius-sm); padding: 12px 14px; min-width: 0; }
+.lead-metrics .stat b { display: block; font-size: 22px; font-weight: 800; color: var(--admin-ink); }
+.lead-metrics .stat span { display: block; font-size: 12px; color: var(--admin-muted); margin-top: 2px; }
+.lead-metrics .stat small { display: block; font-size: 11px; color: var(--admin-muted); margin-top: 4px; line-height: 1.4; }
+
+.lead-funnel { background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: var(--admin-radius); padding: 14px 16px; margin-bottom: 14px; }
+.lead-funnel-row { display: grid; grid-template-columns: 190px 1fr 54px; align-items: center; gap: 12px; padding: 5px 0; }
+.lead-funnel-label { font-size: 13px; color: var(--admin-muted); }
+.lead-funnel-track { display: block; background: var(--admin-subtle); border-radius: 999px; height: 12px; overflow: hidden; }
+.lead-funnel-fill { display: block; height: 100%; background: var(--admin-yellow); border-radius: 999px; min-width: 2px; }
+.lead-funnel-num { font-size: 13px; text-align: right; color: var(--admin-ink); }
+.lead-defs { font-size: 11.5px; color: var(--admin-muted); line-height: 1.55; margin: 10px 0 0; }
+
+.lead-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.lead-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lead-chip { border: 1px solid var(--admin-line-strong); background: var(--admin-surface); color: var(--admin-muted); border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.lead-chip.is-on { background: var(--admin-ink); border-color: var(--admin-ink); color: #fff; }
+.lead-bar select { border: 1px solid var(--admin-line-strong); border-radius: var(--admin-radius-sm); padding: 7px 10px; font: inherit; font-size: 12.5px; background: var(--admin-surface); color: var(--admin-ink); }
+
+.lead-table { width: 100%; border-collapse: collapse; background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: var(--admin-radius); overflow: hidden; }
+.lead-table th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--admin-muted); padding: 10px 12px; border-bottom: 1px solid var(--admin-line); background: var(--admin-subtle); }
+.lead-table td { padding: 11px 12px; border-bottom: 1px solid var(--admin-line); font-size: 13px; color: var(--admin-ink); vertical-align: top; }
+.lead-table td b { display: block; font-size: 13.5px; }
+.lead-table td small { display: block; font-size: 11.5px; color: var(--admin-muted); margin-top: 2px; word-break: break-all; }
+.lead-table tbody tr { cursor: pointer; }
+.lead-table tbody tr:hover { background: var(--admin-subtle); }
+.lead-table tbody tr.is-open { background: #fffbe8; }
+
+.lead-detail { margin-top: 16px; background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: var(--admin-radius); padding: 16px 18px; }
+.lead-detail-head b { display: block; font-size: 17px; }
+.lead-detail-head span { display: block; font-size: 12.5px; color: var(--admin-muted); margin-bottom: 6px; word-break: break-all; }
+.lead-detail h4 { margin: 18px 0 8px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--admin-muted); }
+.lead-journey { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--admin-line); }
+.lead-journey li { position: relative; padding: 0 0 12px 16px; }
+.lead-journey li::before { content: ""; position: absolute; left: -5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--admin-yellow); }
+.lead-journey b { display: block; font-size: 12px; color: var(--admin-muted); font-weight: 700; }
+.lead-journey span { display: block; font-size: 13.5px; color: var(--admin-ink); }
+.lead-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 16px; }
+.lead-kv div span { display: block; font-size: 11.5px; color: var(--admin-muted); }
+.lead-kv div b { display: block; font-size: 13px; color: var(--admin-ink); word-break: break-word; }
+.lead-answers { width: 100%; border-collapse: collapse; }
+.lead-answers td { padding: 6px 0; border-bottom: 1px solid var(--admin-line); font-size: 13px; vertical-align: top; }
+.lead-answers td:first-child { width: 52px; font-size: 11px; font-weight: 800; color: var(--admin-muted); }
+.lead-note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--admin-muted); }
+.lead-priority { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--admin-line); }
+.lead-priority li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--admin-line); font-size: 12.5px; }
+.lead-priority li span { color: var(--admin-ink); }
+.lead-priority li b { color: var(--admin-muted); font-weight: 800; white-space: nowrap; }
+.lead-loading, .lead-empty { padding: 18px; color: var(--admin-muted); font-size: 13px; text-align: center; }
+
+@media (max-width: 1100px) {
+  .lead-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lead-funnel-row { grid-template-columns: 130px 1fr 46px; }
+}
+@media (max-width: 680px) {
+  .lead-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lead-funnel-row { grid-template-columns: 1fr; gap: 4px; }
+  .lead-funnel-num { text-align: left; }
+  .lead-table { display: block; overflow-x: auto; white-space: nowrap; }
 }
