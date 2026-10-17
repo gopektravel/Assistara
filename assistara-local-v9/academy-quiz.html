@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/mobile-polish.css?v=3" />
-  <link rel="stylesheet" href="/quiz.css?v=20261017-2" />
+  <link rel="stylesheet" href="/quiz.css?v=20261017-3" />
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Quiz","name":"Assistara Remote Income Potential Quiz","description":"A 10-question Assistara Academy assessment that matches you to a remote virtual assistant career and shows an illustrative income model for the hours you actually have.","url":"https://www.getassistara.com/academy/quiz","publisher":{"@type":"Organization","name":"Assistara Academy","url":"https://www.getassistara.com/academy"}}</script>
 </head>
@@ -59,7 +59,7 @@
           <li><span>✓</span><div><b>A career match, not a personality label</b><small>See exactly which answers pointed to your result.</small></div></li>
           <li><span>✓</span><div><b>Income maths you can check yourself</b><small>Hours multiplied by rate, with the formula shown in full.</small></div></li>
           <li><span>✓</span><div><b>A plan scaled to the time you actually have</b><small>Four weeks, matched to your experience and your schedule.</small></div></li>
-          <li><span>✓</span><div><b>No email needed to see your result</b><small>Answer the questions and it appears. That is all.</small></div></li>
+          <li><span>✓</span><div><b>Your report, emailed if you want it</b><small>One email with your match and your plan, or skip it and read it here.</small></div></li>
         </ul>
         <div class="quiz-landing-actions">
           <button class="btn btn-yellow quiz-cta" type="button" id="startQuiz">Find My Remote Career &amp; Income Potential <span>→</span></button>
@@ -145,40 +145,48 @@
     </section>
 
     <!-- ================================================================
-         3. Reveal step: everything here is optional, and the result does
-            not depend on any of it being filled in.
+         3. Reveal step: emailing the report is the default path and the
+            opt-out sits in plain sight beside it. Nothing here is
+            required to see the result, and the result does not depend on
+            any of it being filled in.
          ================================================================ -->
     <section class="quiz-reveal shell" id="quizReveal" hidden>
       <div class="quiz-reveal-card">
         <p class="quiz-kicker">ALMOST THERE</p>
-        <h2 class="quiz-title" id="revealTitle" tabindex="-1">Want this in your name?</h2>
-        <p class="quiz-support">Totally optional. Your result is ready either way, and nothing here is required to see it.</p>
+        <h2 class="quiz-title" id="revealTitle" tabindex="-1">Get your report by email</h2>
+        <p class="quiz-support">Your result appears on the next screen either way. Add an email and we also send you a copy you can come back to, or skip it and read everything right now.</p>
+
+        <ul class="quiz-email-benefits">
+          <li><span aria-hidden="true">✓</span><div><b>Your career match, saved</b><small>A private link back to this exact report whenever you want it.</small></div></li>
+          <li><span aria-hidden="true">✓</span><div><b>Your income scenarios, to check again later</b><small>The example rates and your hours, ready when you are.</small></div></li>
+          <li><span aria-hidden="true">✓</span><div><b>Your 30-day roadmap, in your inbox</b><small>Four weeks of actions you can start this week.</small></div></li>
+        </ul>
 
         <form id="revealForm" novalidate>
+          <div class="quiz-field">
+            <label for="leadEmail">Email</label>
+            <input type="email" id="leadEmail" name="email" autocomplete="email" maxlength="254" placeholder="you@example.com" aria-describedby="emailHint" />
+            <p class="quiz-field-hint" id="emailHint">We send one email: your report, with a private link back to it.</p>
+            <p class="quiz-field-error" id="emailError" hidden></p>
+          </div>
+
           <div class="quiz-field">
             <label for="firstName">First name <span class="quiz-optional">optional</span></label>
             <input type="text" id="firstName" name="firstName" autocomplete="given-name" maxlength="80" placeholder="Maria" />
             <p class="quiz-field-error" id="nameError" hidden></p>
           </div>
 
-          <div class="quiz-field">
-            <label for="leadEmail">Email <span class="quiz-optional">optional</span></label>
-            <input type="email" id="leadEmail" name="email" autocomplete="email" maxlength="254" placeholder="you@example.com" aria-describedby="emailHint" />
-            <p class="quiz-field-hint" id="emailHint">Only if you want your report sent to you. Leave it blank and nothing is sent.</p>
-            <p class="quiz-field-error" id="emailError" hidden></p>
-          </div>
-
           <div class="quiz-consent">
             <input type="checkbox" id="marketingConsent" name="marketingConsent" aria-describedby="consentHint" />
-            <label for="marketingConsent">Yes, email me occasional Assistara career tips and Academy news.</label>
+            <label for="marketingConsent">Also email me occasional remote-work opportunities, free training resources and useful career advice.</label>
           </div>
-          <p class="quiz-field-hint" id="consentHint">Optional and off by default. You can unsubscribe from any email, and your result is not affected either way.</p>
+          <p class="quiz-field-hint" id="consentHint">Optional and off by default, and kept separate from your report. You can stop these emails from any of them or from your result page, and your result is not affected either way.</p>
 
           <input type="text" id="quizHoneypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="quiz-honeypot" />
 
           <div class="quiz-reveal-actions">
-            <button class="btn btn-yellow" type="submit" id="revealSubmit">Show my result <span aria-hidden="true">→</span></button>
-            <button class="quiz-skip" type="button" id="revealSkip">Skip, just show my result</button>
+            <button class="btn btn-yellow" type="submit" id="revealSubmit">Email me my report <span aria-hidden="true">→</span></button>
+            <button class="quiz-skip quiz-optout" type="button" id="revealSkip">View my results without email</button>
           </div>
           <p class="quiz-submit-error" id="submitError" hidden role="alert"></p>
         </form>
@@ -214,6 +222,17 @@
             <button class="quiz-skip" type="button" id="retakeQuiz">Take the quiz again</button>
           </div>
         </div>
+
+        <!-- Email preferences live with the report they belong to, so a
+             promotional opt-in can be withdrawn from the same private link the
+             report was shared on. Withdrawing never removes the report. -->
+        <div class="quiz-prefs" id="rPrefs" hidden>
+          <div class="quiz-prefs-copy">
+            <b>Email preferences</b>
+            <p id="rPrefsText">We never sent you promotional email without asking first.</p>
+          </div>
+          <button class="quiz-skip" type="button" id="rPrefsWithdraw" hidden>Stop occasional career emails</button>
+        </div>
       </div>
     </section>
 
@@ -225,7 +244,7 @@
        existing Assistara modules so the quiz attributes exactly like an
        Academy application does. -->
   <script src="/app.js?v=20260917-USD-FIX"></script>
-  <script src="/quiz.js?v=20261017-2"></script>
-  <script src="/quiz-report.js?v=20261017-2"></script>
+  <script src="/quiz.js?v=20261017-3"></script>
+  <script src="/quiz-report.js?v=20261017-3"></script>
 </body>
 </html>

@@ -55,7 +55,7 @@ function fakeReq({ method = "GET", url = "/api/quiz-funnel", body, headers = {} 
 // gets past normalisation.
 const FULL_ANSWERS = {
   q1: "b", q2: 25000, q3: "c", q4: "a", q5: "c",
-  q6: ["tnone"], q7: "a", q8: "a", q9: "b", q10: "a",
+  q6: ["tnone"], q7: "a", q8: "a", q9: ["none"], q10: "a",
 };
 
 // -------------------------------------------------------------------- tokens
@@ -568,4 +568,291 @@ test("an analytics event only writes columns quiz_events declares", async () => 
   } finally {
     restore();
   }
+});
+
+// ------------------------------------------------------------- consent model
+//
+// Report delivery and promotional consent are two different decisions and the
+// tests below pin that down from the outside: what gets written to the row,
+// what comes back in the response, and what never happens when someone says
+// no. Nothing here can eat a result: declining email must still return it.
+
+test("an address alone asks for the report, never for promotional email", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: { action: "submit", answers: FULL_ANSWERS, email: "reader@example.com" },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const insert = posted.find((p) => p.method === "POST" && /\/rest\/v1\/quiz_results$/.test(p.url));
+    assert.equal(insert.body.marketing_consent, false, "an address on its own must never opt anyone in");
+    assert.ok(insert.body.consent_source, "a decline is still a decision, so it must be recorded");
+    assert.match(insert.body.consent_source, /declined/, "the source must say the opt-in was declined");
+    assert.ok(insert.body.marketing_consent_at, "the decision must be timestamped");
+
+    const body = JSON.parse(res.body || "{}");
+    assert.equal(body.reportDelivery, true, "the report was requested, so that must be reported");
+    assert.equal(body.marketingConsent, false);
+    assert.ok(body.report, "the report is returned either way");
+  } finally {
+    restore();
+  }
+});
+
+test("an explicit opt-in is stored with its source and a timestamp", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: {
+          action: "submit",
+          answers: FULL_ANSWERS,
+          email: "optin@example.com",
+          firstName: "Maria",
+          marketingConsent: true,
+        },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const insert = posted.find((p) => p.method === "POST" && /\/rest\/v1\/quiz_results$/.test(p.url));
+    assert.equal(insert.body.marketing_consent, true);
+    assert.ok(insert.body.marketing_consent_at, "consent true must always carry a timestamp");
+    assert.ok(insert.body.consent_source);
+    assert.doesNotMatch(insert.body.consent_source, /withdrawn/);
+
+    const body = JSON.parse(res.body || "{}");
+    assert.equal(body.marketingConsent, true, "the page must be told what was actually stored");
+  } finally {
+    restore();
+  }
+});
+
+test("marketing consent is impossible without an email to send it to", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: { action: "submit", answers: FULL_ANSWERS, marketingConsent: true },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const insert = posted.find((p) => p.method === "POST" && /\/rest\/v1\/quiz_results$/.test(p.url));
+    assert.equal(insert.body.email, null, "nothing was sent anywhere");
+    assert.equal(insert.body.marketing_consent, false, "consent without an address must never be stored as an opt-in");
+    assert.equal(insert.body.marketing_consent_at, null, "there is no decision to timestamp without an address");
+    assert.equal(insert.body.consent_source, null);
+    assert.ok(JSON.parse(res.body || "{}").report, "the result is returned regardless");
+  } finally {
+    restore();
+  }
+});
+
+test("submitting again without the opt-in withdraws an earlier consent for that address", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: { action: "submit", answers: FULL_ANSWERS, email: "changing@example.com" },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const withdraw = posted.find((p) => p.method === "PATCH" && /marketing_consent=eq\.true/.test(p.url));
+    assert.ok(withdraw, "a later decline must reach the stored opt-in");
+    assert.equal(withdraw.body.marketing_consent, false);
+    assert.ok(withdraw.body.marketing_consent_at, "the withdrawal must be timestamped");
+    assert.match(withdraw.body.consent_source, /withdrawn/);
+    assert.match(withdraw.url, /email=eq\.changing%40example\.com/, "the withdrawal is scoped to that address");
+    assert.ok(JSON.parse(res.body || "{}").report, "withdrawing is best-effort and never blocks the result");
+  } finally {
+    restore();
+  }
+});
+
+test("an explicit opt-in never withdraws anything", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: { action: "submit", answers: FULL_ANSWERS, email: "keep@example.com", marketingConsent: true },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const withdraw = posted.find((p) => p.method === "PATCH" && /marketing_consent=eq\.true/.test(p.url));
+    assert.equal(withdraw, undefined, "saying yes must not clear anyone's stored consent");
+  } finally {
+    restore();
+  }
+});
+
+test("the unsubscribe action needs the private result token and only ever withdraws", async () => {
+  const posted = [];
+  const real = global.fetch;
+  // The PATCH returns the updated row, which is what "it actually happened"
+  // looks like from PostgREST's side.
+  global.fetch = async (url, init) => {
+    posted.push({ url: String(url), method: init && init.method, body: init && init.body ? JSON.parse(init.body) : null });
+    return { ok: true, status: 200, text: async () => JSON.stringify([{ id: "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0" }]) };
+  };
+  try {
+    const res = fakeRes();
+    const token = internal.mintToken();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: { action: "consent", token, marketingConsent: false },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const patch = posted.find((p) => p.method === "PATCH");
+    assert.ok(patch, "the withdrawal must be written");
+    assert.match(patch.url, new RegExp(`result_token_hash=eq\\.${internal.hashToken(token)}`), "looked up by the stored hash");
+    assert.equal(patch.body.marketing_consent, false);
+    assert.match(patch.body.consent_source, /withdrawn/);
+
+    // The report itself is untouched: opting out never costs someone their result.
+    const body = JSON.parse(res.body || "{}");
+    assert.equal(body.ok, true);
+    assert.equal(body.marketingConsent, false);
+    assert.equal(posted.filter((p) => p.method === "DELETE").length, 0, "nothing is ever deleted");
+  } finally {
+    global.fetch = real;
+  }
+});
+
+test("the unsubscribe action refuses a token it cannot verify, before any write", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    for (const token of ["", "short", "x".repeat(200)]) {
+      const res = fakeRes();
+      await handler(
+        fakeReq({ method: "POST", body: { action: "consent", token }, headers: { origin: "https://getassistara.com" } }),
+        res,
+      );
+      assert.equal(res.statusCode, 400, `token ${JSON.stringify(token.slice(0, 12))} must be refused`);
+      assert.equal(posted.length, 0, "nothing may be written for an unverified token");
+    }
+  } finally {
+    restore();
+  }
+});
+
+test("the unsubscribe action reports an unknown token rather than pretending it worked", async () => {
+  const real = global.fetch;
+  global.fetch = async () => ({ ok: true, status: 200, text: async () => "[]" });
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: { action: "consent", token: internal.mintToken(), marketingConsent: false },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    assert.equal(res.statusCode, 404, "a token that matches no row must not report success");
+  } finally {
+    global.fetch = real;
+  }
+});
+
+test("a stored result returns its email preferences so the page can show them", async () => {
+  const real = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () =>
+      JSON.stringify([{
+        id: "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
+        report: { intro: { heading: "hi" } },
+        marketing_consent: true,
+        marketing_consent_at: "2026-10-17T10:00:00.000Z",
+        consent_source: "quiz_results_form_v2",
+      }]),
+  });
+  try {
+    const token = internal.mintToken();
+    const res = fakeRes();
+    await handler(
+      fakeReq({ method: "GET", url: `/api/quiz-funnel?action=result&t=${token}`, headers: {} }),
+      res,
+    );
+    const body = JSON.parse(res.body || "{}");
+    assert.equal(body.ok, true);
+    assert.equal(body.marketingConsent, true, "the stored decision travels with the result");
+    assert.ok(body.consentSource, "so does where it was recorded");
+    assert.doesNotMatch(res.body, /answers/, "the answers that produced it are never exposed on this route");
+  } finally {
+    global.fetch = real;
+  }
+});
+
+test("a result read never writes a consent decision", async () => {
+  const real = global.fetch;
+  const writes = [];
+  global.fetch = async (url, init) => {
+    if (init && init.method && init.method !== "GET") {
+      writes.push({ url: String(url), method: init.method, body: init.body ? JSON.parse(init.body) : null });
+    }
+    return {
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify([{ id: "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0", report: { intro: {} } }]),
+    };
+  };
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({ method: "GET", url: `/api/quiz-funnel?action=result&t=${internal.mintToken()}`, headers: {} }),
+      res,
+    );
+    // The only write on this route is the view counter, which is a read
+    // metric, never a preference.
+    assert.ok(writes.length <= 1, "reading a result must not fan out into writes");
+    for (const w of writes) {
+      assert.doesNotMatch(w.url, /marketing_consent/, "reading must never change a consent decision");
+      assert.deepEqual(
+        Object.keys(w.body || {}).sort(),
+        ["last_viewed_at", "result_view_count"],
+        "the only write is the view counter",
+      );
+    }
+  } finally {
+    global.fetch = real;
+  }
+});
+
+test("the meta action serves the qualifications question, not the old workday one", async () => {
+  const res = fakeRes();
+  await handler(fakeReq({ method: "GET", url: "/api/quiz-funnel?action=meta", headers: {} }), res);
+  const body = JSON.parse(res.body || "{}");
+  const questions = body.questions || (body.meta && body.meta.questions) || [];
+  assert.equal(questions.length, 10);
+  const q9 = questions.find((q) => q.id === "q9");
+  assert.ok(q9, "question 9 must still be served");
+  assert.equal(q9.type, "multi", "qualifications are multi-select");
+  assert.match(q9.title, /qualifications and certificates/i);
+  const keys = (q9.options || []).map((o) => o.key);
+  assert.ok(keys.includes("none"), "the no-formal-qualifications option must be offered");
+  assert.ok(keys.includes("academy"), "the already-hold-the-Academy-certificate option must be offered");
+  assert.ok(keys.includes("bach"));
+  const flat = JSON.stringify(body);
+  assert.doesNotMatch(flat, /perfect workday/i, "the lifestyle question no longer exists");
 });

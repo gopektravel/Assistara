@@ -15,6 +15,10 @@
 //   * Certification is never sold as mandatory and never implies employment.
 //   * Someone who already holds a certificate is pushed toward portfolio,
 //     specialization, positioning and outreach — not toward another certificate.
+//   * Qualifications (q9) are reported as preparation the person already has.
+//     Holding nothing formal is written about neutrally, never as a gap, and
+//     the Academy's Certificate of Completion only ever appears as a future
+//     option, never as something the visitor holds because they took a quiz.
 //   * A 30-day plan is a plan, never a promise of employment.
 //   * Lifestyle copy never promises unlimited flexibility for every VA role.
 // ----------------------------------------------------------------------------
@@ -25,7 +29,9 @@ const {
   QUESTIONS,
   scoreAnswers,
   readinessFor,
+  educationFor,
   incomeScenarios,
+  hoursForAnswer,
   peso,
 } = require("./_quiz-engine");
 
@@ -185,6 +191,39 @@ function buildIncome(answers) {
 // E. Existing strengths (q6)
 // ---------------------------------------------------------------------------
 
+function listPhrase(items) {
+  const list = (items || []).filter(Boolean);
+  if (!list.length) return "";
+  if (list.length === 1) return list[0];
+  return `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`;
+}
+
+// E1. Qualifications and certificates (q9). Reported as preparation already
+// held, never as a requirement, and holding nothing is written about neutrally
+// rather than as a gap.
+function buildQualifications(answers) {
+  const edu = educationFor(answers);
+  const paras = [];
+  if (edu.noneSelected || !edu.entries.length) {
+    paras.push(
+      "You told us you do not hold formal qualifications or certificates yet. That is a normal place to start, not a penalty: remote clients buy proof that a task got done, and proof is built from sample work rather than from paper.",
+    );
+  } else {
+    paras.push(`On paper you already bring ${listPhrase(edu.labels)}.`);
+    paras.push(
+      edu.relevantTraining || edu.tier >= 3
+        ? "Training and qualifications shorten the path by giving you method and vocabulary, but clients still ask to see the work. The fastest way to use what you already hold is to attach it to one finished sample project."
+        : "That is a real foundation, and remote clients rarely ask for transcripts. The way to use it is to let it decide which tasks you take on first, then prove those tasks with sample work.",
+    );
+  }
+  if (edu.holdsAcademyCertificate) {
+    paras.push(
+      "You also told us you already hold an Assistara Academy certificate of completion, so this plan is about turning that certificate into evidence people can open, not about collecting another one.",
+    );
+  }
+  return Object.assign({}, edu, { paragraphs: paras });
+}
+
 function buildStrengths(answers) {
   const q6 = QUESTIONS.find((q) => q.id === "q6");
   const chosen = Array.isArray(answers.q6) ? answers.q6 : [];
@@ -192,6 +231,7 @@ function buildStrengths(answers) {
     .filter((o) => chosen.includes(o.key))
     .map((o) => o.label);
   const none = chosen.includes("tnone");
+  const qualifications = buildQualifications(answers);
   const paras = [];
   if (none) {
     paras.push(
@@ -211,7 +251,10 @@ function buildStrengths(answers) {
       );
     }
   }
-  return { selected, none, paragraphs: paras };
+  // Qualifications travel with the same block: both are "what you already
+  // bring", and neither is allowed to read as a requirement.
+  paras.push.apply(paras, qualifications.paragraphs);
+  return { selected, none, qualifications, paragraphs: paras };
 }
 
 // ---------------------------------------------------------------------------
@@ -550,12 +593,21 @@ function buildRoadmap(answers, scoring, readiness, obstacle) {
     target.tasks = target.tasks.concat([`This week also: ${obstacle.advice[1] || obstacle.advice[0]}`]);
   }
 
+  // The Academy certificate appears only as an option, and only ever worded
+  // from what the visitor actually told us about holding it.
+  const education = educationFor(answers);
+  const certificateNote = education.holdsAcademyCertificate
+    ? "You already hold an Assistara Academy certificate of completion, so treat it as proof that you can finish something demanding. Mention it once in your profile, then let the sample work above do the talking."
+    : "Optional, never required: if structured training would help, Assistara Academy awards a Certificate of Completion once a student finishes every class and passes all four phase exams plus the final Academy exam.";
+
   return {
     heading: "Your 30-day roadmap",
     track,
     load,
     note: loadNote,
     promise: "This is a 30-day plan for building evidence and starting outreach. It is not a promise of employment.",
+    certificateNote,
+    certificateHeld: !!education.holdsAcademyCertificate,
     weeks,
   };
 }
@@ -579,7 +631,14 @@ function buildPortfolio(scoring, readiness) {
 }
 
 // ---------------------------------------------------------------------------
-// J. Lifestyle fit (q9) — no promise of unlimited flexibility
+// J. Lifestyle fit (q3 availability + q1 motivation) — no promise of
+// unlimited flexibility.
+//
+// The dedicated "perfect workday" question was folded into the qualifications
+// step to keep the quiz at ten questions, so the shape of the week is modelled
+// from two answers the visitor already gave (how many hours they actually
+// have, and what they want remote work to change) instead of being read off a
+// single one. Every variant keeps an honest caveat.
 // ---------------------------------------------------------------------------
 
 const WORKDAY = {
@@ -604,17 +663,33 @@ const WORKDAY = {
     caveat: "It is also the route with the least day-to-day flexibility, which is exactly what some people want.",
   },
   parttime: {
-    title: "Evenings or weekends alongside current work",
-    body: "Part-time and project-based remote work is a real category. Small businesses and solo founders routinely need a few focused hours a week rather than a full-time hire.",
+    title: "A steady part-time week around what you already do",
+    body: "Part-time and project-based remote work is a real category. Small businesses and solo founders routinely need a focused block of hours each week rather than a full-time hire.",
     caveat: "Pay is usually hourly or per project, and hours may be limited while you build proof and reputation.",
   },
 };
 
+function lifestyleKeyFor(answers) {
+  const load = hoursLabel(answers);
+  const motivation = answers && answers.q1;
+  if (load === "light") return motivation === "b" ? "family" : "flexible";
+  if (motivation === "c") return "travel";
+  return load === "steady" ? "parttime" : "stable";
+}
+
 function buildLifestyle(answers) {
-  const q9 = QUESTIONS.find((q) => q.id === "q9");
-  const o = q9.options.find((x) => x.key === answers.q9) || q9.options[0];
-  const copy = WORKDAY[o.workday] || WORKDAY.flexible;
-  return { label: o.label, ...copy };
+  const key = lifestyleKeyFor(answers);
+  const copy = WORKDAY[key] || WORKDAY.flexible;
+  const hours = hoursForAnswer(answers);
+  const intro = `You told us you can put in about ${hours.hours} hours a week${hours.openEnded ? ` (modelled at ${hours.hours}, because you picked "${hours.label}")` : ""}, so this is the week shape that fits those hours.`;
+  return {
+    key,
+    label: hours.label,
+    hours: hours.hours,
+    title: copy.title,
+    body: `${intro} ${copy.body}`,
+    caveat: copy.caveat,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -746,5 +821,6 @@ module.exports = {
   READINESS_COPY,
   trackFor,
   hoursLabel,
+  lifestyleKeyFor,
   whyMatches,
 };

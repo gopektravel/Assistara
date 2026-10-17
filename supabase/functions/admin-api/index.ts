@@ -74,7 +74,7 @@ Deno.serve(async(req:Request)=>{
     // The quiz tables are added by a later migration. Until it is applied this
     // must still serve the applicant half of the picture rather than erroring.
     const {data:results,error:quizError}=await db.from("quiz_results")
-      .select("id,created_at,first_name,email,marketing_consent,marketing_consent_at,primary_career,secondary_career,readiness_stage,readiness_key,income_goal_php,weekly_hours,obstacle,start_timeline,lead_priority,lead_priority_band,lead_priority_reasons,answers,email_state,email_sent_at,acquisition_visit_id,acquisition_visitor_id,tracking_token,application_id,report")
+      .select("id,created_at,first_name,email,marketing_consent,marketing_consent_at,consent_source,primary_career,secondary_career,readiness_stage,readiness_key,income_goal_php,weekly_hours,obstacle,start_timeline,lead_priority,lead_priority_band,lead_priority_reasons,answers,email_state,email_sent_at,acquisition_visit_id,acquisition_visitor_id,tracking_token,application_id,report")
       .order("created_at",{ascending:false}).limit(limit);
     const quizAvailable=!quizError;
     const rows=quizAvailable?(results||[]):[];
@@ -133,7 +133,7 @@ Deno.serve(async(req:Request)=>{
         first_name:(r&&r.first_name)||(a&&String(a.name||"").trim().split(/\s+/)[0])||"",
         first_seen:(a&&a.created_at)||(r&&r.created_at)||null,
         last_seen:(r&&r.created_at)||(a&&a.created_at)||null,
-        quiz:r?{completed_at:r.created_at,primary:r.primary_career,secondary:r.secondary_career,readiness_stage:r.readiness_stage,readiness_key:r.readiness_key,goal:r.income_goal_php,weekly_hours:r.weekly_hours,obstacle:r.obstacle,timeline:r.start_timeline,priority:priorityOf(r,!!a),answers:r.answers||{},report:r.report||null,email_state:r.email_state,email_sent_at:r.email_sent_at,consent:r.marketing_consent===true,consent_at:r.marketing_consent_at}:null,
+        quiz:r?{completed_at:r.created_at,primary:r.primary_career,secondary:r.secondary_career,readiness_stage:r.readiness_stage,readiness_key:r.readiness_key,goal:r.income_goal_php,weekly_hours:r.weekly_hours,obstacle:r.obstacle,timeline:r.start_timeline,priority:priorityOf(r,!!a),answers:r.answers||{},report:r.report||null,email_state:r.email_state,email_sent_at:r.email_sent_at,consent:r.marketing_consent===true,consent_at:r.marketing_consent_at,consent_source:r.consent_source||null}:null,
         application:a?{id:a.id,created_at:a.created_at,status:a.status,decision:a.decision,payment_status:a.payment_status,accepted_at:a.accepted_at,paid_at:a.paid_at,onboarding_completed_at:a.onboarding_completed_at,source:a.source}:null,
         attribution:r?{visit:r.acquisition_visit_id,visitor:r.acquisition_visitor_id,token:r.tracking_token}:null,
         segments:s,

@@ -2590,6 +2590,13 @@
           ev.push([l.quiz.completed_at, "Completed the Remote Income Potential Quiz"]);
           if (l.quiz.email_state === "sent" && l.quiz.email_sent_at)
             ev.push([l.quiz.email_sent_at, "Personalised result email sent"]);
+          if (l.quiz.consent_at)
+            ev.push([l.quiz.consent_at,
+              l.quiz.consent === true
+                ? "Opted in to occasional career emails"
+                : /withdrawn/i.test(String(l.quiz.consent_source || ""))
+                  ? "Withdrew from occasional career emails"
+                  : "Declined occasional career emails"]);
         }
         const a = l.application;
         if (a) {
@@ -2600,19 +2607,52 @@
         }
         return ev.filter((e) => e[0]).sort((x, y) => String(x[0]).localeCompare(String(y[0])));
       }
+      // Promotional consent is recorded at the moment it was DECIDED, so the
+      // four states below are all readable from the row: given, declined,
+      // withdrawn, or never asked. The report and its delivery are separate
+      // decisions and are shown on their own rows.
+      function leadConsentLabel(q) {
+        if (!q) return "-";
+        const at = q.consent_at ? fmtDate(q.consent_at) : "";
+        const suffix = at ? ` (${at})` : "";
+        if (q.consent === true) return "Given" + suffix;
+        if (at) return /withdrawn/i.test(String(q.consent_source || "")) ? "Withdrawn" + suffix : "Declined" + suffix;
+        return "Not given";
+      }
+      function leadQualifications(q) {
+        const qz = q && q.report && q.report.strengths && q.report.strengths.qualifications;
+        if (!qz || !Array.isArray(qz.labels) || !qz.labels.length) {
+          return qz && qz.noneSelected ? "No formal qualifications yet" : "-";
+        }
+        return qz.labels.join(", ");
+      }
       function renderLeadDetail(l) {
         const q = l.quiz, a = l.application;
         const answers = (q && q.answers) || {};
         const journey = leadJourney(l);
+        const report = (q && q.report) || {};
         const ansRows = Object.keys(answers)
           .sort()
           .map((k) => {
             const v = answers[k];
+            // Multi-select answers are stored as keys. Where the stored report
+            // already carries the human labels for them, show those instead of
+            // the keys, so a lead can be read without a decoder ring.
+            if (Array.isArray(v)) {
+              const labels =
+                k === "q9" && report.strengths && report.strengths.qualifications
+                  ? report.strengths.qualifications.labels
+                  : k === "q6" && report.strengths
+                    ? report.strengths.selected
+                    : null;
+              if (labels && labels.length && labels.length === v.length) {
+                return `<tr><td>${escHtml(k.toUpperCase())}</td><td>${escHtml(labels.join(", "))}</td></tr>`;
+              }
+            }
             const shown = Array.isArray(v) ? v.join(", ") : v;
             return `<tr><td>${escHtml(k.toUpperCase())}</td><td>${escHtml(shown)}</td></tr>`;
           })
           .join("");
-        const report = (q && q.report) || {};
         const primary = report.primary || {};
         const secondary = report.secondary || {};
         return `
@@ -2637,8 +2677,10 @@
               <div><span>Start timeline</span><b>${escHtml(q.timeline || "-")}</b></div>
               <div><span>Lead priority</span><b>${q.priority ? escHtml(q.priority.score) + " / 100 (" + escHtml(q.priority.band) + ")" : "-"}</b></div>
               <div><span>Result email</span><b>${escHtml(q.email_state || "-")}</b></div>
-              <div><span>Marketing consent</span><b>${q.consent ? "Given" + (q.consent_at ? " (" + escHtml(fmtDate(q.consent_at)) + ")" : "") : "Not given"}</b></div>
+              <div><span>Qualifications</span><b>${escHtml(leadQualifications(q))}</b></div>
+              <div><span>Promotional email</span><b>${escHtml(leadConsentLabel(q))}</b></div>
             </div>
+            <p class="lead-note">"Promotional email" is the occasional opportunities and career-advice opt-in, recorded when this person decided. It is separate from the report: the result is always shown either way, and a result email is a transactional delivery of what they asked for.</p>
             ${q.priority && (q.priority.reasons || []).length ? `
             <p class="lead-note">Priority is an operational follow-up ranking, not a validated score. It is built only from what this person said about timing, experience and available hours. A high income goal alone never raises it.</p>
             <ul class="lead-priority">${q.priority.reasons.map((r) => `<li><span>${escHtml(r.label)}</span><b>+${escHtml(r.points)}</b></li>`).join("")}</ul>` : ""}

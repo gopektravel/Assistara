@@ -14,10 +14,15 @@
 //   POST { action: "progress" }        resume-after-refresh (anonymous)
 //   POST { action: "event" }           funnel analytics, idempotent
 //   POST { action: "submit" }          score + persist + return the report
+//   POST { action: "consent" }         withdraw promotional consent (unsubscribe)
 //
 // Product rules enforced here:
 //   * No email or account is required to get a result. `email` is optional and
-//     `marketingConsent` defaults to false and is stored with a timestamp.
+//     the report is returned in this response whether it was given or not.
+//   * Report delivery and promotional consent are two separate decisions:
+//     giving an address asks for the report (transactional), and the
+//     marketing opt-in is stored separately, unchecked by default, and can be
+//     withdrawn later from the result page or by declining again.
 //   * The result is ALWAYS returned in the submit response. Email is fired
 //     afterwards and best-effort: a provider outage can never eat a result.
 //   * Report tokens are 32 random bytes; only their SHA-256 hash is stored, so
@@ -38,6 +43,11 @@ const report = require("./_quiz-report");
 const SITE = "https://www.getassistara.com";
 const RESULT_TOKEN_TTL_DAYS = 7;
 
+// Where a promotional consent decision was recorded. Stored for every visitor
+// who leaves an address, whether they said yes or no, so the admin surface can
+// show an accurate "given / declined / withdrawn" state with a date.
+const CONSENT_SOURCE = "quiz_results_form_v2";
+
 // How long a half-finished quiz is still resumable after a refresh. Exposed on
 // the meta route so the browser never hardcodes the window, and so a session
 // parked overnight is not silently picked back up days later.
@@ -50,6 +60,9 @@ const LIMITS = {
   event: { count: 120, windowMs: 60 * 60 * 1000 },
   // A result may only be re-read a handful of times per hour per identity.
   result: { count: 30, windowMs: 60 * 60 * 1000 },
+  // Consent withdrawals need the private result token anyway; this only stops
+  // someone hammering the endpoint.
+  consent: { count: 20, windowMs: 60 * 60 * 1000 },
 };
 
 // Below this, a submission is humanly implausible. It is still accepted and
@@ -345,7 +358,7 @@ async function actionResult(req, res, cfg, query) {
     const r = await rest(
       cfg,
       "GET",
-      `quiz_results?result_token_hash=eq.${hashToken(token)}&result_token_expires_at=gt.${new Date().toISOString()}&select=id,report,first_name,primary_career,secondary_career,readiness_stage,readiness_key,created_at,result_view_count&limit=1`,
+      `quiz_results?result_token_hash=eq.${hashToken(token)}&result_token_expires_at=gt.${new Date().toISOString()}&select=id,report,first_name,primary_career,secondary_career,readiness_stage,readiness_key,created_at,result_view_count,marketing_consent,marketing_consent_at,consent_source,email_state&limit=1`,
     );
     const row = r.ok && Array.isArray(r.data) ? r.data[0] : null;
     if (!row || !row.report) return fail(res, 404, "Not found");
@@ -367,6 +380,12 @@ async function actionResult(req, res, cfg, query) {
       readinessStage: row.readiness_stage,
       readinessKey: row.readiness_key,
       createdAt: row.created_at,
+      // Email preferences travel with the result so the page can show the
+      // state honestly, and so an emailed link can offer the withdrawal.
+      marketingConsent: row.marketing_consent === true,
+      marketingConsentAt: row.marketing_consent_at || null,
+      consentSource: row.consent_source || null,
+      emailState: row.email_state || null,
       // The answers that produced this report are never exposed on this route.
       siteUrl: SITE,
     });
@@ -471,22 +490,25 @@ async function actionSubmit(req, res, cfg, body) {
   // --- lead fields (all optional) -------------------------------------------
   const rawName = String(body.firstName || "").replace(/\s+/g, " ").trim().slice(0, 80);
   const rawEmail = String(body.email || "").trim().toLowerCase().slice(0, 254);
+  const decidedAt = new Date();
 
   if (rawEmail && !EMAIL_RE.test(rawEmail)) {
     return fail(res, 400, "That email address does not look right.", { field: "email" });
   }
-  // A name on its own is fine; an email is only meaningful with a name-less
-  // report too, so neither is required.
-  if (!rawName && !rawEmail) {
-    // Still allowed: a fully anonymous result is a valid outcome.
-  }
 
-  // Marketing consent is optional, defaults to false, and is only recorded when
-  // it was actually given. Consent without an address is meaningless, so it is
-  // downgraded rather than silently stored as an opt-in.
+  // Two separate decisions, deliberately kept apart:
+  //
+  //  1. REPORT DELIVERY (transactional). Leaving an address on the reveal step
+  //     means "send me my report". The results email is the thing the visitor
+  //     asked for, so it never depends on promotional consent.
+  //  2. PROMOTIONAL CONSENT (opt-in). Unchecked by default, needs an address,
+  //     and recorded with the time it was decided so a later decline reads as
+  //     a withdrawal rather than as an absence of data.
+  //
+  // Neither is required: declining both still returns the full report.
+  const reportDelivery = !!rawEmail && body.reportDelivery !== false;
   let marketingConsent = body.marketingConsent === true || body.marketingConsent === "true";
   if (marketingConsent && !rawEmail) marketingConsent = false;
-  if (marketingConsent && !rawName) marketingConsent = false;
 
   const elapsedMs = Number.isFinite(Number(body.elapsedMs)) ? Math.max(0, Math.floor(Number(body.elapsedMs))) : null;
   const attr = normaliseAttribution(body.attribution);
@@ -542,9 +564,16 @@ async function actionSubmit(req, res, cfg, body) {
       idempotency_key: idempotencyKey,
       first_name: rawName || null,
       email: rawEmail || null,
+      // The timestamp records the DECISION, so "what did this person choose,
+      // and when" is answerable from the row itself. The schema only requires
+      // a timestamp when consent is true.
       marketing_consent: marketingConsent,
-      marketing_consent_at: marketingConsent ? now.toISOString() : null,
-      consent_source: marketingConsent ? "quiz_results_form_v1" : null,
+      marketing_consent_at: rawEmail ? decidedAt.toISOString() : null,
+      consent_source: marketingConsent
+        ? CONSENT_SOURCE
+        : rawEmail
+          ? `${CONSENT_SOURCE}_declined`
+          : null,
       answers,
       scores: scoring.scores,
       primary_career: scoring.primary,
@@ -599,6 +628,8 @@ async function actionSubmit(req, res, cfg, body) {
         readinessStage: readiness.stage,
         readinessKey: readiness.key,
         emailQueued: false,
+        reportDelivery,
+        marketingConsent,
       });
     }
 
@@ -618,10 +649,18 @@ async function actionSubmit(req, res, cfg, body) {
       ).catch(() => {});
     }
 
+    // A later decline withdraws an earlier opt-in for the same address, so
+    // "unsubscribe" is honoured even when it happens by filling the form in
+    // again rather than by clicking a link. Best-effort, and never blocking.
+    if (resultId && rawEmail && !marketingConsent) {
+      void withdrawPriorConsent(cfg, rawEmail, decidedAt);
+    }
+
     // The report is already in the response, so the email is fire-and-forget.
     // A provider outage is logged, surfaced in admin, and never blocks this.
+    // Only a requested report is ever queued here: this send is transactional.
     let emailQueued = false;
-    if (rawEmail) {
+    if (reportDelivery) {
       emailQueued = await queueResultEmail(cfg, resultId, token);
     }
 
@@ -644,12 +683,79 @@ async function actionSubmit(req, res, cfg, body) {
       readinessStage: readiness.stage,
       readinessKey: readiness.key,
       emailQueued,
+      // The two email decisions travel back separately so the page can report
+      // them honestly: a report was requested or it was not, and the
+      // promotional opt-in was given or declined. Neither changes the report.
+      reportDelivery,
+      marketingConsent,
       flaggedFast: elapsedMs !== null && elapsedMs < PLAUSIBLE_MIN_MS,
     });
   } catch (error) {
     if (isMissingRelation(error)) return fail(res, 503, "Quiz storage is not available yet");
     console.error("quiz-funnel submit", error.message);
     return fail(res, 500, "Could not save that result");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Consent withdrawal
+// ---------------------------------------------------------------------------
+// Promotional consent is honoured wherever it is withdrawn: through the
+// unsubscribe control on the saved result page, or simply by submitting the
+// form again with the opt-in left off. Both end at the same place, the stored
+// decision, so a withdrawn address can never later be read as an active opt-in.
+async function actionConsent(req, res, cfg, body) {
+  noStore(res);
+  const token = String(body.token || "");
+  if (!token || token.length < 20 || token.length > 128) {
+    return fail(res, 400, "Invalid request", { field: "token" });
+  }
+  const rateKey = rateKeyFor(req, cfg);
+  if (await overLimit(cfg, rateKey, "consent")) return fail(res, 429, "Too many requests");
+
+  try {
+    const at = new Date();
+    const r = await rest(
+      cfg,
+      "PATCH",
+      `quiz_results?result_token_hash=eq.${hashToken(token)}`,
+      {
+        marketing_consent: false,
+        marketing_consent_at: at.toISOString(),
+        consent_source: `${CONSENT_SOURCE}_withdrawn`,
+      },
+    );
+    const rows = r.ok && Array.isArray(r.data) ? r.data : [];
+    if (!rows.length) return fail(res, 404, "Not found");
+    return send(res, 200, {
+      ok: true,
+      marketingConsent: false,
+      marketingConsentAt: at.toISOString(),
+      // The report itself is untouched: withdrawing an opt-in never removes
+      // access to a result.
+    });
+  } catch (error) {
+    if (isMissingRelation(error)) return fail(res, 503, "Quiz storage is not available yet");
+    console.error("quiz-funnel consent", error.message);
+    return fail(res, 500, "Could not update that preference");
+  }
+}
+
+async function withdrawPriorConsent(cfg, email, at) {
+  try {
+    const r = await rest(
+      cfg,
+      "PATCH",
+      `quiz_results?email=eq.${encodeURIComponent(email)}&marketing_consent=eq.true`,
+      {
+        marketing_consent: false,
+        marketing_consent_at: (at instanceof Date ? at : new Date()).toISOString(),
+        consent_source: `${CONSENT_SOURCE}_withdrawn`,
+      },
+    );
+    return !!r.ok;
+  } catch {
+    return false;
   }
 }
 
@@ -752,6 +858,7 @@ module.exports = async function quizFunnel(req, res) {
     if (postAction === "progress") return actionProgress(req, res, cfg, body);
     if (postAction === "event") return actionEvent(req, res, cfg, body);
     if (postAction === "submit") return actionSubmit(req, res, cfg, body);
+    if (postAction === "consent") return actionConsent(req, res, cfg, body);
     return fail(res, 400, "Unknown action");
   } catch (error) {
     console.error("quiz-funnel", error && error.message);
@@ -766,6 +873,7 @@ module.exports._internal = {
   normaliseAttribution,
   validClientKey,
   EMAIL_RE,
+  CONSENT_SOURCE,
   RESULT_TOKEN_TTL_DAYS,
   PLAUSIBLE_MIN_MS,
   LIMITS,

@@ -19,11 +19,20 @@
 //     ever produced — scores are internal ordering only and are never shown.
 //   * Career matching is fully separate from readiness and from purchase
 //     intent: the income goal (q2) and the timeline (q10) never touch scores.
+//   * Qualifications (q9) are preparation context, not a gate. Education can
+//     only ADD a little readiness and a few follow-up points, it never
+//     subtracts anything, and it never changes which career suits someone, so
+//     a beginner with no formal qualifications is never penalised.
 //   * Every hypothetical hourly rate is labelled an example unless verified.
 // ----------------------------------------------------------------------------
 
-const SCORING_VERSION = "quiz-scoring-v1";
-const REPORT_VERSION = "quiz-report-v1";
+// v2: question 9 became a qualifications and certificates multi-select (the
+// lifestyle question is now modelled from availability + motivation), and
+// education was wired into readiness and lead priority as a small, additive
+// signal. Both versions are stored on every saved result so a v1 row is never
+// silently reinterpreted by v2 rules.
+const SCORING_VERSION = "quiz-scoring-v2";
+const REPORT_VERSION = "quiz-report-v2";
 
 // Canonical career order doubles as the deterministic tie-break: when two
 // careers tie on score, the earlier one in this list becomes the primary.
@@ -168,16 +177,23 @@ const QUESTIONS = [
   },
   {
     id: "q9",
-    type: "single",
-    purpose: "Lifestyle fit",
+    type: "multi",
+    purpose: "Qualifications and certificates (preparation input, never a penalty)",
     kicker: "QUESTION 9 OF 10",
-    title: "If you could design your perfect workday, what would it look like?",
+    title: "Which of these qualifications and certificates do you already hold?",
+    support:
+      "Choose everything that applies, or tick the last one on its own if nothing here applies yet. Nothing here is required to get your result, and taking this quiz does not award a certificate: an Assistara Academy Certificate of Completion is earned by finishing the Academy and passing its exams.",
     options: [
-      { key: "a", label: "A few focused hours with plenty of personal time", workday: "flexible" },
-      { key: "b", label: "Flexible hours around my family", workday: "family" },
-      { key: "c", label: "Working from different places while traveling", workday: "travel" },
-      { key: "d", label: "A stable full-time remote schedule", workday: "stable" },
-      { key: "e", label: "Evenings or weekends alongside my current responsibilities", workday: "parttime" },
+      { key: "hs", label: "High school diploma or senior high school" },
+      { key: "voc", label: "Vocational or technical training, such as a TESDA certificate" },
+      { key: "assoc", label: "Associate degree" },
+      { key: "bach", label: "Bachelor's degree" },
+      { key: "master", label: "Master's degree" },
+      { key: "doctorate", label: "Doctorate or professional degree, such as law, medicine or engineering" },
+      { key: "procert", label: "Professional certifications in my field or tools" },
+      { key: "vatrain", label: "Remote-work or VA training: a course, bootcamp or workshop" },
+      { key: "academy", label: "I already hold an Assistara Academy certificate of completion" },
+      { key: "none", label: "No formal qualifications or certificates yet", exclusive: true },
     ],
   },
   {
@@ -566,6 +582,41 @@ const TOOL_WEIGHT = 1; // multiplier applied to TOOL_WEIGHTS values
 const MAX_TOOL_CONTRIBUTION = 3;
 
 // ---------------------------------------------------------------------------
+// Qualifications model (q9)
+// ---------------------------------------------------------------------------
+// Formal education is preparation context, never an entry ticket. These rules
+// are deliberately one-directional:
+//   * education can only ADD readiness (capped, beginners only) and a few
+//     follow-up points, never subtract anything,
+//   * it never changes which career suits someone,
+//   * someone holding "no formal qualifications" scores exactly like someone
+//     before this question existed.
+// Practical, client-facing training is worth slightly more than a degree
+// because it sits closer to the work a client actually buys.
+const EDUCATION = {
+  hs: { tier: 1, leadPoints: 0, label: "High school diploma or senior high school" },
+  voc: { tier: 2, leadPoints: 2, label: "Vocational or technical training" },
+  assoc: { tier: 2, leadPoints: 2, label: "Associate degree" },
+  bach: { tier: 3, leadPoints: 3, label: "Bachelor's degree" },
+  master: { tier: 4, leadPoints: 3, label: "Master's degree" },
+  doctorate: { tier: 4, leadPoints: 3, label: "Doctorate or professional degree" },
+  procert: { tier: 2, leadPoints: 4, label: "Professional certifications", relevant: true },
+  vatrain: { tier: 2, leadPoints: 4, label: "Remote-work or VA training", relevant: true },
+  academy: {
+    tier: 3,
+    leadPoints: 4,
+    label: "Assistara Academy certificate of completion",
+    relevant: true,
+    academyCertificate: true,
+  },
+  none: { tier: 0, leadPoints: 0, label: "No formal qualifications or certificates yet" },
+};
+
+// The most generous single qualification wins, so stacking overlapping paper
+// can never inflate a score. Documented ceiling: 4 priority points.
+const EDUCATION_MAX_LEAD_POINTS = 4;
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -595,6 +646,36 @@ function sortedCareers(scores) {
     if (d !== 0) return d;
     return CAREER_ORDER.indexOf(a) - CAREER_ORDER.indexOf(b);
   });
+}
+
+// What the person told us they already hold on q9. Reads defensively: it is
+// also called from lead priority, which accepts partial payloads.
+function educationFor(answers) {
+  const q9 = question("q9");
+  const chosen = Array.isArray(answers && answers.q9) ? answers.q9 : [];
+  const entries = [];
+  for (const key of chosen) {
+    const meta = (q9 && optionOf(q9, key)) || null;
+    const rule = EDUCATION[key];
+    if (!meta || !rule) continue;
+    entries.push({ key, label: rule.label, questionLabel: meta.label, ...rule });
+  }
+  return {
+    chosen: entries.map((e) => e.key),
+    entries,
+    labels: entries.map((e) => e.label),
+    // The strongest single qualification, so overlapping paper cannot stack.
+    tier: entries.reduce((m, e) => Math.max(m, Number(e.tier) || 0), 0),
+    leadPoints: Math.min(
+      EDUCATION_MAX_LEAD_POINTS,
+      entries.reduce((m, e) => Math.max(m, Number(e.leadPoints) || 0), 0),
+    ),
+    // Client-facing training (VA training, professional or Academy
+    // certification) counts as preparation the moment it is held.
+    relevantTraining: entries.some((e) => !!e.relevant),
+    holdsAcademyCertificate: entries.some((e) => !!e.academyCertificate),
+    noneSelected: entries.some((e) => e.key === "none"),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -734,12 +815,18 @@ function readinessFor(answers) {
   const tools = Array.isArray(answers.q6) ? answers.q6 : [];
   const toolCount = tools.filter((t) => t !== "tnone").length;
   const noneSelected = tools.includes("tnone");
+  const education = educationFor(answers);
 
   let stage = step;
   // Transferable digital skills can move a beginner along one stage. Owning a
   // certificate never does this on its own: a certificate is not the same as
   // being ready for a client.
   if (stage <= 2 && toolCount >= 5) stage += 1;
+  // Qualifications work the same way and only that way: a degree or relevant
+  // training can lift a beginner one stage, but paper alone can never reach
+  // "preparing for clients", and it is ignored entirely once real experience
+  // has had its say. Holding nothing formal changes nothing.
+  if (stage <= 2 && (education.tier >= 3 || education.relevantTraining)) stage += 1;
   if (stage < 1) stage = 1;
   if (stage > 5) stage = 5;
 
@@ -751,6 +838,7 @@ function readinessFor(answers) {
     toolCount,
     noneSelected,
     experienceStep: step,
+    education,
   };
 }
 
@@ -768,6 +856,9 @@ function readinessFor(answers) {
 //     false priority out of ambition.
 //   - Career match contributes NOTHING. Which VA path suits someone says
 //     nothing about how ready they are to enrol.
+// Qualifications (q9) contribute at most EDUCATION_MAX_LEAD_POINTS points and
+// only ever add to the total, so a lead is never pushed down the list for
+// holding no formal qualifications.
 const LEAD_PRIORITY = {
   max: 100,
   // Surfaces that already know the person applied may add this on top of the
@@ -814,17 +905,21 @@ function leadPriority(answers, opts) {
     }
   }
 
-  // 2. Relevant skills or previous experience, self-declared on q7.
+  // 2. Relevant skills or previous experience, self-declared on q7. This reads
+  // the raw experience answer rather than the readiness stage on purpose: the
+  // stage can be lifted by qualifications, and counting that lift here as
+  // well would credit education twice and quietly inflate a beginner.
   const readiness = readinessFor(a);
-  const expPts = LEAD_PRIORITY.experience[readiness.stage] || 0;
+  const expStage = readiness.experienceStep;
+  const expPts = LEAD_PRIORITY.experience[expStage] || 0;
   score += expPts;
   if (expPts > 0) {
     reasons.push({
-      label: readiness.stage >= 5
+      label: expStage >= 5
         ? "Has already done paid client work"
-        : readiness.stage >= 4
+        : expStage >= 4
           ? "Has portfolio work or practiced real tasks"
-          : readiness.stage >= 3
+          : expStage >= 3
             ? "Has completed a course or holds a certificate"
             : "Has taught themselves relevant skills",
       points: expPts,
@@ -847,7 +942,20 @@ function leadPriority(answers, opts) {
     });
   }
 
-  // 4. Already submitted an Academy application. Genuine behavioural
+  // 4. Qualifications and certificates. Small, capped and only ever additive:
+  // preparation the person already has, never a penalty for having none.
+  // Practical, client-facing training is worth a touch more than a degree
+  // because it sits closer to the work a client buys.
+  const education = educationFor(a);
+  if (education.leadPoints > 0) {
+    score += education.leadPoints;
+    reasons.push({
+      label: `Already holds ${education.labels.join(" and ")}`,
+      points: education.leadPoints,
+    });
+  }
+
+  // 5. Already submitted an Academy application. Genuine behavioural
   // evidence, so it counts, but only when it actually happened.
   if (opts && opts.applied === true) {
     score += LEAD_PRIORITY.applicationBonus;
@@ -939,6 +1047,9 @@ module.exports = {
   normaliseAnswers,
   scoreAnswers,
   readinessFor,
+  educationFor,
+  EDUCATION,
+  EDUCATION_MAX_LEAD_POINTS,
   leadPriority,
   leadPriorityBand,
   LEAD_PRIORITY,

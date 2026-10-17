@@ -99,7 +99,7 @@
     "Your answers are starting to pattern-match.",
     "A few people change their answer here. That is fine.",
     "Second to last. You are nearly there.",
-    "Last question, then your result.",
+    "Tick only what you already hold.",
     "Done. Building your result now.",
   ];
 
@@ -331,8 +331,10 @@
         cur = cur.filter(function (k) { return k !== key; });
       }
 
-      // "None yet" is mutually exclusive with every other tool choice. Clearing
-      // it here is a UI nicety; the server refuses the combination regardless.
+      // An "exclusive" option ("none yet", "no formal qualifications") is
+      // mutually exclusive with every other choice on the same question.
+      // Clearing it here is a UI nicety; the server refuses the combination
+      // regardless.
       var exclusive = (q.options || []).filter(function (o) { return o.exclusive; })
         .map(function (o) { return o.key; });
       if (exclusive.indexOf(key) !== -1 && checked) {

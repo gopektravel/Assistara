@@ -36,7 +36,10 @@ function base(over) {
       q6: ["t1", "t4"],
       q7: "a",
       q8: "a",
-      q9: "a",
+      // The qualifications question. Default is the lowest rung so that the
+      // "no formal qualifications" path is the reference point: nothing a test
+      // asserts about readiness or lead priority may depend on a degree.
+      q9: ["hs"],
       q10: "a",
     },
     over || {},
@@ -258,8 +261,8 @@ test("all seven career outcomes are reachable as the primary match", () => {
 
 test("ties resolve to the canonical order, never to chance", () => {
   // Two careers at an identical score.
-  const a = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "a", q5: "b", q6: ["tnone"], q7: "a", q8: "a", q9: "a", q10: "a" });
-  const b = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "b", q5: "a", q6: ["tnone"], q7: "a", q8: "a", q9: "a", q10: "a" });
+  const a = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "a", q5: "b", q6: ["tnone"], q7: "a", q8: "a", q9: ["hs"], q10: "a" });
+  const b = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "b", q5: "a", q6: ["tnone"], q7: "a", q8: "a", q9: ["hs"], q10: "a" });
   // both have one 6 and one 4 on different careers -> tie at 6
   assert.notEqual(a.primary, null);
   const winner = CAREER_ORDER.indexOf(a.primary) < CAREER_ORDER.indexOf(b.primary) ? a : b;
@@ -326,37 +329,37 @@ test("transferable tools can move a beginner forward one stage", () => {
 const PROFILES = [
   {
     name: "Total beginner, part-time, family motivation",
-    answers: { q1: "b", q2: 15000, q3: "b", q4: "a", q5: "c", q6: ["tnone"], q7: "a", q8: "a", q9: "b", q10: "a" },
+    answers: { q1: "b", q2: 15000, q3: "b", q4: "a", q5: "c", q6: ["tnone"], q7: "a", q8: "a", q9: ["none"], q10: "a" },
     expect: { readinessMax: 2, track: "beginner" },
   },
   {
     name: "Creative person with existing digital skills",
-    answers: { q1: "c", q2: 40000, q3: "d", q4: "b", q5: "b", q6: ["t2", "t3", "t1"], q7: "b", q8: "b", q9: "c", q10: "b" },
+    answers: { q1: "c", q2: 40000, q3: "d", q4: "b", q5: "b", q6: ["t2", "t3", "t1"], q7: "b", q8: "b", q9: ["voc"], q10: "b" },
     expect: { primary: "creative" },
   },
   {
     name: "Experienced sales professional",
-    answers: { q1: "d", q2: 80000, q3: "e", q4: "e", q5: "e", q6: ["t5", "t4", "t1"], q7: "e", q8: "e", q9: "d", q10: "b" },
+    answers: { q1: "d", q2: 80000, q3: "e", q4: "e", q5: "e", q6: ["t5", "t4", "t1"], q7: "e", q8: "e", q9: ["bach"], q10: "b" },
     expect: { primary: "growth", readinessMin: 5, track: "experienced" },
   },
   {
     name: "Technically inclined beginner",
-    answers: { q1: "a", q2: 30000, q3: "c", q4: "f", q5: "f", q6: ["t6", "t1"], q7: "a", q8: "b", q9: "a", q10: "b" },
+    answers: { q1: "a", q2: 30000, q3: "c", q4: "f", q5: "f", q6: ["t6", "t1"], q7: "a", q8: "b", q9: ["hs"], q10: "b" },
     expect: { primary: "systems" },
   },
   {
     name: "Existing certified VA without clients",
-    answers: { q1: "d", q2: 45000, q3: "d", q4: "a", q5: "d", q6: ["t1", "t4", "t5"], q7: "c", q8: "d", q9: "a", q10: "c" },
+    answers: { q1: "d", q2: 45000, q3: "d", q4: "a", q5: "d", q6: ["t1", "t4", "t5"], q7: "c", q8: "d", q9: ["vatrain"], q10: "c" },
     expect: { track: "certified", readinessMax: 3 },
   },
   {
     name: "E-commerce worker changing careers",
-    answers: { q1: "e", q2: 35000, q3: "c", q4: "g", q5: "g", q6: ["t7", "t5"], q7: "d", q8: "d", q9: "e", q10: "c" },
+    answers: { q1: "e", q2: 35000, q3: "c", q4: "g", q5: "g", q6: ["t7", "t5"], q7: "d", q8: "d", q9: ["procert"], q10: "c" },
     expect: { primary: "builder" },
   },
   {
     name: "Person with limited equipment or internet",
-    answers: { q1: "a", q2: 10000, q3: "a", q4: "c", q5: "c", q6: ["tnone"], q7: "a", q8: "f", q9: "e", q10: "e" },
+    answers: { q1: "a", q2: 10000, q3: "a", q4: "c", q5: "c", q6: ["tnone"], q7: "a", q8: "f", q9: ["none"], q10: "e" },
     expect: { obstacle: "equipment", readinessMax: 2, timeline: "exploring" },
   },
 ];
@@ -442,9 +445,9 @@ test("every one of the ten answers shapes the report", () => {
     },
     {
       field: "q9",
-      from: { q9: "a" },
-      to: { q9: "d" },
-      pick: (r) => r.lifestyle.title,
+      from: { q9: ["hs"] },
+      to: { q9: ["bach", "procert"] },
+      pick: (r) => r.strengths.qualifications.labels.join(",") + "|" + r.readiness.stage,
     },
     {
       field: "q10",
@@ -572,15 +575,31 @@ test("the obstacle the visitor chose is answered with practical advice", () => {
 });
 
 test("lifestyle copy never promises unlimited flexibility", () => {
-  for (const k of ["a", "b", "c", "d", "e"]) {
-    const r = reportFor({ q9: k });
-    assert.ok(r.lifestyle.caveat, `q9=${k} needs an honest caveat`);
+  // The lifestyle block is modelled from availability (q3) and motivation
+  // (q1), so every combination that can be picked must stay honest.
+  const combos = [];
+  for (const q3 of ["a", "b", "c", "d", "e", "f"]) {
+    for (const q1 of ["a", "b", "c", "d", "e"]) combos.push({ q3, q1 });
+  }
+  const seen = new Set();
+  for (const combo of combos) {
+    const r = reportFor(combo);
+    seen.add(r.lifestyle.key);
+    const id = `q3=${combo.q3},q1=${combo.q1}`;
+    assert.ok(r.lifestyle.caveat, `${id} needs an honest caveat`);
     assert.match(
       r.lifestyle.caveat,
       /not every|negotiated|constraint|flexibility|hours may|core hours|overlap/i,
-      `q9=${k} caveat must actually set a limit`,
+      `${id} caveat must actually set a limit`,
     );
-    assert.doesNotMatch(r.lifestyle.body, /always|guaranteed|any time you want|unlimited/i);
+    assert.doesNotMatch(r.lifestyle.body, /always|guaranteed|any time you want|unlimited/i, id);
+    assert.doesNotMatch(r.lifestyle.title, /always|guaranteed|unlimited/i, id);
+    // The block must still name the hours the visitor said they actually have.
+    assert.equal(r.lifestyle.hours, r.income.weeklyHours, `${id} must use the reported hours`);
+  }
+  assert.ok(seen.size >= 4, `at least four distinct week shapes should be reachable, saw ${[...seen]}`);
+  for (const key of Object.keys(report.WORKDAY)) {
+    assert.ok(seen.has(key), `WORKDAY.${key} must be reachable from some answer`);
   }
 });
 
@@ -590,6 +609,181 @@ test("every roadmap is scaled to the available hours", () => {
   assert.equal(light.roadmap.load, "light");
   assert.equal(full.roadmap.load, "full");
   assert.notEqual(light.roadmap.note, full.roadmap.note);
+});
+
+// ---------------------------------------------------------------------------
+// 7b. Qualifications question (§5 q9)
+//
+// The rule these tests exist to hold: formal education may only ever ADD.
+// It cannot lower readiness, cannot lower follow-up priority, cannot change a
+// career match, and cannot be mistaken for a certificate the visitor holds.
+// ---------------------------------------------------------------------------
+test("q9 covers the documented qualification paths, including an exclusive none", () => {
+  const q9 = engine.question("q9");
+  assert.equal(q9.type, "multi", "qualifications must be multi-select");
+  const keys = q9.options.map((o) => o.key);
+  for (const key of ["hs", "voc", "assoc", "bach", "master", "doctorate", "procert", "vatrain", "academy", "none"]) {
+    assert.ok(keys.includes(key), `q9 is missing the ${key} option`);
+  }
+  // Every option must be present in the EDUCATION scoring table too, so a new
+  // option cannot ship without a documented rule behind it.
+  for (const o of q9.options) {
+    assert.ok(engine.EDUCATION[o.key], `q9.${o.key} has no EDUCATION rule`);
+  }
+  assert.equal(engine.EDUCATION.none.exclusive, undefined);
+  assert.equal(q9.options.find((o) => o.key === "none").exclusive, true, "none stands alone");
+  assert.equal(q9.options.filter((o) => o.exclusive).length, 1, "exactly one exclusive option");
+  // The Academy certificate is an explicit, separately worded choice.
+  const academy = q9.options.find((o) => o.key === "academy");
+  assert.ok(/I already hold/i.test(academy.label), "the Academy option must be first person and past tense");
+});
+
+test("'no formal qualifications' is mutually exclusive with holding qualifications", () => {
+  const ok = normaliseAnswers(base({ q9: ["none"] }));
+  assert.equal(ok.ok, true);
+  assert.deepEqual(ok.answers.q9, ["none"]);
+
+  const bad = normaliseAnswers(base({ q9: ["bach", "none"] }));
+  assert.equal(bad.ok, false, "mixing 'none' with a qualification must be refused");
+  assert.match(bad.error, /exclusive/i);
+});
+
+test("an empty qualifications answer is refused, and unknown keys are rejected", () => {
+  assert.equal(normaliseAnswers(base({ q9: [] })).ok, false);
+  assert.equal(normaliseAnswers(base({ q9: ["law-school"] })).ok, false);
+  // Canonical order and de-duplication behave like every other multi-select.
+  const r = normaliseAnswers(base({ q9: ["procert", "hs", "hs"] }));
+  assert.deepEqual(r.answers.q9, ["hs", "procert"]);
+});
+
+test("qualifications never change which career suits someone", () => {
+  const none = score({ q9: ["none"] });
+  const doctorate = score({ q9: ["master", "doctorate"] });
+  const trained = score({ q9: ["vatrain", "academy"] });
+  assert.equal(none.primary, doctorate.primary, "a degree must not move the primary match");
+  assert.equal(none.primary, trained.primary, "training must not move the primary match");
+  assert.equal(none.secondary, doctorate.secondary);
+  assert.deepEqual(none.scores, doctorate.scores, "career scores must be identical");
+  assert.deepEqual(none.scores, trained.scores);
+});
+
+test("holding no formal qualifications is never a penalty", () => {
+  // The reference path: a beginner with nothing on paper scores exactly like
+  // the same beginner with a high school diploma, because neither is a gate.
+  const none = readinessFor(norm({ q9: ["none"], q7: "a", q6: ["tnone"] }));
+  const hs = readinessFor(norm({ q9: ["hs"], q7: "a", q6: ["tnone"] }));
+  assert.equal(none.stage, hs.stage, "no qualification must not read as a lower stage");
+
+  const noneLead = leadPriority(base({ q9: ["none"] }));
+  const hsLead = leadPriority(base({ q9: ["hs"] }));
+  assert.equal(noneLead.score, hsLead.score, "no qualification must not lose follow-up points");
+
+  // With nothing else in the score, holding nothing formal is a flat zero:
+  // the baseline, never a minus.
+  const nothingElse = base({ q9: ["none"], q3: "a", q10: "e" });
+  assert.equal(leadPriority(nothingElse).score, 0, "holding nothing formal contributes zero, never a minus");
+
+  // And the report must not dress it up as a gap.
+  const r = reportFor({ q9: ["none"] });
+  const text = r.strengths.paragraphs.join(" ");
+  assert.match(text, /normal place to start|common place to start/i);
+  // It must never read as a gap the visitor has to apologise for.
+  assert.doesNotMatch(text, /you (are )?missing|hold you back|falling behind|disadvantage|put you at a (big )?disadvantage/i);
+  assert.equal(r.strengths.qualifications.noneSelected, true);
+});
+
+test("education can lift a beginner by one stage and no further", () => {
+  const bare = readinessFor(norm({ q9: ["none"], q7: "a", q6: ["tnone"] }));
+  const degree = readinessFor(norm({ q9: ["bach"], q7: "a", q6: ["tnone"] }));
+  assert.equal(bare.stage, 1);
+  assert.equal(degree.stage, 2, "a degree may lift a beginner exactly one stage");
+
+  // Even stacked with every transferable tool, paper alone cannot reach
+  // "preparing for clients".
+  const everything = readinessFor(
+    norm({ q9: ["bach", "master", "doctorate"], q7: "a", q6: ["t1", "t2", "t3", "t4", "t5", "t6"] }),
+  );
+  assert.ok(everything.stage <= 3, `qualifications + tools must not imply client readiness, got ${everything.stage}`);
+
+  // Once real experience has had its say, education stops adding entirely.
+  const veteran = readinessFor(norm({ q9: ["master", "doctorate"], q7: "e", q6: ["tnone"] }));
+  assert.equal(veteran.stage, 5, "education must not stack on top of experience");
+  const certified = readinessFor(norm({ q9: ["academy"], q7: "c", q6: ["t1"] }));
+  assert.equal(certified.stage, 3, "the Academy certificate is not a readiness shortcut either");
+});
+
+test("education contributes additively to lead priority, and only up to the ceiling", () => {
+  const plain = leadPriority(base({ q9: ["none"] }));
+  const qualified = leadPriority(base({ q9: ["bach"] }));
+  const stacked = leadPriority(base({ q9: ["master", "doctorate", "academy", "procert"] }));
+
+  assert.ok(qualified.score > plain.score, "holding qualifications should add follow-up points");
+  assert.equal(
+    qualified.score - plain.score,
+    engine.EDUCATION.bach.leadPoints,
+    "a bachelor's degree is worth exactly its documented points",
+  );
+  assert.ok(
+    stacked.score - plain.score <= engine.EDUCATION_MAX_LEAD_POINTS,
+    "education points must be capped, overlapping paper cannot stack",
+  );
+  assert.ok(
+    stacked.score - plain.score <= 4,
+    "the documented ceiling for education is 4 points",
+  );
+
+  // Practical training is worth at least as much as an academic degree,
+  // because it sits closer to the work a client actually buys.
+  const degree = leadPriority(base({ q9: ["bach"] })).score;
+  const trained = leadPriority(base({ q9: ["vatrain"] })).score;
+  assert.ok(trained >= degree, "client-facing training must not be worth less than a degree");
+
+  // The reason is readable and part of the explained total.
+  const reasons = leadPriority(base({ q9: ["bach"] })).reasons;
+  const eduReason = reasons.find((r) => /holds/i.test(r.label));
+  assert.ok(eduReason, "a qualification must explain its own points");
+  assert.ok(eduReason.label.length > 8);
+  assert.ok(!/[—–]/.test(eduReason.label), "reasons must not contain typographic dashes");
+});
+
+test("taking the quiz never implies the visitor already holds the Academy certificate", () => {
+  // Default: they never ticked it, so the report must offer it as a future
+  // option in the exact registered wording, and must not claim completion.
+  const notHeld = reportFor({});
+  assert.equal(notHeld.roadmap.certificateHeld, false, "silence must never read as holding the certificate");
+  assert.match(
+    notHeld.roadmap.certificateNote,
+    /Certificate of Completion/,
+    "the certificate must appear by its exact name",
+  );
+  assert.match(notHeld.roadmap.certificateNote, /exam/, "the requirement to earn it must be stated");
+  assert.match(
+    notHeld.roadmap.certificateNote,
+    /finishes? every class and passes all four phase exams plus the final Academy exam/i,
+    "the verified requirement is: every class, four phase exams, the final Academy exam",
+  );
+  assert.doesNotMatch(notHeld.roadmap.certificateNote, /you (already )?hold/i, "no false claim of ownership");
+
+  // A visitor who says they hold it is told to use it, not sold another one.
+  const held = reportFor({ q9: ["academy"] });
+  assert.equal(held.roadmap.certificateHeld, true);
+  assert.match(held.roadmap.certificateNote, /already hold an Assistara Academy certificate of completion/i);
+  assert.doesNotMatch(
+    held.nextStep.body,
+    /earn your certificate|get certified first|certification is required/i,
+    "a certificate holder must never be told certification comes first",
+  );
+});
+
+test("a taken quiz never awards the certificate anywhere in the report", () => {
+  for (const q9 of [["none"], ["hs"], ["bach"], ["academy"]]) {
+    const flat = JSON.stringify(reportFor({ q9 }));
+    assert.doesNotMatch(flat, /quiz (awards|grants|earns)|pass this quiz to (earn|get)/i);
+  }
+  // The question's own support copy must say so too.
+  const q9 = engine.question("q9");
+  assert.match(q9.support, /does not award a certificate/i);
+  assert.match(q9.support, /Certificate of Completion/);
 });
 
 // ---------------------------------------------------------------------------

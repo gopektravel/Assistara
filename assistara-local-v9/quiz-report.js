@@ -27,6 +27,10 @@
   var startedAt = 0;
   var lastReport = null;
   var lastToken = "";
+  // Whether this visitor opted into promotional email, as the SERVER recorded
+  // it. It is only ever read to render the preferences panel honestly; it is
+  // never used to decide whether a report is shown.
+  var marketingOptIn = null;
 
   // ------------------------------------------------------------ list helper
 
@@ -85,9 +89,15 @@
       ok = false;
     }
 
-    // An email is optional, but if one is given it must be a real address.
-    // Rejecting a typo is kinder than silently never delivering a report.
-    if (email && !/^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/.test(email)) {
+    // Emailing the report is the default path, so the primary button asks for
+    // an address. The result is never withheld for declining: the opt-out
+    // button next to it shows the report with no email at all.
+    if (!email) {
+      emailErr.textContent = "Add an email to have your report sent, or choose \"View my results without email\".";
+      show(emailErr);
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/.test(email)) {
       emailErr.textContent = "That email address does not look right.";
       show(emailErr);
       ok = false;
@@ -102,9 +112,10 @@
 
     var firstName = skipLead ? "" : $("firstName").value.trim();
     var email = skipLead ? "" : $("leadEmail").value.trim().toLowerCase();
-    // Consent is read from the checkbox, which is unchecked by default, and is
-    // only meaningful alongside an address.
-    var consent = !skipLead && $("marketingConsent").checked && !!email && !!firstName;
+    // Marketing consent is the unchecked opt-in and is only meaningful
+    // alongside an address. It is deliberately NOT required for anything: the
+    // report is returned either way, whether it was emailed or not.
+    var consent = !skipLead && $("marketingConsent").checked && !!email;
 
     if (!skipLead && !validateLead()) return;
 
@@ -132,7 +143,7 @@
       .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
       .then(function (res) {
         btn.disabled = false;
-        btn.innerHTML = 'Show my result <span aria-hidden="true">→</span>';
+        btn.innerHTML = 'Email me my report <span aria-hidden="true">→</span>';
 
         if (!res.data || res.data.ok !== true || !res.data.report) {
           var msg = (res.data && res.data.error) || "Something went wrong. Please try again.";
@@ -148,6 +159,9 @@
         }
 
         hide($("quizReveal"));
+        // The server's stored decision is the one that counts, so the page
+        // reports it back rather than trusting what the checkbox said.
+        marketingOptIn = res.data.marketingConsent === true;
         render(res.data.report, { emailQueued: !!res.data.emailQueued, stored: res.data.stored !== false });
 
         track("lead_submitted");
@@ -162,7 +176,7 @@
       })
       .catch(function () {
         btn.disabled = false;
-        btn.innerHTML = 'Show my result <span aria-hidden="true">→</span>';
+        btn.innerHTML = 'Email me my report <span aria-hidden="true">→</span>';
         errBox.textContent = "We could not reach the server. Check your connection and try again.";
         show(errBox);
       });
@@ -246,6 +260,9 @@
       paras(r.strengths.paragraphs) +
       (r.strengths.selected && r.strengths.selected.length
         ? '<p class="rblock-kicker" style="margin-top:16px">YOU ALREADY USE</p>' + list(r.strengths.selected)
+        : "") +
+      (r.strengths.qualifications && r.strengths.qualifications.labels && r.strengths.qualifications.labels.length
+        ? '<p class="rblock-kicker" style="margin-top:16px">YOU ALREADY HOLD</p>' + list(r.strengths.qualifications.labels)
         : ""));
 
     // F. Career readiness --------------------------------------------------
@@ -274,6 +291,7 @@
           list(w.tasks) +
           "</div>";
       }).join("") +
+      (r.roadmap.certificateNote ? '<p class="rnote">' + rich(r.roadmap.certificateNote) + "</p>" : "") +
       '<p class="rnote">' + rich(r.roadmap.promise) + "</p>");
 
     // I. Portfolio project -------------------------------------------------
@@ -308,6 +326,7 @@
 
     wireShare(r.share);
     wireCta();
+    wirePrefs();
     revealOnScroll(body);
 
     hide($("quizLanding"));
@@ -422,6 +441,67 @@
     });
   }
 
+  // ------------------------------------------------ email preferences panel
+  // The promotional opt-in can be withdrawn from the same private link the
+  // report lives on (that is what an email footer's "manage preferences"
+  // points at). Two honest states: opted in, or not. Withdrawing never
+  // touches the report and never requires an email or an account.
+  function wirePrefs() {
+    var panel = $("rPrefs");
+    if (!panel) return;
+    var text = $("rPrefsText");
+    var btn = $("rPrefsWithdraw");
+    if (!text || !btn) return;
+
+    if (marketingOptIn === true) {
+      text.innerHTML = "You asked for <b>occasional remote-work opportunities, free training resources and career advice</b>. " +
+        "Your report email is separate and always stays on.";
+      btn.hidden = false;
+      btn.disabled = false;
+      btn.textContent = "Stop occasional career emails";
+    } else {
+      text.innerHTML = "You are <b>not</b> on the occasional career emails list. Your report is saved here either way, " +
+        "and no promotional email is ever a condition of getting it.";
+      btn.hidden = true;
+    }
+    show(panel);
+
+    // A link with &prefs=1 should land the visitor on this panel, not leave it
+    // scrolling past it.
+    var prefs = new URLSearchParams(location.search).get("prefs");
+    if (prefs === "1" || prefs === "true") {
+      try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { }
+    }
+
+    btn.onclick = function () {
+      if (marketingOptIn !== true || !lastToken) return;
+      btn.disabled = true;
+      btn.textContent = "Stopping…";
+      fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "consent", token: lastToken, marketingConsent: false }),
+      })
+        .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+        .then(function (res) {
+          if (res.data && res.data.ok === true) {
+            marketingOptIn = false;
+            wirePrefs();
+            track("consent_withdrawn");
+            return;
+          }
+          btn.disabled = false;
+          btn.textContent = "Stop occasional career emails";
+          text.innerHTML = "We could not change that just now. Please try again, or use the unsubscribe link in any email.";
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = "Stop occasional career emails";
+          text.innerHTML = "We could not reach the server. Please try again, or use the unsubscribe link in any email.";
+        });
+    };
+  }
+
   // Report blocks fade up as they enter the viewport. The reveal-up class is
   // only ever added here, so with JS off or broken the report simply renders
   // visible; if anything about the observer fails we reveal everything.
@@ -480,6 +560,9 @@
       .then(function (d) {
         if (!d || d.ok !== true || !d.report) throw new Error("not found");
         lastToken = token;
+        // The stored decision travels with the result so an emailed
+        // "manage preferences" link shows the truth rather than a guess.
+        marketingOptIn = d.marketingConsent === true;
         render(d.report, {});
         track("results_viewed");
       })
@@ -515,6 +598,12 @@
       window.__quizState.answers = {};
       window.__quizState.index = 0;
       window.__quizState.done = false;
+      // A new attempt starts with no consent state of its own. The earlier
+      // decision stays recorded on the server; this only stops the panel from
+      // showing the old answer before the new submit has answered the question.
+      marketingOptIn = null;
+      lastToken = null;
+      hide($("rPrefs"));
       hide($("quizResult"));
       show($("quizLanding"));
       try { window.scrollTo(0, 0); } catch (e) { }

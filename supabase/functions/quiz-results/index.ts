@@ -82,6 +82,10 @@ export function buildVars(report: AnyRecord, token: string, name: unknown): Reco
   const cta = asRecord(nextStep.cta);
 
   const resultUrl = token ? `${SITE}/academy/quiz?t=${encodeURIComponent(token)}` : `${SITE}/academy/quiz`;
+  // Same private report, with the preferences panel opened. This is the
+  // unsubscribe route for this email: one token-verified click, and the
+  // promotional opt-in is withdrawn without touching the report itself.
+  const prefsUrl = token ? `${resultUrl}&prefs=1` : resultUrl;
   const required = peso(income.requiredRate);
   const goal = peso(income.goal);
 
@@ -99,6 +103,7 @@ export function buildVars(report: AnyRecord, token: string, name: unknown): Reco
     next_step_cta: str(cta.label, "See your full result"),
     next_step_url: str(cta.href, `${SITE}/academy`),
     result_url: resultUrl,
+    prefs_url: prefsUrl,
     site_url: SITE,
   };
 }
@@ -109,6 +114,7 @@ export function buildVars(report: AnyRecord, token: string, name: unknown): Reco
 function fallbackTemplate(v: Record<string, string>) {
   const name = brandEsc(v.first_name);
   const resultUrl = brandEsc(v.result_url);
+  const prefsUrl = brandEsc(v.prefs_url || v.result_url);
   const applyUrl = brandEsc(v.next_step_url);
 
   const body =
@@ -144,8 +150,9 @@ function fallbackTemplate(v: Record<string, string>) {
       `illustrative calculations based on your answers and example hourly rates. They are not earnings ` +
       `predictions or guarantees, and completing Assistara Academy does not guarantee employment.</p>`,
     footerHtml:
-      `This email was requested by you when you asked for your quiz result.<br>` +
-      `Assistara Academy &middot; <a href="${resultUrl}" style="color:#4f4b45">Open your result</a><br>` +
+      `This email was requested by you when you asked for your quiz result, so it is not a promotional email.<br>` +
+      `Assistara Academy &middot; <a href="${resultUrl}" style="color:#4f4b45">Open your result</a>` +
+      ` &middot; <a href="${prefsUrl}" style="color:#4f4b45">Manage email preferences</a><br>` +
       `Assistara &middot; www.getassistara.com`,
   });
 
@@ -166,7 +173,8 @@ function fallbackTemplate(v: Record<string, string>) {
     ].filter(Boolean),
     cta: { label: v.next_step_cta || "See your full result", href: v.result_url },
     footerLines: [
-      "This email was requested by you when you asked for your quiz result.",
+      "This email was requested by you when you asked for your quiz result, so it is not a promotional email.",
+      `Manage your email preferences: ${v.prefs_url}`,
       `The Assistara Team \u{1F49B}`,
     ],
   });
