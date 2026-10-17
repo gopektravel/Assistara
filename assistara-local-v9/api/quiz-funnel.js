@@ -224,6 +224,33 @@ function normaliseAttribution(raw) {
   return out;
 }
 
+// The three attribution columns the migration declares on quiz_results, and
+// the same three plus the first-touch UTMs on quiz_events. Only quiz_sessions
+// carries the full normalised set (content/term, landing path and referrer
+// included); acquisition_visits keeps those for the whole funnel, and a
+// result stays attributable on its own through the visit/visitor/token trio.
+// Spreading the full attribution into the narrower tables makes PostgREST
+// reject the whole write with "Could not find the 'landing_path' column",
+// which silently cost every stored result and every funnel event.
+function resultAttribution(attr) {
+  return {
+    acquisition_visit_id: attr.acquisition_visit_id,
+    acquisition_visitor_id: attr.acquisition_visitor_id,
+    tracking_token: attr.tracking_token,
+  };
+}
+
+function eventAttribution(attr) {
+  return {
+    acquisition_visit_id: attr.acquisition_visit_id,
+    acquisition_visitor_id: attr.acquisition_visitor_id,
+    tracking_token: attr.tracking_token,
+    utm_source: attr.utm_source,
+    utm_medium: attr.utm_medium,
+    utm_campaign: attr.utm_campaign,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Rate limiting
 // ---------------------------------------------------------------------------
@@ -411,7 +438,7 @@ async function actionEvent(req, res, cfg, body) {
       cfg,
       "POST",
       "quiz_events",
-      Object.assign({}, attr, {
+      Object.assign({}, eventAttribution(attr), {
         event_key: eventKey,
         event,
         question_number: Number.isFinite(Number(body.questionNumber))
@@ -510,7 +537,7 @@ async function actionSubmit(req, res, cfg, body) {
     const now = new Date();
     const expires = new Date(now.getTime() + RESULT_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
 
-    const row = Object.assign({}, attr, {
+    const row = Object.assign({}, resultAttribution(attr), {
       session_id: null,
       idempotency_key: idempotencyKey,
       first_name: rawName || null,

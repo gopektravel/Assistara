@@ -434,3 +434,138 @@ test("readBody prefers the Vercel-parsed req.body so a POST never hangs", async 
   await fn(req, res);
   assert.equal(streamTouched, false, "the raw stream must not be read when req.body is already parsed");
 });
+
+// ------------------------------------------- stored rows match the declared schema
+// PostgREST rejects a write the instant one key names a column the table does
+// not declare. Spreading the full normalised attribution into the narrower
+// quiz_results/quiz_events tables did exactly that in production: the insert
+// 400'd, the handler (correctly) degraded to "your result is shown but not
+// stored", and every lead, email and funnel event was silently lost. These
+// tests pin the contract from both directions: the pickers may only name
+// declared columns, and the wire payloads may only carry declared columns.
+
+const QUIZ_MIGRATION = require("node:fs").readFileSync(
+  require("node:path").join(__dirname, "..", "..", "supabase", "migrations", "202610170001_remote_income_quiz.sql"),
+  "utf8",
+);
+
+function quizDeclaredColumns(table) {
+  const marker = `create table if not exists public.${table}`;
+  const start = QUIZ_MIGRATION.indexOf(marker);
+  if (start < 0) return null;
+  const body = QUIZ_MIGRATION.slice(start, QUIZ_MIGRATION.indexOf(");", start));
+  const cols = new Set();
+  for (const line of body.split("\n")) {
+    const m = /^\s{2}([a-z_][a-z0-9_]*)\s+/.exec(line);
+    if (m && !["constraint", "primary", "unique", "check", "foreign"].includes(m[1])) cols.add(m[1]);
+  }
+  return cols;
+}
+
+test("the attribution pickers only name columns their own table declares", () => {
+  for (const [table, fn] of [["quiz_results", "resultAttribution"], ["quiz_events", "eventAttribution"]]) {
+    const cols = quizDeclaredColumns(table);
+    assert.ok(cols, `${table} should be declared in the quiz migration`);
+    const src = require("node:fs").readFileSync(require("node:path").join(__dirname, "quiz-funnel.js"), "utf8");
+    const start = src.indexOf(`function ${fn}(attr)`);
+    assert.ok(start >= 0, `${fn} is missing; the ${table} insert must not spread raw attribution`);
+    const body = src.slice(start, src.indexOf("\n}", start));
+    const named = [...body.matchAll(/([a-z_]+):\s*attr\./g)].map((m) => m[1]);
+    assert.ok(named.length >= 1, `${fn} should pick at least one column`);
+    for (const col of named) {
+      assert.ok(cols.has(col), `${fn} writes ${col}, which ${table} does not declare`);
+    }
+  }
+});
+
+function captureFetch() {
+  const posted = [];
+  const real = global.fetch;
+  global.fetch = async (url, init) => {
+    posted.push({ url: String(url), method: init && init.method, body: init && init.body ? JSON.parse(init.body) : null });
+    const isResultInsert = init && init.method === "POST" && /\/rest\/v1\/quiz_results$/.test(String(url));
+    return {
+      ok: true,
+      status: isResultInsert ? 201 : 200,
+      text: async () => (isResultInsert ? JSON.stringify([{ id: "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0" }]) : ""),
+    };
+  };
+  return { posted, restore: () => { global.fetch = real; } };
+}
+
+test("a submit only writes columns quiz_results declares, and still carries its attribution", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: {
+          action: "submit",
+          answers: FULL_ANSWERS,
+          email: "schema-contract@example.com",
+          attribution: {
+            utm_source: "ig", utm_medium: "social", utm_campaign: "launch",
+            utm_content: "reel", utm_term: "work from home",
+            landing_path: "/academy/quiz", referrer: "https://instagram.com/",
+            visitorId: "visitor-123", token: "tok-abc",
+          },
+        },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const insert = posted.find((p) => p.method === "POST" && /\/rest\/v1\/quiz_results$/.test(p.url));
+    assert.ok(insert, "the submit must insert exactly one quiz_results row");
+    const declared = quizDeclaredColumns("quiz_results");
+    for (const key of Object.keys(insert.body)) {
+      assert.ok(declared.has(key), `the quiz_results insert sends ${key}, which the table does not declare`);
+    }
+    for (const col of ["acquisition_visit_id", "acquisition_visitor_id", "tracking_token"]) {
+      assert.ok(col in insert.body, `the result row must stay attributable: ${col} is missing`);
+    }
+    assert.equal(insert.body.acquisition_visitor_id, "visitor-123");
+    assert.equal(insert.body.tracking_token, "tok-abc");
+    const body = JSON.parse(res.body || "{}");
+    assert.equal(body.stored, true, "the row must be stored, not just computed");
+    assert.ok(body.resultId, "a stored result must return its id");
+  } finally {
+    restore();
+  }
+});
+
+test("an analytics event only writes columns quiz_events declares", async () => {
+  const { posted, restore } = captureFetch();
+  try {
+    const res = fakeRes();
+    await handler(
+      fakeReq({
+        method: "POST",
+        body: {
+          action: "event",
+          event: "started",
+          clientKey: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+          eventKey: "evt-1",
+          attribution: {
+            utm_source: "ig", utm_medium: "social", utm_campaign: "launch",
+            utm_content: "reel", utm_term: "work from home",
+            landing_path: "/academy/quiz", referrer: "https://instagram.com/",
+          },
+        },
+        headers: { origin: "https://getassistara.com" },
+      }),
+      res,
+    );
+    const insert = posted.find((p) => p.method === "POST" && /\/rest\/v1\/quiz_events$/.test(p.url));
+    assert.ok(insert, "the event must be written to quiz_events");
+    const declared = quizDeclaredColumns("quiz_events");
+    for (const key of Object.keys(insert.body)) {
+      assert.ok(declared.has(key), `the quiz_events insert sends ${key}, which the table does not declare`);
+    }
+    assert.equal(insert.body.utm_source, "ig", "first-touch UTMs must still be recorded on the event");
+    const body = JSON.parse(res.body || "{}");
+    assert.equal(body.ok, true);
+  } finally {
+    restore();
+  }
+});
