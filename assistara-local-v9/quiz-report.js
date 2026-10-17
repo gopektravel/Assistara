@@ -263,10 +263,15 @@
     // E. Existing strengths ------------------------------------------------
     html += block("WHAT YOU ALREADY BRING", "Your existing strengths",
       paras(r.strengths.paragraphs) +
-      (r.strengths.selected && r.strengths.selected.length
+      (r.strengths.selected && r.strengths.selected.length && !r.strengths.none
         ? '<p class="rblock-kicker" style="margin-top:16px">YOU ALREADY USE</p>' + list(r.strengths.selected)
         : "") +
-      (r.strengths.qualifications && r.strengths.qualifications.labels && r.strengths.qualifications.labels.length
+      // The eyebrow below must never claim a qualification the visitor did
+      // not choose. "No formal qualifications or certificates yet" is an
+      // answer, not a credential, so the list is only labelled when there is
+      // something real to hold. The paragraph above already covers the rest.
+      (r.strengths.qualifications && !r.strengths.qualifications.noneSelected &&
+       r.strengths.qualifications.labels && r.strengths.qualifications.labels.length
         ? '<p class="rblock-kicker" style="margin-top:16px">YOU ALREADY HOLD</p>' + list(r.strengths.qualifications.labels)
         : ""));
 

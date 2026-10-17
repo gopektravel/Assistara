@@ -981,6 +981,27 @@ test("the reveal controls are wired exactly once, so one click cannot submit twi
   );
 });
 
+test("the strengths block never labels a none answer as something already held", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const report = fs.readFileSync(path.join(__dirname, "..", "quiz-report.js"), "utf8");
+
+  // "No formal qualifications or certificates yet" and "None yet, but I'm
+  // willing to learn" are answers, not credentials. Labelling either with a
+  // positive eyebrow would tell the visitor they hold something they just
+  // said they do not, so the eyebrow is gated on actually having something.
+  assert.match(
+    report,
+    /r\.strengths\.selected && r\.strengths\.selected\.length && !r\.strengths\.none/,
+    "the tools list must be labelled only when real tools were selected",
+  );
+  assert.match(
+    report,
+    /!r\.strengths\.qualifications\.noneSelected/,
+    "the qualifications list must be labelled only when a real qualification was chosen",
+  );
+});
+
 test("every analytics event the page can emit is one the server accepts", async () => {
   const fs = require("node:fs");
   const path = require("node:path");
