@@ -59,7 +59,7 @@
 
 /* --- Remote Income Potential Quiz funnel -------------------------------- */
 .quizStats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:16px}
-.quizStats .stat{background:#faf9f5;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.quizStats .qstat{background:#faf9f5;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .quizFunnel{margin:16px 0}
 .qfRow{display:grid;grid-template-columns:180px 1fr 50px;align-items:center;gap:12px;padding:5px 0}
 .qfLabel{font-size:13px;color:var(--muted)}
@@ -100,7 +100,7 @@ const careersList=Object.entries(q.byCareer||{}).sort((a,b)=>b[1]-a[1]);
 p.innerHTML=`<h2>Quiz funnel</h2><div class="sub">From the Remote Income Potential Quiz through to payment. Every stage is a real recorded event.</div>
 <div class="quizStats">${[
  [q.starts,"Quiz starts"],[q.completions,"Completions"],[q.completionRate+"%","Completion rate"],[q.leads,"Email leads"],[q.captureRate+"%","Lead capture rate"],[q.applications,"Applications from quiz leads"],[q.accepted,"Accepted"],[q.paid,"Paying customers"],[q.quizToPaidRate+"%","Quiz to paid"],["$"+Number(q.revenue||0).toLocaleString("en-US",{maximumFractionDigits:0}),"Revenue from quiz leads"]
-].map(x=>`<div class="stat"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div>`).join("")}</div>
+].map(x=>`<div class="qstat"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div>`).join("")}</div>
 <div class="quizFunnel">${stages.map(([label,n])=>`<div class="qfRow"><span class="qfLabel">${esc(label)}</span><span class="qfTrack"><span class="qfFill" style="width:${Math.round((Number(n)/max)*100)}%"></span></span><b class="qfNum">${esc(n)}</b></div>`).join("")}</div>
 <div class="quizFilters">
 <label class="qf"><span>Channel</span><select id="fChannel"><option value="">All channels</option>${[...new Set(links.map(x=>x.channel))].sort().map(c=>`<option${quizFilters.channel===c?" selected":""}>${esc(c)}</option>`).join("")}</select></label>

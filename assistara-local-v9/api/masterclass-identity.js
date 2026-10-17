@@ -26,7 +26,24 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+// The Remote Income Quiz shares this function so the whole Academy stays
+// within the Vercel Hobby plan's 12-function limit. The /api/quiz-funnel
+// route rewrites here with `?quiz=1`; that marker is the ONLY thing that
+// switches modules, so this function's own token traffic can never be
+// mistaken for a quiz call (and vice versa). The quiz module owns its own
+// CORS, origin checks, rate limits and responses end to end.
+function isQuizCall(req) {
+  if (req.query && typeof req.query.quiz === "string") return req.query.quiz === "1";
+  try {
+    return new URL(req.url || "/", "http://localhost").searchParams.get("quiz") === "1";
+  } catch {
+    return false;
+  }
+}
+
 module.exports = async function masterclassIdentity(req, res) {
+  if (isQuizCall(req)) return require("./quiz-funnel")(req, res);
+
   noStore(res);
   const origin = req.headers && req.headers.origin ? String(req.headers.origin) : "";
   const good = allowedOrigin(origin);

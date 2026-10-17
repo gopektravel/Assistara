@@ -183,17 +183,6 @@
       }
     },
     {
-      "src": "api/quiz-funnel.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "api/_academy-security.js",
-          "api/_quiz-engine.js",
-          "api/_quiz-report.js"
-        ]
-      }
-    },
-    {
       "src": "api/academy-preview.js",
       "use": "@vercel/node",
       "config": {
@@ -216,7 +205,10 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "api/_academy-security.js"
+          "api/_academy-security.js",
+          "api/quiz-funnel.js",
+          "api/_quiz-engine.js",
+          "api/_quiz-report.js"
         ]
       }
     },
@@ -543,7 +535,7 @@
     },
     {
       "src": "/api/quiz-funnel",
-      "dest": "/api/quiz-funnel.js"
+      "dest": "/api/masterclass-identity.js?quiz=1"
     },
     {
       "src": "/academy/preview",

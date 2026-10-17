@@ -73,6 +73,24 @@ function fail(res, status, error, extra) {
 }
 
 function readBody(req) {
+  // Vercel's Node runtime parses a JSON body into `req.body` BEFORE the handler
+  // runs, so the raw stream is already consumed and would never emit `data` or
+  // `end` again. Reading the stream first would hang every POST until the
+  // platform times the invocation out, so the pre-parsed body wins and the
+  // stream is only a fallback for runtimes (and tests) that leave it raw.
+  if (req.body !== null && typeof req.body === "object") {
+    return Promise.resolve(req.body);
+  }
+  if (typeof req.body === "string") {
+    const trimmed = req.body.trim();
+    if (!trimmed) return Promise.resolve({});
+    try {
+      return Promise.resolve(JSON.parse(trimmed));
+    } catch {
+      return Promise.resolve(null);
+    }
+  }
+
   return new Promise((resolve) => {
     const chunks = [];
     let size = 0;

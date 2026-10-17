@@ -6,6 +6,11 @@
    off the browser is what makes a stored result reproducible and what stops a
    visitor from editing a score into existence.
 
+   /api/quiz-funnel is a stable public path that Vercel rewrites onto the
+   consolidated masterclass-identity function (tagged ?quiz=1). That keeps the
+   whole Academy inside the Vercel Hobby plan's 12-function limit without this
+   browser ever needing to know which function serves the quiz.
+
    It also never requires an email: the result is fetched with the answers
    alone, and the lead form is an optional extra that appears afterwards.
    ---------------------------------------------------------------------------- */

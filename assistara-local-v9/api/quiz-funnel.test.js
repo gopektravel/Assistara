@@ -353,3 +353,84 @@ test("every career the API can return is fully populated", () => {
     assert.ok(c.specializations.length >= 2, `${id} specializations`);
   }
 });
+
+// ------------------------------------------------------- 12-function consolidation
+// The Vercel Hobby plan allows 12 serverless functions per deployment. The quiz
+// shares masterclass-identity.js (tagged ?quiz=1) instead of being its own
+// function, so the whole Academy stays inside that cap. These tests pin the
+// consolidation so it cannot silently drift back to a 13th function.
+
+const VERCEL = JSON.parse(require("node:fs").readFileSync(require("node:path").join(__dirname, "..", "vercel.json"), "utf8"));
+const NODE_BUILDS = (VERCEL.builds || []).filter((b) => b.use === "@vercel/node");
+
+test("the quiz is consolidated, keeping the deployment at or under 12 functions", () => {
+  assert.ok(NODE_BUILDS.length <= 12, `expected <=12 serverless functions, found ${NODE_BUILDS.length}`);
+  const sources = NODE_BUILDS.map((b) => b.src);
+  assert.equal(sources.includes("api/quiz-funnel.js"), false, "quiz-funnel.js must not be its own serverless function");
+  assert.ok(sources.includes("api/masterclass-identity.js"), "the quiz host must remain a declared build");
+});
+
+test("the /api/quiz-funnel route is rewritten onto the consolidated host", () => {
+  const route = (VERCEL.routes || []).find((r) => r.src === "/api/quiz-funnel");
+  assert.ok(route, "/api/quiz-funnel must keep a route so the public path never breaks");
+  assert.equal(route.dest, "/api/masterclass-identity.js?quiz=1", "the route must target the host tagged as a quiz call");
+});
+
+test("the host bundles every module the quiz needs at runtime", () => {
+  const build = NODE_BUILDS.find((b) => b.src === "api/masterclass-identity.js");
+  const files = (build && build.config && build.config.includeFiles) || [];
+  for (const needed of ["api/quiz-funnel.js", "api/_quiz-engine.js", "api/_quiz-report.js", "api/_academy-security.js"]) {
+    assert.ok(files.includes(needed), `${needed} must be bundled with the host`);
+  }
+});
+
+// The host is loaded directly so the dispatch itself is exercised, not just the
+// config that enables it.
+const HOST_PATH = require("node:path").join(__dirname, "masterclass-identity.js");
+
+function loadHost(env = {}) {
+  delete require.cache[require.resolve(HOST_PATH)];
+  process.env.SUPABASE_URL = env.SUPABASE_URL || "https://example.supabase.co";
+  process.env.SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "anon-key";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY || "service-key";
+  process.env.ACADEMY_COOKIE_SECRET = env.ACADEMY_COOKIE_SECRET || "test-cookie-secret-with-32-plus-characters";
+  return require(HOST_PATH);
+}
+
+test("a ?quiz=1 call is served by the quiz module, not the identity module", async () => {
+  const host = loadHost();
+  const res = fakeRes();
+  await host({ method: "GET", url: "/api/masterclass-identity?quiz=1&action=meta", headers: {}, on() {} }, res);
+  const body = JSON.parse(res.body || "{}");
+  // The identity module would answer { ok, identified }; only the quiz returns questions.
+  assert.equal(body.ok, true, "quiz meta must answer ok");
+  assert.ok(Array.isArray(body.questions) && body.questions.length === 10, "the quiz module must own this response");
+});
+
+test("without the quiz marker the host still serves attendee identity untouched", async () => {
+  const host = loadHost();
+  global.fetch = async () => ({ ok: true, status: 200, json: async () => [{ name: "Maria Santos" }] });
+  const res = fakeRes();
+  await host({ method: "GET", url: "/api/masterclass-identity?token=a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4", headers: {}, on() {} }, res);
+  const body = JSON.parse(res.body || "{}");
+  assert.equal(body.identified, true, "identity resolution must be unchanged");
+  assert.equal(body.name, "Maria", "identity must still return the first name");
+});
+
+test("readBody prefers the Vercel-parsed req.body so a POST never hangs", async () => {
+  // On Vercel the platform parses the JSON body before the handler runs and the
+  // raw stream is already spent. Reading the stream only would hang every POST
+  // until the platform timed the call out.
+  const fn = require("./quiz-funnel");
+  let streamTouched = false;
+  const req = {
+    method: "POST",
+    url: "/api/quiz-funnel",
+    headers: { origin: "https://getassistara.com" },
+    body: { action: "submit", answers: FULL_ANSWERS },
+    on() { streamTouched = true; },
+  };
+  const res = fakeRes();
+  await fn(req, res);
+  assert.equal(streamTouched, false, "the raw stream must not be read when req.body is already parsed");
+});
