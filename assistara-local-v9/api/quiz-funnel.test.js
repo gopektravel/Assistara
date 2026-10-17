@@ -856,3 +856,127 @@ test("the meta action serves the qualifications question, not the old workday on
   const flat = JSON.stringify(body);
   assert.doesNotMatch(flat, /perfect workday/i, "the lifestyle question no longer exists");
 });
+
+// ------------------------------------------------------------------ replay
+// A submit can legitimately arrive twice: the reveal controls are wired from
+// two entry points, a visitor can double-press, and a flaky network can retry.
+// Either way there must be one lead row, one queued report, and a response
+// that reports the preference actually stored rather than a blank one.
+
+test("a replayed submit keeps one row and still reports the stored consent", async () => {
+  const posted = [];
+  let inserts = 0;
+  let queued = 0;
+  const real = global.fetch;
+  global.fetch = async (url, init) => {
+    const method = (init && init.method) || "GET";
+    const u = String(url);
+    posted.push({ url: u, method });
+    if (method === "POST" && /\/rest\/v1\/quiz_results$/.test(u)) {
+      inserts += 1;
+      return { ok: true, status: 201, text: async () => JSON.stringify([{ id: "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0" }]) };
+    }
+    if (method === "GET" && /idempotency_key=eq\./.test(u)) {
+      // The replay only recognises itself once the first insert has landed.
+      if (inserts > 0) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () =>
+            JSON.stringify([{
+              id: "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
+              report: { intro: { heading: "Hi" } },
+              first_name: "Maria",
+              primary_career: "organizer",
+              secondary_career: "research",
+              readiness_stage: 2,
+              readiness_key: "building",
+              scoring_version: "quiz-scoring-v2",
+              report_version: "quiz-report-v2",
+              marketing_consent: true,
+              marketing_consent_at: "2026-10-17T10:00:00.000Z",
+              consent_source: "quiz_results_form_v2",
+              email_state: "queued",
+            }]),
+        };
+      }
+      return { ok: true, status: 200, text: async () => "[]" };
+    }
+    if (/\/functions\/v1\/quiz-results/.test(u)) {
+      queued += 1;
+      return { ok: true, status: 200, text: async () => "{}" };
+    }
+    return { ok: true, status: 200, text: async () => "[]" };
+  };
+
+  try {
+    const body = {
+      action: "submit",
+      answers: FULL_ANSWERS,
+      email: "replay@example.com",
+      firstName: "Maria",
+      marketingConsent: true,
+      clientKey: "qz_0123456789abcdef0123456789abcdef",
+      elapsedMs: 40000,
+    };
+
+    const first = fakeRes();
+    await handler(fakeReq({ method: "POST", body, headers: { origin: "https://getassistara.com" } }), first);
+    const firstBody = JSON.parse(first.body || "{}");
+    assert.equal(firstBody.ok, true);
+    assert.equal(firstBody.marketingConsent, true);
+    const queuedAfterFirst = queued;
+
+    const second = fakeRes();
+    await handler(fakeReq({ method: "POST", body, headers: { origin: "https://getassistara.com" } }), second);
+    const secondBody = JSON.parse(second.body || "{}");
+
+    assert.equal(secondBody.alreadySubmitted, true, "the repeat must be recognised as a replay");
+    assert.equal(
+      secondBody.marketingConsent,
+      true,
+      "a replay must carry the stored decision, never a blank the page would read as a decline",
+    );
+    assert.equal(secondBody.consentSource, "quiz_results_form_v2");
+    assert.ok(secondBody.marketingConsentAt, "and the time it was decided");
+    assert.equal(secondBody.emailState, "queued", "and whether the report email went out");
+
+    assert.equal(inserts, 1, "a replay must never write a second lead row");
+    assert.equal(queued, queuedAfterFirst, "a replay must never queue a second report email");
+    assert.equal(posted.filter((p) => p.method === "DELETE").length, 0, "nothing is ever deleted");
+  } finally {
+    global.fetch = real;
+  }
+});
+
+test("the reveal controls are wired exactly once, so one click cannot submit twice", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const report = fs.readFileSync(path.join(__dirname, "..", "quiz-report.js"), "utf8");
+  const quiz = fs.readFileSync(path.join(__dirname, "..", "quiz.js"), "utf8");
+
+  // Both entry points really do reach init(): this file's own bootstrap and
+  // quiz.js once the meta has loaded. That is why the guard exists.
+  assert.match(report, /window\.__quizInitReveal = init;/, "quiz.js must still be able to start the reveal step");
+  assert.match(quiz, /__quizInitReveal/, "quiz.js calls the reveal step after the meta loads");
+  assert.match(report, /document\.addEventListener\("DOMContentLoaded", init\)/, "the reveal step also starts itself");
+
+  // The guard: wiring happens behind a one-shot flag, and a later call can
+  // only ever open a shared result.
+  assert.match(report, /var wired = false;/, "there must be a one-shot flag on the wiring");
+  assert.match(report, /if \(wired\) \{\s*openSharedResult\(\);\s*return;\s*\}/, "a second init must return before wiring");
+
+  // One listener each, not two. A duplicated handler would queue two reports
+  // and write two lead rows from a single press.
+  const count = (re) => (report.match(re) || []).length;
+  assert.equal(count(/\$\("revealForm"\)\.addEventListener\("submit"/g), 1, "exactly one submit handler");
+  assert.equal(count(/\$\("revealSkip"\)\.addEventListener\("click"/g), 1, "exactly one opt-out handler");
+  assert.equal(count(/\$\("retakeQuiz"\)\.addEventListener\("click"/g), 1, "exactly one retake handler");
+
+  // A replayed response that omits consent must never be read as a decline.
+  assert.match(
+    report,
+    /typeof res\.data\.marketingConsent === "boolean"/,
+    "consent is only overwritten when the server actually said something",
+  );
+});

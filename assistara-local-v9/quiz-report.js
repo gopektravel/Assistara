@@ -160,8 +160,13 @@
 
         hide($("quizReveal"));
         // The server's stored decision is the one that counts, so the page
-        // reports it back rather than trusting what the checkbox said.
-        marketingOptIn = res.data.marketingConsent === true;
+        // reports it back rather than trusting what the checkbox said. A
+        // replayed submit omits the field, and missing must never be read as
+        // a decline: the state already on screen is the truth until the
+        // server says otherwise.
+        if (typeof res.data.marketingConsent === "boolean") {
+          marketingOptIn = res.data.marketingConsent;
+        }
         render(res.data.report, { emailQueued: !!res.data.emailQueued, stored: res.data.stored !== false });
 
         track("lead_submitted");
@@ -583,8 +588,23 @@
 
   // --------------------------------------------------------------- init
 
+  // init() is reached from two directions: this file's own bootstrap, and
+  // quiz.js once the meta has loaded. Both really do run. Wiring the controls
+  // twice would put two submit handlers on the form, so a single click would
+  // queue two reports and write two lead rows, and the second response (a
+  // replay) would then overwrite the consent state the first one returned.
+  // Everything below therefore happens exactly once.
+  var wired = false;
+  var sharedOpened = false;
+
   function init() {
     if (!bridge()) return;
+
+    if (wired) {
+      openSharedResult();
+      return;
+    }
+    wired = true;
 
     $("revealForm").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -609,11 +629,18 @@
       try { window.scrollTo(0, 0); } catch (e) { }
     });
 
-    // A shared or bookmarked link opens the saved report directly.
+    openSharedResult();
+  }
+
+  // A shared or bookmarked link opens the saved report directly. Only ever
+  // attempted once, so a second init cannot fetch it twice or paint over the
+  // report the visitor is already looking at.
+  function openSharedResult() {
+    if (sharedOpened) return;
     var token = new URLSearchParams(location.search).get("t");
-    if (token && /^[A-Za-z0-9_-]{20,128}$/.test(token)) {
-      loadStoredResult(token);
-    }
+    if (!token || !/^[A-Za-z0-9_-]{20,128}$/.test(token)) return;
+    sharedOpened = true;
+    loadStoredResult(token);
   }
 
   window.__quizInitReveal = init;

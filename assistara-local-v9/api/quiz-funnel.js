@@ -526,7 +526,7 @@ async function actionSubmit(req, res, cfg, body) {
     const existing = await rest(
       cfg,
       "GET",
-      `quiz_results?idempotency_key=eq.${idempotencyKey}&select=id,report,first_name,primary_career,secondary_career,readiness_stage,readiness_key,scoring_version,report_version&limit=1`,
+      `quiz_results?idempotency_key=eq.${idempotencyKey}&select=id,report,first_name,primary_career,secondary_career,readiness_stage,readiness_key,scoring_version,report_version,marketing_consent,marketing_consent_at,consent_source,email_state&limit=1`,
     );
     const dup = existing.ok && Array.isArray(existing.data) ? existing.data[0] : null;
     if (dup && dup.report) {
@@ -544,6 +544,13 @@ async function actionSubmit(req, res, cfg, body) {
         secondaryCareer: dup.secondary_career,
         readinessStage: dup.readiness_stage,
         readinessKey: dup.readiness_key,
+        // The stored decision rides along with a replay too, so a second
+        // response cannot leave the page showing a preference the visitor
+        // never actually made.
+        marketingConsent: dup.marketing_consent === true,
+        marketingConsentAt: dup.marketing_consent_at || null,
+        consentSource: dup.consent_source || null,
+        emailState: dup.email_state || null,
       });
     }
 
@@ -606,11 +613,22 @@ async function actionSubmit(req, res, cfg, body) {
         const again = await rest(
           cfg,
           "GET",
-          `quiz_results?idempotency_key=eq.${idempotencyKey}&select=id,report&limit=1`,
+          `quiz_results?idempotency_key=eq.${idempotencyKey}&select=id,report,marketing_consent,marketing_consent_at,consent_source,email_state&limit=1`,
         );
         const winner = again.ok && Array.isArray(again.data) ? again.data[0] : null;
         if (winner) {
-          return send(res, 200, { ok: true, alreadySubmitted: true, resultId: winner.id, report: winner.report });
+          return send(res, 200, {
+            ok: true,
+            alreadySubmitted: true,
+            resultId: winner.id,
+            report: winner.report,
+            // Same as the safe-replay path: the stored preference travels with
+            // the response so the page never invents one.
+            marketingConsent: winner.marketing_consent === true,
+            marketingConsentAt: winner.marketing_consent_at || null,
+            consentSource: winner.consent_source || null,
+            emailState: winner.email_state || null,
+          });
         }
       }
       const msg = (inserted.data && inserted.data.message) || "";
