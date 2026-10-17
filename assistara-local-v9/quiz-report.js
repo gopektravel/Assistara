@@ -339,7 +339,6 @@
     wirePrefs();
     revealOnScroll(body);
 
-    hide($("quizLanding"));
     hide($("quizPlay"));
     hide($("quizReveal"));
     show($("quizResult"));
@@ -582,7 +581,6 @@
 
   function loadStoredResult(token) {
     noindex();
-    hide($("quizLanding"));
     var body = $("quizResult");
     show(body);
     $("reportBody").innerHTML =
@@ -654,7 +652,11 @@
       lastToken = null;
       hide($("rPrefs"));
       hide($("quizResult"));
-      show($("quizLanding"));
+      // There is no landing screen to go back to, so a retake restarts at
+      // question 1: same answers cleared, same first screen as a fresh visit.
+      window.__quizState.startedAt = Date.now();
+      show($("quizPlay"));
+      if (typeof window.__quizRenderQuestion === "function") window.__quizRenderQuestion();
       try { window.scrollTo(0, 0); } catch (e) { }
     });
 

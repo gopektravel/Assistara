@@ -56,8 +56,8 @@ test("the quiz banner is the first thing in main, above the hero", () => {
 
 test("the banner carries the agreed copy and links to the quiz", () => {
   const banner = slice('<section class="quiz-banner"', "</section>");
-  assert.match(banner, /Curious how much you could earn working from home\?/);
-  assert.match(banner, /Take our free 4-minute quiz and discover your remote career match\./);
+  assert.match(banner, /How much could you earn working from home\?/);
+  assert.match(banner, /Find your remote career match in 4 minutes\./);
   assert.match(banner, /href="\/academy\/quiz"/);
   assert.match(banner, /Take the Free Quiz/);
   // Copy rule: no em dashes anywhere in the banner.

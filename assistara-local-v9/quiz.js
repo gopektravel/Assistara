@@ -579,21 +579,19 @@
     return false;
   }
 
+  // There is no landing screen and no start button: question 1 paints as soon
+  // as the questions have loaded. The banner on /academy is the only click
+  // between the hero and this screen.
   function startQuiz() {
     track("started");
-    hide($("quizLanding"));
     show($("quizPlay"));
     state.startedAt = Date.now();
     renderQuestion();
-    // Move focus to the document so the landmark is announced, then to the
-    // heading once it has painted.
-    try { $("quizPlay").scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { }
     saveProgress();
     queueProgress();
   }
 
   function boot() {
-    $("startQuiz").addEventListener("click", startQuiz);
     $("qNext").addEventListener("click", goNext);
     $("qBack").addEventListener("click", goBack);
     document.addEventListener("keydown", onKeydown);
@@ -623,17 +621,20 @@
     window.__quizHide = hide;
     window.__quizFocus = focusHeading;
     window.__quizClearProgress = clearProgress;
+    window.__quizRenderQuestion = renderQuestion;
     window.__quizPLAUSIBLE_MIN_MS = PLAUSIBLE_MIN_MS;
 
     loadMeta().then(function () {
-      var resumed = restore();
-      if (resumed) {
+      if (restore()) {
         // A refresh mid-quiz returns the visitor to the question they were on
         // rather than silently restarting them.
         show($("quizPlay"));
-        hide($("quizLanding"));
         state.startedAt = Date.now();
         renderQuestion();
+      } else {
+        // Otherwise the quiz starts itself. There is no start screen to click
+        // through before question 1.
+        startQuiz();
       }
       if (typeof window.__quizInitReveal === "function") window.__quizInitReveal();
     }).catch(function (err) {

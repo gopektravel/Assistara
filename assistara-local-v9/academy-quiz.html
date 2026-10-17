@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/mobile-polish.css?v=3" />
-  <link rel="stylesheet" href="/quiz.css?v=20261017-3" />
+  <link rel="stylesheet" href="/quiz.css?v=20261017-8" />
   <link rel="stylesheet" href="/manrope-lock.css?v=20260917-3" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Quiz","name":"Assistara Remote Income Potential Quiz","description":"A 10-question Assistara Academy assessment that matches you to a remote virtual assistant career and shows an illustrative income model for the hours you actually have.","url":"https://www.getassistara.com/academy/quiz","publisher":{"@type":"Organization","name":"Assistara Academy","url":"https://www.getassistara.com/academy"}}</script>
 </head>
@@ -43,64 +43,25 @@
   <main id="top">
 
     <!-- ================================================================
-         1. Landing: the promise, what you get, and the start button.
-         ================================================================ -->
-    <section class="quiz-landing shell" id="quizLanding">
-      <div class="quiz-landing-copy">
-        <div class="section-kicker">REMOTE INCOME POTENTIAL QUIZ</div>
-        <h1>How Much Could You Earn<br><span>Working From Home?</span></h1>
-        <p class="quiz-lead">Answer 10 quick questions and get your remote career match, income scenarios built from the hours you actually have, and a 30-day plan you can start this week. Completely free, and no email is needed to see your result.</p>
-        <div class="quiz-facts">
-          <div><b>7</b><span>real career paths compared</span></div>
-          <div><b>~3</b><span>minutes, one question at a time</span></div>
-          <div><b>₱0</b><span>free, no email required</span></div>
-        </div>
-        <ul class="quiz-benefits">
-          <li><span>✓</span><div><b>A career match, not a personality label</b><small>See exactly which answers pointed to your result.</small></div></li>
-          <li><span>✓</span><div><b>Income maths you can check yourself</b><small>Hours multiplied by rate, with the formula shown in full.</small></div></li>
-          <li><span>✓</span><div><b>A plan scaled to the time you actually have</b><small>Four weeks, matched to your experience and your schedule.</small></div></li>
-          <li><span>✓</span><div><b>Your report, emailed if you want it</b><small>One email with your match and your plan, or skip it and read it here.</small></div></li>
-        </ul>
-        <div class="quiz-landing-actions">
-          <button class="btn btn-yellow quiz-cta" type="button" id="startQuiz">Find My Remote Career &amp; Income Potential <span>→</span></button>
-          <a class="text-link" href="/academy#academy">See what the Academy teaches →</a>
-        </div>
-        <p class="quiz-honesty">This is a careers assessment, not a psychometric test, and it is part of Assistara Academy. Income figures are illustrative examples based on your answers, not predictions or guarantees. Nothing here is required to see your result.</p>
-      </div>
+         1. The quiz itself: exactly one question on screen at a time.
 
-      <div class="quiz-landing-visual" aria-hidden="true">
-        <div class="glow glow-a"></div>
-        <div class="glow glow-b"></div>
-        <!-- A teaser shaped like the real report, so the reward is visible before
-             the first question. Decorative and illustrative only. -->
-        <div class="quiz-teaser">
-          <div class="quiz-teaser-top"><span class="dot"></span><b>Your result</b><small>PERSONALIZED &middot; FREE</small></div>
-          <div class="quiz-teaser-match">
-            <small>CAREER MATCH</small>
-            <b>The Master Organizer</b>
-            <span>Administrative VA / Executive Assistant &middot; one of seven paths</span>
-          </div>
-          <div class="quiz-teaser-money">
-            <small>YOUR INCOME SCENARIOS</small>
-            <div class="quiz-teaser-figures">
-              <div><b>&#8776;&#8202;₱10,800</b><span>10 hrs / week</span></div>
-              <div><b>&#8776;&#8202;₱34,700</b><span>20 hrs / week</span></div>
-              <div><b>&#8776;&#8202;₱78,000</b><span>30 hrs / week</span></div>
-            </div>
-          </div>
-          <div class="quiz-teaser-plan">
-            <div class="quiz-teaser-dots"><span></span><span></span><span></span><span></span></div>
-            <div class="quiz-teaser-plan-copy"><b>Your 30-day plan</b><span>Four weeks of actions, scaled to your time</span></div>
-          </div>
-          <div class="quiz-teaser-foot"><small>ILLUSTRATIVE EXAMPLES ONLY &middot; NEVER A GUARANTEE</small></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================================
-         2. The quiz itself: exactly one question on screen at a time.
+         Question 1 is on screen the moment this page loads. There is no
+         landing screen, no oversized headline, no result preview and no
+         start button: the banner on /academy is the only click before the
+         first question. The compact header below names the quiz, says what
+         the ten answers lead to, and carries the progress bar.
          ================================================================ -->
-    <section class="quiz-play shell" id="quizPlay" hidden>
+    <section class="quiz-play shell" id="quizPlay">
+      <!-- Compact quiz header: the Assistara branding, what the ten
+           answers lead to, and the progress bar that tracks them. Kept
+           deliberately small so question 1 is visible on a phone without
+           scrolling past a second hero. -->
+      <header class="quiz-head">
+        <p class="quiz-head-kicker"><span class="quiz-head-dot" aria-hidden="true"></span>Assistara Academy &middot; Remote Income Potential Quiz</p>
+        <h1 class="quiz-head-title">Find your remote career match</h1>
+        <p class="quiz-head-sub">Ten quick questions. You get the remote career that fits you, illustrative income scenarios built from the hours you actually have, and a 30-day plan.</p>
+      </header>
+
       <div class="quiz-progress" id="quizProgress">
         <div class="quiz-progress-top">
           <span class="quiz-progress-label" id="progressLabel">Question 1 of 10</span>
@@ -142,6 +103,23 @@
       </div>
 
       <p class="quiz-a11y-hint" id="quizHint">Use the arrow keys to move between options, Enter or Space to choose, and Enter to continue.</p>
+    </section>
+
+    <!-- ================================================================
+         2. Read more, if you want to. This sits below the questions so it
+            can never interrupt the quiz flow, and nothing in it gates
+            question 1.
+         ================================================================ -->
+    <section class="quiz-about shell" id="quizAbout">
+      <div class="quiz-facts">
+        <div><b>10</b><span>questions, one at a time</span></div>
+        <div><b>7</b><span>remote career paths compared</span></div>
+        <div><b>&#8369;0</b><span>free, and no email needed for your result</span></div>
+      </div>
+      <h2 class="quiz-about-title">How the quiz works</h2>
+      <p class="quiz-about-body">Ten questions, one screen each, and the answers are scored on the server against seven remote virtual assistant career paths. Your report names the path that fits you, the day to day work and tools it involves, and a four-week plan scaled to the hours you have. Every income figure is an illustrative calculation, your hours multiplied by an example hourly rate, with the formula shown so you can check it yourself.</p>
+      <p class="quiz-honesty">This is a careers assessment, not a psychometric test, and it is part of Assistara Academy. No compatibility percentage is calculated or shown. Nothing here is required to see your result, and completing Assistara Academy does not guarantee employment.</p>
+      <a class="text-link" href="/academy#academy">See what the Academy teaches &rarr;</a>
     </section>
 
     <!-- ================================================================
@@ -244,7 +222,7 @@
        existing Assistara modules so the quiz attributes exactly like an
        Academy application does. -->
   <script src="/app.js?v=20260917-USD-FIX"></script>
-  <script src="/quiz.js?v=20261017-4"></script>
-  <script src="/quiz-report.js?v=20261017-6"></script>
+  <script src="/quiz.js?v=20261017-8"></script>
+  <script src="/quiz-report.js?v=20261017-8"></script>
 </body>
 </html>
