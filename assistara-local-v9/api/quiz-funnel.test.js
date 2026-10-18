@@ -839,7 +839,7 @@ test("a result read never writes a consent decision", async () => {
   }
 });
 
-test("the meta action serves the qualifications question, not the old workday one", async () => {
+test("the meta action serves the interests question, not the old workday or qualifications ones", async () => {
   const res = fakeRes();
   await handler(fakeReq({ method: "GET", url: "/api/quiz-funnel?action=meta", headers: {} }), res);
   const body = JSON.parse(res.body || "{}");
@@ -847,14 +847,21 @@ test("the meta action serves the qualifications question, not the old workday on
   assert.equal(questions.length, 10);
   const q9 = questions.find((q) => q.id === "q9");
   assert.ok(q9, "question 9 must still be served");
-  assert.equal(q9.type, "multi", "qualifications are multi-select");
-  assert.match(q9.title, /qualifications and certificates/i);
+  assert.equal(q9.type, "multi", "interests are multi-select");
+  assert.match(q9.title, /activities/i);
+  assert.match(q9.purpose, /interest/i, "q9 measures interests, not qualifications");
   const keys = (q9.options || []).map((o) => o.key);
-  assert.ok(keys.includes("none"), "the no-formal-qualifications option must be offered");
-  assert.ok(keys.includes("academy"), "the already-hold-the-Academy-certificate option must be offered");
-  assert.ok(keys.includes("bach"));
+  assert.ok(keys.includes("none"), "the 'none of these feel right yet' option must be offered");
+  assert.ok(keys.includes("i1"), "the first interest option must be offered");
+  assert.ok(keys.includes("i11"), "the last interest option must be offered");
+  assert.equal(q9.options.filter((o) => o.exclusive).length, 1, "exactly one exclusive option");
+  // The old constructs must not come back under any wording.
+  for (const gone of ["academy", "bach", "hs", "vatrain", "procert"]) {
+    assert.ok(!keys.includes(gone), `the old ${gone} option must not be served`);
+  }
   const flat = JSON.stringify(body);
   assert.doesNotMatch(flat, /perfect workday/i, "the lifestyle question no longer exists");
+  assert.doesNotMatch(flat, /qualifications and certificates/i, "the old qualifications question no longer exists");
 });
 
 // ------------------------------------------------------------------ replay
@@ -949,11 +956,12 @@ test("a replayed submit keeps one row and still reports the stored consent", asy
   }
 });
 
-test("the reveal controls are wired exactly once, so one click cannot submit twice", () => {
+test("the reveal step is email-only and wired exactly once, so one click cannot submit twice", () => {
   const fs = require("node:fs");
   const path = require("node:path");
   const report = fs.readFileSync(path.join(__dirname, "..", "quiz-report.js"), "utf8");
   const quiz = fs.readFileSync(path.join(__dirname, "..", "quiz.js"), "utf8");
+  const page = fs.readFileSync(path.join(__dirname, "..", "academy-quiz.html"), "utf8");
 
   // Both entry points really do reach init(): this file's own bootstrap and
   // quiz.js once the meta has loaded. That is why the guard exists.
@@ -962,7 +970,7 @@ test("the reveal controls are wired exactly once, so one click cannot submit twi
   assert.match(report, /document\.addEventListener\("DOMContentLoaded", init\)/, "the reveal step also starts itself");
 
   // The guard: wiring happens behind a one-shot flag, and a later call can
-  // only ever open a shared result.
+  // only ever open the shared confirmation.
   assert.match(report, /var wired = false;/, "there must be a one-shot flag on the wiring");
   assert.match(report, /if \(wired\) \{\s*openSharedResult\(\);\s*return;\s*\}/, "a second init must return before wiring");
 
@@ -970,8 +978,27 @@ test("the reveal controls are wired exactly once, so one click cannot submit twi
   // and write two lead rows from a single press.
   const count = (re) => (report.match(re) || []).length;
   assert.equal(count(/\$\("revealForm"\)\.addEventListener\("submit"/g), 1, "exactly one submit handler");
-  assert.equal(count(/\$\("revealSkip"\)\.addEventListener\("click"/g), 1, "exactly one opt-out handler");
   assert.equal(count(/\$\("retakeQuiz"\)\.addEventListener\("click"/g), 1, "exactly one retake handler");
+  assert.equal(count(/\$\("confirmRetry"\)\.addEventListener\("click"/g), 1, "exactly one retry handler");
+
+  // Email is the only required field: there is no Skip path anywhere.
+  assert.equal(count(/revealSkip/g), 0, "the Skip control must be gone from the reveal step");
+  assert.ok(!/revealSkip/.test(page), "the page must not wire a Skip link either");
+  assert.ok(!/>\s*Skip\b/.test(page), "no Skip label may appear on the quiz page");
+
+  // The confirmation is gated on a real queue: queued -> confirmation,
+  // anything else -> an honest error with a retry, never a fake "sent".
+  assert.match(
+    report,
+    /if \(res\.data\.emailQueued === true\) \{\s*showConfirm\(true\);/,
+    "the confirmation must appear only when the server queued the email",
+  );
+  assert.match(report, /showConfirm\(false\);/, "a failed queue must take the error branch");
+  assert.match(
+    report,
+    /heading\.textContent = "We could not send your report\."/,
+    "the error branch must say the report was not sent",
+  );
 
   // A replayed response that omits consent must never be read as a decline.
   assert.match(
@@ -981,48 +1008,58 @@ test("the reveal controls are wired exactly once, so one click cannot submit twi
   );
 });
 
-test("the strengths block never labels a none answer as something already held", () => {
+test("the website never renders the report: no match, plan or report blocks exist", () => {
   const fs = require("node:fs");
   const path = require("node:path");
-  const report = fs.readFileSync(path.join(__dirname, "..", "quiz-report.js"), "utf8");
+  const read = (f) => fs.readFileSync(path.join(__dirname, "..", f), "utf8");
+  const report = read("quiz-report.js");
+  const quiz = read("quiz.js");
+  const page = read("academy-quiz.html");
 
-  // "No formal qualifications or certificates yet" and "None yet, but I'm
-  // willing to learn" are answers, not credentials. Labelling either with a
-  // positive eyebrow would tell the visitor they hold something they just
-  // said they do not, so the eyebrow is gated on actually having something.
-  assert.match(
-    report,
-    /r\.strengths\.selected && r\.strengths\.selected\.length && !r\.strengths\.none/,
-    "the tools list must be labelled only when real tools were selected",
-  );
-  assert.match(
-    report,
-    /!r\.strengths\.qualifications\.noneSelected/,
-    "the qualifications list must be labelled only when a real qualification was chosen",
-  );
+  // The old on-page report renderer and its sections are gone for good: the
+  // reveal step shows only the confirmation, and the report itself lives in
+  // the email.
+  for (const [name, src] of [["quiz-report.js", report], ["academy-quiz.html", page]]) {
+    assert.ok(!/function render\(/.test(src), `${name} must not contain a report renderer`);
+    assert.ok(!/incomeBlock|rHeading|quizResult/.test(src), `${name} must not contain report blocks`);
+    assert.ok(!/strengths\.selected/.test(src), `${name} must not render the strengths section`);
+  }
+  // quiz.js renders the questions themselves; the income question is an input,
+  // not a report figure.
+  assert.ok(!/incomeBlock|rHeading/.test(quiz), "quiz.js must not contain report rendering either");
+  assert.ok(!/30-day roadmap|Why this fits/.test(report + page), "plan or match copy must not ship in the page");
 });
 
-test("a prefs deep link lands on the panel, not at the top of the report", () => {
+test("a prefs deep link lands on the confirmation's panel, not on a report", () => {
   const fs = require("node:fs");
   const path = require("node:path");
   const report = fs.readFileSync(path.join(__dirname, "..", "quiz-report.js"), "utf8");
 
-  // The jump must run in render(), after the result section is shown, because
-  // render() also scrolls to the top of the report. A scroll inside wirePrefs
-  // would be silently overridden and the panel would never come into view.
-  const renderBody = report.slice(report.indexOf("function render("), report.indexOf("function incomeBlock("));
-  assert.match(renderBody, /if \(prefsRequested\(\)\) \{/, "render() must branch on the prefs flag");
-  assert.match(
-    renderBody,
-    /if \(prefsRequested\(\)\) \{[\s\S]{0,500}scrollIntoView\(\{ block: "center" \}\)/,
-    "the prefs panel must be centred into view from within that branch",
+  // The panel is opened from openSharedResult(), right after the confirmation
+  // is shown, so ?prefs=1 lands on a visible panel instead of a report.
+  const sharedBody = report.slice(
+    report.indexOf("function openSharedResult()"),
+    report.indexOf("window.__quizInitReveal"),
   );
+  assert.ok(sharedBody.length > 0, "openSharedResult must exist");
+  assert.match(sharedBody, /if \(prefsRequested\(\)\) \{/, "openSharedResult() must branch on the prefs flag");
+  assert.match(
+    sharedBody,
+    /if \(prefsRequested\(\)\) \{[\s\S]{0,500}wirePrefs\(\)/,
+    "the prefs panel must be wired from within that branch",
+  );
+  assert.match(
+    sharedBody,
+    /show\(\$\("quizConfirm"\)\);[\s\S]{0,300}scrollIntoView/,
+    "the confirmation must be scrolled into view",
+  );
+  assert.match(sharedBody, /focusHeading\(heading, true\)/, "focus must not fight the explicit scroll");
 
-  const wirePrefsBody = report.slice(report.indexOf("function wirePrefs()"), report.indexOf("function prefsRequested()"));
+  const wirePrefsBody = report.slice(
+    report.indexOf("function wirePrefs()"),
+    report.indexOf("function prefsRequested()"),
+  );
   assert.ok(!/scrollIntoView/.test(wirePrefsBody), "wirePrefs must only render the panel state, never scroll");
-
-  // Focusing the heading must not fight the jump.
-  assert.match(renderBody, /__quizFocus\(\$\("rHeading"\), true\)/, "focus must not scroll when a deep link jumps");
 });
 
 test("every analytics event the page can emit is one the server accepts", async () => {

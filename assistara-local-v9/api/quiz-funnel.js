@@ -803,7 +803,9 @@ async function queueResultEmail(cfg, resultId, token) {
       // emailed link could not be built.
       body: JSON.stringify({ result_id: resultId, result_token: token }),
       cache: "no-store",
-      signal: AbortSignal.timeout(8000),
+      // The function answers within its own bounded queue window; this is
+      // headroom over that window, not a wait for provider delivery.
+      signal: AbortSignal.timeout(12000),
     });
     if (!r.ok) {
       // The gateway answered but refused or failed. The status and a short
@@ -821,6 +823,16 @@ async function queueResultEmail(cfg, resultId, token) {
       console.error("quiz-funnel email queue", r.status, detail);
       return false;
     }
+    // Status and provider only: enough to prove a real send happened after
+    // the fact without ever logging the report or the address.
+    let info = "(no body)";
+    try {
+      const j = JSON.parse(await r.text());
+      info = `${j.status || "?"} via ${j.provider || "none"}`;
+    } catch {
+      /* keep the placeholder */
+    }
+    console.info("quiz-funnel email queue ok", info);
     return true;
   } catch (error) {
     console.error("quiz-funnel email queue", error.message);

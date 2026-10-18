@@ -19,10 +19,10 @@
 //     ever produced — scores are internal ordering only and are never shown.
 //   * Career matching is fully separate from readiness and from purchase
 //     intent: the income goal (q2) and the timeline (q10) never touch scores.
-//   * Qualifications (q9) are preparation context, not a gate. Education can
-//     only ADD a little readiness and a few follow-up points, it never
-//     subtracts anything, and it never changes which career suits someone, so
-//     a beginner with no formal qualifications is never penalised.
+//   * Interests and working style (q9) are fit input, not a gate. They can
+//     nudge a near-tie between two careers by a small capped amount, they
+//     never subtract anything, and they never outweigh the q4/q5/q6 evidence,
+//     so a beginner who ticked nothing is never penalised.
 //   * Every hypothetical hourly rate is labelled an example unless verified.
 // ----------------------------------------------------------------------------
 
@@ -31,8 +31,15 @@
 // education was wired into readiness and lead priority as a small, additive
 // signal. Both versions are stored on every saved result so a v1 row is never
 // silently reinterpreted by v2 rules.
-const SCORING_VERSION = "quiz-scoring-v2";
-const REPORT_VERSION = "quiz-report-v2";
+// v3: question 9 became an interests, preferred-activities and working-style
+// multi-select, replacing the qualifications construct it used to duplicate
+// with q7. Education is no longer asked, so the education readiness lift and
+// the education lead points are gone: readiness reads q7 and q6 only, lead
+// priority derives its experience points from the q7 step, and q9 contributes
+// a small capped career affinity instead. Stored v2 rows keep their meaning
+// because the version travels with every saved result.
+const SCORING_VERSION = "quiz-scoring-v3";
+const REPORT_VERSION = "quiz-report-v3";
 
 // Canonical career order doubles as the deterministic tie-break: when two
 // careers tie on score, the earlier one in this list becomes the primary.
@@ -147,14 +154,14 @@ const QUESTIONS = [
   {
     id: "q7",
     type: "single",
-    purpose: "Experience and preparation (readiness input)",
+    purpose: "Existing experience and transferable skills (readiness input)",
     kicker: "QUESTION 7 OF 10",
     title: "How far along are you in your remote career journey?",
     support: "There is no wrong answer here. Everyone on this list is a valid place to start.",
     options: [
       { key: "a", label: "I'm starting completely from scratch", step: 1 },
       { key: "b", label: "I've watched tutorials or learned on my own", step: 2 },
-      { key: "c", label: "I've completed a course or earned a certificate", step: 3 },
+      { key: "c", label: "I've applied skills from work, school, or life experience to a real project", step: 3 },
       { key: "d", label: "I've practiced real tasks or created portfolio examples", step: 4 },
       { key: "e", label: "I've already done paid work for clients", step: 5 },
     ],
@@ -178,22 +185,24 @@ const QUESTIONS = [
   {
     id: "q9",
     type: "multi",
-    purpose: "Qualifications and certificates (preparation input, never a penalty)",
+    purpose: "Interests, preferred activities and working style (fit input)",
     kicker: "QUESTION 9 OF 10",
-    title: "Which of these qualifications and certificates do you already hold?",
+    title: "Which of these activities sound most like work you would enjoy?",
     support:
-      "Choose everything that applies, or tick the last one on its own if nothing here applies yet. Nothing here is required to get your result, and taking this quiz does not award a certificate: an Assistara Academy Certificate of Completion is earned by finishing the Academy and passing its exams.",
+      "Choose everything that fits. We use these to shape your recommendation, not to gate it. Pick the last one on its own if none of these feel right yet.",
     options: [
-      { key: "hs", label: "High school diploma or senior high school" },
-      { key: "voc", label: "Vocational or technical training, such as a TESDA certificate" },
-      { key: "assoc", label: "Associate degree" },
-      { key: "bach", label: "Bachelor's degree" },
-      { key: "master", label: "Master's degree" },
-      { key: "doctorate", label: "Doctorate or professional degree, such as law, medicine or engineering" },
-      { key: "procert", label: "Professional certifications in my field or tools" },
-      { key: "vatrain", label: "Remote-work or VA training: a course, bootcamp or workshop" },
-      { key: "academy", label: "I already hold an Assistara Academy certificate of completion" },
-      { key: "none", label: "No formal qualifications or certificates yet", exclusive: true },
+      { key: "i1", label: "Organizing schedules, details, and day-to-day plans" },
+      { key: "i2", label: "Writing, editing, or explaining things clearly" },
+      { key: "i3", label: "Design or visual creative work, like graphics or short videos" },
+      { key: "i4", label: "Working with spreadsheets, data, and tidy systems" },
+      { key: "i5", label: "Social media, content, and online communities" },
+      { key: "i6", label: "Customer conversations, sales, or support" },
+      { key: "i7", label: "AI tools, automation, and troubleshooting technology" },
+      { key: "i8", label: "Research, planning, and solving problems" },
+      { key: "i9", label: "Teaching, coaching, or helping others learn" },
+      { key: "i10", label: "Deep, focused blocks on one task" },
+      { key: "i11", label: "A variety of new tasks rather than the same routine" },
+      { key: "none", label: "None of these feel right yet", exclusive: true },
     ],
   },
   {
@@ -582,39 +591,35 @@ const TOOL_WEIGHT = 1; // multiplier applied to TOOL_WEIGHTS values
 const MAX_TOOL_CONTRIBUTION = 3;
 
 // ---------------------------------------------------------------------------
-// Qualifications model (q9)
+// Interests model (q9)
 // ---------------------------------------------------------------------------
-// Formal education is preparation context, never an entry ticket. These rules
-// are deliberately one-directional:
-//   * education can only ADD readiness (capped, beginners only) and a few
-//     follow-up points, never subtract anything,
-//   * it never changes which career suits someone,
-//   * someone holding "no formal qualifications" scores exactly like someone
-//     before this question existed.
-// Practical, client-facing training is worth slightly more than a degree
-// because it sits closer to the work a client actually buys.
-const EDUCATION = {
-  hs: { tier: 1, leadPoints: 0, label: "High school diploma or senior high school" },
-  voc: { tier: 2, leadPoints: 2, label: "Vocational or technical training" },
-  assoc: { tier: 2, leadPoints: 2, label: "Associate degree" },
-  bach: { tier: 3, leadPoints: 3, label: "Bachelor's degree" },
-  master: { tier: 4, leadPoints: 3, label: "Master's degree" },
-  doctorate: { tier: 4, leadPoints: 3, label: "Doctorate or professional degree" },
-  procert: { tier: 2, leadPoints: 4, label: "Professional certifications", relevant: true },
-  vatrain: { tier: 2, leadPoints: 4, label: "Remote-work or VA training", relevant: true },
-  academy: {
-    tier: 3,
-    leadPoints: 4,
-    label: "Assistara Academy certificate of completion",
-    relevant: true,
-    academyCertificate: true,
-  },
-  none: { tier: 0, leadPoints: 0, label: "No formal qualifications or certificates yet" },
+// q9 measures fit, not preparation: which activities someone would enjoy and
+// how they like to work. These rules are deliberately narrow:
+//   * it never adds readiness (experience and tools do that, from q7 and q6),
+//   * it only nudges career scores as a small per-career affinity, applied
+//     after q4/q5/q6, so it can only break near-ties, never overturn them,
+//   * the exclusive "none" option ("None of these feel right yet") is a valid
+//     answer and contributes affinity to no career.
+// Labels are read from the q9 question definition so the copy stays in one
+// place; this map only carries the rules that are not wording.
+const INTERESTS = {
+  none: { exclusive: true },
 };
 
-// The most generous single qualification wins, so stacking overlapping paper
-// can never inflate a score. Documented ceiling: 4 priority points.
-const EDUCATION_MAX_LEAD_POINTS = 4;
+// Per-career affinity: +1 point for every shared interest key. The overlap
+// ceiling is small and capped, so q4 (6) > q5 (q4, 4) > q6 always dominate
+// and interests only separate careers that are already nearly tied.
+const INTEREST_AFFINITY_WEIGHT = 1;
+const INTEREST_AFFINITY_MAX = 2;
+const CAREER_INTERESTS = {
+  organizer: ["i1", "i2", "i10"], // schedules, writing things down, focus
+  creative: ["i2", "i3", "i5"], // writing, visual design, social content
+  connector: ["i5", "i6", "i9"], // communities, conversations, helping people
+  detective: ["i4", "i8", "i10"], // data, research, deep focus
+  growth: ["i5", "i6", "i8"], // social, sales conversations, research
+  systems: ["i4", "i7", "i10"], // systems, automation, focus
+  builder: ["i4", "i7", "i11"], // systems, tooling, variety
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -648,32 +653,22 @@ function sortedCareers(scores) {
   });
 }
 
-// What the person told us they already hold on q9. Reads defensively: it is
-// also called from lead priority, which accepts partial payloads.
-function educationFor(answers) {
+// What the person told us they enjoy on q9. Reads defensively: it is also
+// called from lead priority, which accepts partial payloads.
+function interestsFor(answers) {
   const q9 = question("q9");
   const chosen = Array.isArray(answers && answers.q9) ? answers.q9 : [];
   const entries = [];
   for (const key of chosen) {
     const meta = (q9 && optionOf(q9, key)) || null;
-    const rule = EDUCATION[key];
-    if (!meta || !rule) continue;
-    entries.push({ key, label: rule.label, questionLabel: meta.label, ...rule });
+    if (!meta) continue;
+    const rule = INTERESTS[key] || {};
+    entries.push({ key, label: meta.label, questionLabel: meta.label, ...rule });
   }
   return {
     chosen: entries.map((e) => e.key),
     entries,
     labels: entries.map((e) => e.label),
-    // The strongest single qualification, so overlapping paper cannot stack.
-    tier: entries.reduce((m, e) => Math.max(m, Number(e.tier) || 0), 0),
-    leadPoints: Math.min(
-      EDUCATION_MAX_LEAD_POINTS,
-      entries.reduce((m, e) => Math.max(m, Number(e.leadPoints) || 0), 0),
-    ),
-    // Client-facing training (VA training, professional or Academy
-    // certification) counts as preparation the moment it is held.
-    relevantTraining: entries.some((e) => !!e.relevant),
-    holdsAcademyCertificate: entries.some((e) => !!e.academyCertificate),
     noneSelected: entries.some((e) => e.key === "none"),
   };
 }
@@ -780,6 +775,20 @@ function scoreAnswers(answers) {
     }
   }
 
+  // q9 — small per-career interest affinity, applied after q4/q5/q6. Shared
+  // interests add INTEREST_AFFINITY_WEIGHT each, capped at INTEREST_AFFINITY_MAX
+  // per career, so the total stays well under q5 and can only break near-ties.
+  // It is deliberately NOT pushed into evidence: interests shape the ranking,
+  // they never appear as "why you matched" proof.
+  const chosenInterests = interestsFor(answers).chosen.filter((k) => k !== "none");
+  for (const career of CAREER_ORDER) {
+    const affinityKeys = CAREER_INTERESTS[career] || [];
+    let hits = 0;
+    for (const key of affinityKeys) if (chosenInterests.includes(key)) hits += 1;
+    if (hits <= 0) continue;
+    scores[career] += Math.min(hits * INTEREST_AFFINITY_WEIGHT, INTEREST_AFFINITY_MAX);
+  }
+
   const order = sortedCareers(scores);
   const primary = order[0] || null;
   let secondary = order.find((id) => id !== primary && (scores[id] || 0) > 0) || null;
@@ -815,18 +824,16 @@ function readinessFor(answers) {
   const tools = Array.isArray(answers.q6) ? answers.q6 : [];
   const toolCount = tools.filter((t) => t !== "tnone").length;
   const noneSelected = tools.includes("tnone");
-  const education = educationFor(answers);
 
   let stage = step;
   // Transferable digital skills can move a beginner along one stage. Owning a
   // certificate never does this on its own: a certificate is not the same as
   // being ready for a client.
   if (stage <= 2 && toolCount >= 5) stage += 1;
-  // Qualifications work the same way and only that way: a degree or relevant
-  // training can lift a beginner one stage, but paper alone can never reach
-  // "preparing for clients", and it is ignored entirely once real experience
-  // has had its say. Holding nothing formal changes nothing.
-  if (stage <= 2 && (education.tier >= 3 || education.relevantTraining)) stage += 1;
+  // q9 (interests, preferred activities and working style) adds NO readiness
+  // lift. It measures fit, not preparation: what someone would enjoy doing
+  // says nothing about how ready they are to serve a client. Readiness reads
+  // q7 (experience) and q6 (tools) only. Holding no interests changes nothing.
   if (stage < 1) stage = 1;
   if (stage > 5) stage = 5;
 
@@ -838,7 +845,6 @@ function readinessFor(answers) {
     toolCount,
     noneSelected,
     experienceStep: step,
-    education,
   };
 }
 
@@ -856,9 +862,12 @@ function readinessFor(answers) {
 //     false priority out of ambition.
 //   - Career match contributes NOTHING. Which VA path suits someone says
 //     nothing about how ready they are to enrol.
-// Qualifications (q9) contribute at most EDUCATION_MAX_LEAD_POINTS points and
-// only ever add to the total, so a lead is never pushed down the list for
-// holding no formal qualifications.
+// Experience depth on q7 contributes at most EXPERIENCE_MAX_LEAD_POINTS
+// points and only ever adds to the total, so a lead is never pushed down the
+// list for still being a beginner.
+// Documented ceiling on the q7 experience-depth bonus in leadPriority. A
+// beginner at step 1 earns 0; step 5 caps out here.
+const EXPERIENCE_MAX_LEAD_POINTS = 4;
 const LEAD_PRIORITY = {
   max: 100,
   // Surfaces that already know the person applied may add this on top of the
@@ -907,8 +916,8 @@ function leadPriority(answers, opts) {
 
   // 2. Relevant skills or previous experience, self-declared on q7. This reads
   // the raw experience answer rather than the readiness stage on purpose: the
-  // stage can be lifted by qualifications, and counting that lift here as
-  // well would credit education twice and quietly inflate a beginner.
+  // stage can be lifted by tool depth, and counting that lift here as well
+  // would credit tooling as experience and quietly inflate a beginner.
   const readiness = readinessFor(a);
   const expStage = readiness.experienceStep;
   const expPts = LEAD_PRIORITY.experience[expStage] || 0;
@@ -920,7 +929,7 @@ function leadPriority(answers, opts) {
         : expStage >= 4
           ? "Has portfolio work or practiced real tasks"
           : expStage >= 3
-            ? "Has completed a course or holds a certificate"
+            ? "Has applied skills to a real project"
             : "Has taught themselves relevant skills",
       points: expPts,
     });
@@ -942,16 +951,26 @@ function leadPriority(answers, opts) {
     });
   }
 
-  // 4. Qualifications and certificates. Small, capped and only ever additive:
-  // preparation the person already has, never a penalty for having none.
-  // Practical, client-facing training is worth a touch more than a degree
-  // because it sits closer to the work a client buys.
-  const education = educationFor(a);
-  if (education.leadPoints > 0) {
-    score += education.leadPoints;
+  // 4. Depth of transferable experience on q7, on top of the baseline in (2).
+  // Small, capped and only ever additive: someone at step 1 (no experience
+  // yet) scores exactly like someone before this question existed, and the
+  // ceiling keeps it from overtaking timeline or capacity.
+  const depthStep = Math.max(1, Math.min(5, expStage));
+  const depthPts = Math.min(
+    EXPERIENCE_MAX_LEAD_POINTS,
+    Math.max(0, depthStep - 1),
+  );
+  score += depthPts;
+  if (depthPts > 0) {
     reasons.push({
-      label: `Already holds ${education.labels.join(" and ")}`,
-      points: education.leadPoints,
+      label: depthStep >= 5
+        ? "Has working client-level experience to build on"
+        : depthStep >= 4
+          ? "Has hands-on portfolio practice already"
+          : depthStep >= 3
+            ? "Has applied skills from experience to real work"
+            : "Is already building relevant skills",
+      points: depthPts,
     });
   }
 
@@ -1047,9 +1066,12 @@ module.exports = {
   normaliseAnswers,
   scoreAnswers,
   readinessFor,
-  educationFor,
-  EDUCATION,
-  EDUCATION_MAX_LEAD_POINTS,
+  interestsFor,
+  INTERESTS,
+  CAREER_INTERESTS,
+  INTEREST_AFFINITY_WEIGHT,
+  INTEREST_AFFINITY_MAX,
+  EXPERIENCE_MAX_LEAD_POINTS,
   leadPriority,
   leadPriorityBand,
   LEAD_PRIORITY,

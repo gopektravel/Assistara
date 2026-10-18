@@ -251,3 +251,53 @@ test("the legacy Google Apps Script form handler is retired", () => {
     assert.ok(!fn.code.includes("script.google.com"), `${fn.name} still calls Apps Script`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Quiz report email: the email IS the report. The website never renders the
+// career match, so this email alone must carry every promised section.
+// ---------------------------------------------------------------------------
+
+test("the quiz report email carries every promised section and only the primary match", () => {
+  const code = sender("quiz-results").code;
+
+  // One primary career, why it fits, strengths, skills to develop, and the
+  // practical 30-day plan: all five must be built into the email.
+  const markers = [
+    "Why it fits",
+    "Your strengths",
+    "Skills to develop",
+    "Your 30-day plan",
+    "why_fit",
+    "skills_to_develop",
+    "plan_w1",
+    "plan_w4",
+  ];
+  for (const marker of markers) {
+    assert.ok(code.includes(marker), `quiz-results email is missing "${marker}"`);
+  }
+
+  // One career only: the second match is never listed.
+  assert.ok(!code.includes("Also worth exploring"), "the quiz email must not list a second career");
+
+  // The CTA is the subtle Academy invitation (next step), not a button that
+  // pretends the website shows a full report.
+  assert.match(
+    code,
+    /cta:\s*\{\s*label:\s*v\.next_step_cta[^\n]*href:\s*v\.next_step_url/,
+    "the quiz email CTA must use the Academy next-step link"
+  );
+  assert.ok(
+    !code.includes("full report includes the career paths"),
+    "the quiz email must not promise a report that only exists on the website"
+  );
+});
+
+test("the registry's quiz template mirrors the same report sections", () => {
+  const p = path.join(FUNCTIONS_DIR, "_shared", "email-template-registry.ts");
+  assert.ok(fs.existsSync(p), "email-template-registry.ts missing");
+  const code = fs.readFileSync(p, "utf8");
+  for (const marker of ["Why it fits", "Your strengths", "Skills to develop", "Your 30-day plan", "why_fit", "plan_w4"]) {
+    assert.ok(code.includes(marker), `registry quiz template is missing "${marker}"`);
+  }
+  assert.ok(!code.includes("Also worth exploring"), "the registry quiz template must not list a second career");
+});

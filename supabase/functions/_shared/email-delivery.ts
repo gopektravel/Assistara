@@ -126,6 +126,10 @@ export class EmailDelivery {
   private providers: Map<string, EmailProviderConfig> = new Map();
   private rateLimiters: Map<string, TokenBucket> = new Map();
   private workerId: string;
+  // Set when claimDelivery gets a non-true answer, so the caller can surface
+  // WHY (PostgREST status + error body: table/constraint names only, never a
+  // credential or recipient data) instead of a bare boolean.
+  private lastClaimDetail = "";
 
   constructor(supabaseUrl: string, supabaseKey: string, workerId?: string) {
     this.supabaseUrl = supabaseUrl;
@@ -203,6 +207,12 @@ export class EmailDelivery {
       return { success: false, provider: null, providerMessageId: null, status: 'expired', error: 'Deadline exceeded', errorCategory: 'unknown', attempts: 0 };
     }
 
+    // The claim row references this delivery-log row, so the log must exist
+    // before the claim. Callers like masterclass-reminder create it
+    // themselves; create it here as well so a first-time send can never fail
+    // its own claim with a foreign-key violation.
+    await this.ensureDeliveryLog(idempotencyKey, options);
+
     // Atomic claim for exactly-once
     const claimed = await this.claimDelivery(idempotencyKey);
     if (!claimed) {
@@ -219,7 +229,8 @@ export class EmailDelivery {
           attempts: existing.attempts
         };
       }
-      return { success: false, provider: null, providerMessageId: null, status: 'failed', error: 'Could not claim delivery', errorCategory: 'unknown', attempts: 0 };
+      const why = this.lastClaimDetail ? `: ${this.lastClaimDetail}` : '';
+      return { success: false, provider: null, providerMessageId: null, status: 'failed', error: `Could not claim delivery${why}`, errorCategory: 'unknown', attempts: 0 };
     }
 
     try {
@@ -688,6 +699,45 @@ export class EmailDelivery {
     })).filter(p => p.apiKey);
   }
 
+  // Creates the delivery-log row that the claim's foreign key requires.
+  // Idempotent: an existing row (inserted by the caller or by an earlier
+  // attempt) is left untouched. All columns used here are defined in the
+  // base delivery migration, so this cannot fail on later schema additions.
+  private async ensureDeliveryLog(idempotencyKey: string, options: EmailDeliveryOptions): Promise<void> {
+    try {
+      const existing = await this.getDeliveryLog(idempotencyKey);
+      if (existing) return;
+      const response = await fetch(`${this.supabaseUrl}/rest/v1/email_delivery_log?select=id`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          Authorization: `Bearer ${this.supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation,resolution=ignore-duplicates',
+        },
+        body: JSON.stringify([{
+          idempotency_key: idempotencyKey,
+          email_type: options.emailType,
+          recipient_email: options.to,
+          recipient_name: options.toName || null,
+          subject: options.subject,
+          status: 'pending',
+          max_attempts: options.maxAttempts || 3,
+          ...(options.deadline ? { deadline: options.deadline.toISOString() } : {}),
+          ...(options.metadata ? { metadata: options.metadata } : {}),
+        }]),
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        console.error('delivery log ensure failed', response.status, body.slice(0, 300));
+        this.lastClaimDetail = `log insert ${response.status} ${body}`.slice(0, 300);
+      }
+    } catch (error) {
+      console.error('delivery log ensure error', String(error));
+    }
+  }
+
   private async claimDelivery(idempotencyKey: string): Promise<boolean> {
     const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/email_claim_delivery`, {
       method: 'POST',
@@ -699,8 +749,18 @@ export class EmailDelivery {
       },
       body: JSON.stringify({ p_idempotency_key: idempotencyKey, p_claimed_by: this.workerId, p_ttl_seconds: 300 })
     });
-    const result = await response.json().catch(() => false);
-    return result === true;
+    const body = await response.text().catch(() => '');
+    let parsed: unknown = false;
+    try {
+      parsed = body ? JSON.parse(body) : false;
+    } catch {
+      parsed = false;
+    }
+    const claimed = parsed === true;
+    // On failure the PostgREST body says exactly why (missing function,
+    // foreign-key violation, permissions) and contains no secret material.
+    this.lastClaimDetail = claimed ? '' : `claim ${response.status} ${body}`.slice(0, 300);
+    return claimed;
   }
 
   private async releaseClaim(idempotencyKey: string): Promise<void> {

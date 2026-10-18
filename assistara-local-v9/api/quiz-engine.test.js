@@ -36,10 +36,11 @@ function base(over) {
       q6: ["t1", "t4"],
       q7: "a",
       q8: "a",
-      // The qualifications question. Default is the lowest rung so that the
-      // "no formal qualifications" path is the reference point: nothing a test
-      // asserts about readiness or lead priority may depend on a degree.
-      q9: ["hs"],
+      // The interests question (q9). Default is the exclusive "none of these
+      // feel right yet" so that the reference point carries no career affinity:
+      // nothing a test asserts about readiness or lead priority may depend on
+      // which activities someone enjoys.
+      q9: ["none"],
       q10: "a",
     },
     over || {},
@@ -261,8 +262,8 @@ test("all seven career outcomes are reachable as the primary match", () => {
 
 test("ties resolve to the canonical order, never to chance", () => {
   // Two careers at an identical score.
-  const a = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "a", q5: "b", q6: ["tnone"], q7: "a", q8: "a", q9: ["hs"], q10: "a" });
-  const b = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "b", q5: "a", q6: ["tnone"], q7: "a", q8: "a", q9: ["hs"], q10: "a" });
+  const a = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "a", q5: "b", q6: ["tnone"], q7: "a", q8: "a", q9: ["none"], q10: "a" });
+  const b = scoreAnswers({ q1: "a", q2: 5000, q3: "a", q4: "b", q5: "a", q6: ["tnone"], q7: "a", q8: "a", q9: ["none"], q10: "a" });
   // both have one 6 and one 4 on different careers -> tie at 6
   assert.notEqual(a.primary, null);
   const winner = CAREER_ORDER.indexOf(a.primary) < CAREER_ORDER.indexOf(b.primary) ? a : b;
@@ -307,13 +308,16 @@ test("readiness stages stay inside the documented five", () => {
   }
 });
 
-test("a certificate alone never implies client readiness", () => {
-  const certified = readinessFor(norm({ q7: "c", q6: ["t1"] }));
-  assert.equal(certified.experienceStep, 3);
-  assert.ok(certified.stage <= 3, "holding a certificate must not reach 'preparing for clients'");
-  // Even with strong tooling, a certificate must not jump to stage 4/5.
-  const certifiedAndSkilled = readinessFor(norm({ q7: "c", q6: ["t1", "t2", "t3", "t4", "t5", "t6"] }));
-  assert.ok(certifiedAndSkilled.stage <= 3, "certificate + tools still cannot mean client-ready");
+test("applied experience at step three never implies client readiness", () => {
+  // Step 3 is "applied skills from experience to a real project". It is real
+  // experience, but it is not the same as being ready to run a client
+  // engagement, and tooling must not push it there either.
+  const applied = readinessFor(norm({ q7: "c", q6: ["t1"] }));
+  assert.equal(applied.experienceStep, 3);
+  assert.ok(applied.stage <= 3, "step three must not reach 'Preparing for Clients'");
+  // Even with strong tooling, step three cannot jump to stage 4/5.
+  const appliedAndSkilled = readinessFor(norm({ q7: "c", q6: ["t1", "t2", "t3", "t4", "t5", "t6"] }));
+  assert.ok(appliedAndSkilled.stage <= 3, "step three plus tools still cannot mean client-ready");
 });
 
 test("transferable tools can move a beginner forward one stage", () => {
@@ -334,27 +338,27 @@ const PROFILES = [
   },
   {
     name: "Creative person with existing digital skills",
-    answers: { q1: "c", q2: 40000, q3: "d", q4: "b", q5: "b", q6: ["t2", "t3", "t1"], q7: "b", q8: "b", q9: ["voc"], q10: "b" },
+    answers: { q1: "c", q2: 40000, q3: "d", q4: "b", q5: "b", q6: ["t2", "t3", "t1"], q7: "b", q8: "b", q9: ["i3", "i5"], q10: "b" },
     expect: { primary: "creative" },
   },
   {
     name: "Experienced sales professional",
-    answers: { q1: "d", q2: 80000, q3: "e", q4: "e", q5: "e", q6: ["t5", "t4", "t1"], q7: "e", q8: "e", q9: ["bach"], q10: "b" },
+    answers: { q1: "d", q2: 80000, q3: "e", q4: "e", q5: "e", q6: ["t5", "t4", "t1"], q7: "e", q8: "e", q9: ["i6", "i8"], q10: "b" },
     expect: { primary: "growth", readinessMin: 5, track: "experienced" },
   },
   {
     name: "Technically inclined beginner",
-    answers: { q1: "a", q2: 30000, q3: "c", q4: "f", q5: "f", q6: ["t6", "t1"], q7: "a", q8: "b", q9: ["hs"], q10: "b" },
+    answers: { q1: "a", q2: 30000, q3: "c", q4: "f", q5: "f", q6: ["t6", "t1"], q7: "a", q8: "b", q9: ["i7"], q10: "b" },
     expect: { primary: "systems" },
   },
   {
-    name: "Existing certified VA without clients",
-    answers: { q1: "d", q2: 45000, q3: "d", q4: "a", q5: "d", q6: ["t1", "t4", "t5"], q7: "c", q8: "d", q9: ["vatrain"], q10: "c" },
+    name: "Career changer with applied skills but no clients yet",
+    answers: { q1: "d", q2: 45000, q3: "d", q4: "a", q5: "d", q6: ["t1", "t4", "t5"], q7: "c", q8: "d", q9: ["i1", "i10"], q10: "c" },
     expect: { track: "certified", readinessMax: 3 },
   },
   {
     name: "E-commerce worker changing careers",
-    answers: { q1: "e", q2: 35000, q3: "c", q4: "g", q5: "g", q6: ["t7", "t5"], q7: "d", q8: "d", q9: ["procert"], q10: "c" },
+    answers: { q1: "e", q2: 35000, q3: "c", q4: "g", q5: "g", q6: ["t7", "t5"], q7: "d", q8: "d", q9: ["i7", "i11"], q10: "c" },
     expect: { primary: "builder" },
   },
   {
@@ -445,9 +449,9 @@ test("every one of the ten answers shapes the report", () => {
     },
     {
       field: "q9",
-      from: { q9: ["hs"] },
-      to: { q9: ["bach", "procert"] },
-      pick: (r) => r.strengths.qualifications.labels.join(",") + "|" + r.readiness.stage,
+      from: { q9: ["none"] },
+      to: { q9: ["i3", "i5"] },
+      pick: (r) => r.strengths.interests.labels.join(",") + "|" + r.strengths.paragraphs.join(" "),
     },
     {
       field: "q10",
@@ -535,11 +539,15 @@ test("the share card never exposes private answers", () => {
 // ---------------------------------------------------------------------------
 // 7. Certification and experience copy (§5 q7, §9)
 // ---------------------------------------------------------------------------
-test("certificate holders are steered to proof, not to another certificate", () => {
+test("step-three experience is steered to proof, not to more study", () => {
   const r = reportFor({ q7: "c", q8: "c", q10: "b" });
   assert.equal(r.nextStep.tone, "portfolio");
-  assert.match(r.readiness.paragraphs.join(" "), /certificate|credential/i);
   assert.match(r.readiness.paragraphs.join(" "), /portfolio/i);
+  assert.doesNotMatch(
+    r.readiness.paragraphs.join(" "),
+    /certificate/i,
+    "step three is experience now, not a certificate",
+  );
   assert.doesNotMatch(
     r.nextStep.body,
     /guarantee|job placement|accredited/i,
@@ -612,76 +620,168 @@ test("every roadmap is scaled to the available hours", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 7b. Qualifications question (§5 q9)
+// 7b. Interests question (§5 q9)
 //
-// The rule these tests exist to hold: formal education may only ever ADD.
-// It cannot lower readiness, cannot lower follow-up priority, cannot change a
-// career match, and cannot be mistaken for a certificate the visitor holds.
+// The rules these tests exist to hold: q9 measures fit (interests, preferred
+// activities and working style), not preparation. It may only ever nudge a
+// near-tie in career scoring, never add readiness, never change lead priority,
+// never appear as match evidence, and never be written about as a requirement.
 // ---------------------------------------------------------------------------
-test("q9 covers the documented qualification paths, including an exclusive none", () => {
+
+test("q9 covers the documented interest and working-style paths, including an exclusive none", () => {
   const q9 = engine.question("q9");
-  assert.equal(q9.type, "multi", "qualifications must be multi-select");
+  assert.equal(q9.type, "multi", "interests must be multi-select");
   const keys = q9.options.map((o) => o.key);
-  for (const key of ["hs", "voc", "assoc", "bach", "master", "doctorate", "procert", "vatrain", "academy", "none"]) {
-    assert.ok(keys.includes(key), `q9 is missing the ${key} option`);
+  for (let i = 1; i <= 11; i++) {
+    assert.ok(keys.includes(`i${i}`), `q9 is missing the i${i} option`);
   }
-  // Every option must be present in the EDUCATION scoring table too, so a new
-  // option cannot ship without a documented rule behind it.
+  assert.ok(keys.includes("none"), "q9 is missing the exclusive 'none of these feel right yet' option");
+  // The old qualifications construct is gone for good: none of its keys may
+  // come back under any wording.
+  for (const gone of ["hs", "voc", "assoc", "bach", "master", "doctorate", "procert", "vatrain", "academy"]) {
+    assert.ok(!keys.includes(gone), `q9 must no longer offer the old ${gone} option`);
+  }
+  // Every interest option is tied to at least one career, so a new option
+  // cannot ship without a documented affinity rule behind it. The exclusive
+  // option is the deliberate exception: it belongs to no career.
+  const affinityKeys = new Set(Object.values(engine.CAREER_INTERESTS).flat());
   for (const o of q9.options) {
-    assert.ok(engine.EDUCATION[o.key], `q9.${o.key} has no EDUCATION rule`);
+    if (o.exclusive) {
+      assert.ok(!affinityKeys.has(o.key), `${o.key} is exclusive and must claim no career`);
+      continue;
+    }
+    assert.ok(affinityKeys.has(o.key), `q9.${o.key} has no career affinity rule`);
   }
-  assert.equal(engine.EDUCATION.none.exclusive, undefined);
+  assert.equal(engine.INTERESTS.none.exclusive, true);
   assert.equal(q9.options.find((o) => o.key === "none").exclusive, true, "none stands alone");
   assert.equal(q9.options.filter((o) => o.exclusive).length, 1, "exactly one exclusive option");
-  // The Academy certificate is an explicit, separately worded choice.
-  const academy = q9.options.find((o) => o.key === "academy");
-  assert.ok(/I already hold/i.test(academy.label), "the Academy option must be first person and past tense");
+  // Affinity stays small by construction: the cap must sit under the q5
+  // weight so interests can only ever break a near-tie.
+  assert.ok(engine.INTEREST_AFFINITY_MAX < engine.SECONDARY_WEIGHT, "affinity must stay below q5");
 });
 
-test("'no formal qualifications' is mutually exclusive with holding qualifications", () => {
+test("'none of these feel right yet' is mutually exclusive with the interests", () => {
   const ok = normaliseAnswers(base({ q9: ["none"] }));
   assert.equal(ok.ok, true);
   assert.deepEqual(ok.answers.q9, ["none"]);
 
-  const bad = normaliseAnswers(base({ q9: ["bach", "none"] }));
-  assert.equal(bad.ok, false, "mixing 'none' with a qualification must be refused");
+  const bad = normaliseAnswers(base({ q9: ["i1", "none"] }));
+  assert.equal(bad.ok, false, "mixing 'none' with an interest must be refused");
   assert.match(bad.error, /exclusive/i);
 });
 
-test("an empty qualifications answer is refused, and unknown keys are rejected", () => {
+test("an empty interests answer is refused, and unknown keys are rejected", () => {
   assert.equal(normaliseAnswers(base({ q9: [] })).ok, false);
   assert.equal(normaliseAnswers(base({ q9: ["law-school"] })).ok, false);
   // Canonical order and de-duplication behave like every other multi-select.
-  const r = normaliseAnswers(base({ q9: ["procert", "hs", "hs"] }));
-  assert.deepEqual(r.answers.q9, ["hs", "procert"]);
+  const r = normaliseAnswers(base({ q9: ["i10", "i1", "i10"] }));
+  assert.deepEqual(r.answers.q9, ["i1", "i10"]);
 });
 
-test("qualifications never change which career suits someone", () => {
-  const none = score({ q9: ["none"] });
-  const doctorate = score({ q9: ["master", "doctorate"] });
-  const trained = score({ q9: ["vatrain", "academy"] });
-  assert.equal(none.primary, doctorate.primary, "a degree must not move the primary match");
-  assert.equal(none.primary, trained.primary, "training must not move the primary match");
-  assert.equal(none.secondary, doctorate.secondary);
-  assert.deepEqual(none.scores, doctorate.scores, "career scores must be identical");
-  assert.deepEqual(none.scores, trained.scores);
+test("interests can only nudge a near-tie, never overturn a decided match", () => {
+  // Decided match: q4 and q5 agree, so the leader sits 10 clear of zero. Even
+  // the strongest affinity cannot close that, because the cap is below q5.
+  // i1 belongs to the organizer alone, so nothing else may move at all.
+  const decidedNone = score({ q4: "b", q5: "b", q6: ["tnone"], q9: ["none"] });
+  const decidedLoved = score({ q4: "b", q5: "b", q6: ["tnone"], q9: ["i1"] });
+  assert.equal(decidedNone.primary, "creative", "the decided match stands");
+  assert.equal(decidedNone.primary, decidedLoved.primary, "interests must not overturn a clear lead");
+  assert.equal(decidedNone.secondary, decidedLoved.secondary);
+  for (const id of CAREER_ORDER) {
+    if (id === "organizer") continue;
+    assert.equal(decidedLoved.scores[id], decidedNone.scores[id], `${id} must not move on someone else's interests`);
+  }
+  assert.ok(
+    decidedLoved.scores.organizer - decidedNone.scores.organizer <= engine.INTEREST_AFFINITY_MAX,
+    "the interest nudge must stay capped",
+  );
+
+  // Near-tie: q4 organizer (6) against q5 creative (4) plus a creative tool
+  // (1) leaves a gap of one, which exactly one extra shared interest closes.
+  const tieA = score({ q4: "a", q5: "b", q6: ["t3"], q9: ["none"] });
+  const tieB = score({ q4: "a", q5: "b", q6: ["t3"], q9: ["i3", "i5"] });
+  assert.equal(tieA.primary, "organizer", "without interests the canonical order decides");
+  assert.equal(tieB.primary, "creative", "shared interests break the near-tie towards what they enjoy");
+  assert.ok(tieB.scores.creative > tieA.scores.creative);
+  assert.ok(
+    tieB.scores.creative - tieA.scores.creative <= engine.INTEREST_AFFINITY_MAX,
+    "the break is a nudge, not a landslide",
+  );
+
+  // The cap bites: sharing every one of a career's interests still moves it
+  // by at most the documented nudge, so interests can never outweigh q5.
+  const allOrganizer = score({ q4: "a", q5: "b", q6: ["t3"], q9: ["i1", "i2", "i10"] });
+  const noInterests = score({ q4: "a", q5: "b", q6: ["t3"], q9: ["none"] });
+  assert.equal(
+    allOrganizer.scores.organizer - noInterests.scores.organizer,
+    engine.INTEREST_AFFINITY_MAX,
+    "three shared interests must cap at INTEREST_AFFINITY_MAX",
+  );
+  assert.ok(engine.INTEREST_AFFINITY_MAX < engine.SECONDARY_WEIGHT, "the cap must stay below the q5 weight");
 });
 
-test("holding no formal qualifications is never a penalty", () => {
-  // The reference path: a beginner with nothing on paper scores exactly like
-  // the same beginner with a high school diploma, because neither is a gate.
+test("interests never appear in the evidence that explains a match", () => {
+  // Same near-tie as above: the affinity really did move the score, so this
+  // is not passing because the signal was never applied.
+  const s = score({ q4: "a", q5: "b", q6: ["t3"], q9: ["i3", "i5"] });
+  assert.equal(s.primary, "creative");
+  for (const list of [s.primaryEvidence, s.secondaryEvidence]) {
+    assert.ok(list.length >= 1, "the match must still explain itself");
+    for (const e of list) {
+      assert.ok(["q4", "q5", "q6"].includes(e.question), `interests leaked into match evidence: ${e.question}`);
+    }
+  }
+  assert.ok(s.primaryEvidence.every((e) => e.weight >= engine.SECONDARY_WEIGHT || e.question === "q6"));
+});
+
+test("q7 and q9 are separate constructs and never substitute for each other", () => {
+  const q7 = engine.question("q7");
+  const q9 = engine.question("q9");
+  assert.match(q7.purpose, /experience/i, "q7 measures existing experience");
+  assert.match(q9.purpose, /interest/i, "q9 measures interests");
+  assert.match(q9.purpose, /working style/i, "q9 also covers working style");
+  assert.doesNotMatch(q9.purpose, /readiness/i, "q9 is not a readiness input");
+  // Different keys entirely, so one cannot silently answer for the other.
+  const k7 = q7.options.map((o) => o.key);
+  const k9 = q9.options.map((o) => o.key);
+  assert.equal(k9.some((k) => k7.includes(k)), false, "q7 and q9 must not share option keys");
+
+  // Reading one question must never move what the other question reports.
+  for (const interest of [["none"], ["i1", "i10"], ["i3", "i5", "i9"]]) {
+    const before = readinessFor(norm({ q9: ["none"], q7: "c", q6: ["t1"] }));
+    const after = readinessFor(norm({ q9: interest, q7: "c", q6: ["t1"] }));
+    assert.deepEqual(after, before, "interests must not touch readiness");
+
+    const expectedLabels = q9.options
+      .filter((o) => interest.includes(o.key))
+      .map((o) => o.label);
+    assert.deepEqual(
+      reportFor({ q9: interest }).strengths.interests.labels,
+      expectedLabels,
+      "interest labels must report q9 and only q9",
+    );
+  }
+  const expA = reportFor({ q7: "a" }).strengths.experience.step;
+  const expE = reportFor({ q7: "e" }).strengths.experience.step;
+  assert.equal(expA, 1, "experience block must read q7");
+  assert.equal(expE, 5);
+});
+
+test("choosing none of the interests is never a penalty", () => {
+  // The reference path: a beginner who picked no interests scores exactly like
+  // the same beginner who picked two, because fit input is never a gate.
   const none = readinessFor(norm({ q9: ["none"], q7: "a", q6: ["tnone"] }));
-  const hs = readinessFor(norm({ q9: ["hs"], q7: "a", q6: ["tnone"] }));
-  assert.equal(none.stage, hs.stage, "no qualification must not read as a lower stage");
+  const interested = readinessFor(norm({ q9: ["i1", "i5"], q7: "a", q6: ["tnone"] }));
+  assert.equal(none.stage, interested.stage, "no interests must not read as a lower stage");
 
   const noneLead = leadPriority(base({ q9: ["none"] }));
-  const hsLead = leadPriority(base({ q9: ["hs"] }));
-  assert.equal(noneLead.score, hsLead.score, "no qualification must not lose follow-up points");
+  const interestedLead = leadPriority(base({ q9: ["i1", "i5"] }));
+  assert.equal(noneLead.score, interestedLead.score, "no interests must not lose follow-up points");
 
-  // With nothing else in the score, holding nothing formal is a flat zero:
+  // With nothing else in the score, choosing nothing is a flat zero:
   // the baseline, never a minus.
   const nothingElse = base({ q9: ["none"], q3: "a", q10: "e" });
-  assert.equal(leadPriority(nothingElse).score, 0, "holding nothing formal contributes zero, never a minus");
+  assert.equal(leadPriority(nothingElse).score, 0, "choosing nothing contributes zero, never a minus");
 
   // And the report must not dress it up as a gap.
   const r = reportFor({ q9: ["none"] });
@@ -689,101 +789,136 @@ test("holding no formal qualifications is never a penalty", () => {
   assert.match(text, /normal place to start|common place to start/i);
   // It must never read as a gap the visitor has to apologise for.
   assert.doesNotMatch(text, /you (are )?missing|hold you back|falling behind|disadvantage|put you at a (big )?disadvantage/i);
-  assert.equal(r.strengths.qualifications.noneSelected, true);
+  assert.equal(r.strengths.interests.noneSelected, true);
+  // And the "you would enjoy" sentence is simply absent, never replaced by a
+  // judgement about having no interests.
+  assert.doesNotMatch(text, /you also said the work you would most enjoy/i);
 });
 
-test("education can lift a beginner by one stage and no further", () => {
-  const bare = readinessFor(norm({ q9: ["none"], q7: "a", q6: ["tnone"] }));
-  const degree = readinessFor(norm({ q9: ["bach"], q7: "a", q6: ["tnone"] }));
-  assert.equal(bare.stage, 1);
-  assert.equal(degree.stage, 2, "a degree may lift a beginner exactly one stage");
-
-  // Even stacked with every transferable tool, paper alone cannot reach
-  // "preparing for clients".
-  const everything = readinessFor(
-    norm({ q9: ["bach", "master", "doctorate"], q7: "a", q6: ["t1", "t2", "t3", "t4", "t5", "t6"] }),
-  );
-  assert.ok(everything.stage <= 3, `qualifications + tools must not imply client readiness, got ${everything.stage}`);
-
-  // Once real experience has had its say, education stops adding entirely.
-  const veteran = readinessFor(norm({ q9: ["master", "doctorate"], q7: "e", q6: ["tnone"] }));
-  assert.equal(veteran.stage, 5, "education must not stack on top of experience");
-  const certified = readinessFor(norm({ q9: ["academy"], q7: "c", q6: ["t1"] }));
-  assert.equal(certified.stage, 3, "the Academy certificate is not a readiness shortcut either");
+test("interests add no readiness lift, for any combination of answers", () => {
+  // Documented: readiness reads q7 (experience) and q6 (tools) only. q9 is
+  // fit input, so every interest choice must land on the identical stage,
+  // including the old "qualifications used to lift a beginner" case.
+  const tools = [["tnone"], ["t1"], ["t1", "t2", "t3", "t4", "t5", "t6"]];
+  const interests = [["none"], ["i1"], ["i4", "i8"], ["i1", "i3", "i9", "i11"]];
+  for (const step of ["a", "b", "c", "d", "e"]) {
+    for (const q6 of tools) {
+      const reference = readinessFor(norm({ q9: ["none"], q7: step, q6 }));
+      for (const q9 of interests) {
+        const r = readinessFor(norm({ q9, q7: step, q6 }));
+        assert.equal(
+          r.stage,
+          reference.stage,
+          `q7=${step}, q6=${q6.join("/")}, q9=${q9.join("/")} must not move the stage`,
+        );
+        assert.equal(r.experienceStep, reference.experienceStep);
+      }
+      // And the stage itself is exactly what q7 plus the tool rule produce.
+      const stepNo = { a: 1, b: 2, c: 3, d: 4, e: 5 }[step];
+      const toolCount = q6.filter((t) => t !== "tnone").length;
+      const expected = Math.min(5, Math.max(1, stepNo + (stepNo <= 2 && toolCount >= 5 ? 1 : 0)));
+      assert.equal(reference.stage, expected, "readiness must be a pure function of q7 and q6");
+    }
+  }
 });
 
-test("education contributes additively to lead priority, and only up to the ceiling", () => {
-  const plain = leadPriority(base({ q9: ["none"] }));
-  const qualified = leadPriority(base({ q9: ["bach"] }));
-  const stacked = leadPriority(base({ q9: ["master", "doctorate", "academy", "procert"] }));
+test("experience depth adds to lead priority, and only up to the ceiling", () => {
+  // Isolated: no timeline intent and no spare hours, so only the q7 answer
+  // can move the score.
+  const plain = leadPriority(base({ q9: ["none"], q3: "a", q7: "a", q10: "e" }));
+  const step2 = leadPriority(base({ q9: ["none"], q3: "a", q7: "b", q10: "e" }));
+  const deepest = leadPriority(base({ q9: ["none"], q3: "a", q7: "e", q10: "e" }));
+  const depth = (stage) => Math.max(0, Math.min(engine.EXPERIENCE_MAX_LEAD_POINTS, stage - 1));
 
-  assert.ok(qualified.score > plain.score, "holding qualifications should add follow-up points");
+  assert.ok(step2.score > plain.score, "more experience should add follow-up points");
   assert.equal(
-    qualified.score - plain.score,
-    engine.EDUCATION.bach.leadPoints,
-    "a bachelor's degree is worth exactly its documented points",
+    step2.score - plain.score,
+    LEAD_PRIORITY.experience[2] + depth(2),
+    "step two is baseline plus exactly its documented depth points",
   );
-  assert.ok(
-    stacked.score - plain.score <= engine.EDUCATION_MAX_LEAD_POINTS,
-    "education points must be capped, overlapping paper cannot stack",
-  );
-  assert.ok(
-    stacked.score - plain.score <= 4,
-    "the documented ceiling for education is 4 points",
+  assert.equal(
+    deepest.score - plain.score,
+    LEAD_PRIORITY.experience[5] + depth(5),
+    "step five is baseline plus the documented depth ceiling",
   );
 
-  // Practical training is worth at least as much as an academic degree,
-  // because it sits closer to the work a client actually buys.
-  const degree = leadPriority(base({ q9: ["bach"] })).score;
-  const trained = leadPriority(base({ q9: ["vatrain"] })).score;
-  assert.ok(trained >= degree, "client-facing training must not be worth less than a degree");
+  // Nothing else in the model may exceed the depth ceiling, so a beginner is
+  // never out-scored by paper on the depth line.
+  const allSteps = ["a", "b", "c", "d", "e"].map((q7, i) => ({
+    step: i + 1,
+    depth: leadPriority(base({ q9: ["none"], q3: "a", q7, q10: "e" })).score - LEAD_PRIORITY.experience[i + 1],
+  }));
+  for (const row of allSteps) {
+    assert.equal(row.depth, depth(row.step), `step ${row.step} depth points`);
+    assert.ok(row.depth <= 4, "the documented ceiling for depth is 4 points");
+    assert.ok(row.depth >= 0, "a beginner gains nothing, never a minus");
+  }
 
-  // The reason is readable and part of the explained total.
-  const reasons = leadPriority(base({ q9: ["bach"] })).reasons;
-  const eduReason = reasons.find((r) => /holds/i.test(r.label));
-  assert.ok(eduReason, "a qualification must explain its own points");
-  assert.ok(eduReason.label.length > 8);
-  assert.ok(!/[—–]/.test(eduReason.label), "reasons must not contain typographic dashes");
+  // The interests answer contributes nothing here: lead priority reads q7,
+  // never q9.
+  const noInterests = leadPriority(base({ q9: ["none"], q3: "a", q7: "c", q10: "e" }));
+  const someInterests = leadPriority(base({ q9: ["i7", "i8", "i9"], q3: "a", q7: "c", q10: "e" }));
+  assert.equal(noInterests.score, someInterests.score, "interests must not move follow-up priority");
+
+  // The depth reason is readable and part of the explained total, alongside
+  // the baseline experience reason from the same answer.
+  const reasons = leadPriority(base({ q9: ["none"], q3: "a", q7: "c", q10: "e" })).reasons;
+  const baseline = reasons.find((r) => r.points === LEAD_PRIORITY.experience[3]);
+  const depthReason = reasons.find((r) => r.points === depth(3));
+  assert.ok(baseline, "the baseline experience reason must explain its own points");
+  assert.ok(depthReason, "experience depth must explain its own points");
+  assert.notEqual(baseline.label, depthReason.label, "the two lines must read differently");
+  assert.ok(depthReason.label.length > 8);
+  assert.ok(!/[—–]/.test(depthReason.label), "reasons must not contain typographic dashes");
 });
 
-test("taking the quiz never implies the visitor already holds the Academy certificate", () => {
-  // Default: they never ticked it, so the report must offer it as a future
-  // option in the exact registered wording, and must not claim completion.
-  const notHeld = reportFor({});
-  assert.equal(notHeld.roadmap.certificateHeld, false, "silence must never read as holding the certificate");
-  assert.match(
-    notHeld.roadmap.certificateNote,
-    /Certificate of Completion/,
-    "the certificate must appear by its exact name",
-  );
-  assert.match(notHeld.roadmap.certificateNote, /exam/, "the requirement to earn it must be stated");
-  assert.match(
-    notHeld.roadmap.certificateNote,
-    /finishes? every class and passes all four phase exams plus the final Academy exam/i,
-    "the verified requirement is: every class, four phase exams, the final Academy exam",
-  );
-  assert.doesNotMatch(notHeld.roadmap.certificateNote, /you (already )?hold/i, "no false claim of ownership");
-
-  // A visitor who says they hold it is told to use it, not sold another one.
-  const held = reportFor({ q9: ["academy"] });
-  assert.equal(held.roadmap.certificateHeld, true);
-  assert.match(held.roadmap.certificateNote, /already hold an Assistara Academy certificate of completion/i);
-  assert.doesNotMatch(
-    held.nextStep.body,
-    /earn your certificate|get certified first|certification is required/i,
-    "a certificate holder must never be told certification comes first",
-  );
+test("the report never claims the visitor already holds the Academy certificate", () => {
+  // q9 cannot say "I already hold it" any more, so no answer can produce a
+  // held state: the certificate is offered as a future option in the exact
+  // registered wording, worded the same way for everyone.
+  const q9 = engine.question("q9");
+  for (const opt of q9.options) {
+    const r = reportFor({ q9: [opt.key] });
+    assert.equal(
+      r.roadmap.certificateHeld,
+      false,
+      `q9=${opt.key} must never read as holding the certificate`,
+    );
+    assert.match(
+      r.roadmap.certificateNote,
+      /^Optional, never required:/,
+      "the certificate note must always be worded as an option",
+    );
+    assert.match(
+      r.roadmap.certificateNote,
+      /Certificate of Completion/,
+      "the certificate must appear by its exact name",
+    );
+    assert.match(r.roadmap.certificateNote, /exam/, "the requirement to earn it must be stated");
+    assert.match(
+      r.roadmap.certificateNote,
+      /finishes? every class and passes all four phase exams plus the final Academy exam/i,
+      "the verified requirement is: every class, four phase exams, the final Academy exam",
+    );
+    assert.doesNotMatch(r.roadmap.certificateNote, /you (already )?hold/i, "no false claim of ownership");
+    assert.doesNotMatch(
+      r.nextStep.body,
+      /earn your certificate|get certified first|certification is required/i,
+      "nobody may be told certification comes first",
+    );
+  }
 });
 
 test("a taken quiz never awards the certificate anywhere in the report", () => {
-  for (const q9 of [["none"], ["hs"], ["bach"], ["academy"]]) {
+  for (const q9 of [["none"], ["i1"], ["i5", "i9"], ["i4", "i7", "i11"]]) {
     const flat = JSON.stringify(reportFor({ q9 }));
     assert.doesNotMatch(flat, /quiz (awards|grants|earns)|pass this quiz to (earn|get)/i);
   }
-  // The question's own support copy must say so too.
+  // The interests question must not gate anything either: it shapes the
+  // recommendation, it never qualifies the visitor for one.
   const q9 = engine.question("q9");
-  assert.match(q9.support, /does not award a certificate/i);
-  assert.match(q9.support, /Certificate of Completion/);
+  assert.match(q9.support, /not to gate it/i);
+  assert.doesNotMatch(JSON.stringify(q9.options), /we (award|grant)/i);
 });
 
 // ---------------------------------------------------------------------------
@@ -883,17 +1018,19 @@ test("previous experience is ordered the way the readiness stages read", () => {
   // q3 "a" zeroes out capacity, so only the experience answer moves.
   const scoreFor = (q7) => leadPriority(base({ q3: "a", q7, q10: "e" })).score;
   assert.ok(scoreFor("e") > scoreFor("d"), "paid work should outrank portfolio work");
-  assert.ok(scoreFor("d") > scoreFor("c"), "portfolio should outrank a certificate");
-  assert.ok(scoreFor("c") > scoreFor("b"), "a course should outrank self-teaching");
+  assert.ok(scoreFor("d") > scoreFor("c"), "portfolio should outrank applied experience");
+  assert.ok(scoreFor("c") > scoreFor("b"), "applied experience should outrank self-teaching");
   assert.ok(scoreFor("b") > scoreFor("a"), "self-teaching should outrank starting from scratch");
   assert.equal(scoreFor("a"), 0, "starting from scratch is the baseline, not a penalty");
 });
 
 test("each experience level is worth exactly the documented points", () => {
   const stages = { a: 1, b: 2, c: 3, d: 4, e: 5 };
+  const depth = (step) => Math.max(0, Math.min(engine.EXPERIENCE_MAX_LEAD_POINTS, step - 1));
   for (const [q7, stage] of Object.entries(stages)) {
+    const expected = LEAD_PRIORITY.experience[stage] + depth(stage);
     const p = leadPriority(base({ q3: "a", q7, q10: "e" }));
-    assert.equal(p.score, LEAD_PRIORITY.experience[stage], `stage ${stage} should score ${LEAD_PRIORITY.experience[stage]}`);
+    assert.equal(p.score, expected, `stage ${stage} should score ${expected}`);
   }
 });
 

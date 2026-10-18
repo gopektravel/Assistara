@@ -14,11 +14,14 @@
 //   * Every one of the ten answers influences at least one block.
 //   * Certification is never sold as mandatory and never implies employment.
 //   * Someone who already holds a certificate is pushed toward portfolio,
-//     specialization, positioning and outreach — not toward another certificate.
-//   * Qualifications (q9) are reported as preparation the person already has.
-//     Holding nothing formal is written about neutrally, never as a gap, and
-//     the Academy's Certificate of Completion only ever appears as a future
-//     option, never as something the visitor holds because they took a quiz.
+//     specialization, positioning and outreach, not toward another certificate.
+//   * Experience (q7) is reported as what the person has already done, with an
+//     honest paragraph for every step from 1 to 5. Starting from zero is
+//     written about neutrally, never as a gap, and no step is a requirement.
+//   * Interests (q9) shape emphasis only. They are never reported as
+//     qualifications or preparation, and the Academy's Certificate of
+//     Completion only ever appears as a future option, never as something the
+//     visitor holds because they took a quiz.
 //   * A 30-day plan is a plan, never a promise of employment.
 //   * Lifestyle copy never promises unlimited flexibility for every VA role.
 // ----------------------------------------------------------------------------
@@ -29,7 +32,7 @@ const {
   QUESTIONS,
   scoreAnswers,
   readinessFor,
-  educationFor,
+  interestsFor,
   incomeScenarios,
   hoursForAnswer,
   peso,
@@ -198,30 +201,37 @@ function listPhrase(items) {
   return `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`;
 }
 
-// E1. Qualifications and certificates (q9). Reported as preparation already
-// held, never as a requirement, and holding nothing is written about neutrally
-// rather than as a gap.
-function buildQualifications(answers) {
-  const edu = educationFor(answers);
+// E1. Existing experience (q7). One readable paragraph for every step from 1
+// to 5, reported as what the person has already done rather than as a
+// requirement. Step 1 is a normal place to start and is written about
+// neutrally, never as a gap; no step is a qualification and nothing here is
+// a certificate.
+function buildExperience(answers) {
+  const readiness = readinessFor(answers);
+  const step = readiness.experienceStep;
   const paras = [];
-  if (edu.noneSelected || !edu.entries.length) {
+  if (step <= 1) {
     paras.push(
-      "You told us you do not hold formal qualifications or certificates yet. That is a normal place to start, not a penalty: remote clients buy proof that a task got done, and proof is built from sample work rather than from paper.",
+      "You told us you are starting completely from scratch. That is a normal place to start, not a penalty: nobody begins with clients, and everything on your plan below is small enough to finish in the next month.",
+    );
+  } else if (step === 2) {
+    paras.push(
+      "You have already taught yourself relevant skills, which is experience in the only form a client cares about: you learned it by doing the thing rather than by being told about it.",
+    );
+  } else if (step === 3) {
+    paras.push(
+      "You have applied skills from work, school, or life experience to a real project. That transferable experience is the raw material of a service: the work now is naming what you did and letting someone else open it.",
+    );
+  } else if (step === 4) {
+    paras.push(
+      "You have practiced real tasks and built portfolio examples, which puts you ahead of most people at this stage. Clients can open that and read it, so your job is to keep it current and specific rather than to start again.",
     );
   } else {
-    paras.push(`On paper you already bring ${listPhrase(edu.labels)}.`);
     paras.push(
-      edu.relevantTraining || edu.tier >= 3
-        ? "Training and qualifications shorten the path by giving you method and vocabulary, but clients still ask to see the work. The fastest way to use what you already hold is to attach it to one finished sample project."
-        : "That is a real foundation, and remote clients rarely ask for transcripts. The way to use it is to let it decide which tasks you take on first, then prove those tasks with sample work.",
+      "You have already done paid work for clients. That is the strongest thing you told us: the plan below is about packaging what you already deliver, pricing it clearly and repeating it with the next client.",
     );
   }
-  if (edu.holdsAcademyCertificate) {
-    paras.push(
-      "You also told us you already hold an Assistara Academy certificate of completion, so this plan is about turning that certificate into evidence people can open, not about collecting another one.",
-    );
-  }
-  return Object.assign({}, edu, { paragraphs: paras });
+  return { step, paragraphs: paras };
 }
 
 function buildStrengths(answers) {
@@ -231,7 +241,10 @@ function buildStrengths(answers) {
     .filter((o) => chosen.includes(o.key))
     .map((o) => o.label);
   const none = chosen.includes("tnone");
-  const qualifications = buildQualifications(answers);
+  const experience = buildExperience(answers);
+  // One quiet interests sentence: q9 is fit input, so it is mentioned as a
+  // steer, never as evidence, a requirement or a qualification.
+  const interests = interestsFor(answers);
   const paras = [];
   if (none) {
     paras.push(
@@ -251,10 +264,15 @@ function buildStrengths(answers) {
       );
     }
   }
-  // Qualifications travel with the same block: both are "what you already
-  // bring", and neither is allowed to read as a requirement.
-  paras.push.apply(paras, qualifications.paragraphs);
-  return { selected, none, qualifications, paragraphs: paras };
+  // Experience travels with the same block: both are "what you already bring",
+  // and neither is allowed to read as a requirement.
+  paras.push.apply(paras, experience.paragraphs);
+  if (!interests.noneSelected && interests.labels.length) {
+    paras.push(
+      `You also said the work you would most enjoy includes ${listPhrase(interests.labels)}, so the recommendation below leans that way.`,
+    );
+  }
+  return { selected, none, experience, interests, paragraphs: paras };
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +308,7 @@ function buildReadiness(answers) {
   const paras = [copy.body];
   if (r.experienceStep === 3) {
     paras.push(
-      "One important note: a certificate shows that you studied something. It does not by itself show that you can run a client engagement, and nobody should tell you otherwise. Treat it as a foundation and build the proof on top of it.",
+      "One important note: applying skills to a real project shows you can do the work. It does not, by itself, show a stranger that you can run a client engagement, so the next move is to make that project visible rather than to collect more theory.",
     );
   } else if (r.experienceStep === 5) {
     paras.push(
@@ -593,12 +611,11 @@ function buildRoadmap(answers, scoring, readiness, obstacle) {
     target.tasks = target.tasks.concat([`This week also: ${obstacle.advice[1] || obstacle.advice[0]}`]);
   }
 
-  // The Academy certificate appears only as an option, and only ever worded
-  // from what the visitor actually told us about holding it.
-  const education = educationFor(answers);
-  const certificateNote = education.holdsAcademyCertificate
-    ? "You already hold an Assistara Academy certificate of completion, so treat it as proof that you can finish something demanding. Mention it once in your profile, then let the sample work above do the talking."
-    : "Optional, never required: if structured training would help, Assistara Academy awards a Certificate of Completion once a student finishes every class and passes all four phase exams plus the final Academy exam.";
+  // q9 no longer asks about certificates, so there is no held state to read.
+  // The Academy certificate appears only as an option and is worded the same
+  // way for everyone: always optional, never a requirement.
+  const certificateNote =
+    "Optional, never required: if structured training would help, Assistara Academy awards a Certificate of Completion once a student finishes every class and passes all four phase exams plus the final Academy exam.";
 
   return {
     heading: "Your 30-day roadmap",
@@ -607,7 +624,7 @@ function buildRoadmap(answers, scoring, readiness, obstacle) {
     note: loadNote,
     promise: "This is a 30-day plan for building evidence and starting outreach. It is not a promise of employment.",
     certificateNote,
-    certificateHeld: !!education.holdsAcademyCertificate,
+    certificateHeld: false,
     weeks,
   };
 }
@@ -634,7 +651,7 @@ function buildPortfolio(scoring, readiness) {
 // J. Lifestyle fit (q3 availability + q1 motivation) — no promise of
 // unlimited flexibility.
 //
-// The dedicated "perfect workday" question was folded into the qualifications
+// The dedicated "perfect workday" question was folded into the interests
 // step to keep the quiz at ten questions, so the shape of the week is modelled
 // from two answers the visitor already gave (how many hours they actually
 // have, and what they want remote work to change) instead of being read off a
@@ -737,8 +754,8 @@ function buildNextStep(readiness, answers, scoring) {
   if (readiness.experienceStep === 3) {
     return {
       tone: "portfolio",
-      heading: "You have studied. Now make it visible",
-      body: `${when} Your certificate already covers the fundamentals, so your highest-value move is proof: the portfolio, the specialization and the first outreach. Assistara Academy is built around getting that proof done with feedback, which is a different thing from studying again.`,
+      heading: "You have done real work. Now make it visible",
+      body: `${when} You have already applied your skills to a real project, so the fundamentals are not the gap. Your highest-value move is proof: the portfolio, the specialization and the first outreach. Assistara Academy is built around getting that proof done with feedback, which is a different thing from starting over.`,
       timeline: t.timeline,
       cta: { label: "See how Assistara Academy works", href: academy },
     };

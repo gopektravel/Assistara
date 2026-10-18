@@ -592,18 +592,26 @@ export const TEMPLATES: TemplateDef[] = [
     requiredLinks: [{ label: "Result link", test: /\/academy\/quiz\?t=/ }],
     vars: [
       { name: "first_name", label: "First name", description: "Quiz lead's first name, or 'there'", type: "string", required: true, sample: "Maria", dynamic: true },
-      { name: "primary_career", label: "Primary career match", description: "Top-scoring VA career", type: "string", required: true, sample: "Executive Support Specialist", dynamic: true },
+      { name: "primary_career", label: "Primary career match", description: "The one primary career from the stored report", type: "string", required: true, sample: "Executive Support Specialist", dynamic: true },
       { name: "primary_tagline", label: "Match tagline", description: "One-line description of the primary match", type: "string", required: false, sample: "The calm centre of a busy person's week", dynamic: true },
-      { name: "secondary_career", label: "Secondary match", description: "Second career worth exploring", type: "string", required: false, sample: "Operations Coordinator", dynamic: true },
+      { name: "secondary_career", label: "Secondary match", description: "Stored for reference only; never rendered in this email", type: "string", required: false, sample: "Operations Coordinator", dynamic: true },
       { name: "readiness", label: "Readiness stage", description: "Career readiness stage from q7", type: "string", required: false, sample: "Exploring", dynamic: true },
       { name: "weekly_hours", label: "Weekly hours", description: "Paid hours a week the lead has", type: "string", required: false, sample: "20", dynamic: true },
       { name: "goal_income", label: "Monthly income goal", description: "Target monthly income, peso formatted", type: "string", required: false, sample: "\u20b130,000", dynamic: true },
       { name: "required_rate", label: "Required hourly rate", description: "Rate implied by the goal and hours", type: "string", required: false, sample: "\u20b1433", dynamic: true },
+      { name: "why_fit", label: "Why it fits", description: "Explanation lines from the stored report", type: "string", required: false, sample: "The mission you said sounded most exciting was \"admin and support\". That is exactly where this path lives.", dynamic: true },
+      { name: "strengths", label: "Your strengths", description: "Strength paragraphs from the stored report", type: "string", required: false, sample: "You already work with spreadsheets and customer communication. This is transferable experience.", dynamic: true },
+      { name: "skills_to_develop", label: "Skills to develop", description: "Readiness gaps phrased as what to build next", type: "string", required: false, sample: "A first tool you know properly; One sample project you can show", dynamic: true },
+      { name: "plan_intro", label: "Plan intro", description: "Honest framing line for the 30-day plan", type: "string", required: false, sample: "This is a 30-day plan for building evidence and starting outreach. It is not a promise of employment.", dynamic: true },
+      { name: "plan_w1", label: "Plan week 1", description: "First week of the 30-day plan", type: "string", required: false, sample: "Week 1: Foundations. Learn the two tools the role uses most. Set up the accounts. Do one small real task with each, end to end.", dynamic: true },
+      { name: "plan_w2", label: "Plan week 2", description: "Second week of the 30-day plan", type: "string", required: false, sample: "Week 2: Guided practice. Repeat the task until it is boring. Redo your week 1 task and time yourself.", dynamic: true },
+      { name: "plan_w3", label: "Plan week 3", description: "Third week of the 30-day plan", type: "string", required: false, sample: "Week 3: Sample project. Build one finished thing you can show.", dynamic: true },
+      { name: "plan_w4", label: "Plan week 4", description: "Final week of the 30-day plan", type: "string", required: false, sample: "Week 4: First outreach. Put the sample work in front of real people.", dynamic: true },
       { name: "next_step_heading", label: "Next step heading", description: "Timeline-appropriate next step", type: "string", required: false, sample: "Start with the foundations", dynamic: true },
       { name: "next_step_body", label: "Next step body", description: "Why this step fits the stage", type: "string", required: false, sample: "A structured start saves months.", dynamic: true },
       { name: "next_step_cta", label: "Next step button", description: "CTA label", type: "string", required: false, sample: "Explore the Academy", dynamic: true },
       { name: "next_step_url", label: "Next step link", description: "Academy or application link", type: "url", required: false, sample: `${SITE}/academy`, dynamic: true },
-      { name: "result_url", label: "Result link", description: "Token link to the saved report", type: "url", required: true, sample: `${SITE}/academy/quiz?t=sample-token`, dynamic: true },
+      { name: "result_url", label: "Result link", description: "Token link to the saved confirmation", type: "url", required: true, sample: `${SITE}/academy/quiz?t=sample-token`, dynamic: true },
       { name: "site_url", label: "Site URL", description: "Canonical site origin", type: "url", required: false, sample: SITE, dynamic: false },
     ],
     samples: {
@@ -615,6 +623,14 @@ export const TEMPLATES: TemplateDef[] = [
       weekly_hours: "20",
       goal_income: "\u20b130,000",
       required_rate: "\u20b1433",
+      why_fit: "The mission you said sounded most exciting was \"admin and support\". That is exactly where this path lives.",
+      strengths: "You already work with spreadsheets and customer communication. This is transferable experience.",
+      skills_to_develop: "A first tool you know properly; One sample project you can show",
+      plan_intro: "This is a 30-day plan for building evidence and starting outreach. It is not a promise of employment.",
+      plan_w1: "Week 1: Foundations. Learn the two tools the role uses most. Set up the accounts. Do one small real task with each, end to end.",
+      plan_w2: "Week 2: Guided practice. Repeat the task until it is boring. Redo your week 1 task and time yourself.",
+      plan_w3: "Week 3: Sample project. Build one finished thing you can show.",
+      plan_w4: "Week 4: First outreach. Put the sample work in front of real people.",
       next_step_heading: "Start with the foundations",
       next_step_body: "A structured start saves months of guessing.",
       next_step_cta: "Explore the Academy",
@@ -629,30 +645,62 @@ export const TEMPLATES: TemplateDef[] = [
       const nextCta = esc(String(v.next_step_cta ?? "Explore the Academy"));
       const rows: [string, string][] = [
         ["Primary match", String(v.primary_career ?? "Your matched career")],
-        ["Also worth exploring", String(v.secondary_career ?? "-")],
         ["Where you are starting from", String(v.readiness ?? "-")],
       ];
       if (v.weekly_hours) rows.push(["Hours you have each week", `${v.weekly_hours} hrs`]);
       if (v.goal_income) rows.push(["Monthly income you are aiming for", String(v.goal_income)]);
       const card = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f5;border:1px solid #ece9e2;border-radius:14px"><tr><td style="padding:14px 18px">${rows.map(([l, val]) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0"><span style="color:#77716a;font-size:13px">${esc(l)}</span><b style="color:#151515;font-size:14px">${esc(val)}</b></div>`).join("")}</td></tr></table>`;
+      const section = (title: string, value: unknown) => {
+        const s = String(value ?? "").trim();
+        return s ? `<p><strong>${esc(title)}</strong></p><p>${esc(s)}</p>` : "";
+      };
+      const week = (n: number) => {
+        const s = String(v[`plan_w${n}`] ?? "").trim();
+        return s ? `<p>${esc(s)}</p>` : "";
+      };
       const rateLine = v.required_rate
         ? `<p>For the goal you set, that works out at about <strong>${esc(String(v.required_rate))}</strong> per paid hour at the hours you told us you have. That is arithmetic you can check, not a forecast.</p>`
-        : `<p>Open your result to see the income arithmetic laid out for the hours you actually have.</p>`;
+        : "";
+      const body =
+        `<p>Hi ${name},</p>` +
+        `<p>Thanks for taking the Remote Income Potential Quiz. Here is your personalised remote career report, built from the ten answers you gave. Everything you asked for is in this email.</p>` +
+        card +
+        (v.primary_tagline ? `<p>${esc(String(v.primary_tagline))}</p>` : "") +
+        rateLine +
+        section("Why it fits", v.why_fit) +
+        section("Your strengths", v.strengths) +
+        section("Skills to develop", v.skills_to_develop ? `${String(v.skills_to_develop)}.` : "") +
+        `<p><strong>Your 30-day plan</strong></p>` +
+        (v.plan_intro ? `<p>${esc(String(v.plan_intro))}</p>` : "") +
+        week(1) + week(2) + week(3) + week(4) +
+        `<p><strong>${esc(String(v.next_step_heading ?? "Your next step"))}</strong></p>` +
+        `<p>${esc(String(v.next_step_body ?? ""))}</p>` +
+        `<p style="color:#77716a;font-size:12px;line-height:1.6">Income figures in your report are illustrative calculations based on your answers and example hourly rates. They are not earnings predictions or guarantees, and completing Assistara Academy does not guarantee employment.</p>` +
+        `<p style="color:#77716a;font-size:12px;line-height:1.55">Your result link: <a href="${result}" style="color:#4f4b45">${result}</a></p>`;
       return {
         subject: `Your quiz result: ${v.primary_career} is your match`,
         html: appShell(
-          "Your remote career result is ready",
-          `<p>Hi ${name},</p><p>Thanks for taking the Remote Income Potential Quiz. Your result is ready, and it is built entirely from the ten answers you gave.</p>${card}${rateLine}<p><strong>${esc(String(v.next_step_heading ?? "Your next step"))}</strong></p><p>${esc(String(v.next_step_body ?? ""))}</p><p style="color:#77716a;font-size:12px;line-height:1.6">Income figures in your report are illustrative calculations based on your answers and example hourly rates. They are not earnings predictions or guarantees, and completing Assistara Academy does not guarantee employment.</p>`,
-          { label: nextCta, href: result },
+          "Your personalised remote career report",
+          body,
+          { label: nextCta, href: nextUrl },
         ),
         text: [
           `Hi ${FIRST(v)},`,
-          `Thanks for taking the Remote Income Potential Quiz. Your result is ready.`,
+          `Thanks for taking the Remote Income Potential Quiz. Here is your personalised remote career report, built from the ten answers you gave.`,
           `Primary match: ${v.primary_career}`,
-          v.secondary_career ? `Also worth exploring: ${v.secondary_career}` : "",
+          v.primary_tagline ? String(v.primary_tagline) : "",
           v.required_rate ? `That works out at about ${v.required_rate} per paid hour.` : "",
-          `Open your result: ${result}`,
+          v.why_fit ? `Why it fits: ${v.why_fit}` : "",
+          v.strengths ? `Your strengths: ${v.strengths}` : "",
+          v.skills_to_develop ? `Skills to develop: ${v.skills_to_develop}.` : "",
+          `Your 30-day plan`,
+          String(v.plan_intro ?? ""),
+          String(v.plan_w1 ?? ""),
+          String(v.plan_w2 ?? ""),
+          String(v.plan_w3 ?? ""),
+          String(v.plan_w4 ?? ""),
           `Next step: ${nextCta} ${nextUrl}`,
+          `Open your result: ${result}`,
           `Income figures are illustrative calculations, not earnings predictions or guarantees.`,
         ].filter(Boolean).join("\n\n"),
         senderName: "Assistara Academy",

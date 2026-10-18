@@ -2619,12 +2619,17 @@
         if (at) return /withdrawn/i.test(String(q.consent_source || "")) ? "Withdrawn" + suffix : "Declined" + suffix;
         return "Not given";
       }
-      function leadQualifications(q) {
-        const qz = q && q.report && q.report.strengths && q.report.strengths.qualifications;
-        if (!qz || !Array.isArray(qz.labels) || !qz.labels.length) {
-          return qz && qz.noneSelected ? "No formal qualifications yet" : "-";
+      // q9 is the interests question now. Reports stored before that change
+      // still carry the old qualifications block, so fall back to it rather
+      // than showing nothing for historical leads.
+      function leadInterests(q) {
+        const s = q && q.report && q.report.strengths;
+        const block = (s && (s.interests || s.qualifications)) || null;
+        if (!block || !Array.isArray(block.labels) || !block.labels.length) {
+          if (block && block.noneSelected) return "None selected yet";
+          return "-";
         }
-        return qz.labels.join(", ");
+        return block.labels.join(", ");
       }
       function renderLeadDetail(l) {
         const q = l.quiz, a = l.application;
@@ -2640,8 +2645,8 @@
             // the keys, so a lead can be read without a decoder ring.
             if (Array.isArray(v)) {
               const labels =
-                k === "q9" && report.strengths && report.strengths.qualifications
-                  ? report.strengths.qualifications.labels
+                k === "q9" && report.strengths
+                  ? (report.strengths.interests || report.strengths.qualifications || {}).labels
                   : k === "q6" && report.strengths
                     ? report.strengths.selected
                     : null;
@@ -2677,7 +2682,7 @@
               <div><span>Start timeline</span><b>${escHtml(q.timeline || "-")}</b></div>
               <div><span>Lead priority</span><b>${q.priority ? escHtml(q.priority.score) + " / 100 (" + escHtml(q.priority.band) + ")" : "-"}</b></div>
               <div><span>Result email</span><b>${escHtml(q.email_state || "-")}</b></div>
-              <div><span>Qualifications</span><b>${escHtml(leadQualifications(q))}</b></div>
+              <div><span>Interests</span><b>${escHtml(leadInterests(q))}</b></div>
               <div><span>Promotional email</span><b>${escHtml(leadConsentLabel(q))}</b></div>
             </div>
             <p class="lead-note">"Promotional email" is the occasional opportunities and career-advice opt-in, recorded when this person decided. It is separate from the report: the result is always shown either way, and a result email is a transactional delivery of what they asked for.</p>
