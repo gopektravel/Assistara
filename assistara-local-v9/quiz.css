@@ -1439,47 +1439,8 @@
   margin: 8px 0 0;
 }
 
-.quiz-about {
-  max-width: 820px;
-  padding-top: 6px;
-  padding-bottom: 56px;
-}
-
-.quiz-about .quiz-facts {
-  margin-top: 0;
-}
-
-.quiz-about-title {
-  font-size: clamp(19px, 4.4vw, 23px);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-weight: 800;
-  margin: 26px 0 0;
-}
-
-.quiz-about-body {
-  font-size: 15px;
-  line-height: 1.7;
-  color: var(--muted, #66625f);
-  margin: 10px 0 0;
-  max-width: 720px;
-}
-
-.quiz-about .text-link {
-  display: inline-block;
-  margin-top: 18px;
-  font-weight: 700;
-}
-
 @media (max-width: 640px) {
   .quiz-head {
     margin-bottom: 14px;
-  }
-  .quiz-about {
-    padding-bottom: 40px;
-  }
-  .quiz-about .quiz-facts {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
   }
 }

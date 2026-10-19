@@ -72,41 +72,29 @@ test("a retake returns to question 1, not to a landing screen", () => {
   assert.match(report, /__quizRenderQuestion/, "a retake has to paint question 1 again");
 });
 
-test("the explanation of the quiz sits below the questions, never above them", () => {
+test("no explanation section exists between questions and reveal", () => {
   const about = page.indexOf('id="quizAbout"');
   const quizStart = page.indexOf('id="quizPlay"');
   const reveal = page.indexOf('id="quizReveal"');
-  assert.ok(about > quizStart, "the explanation must come after the questions");
-  assert.ok(about < reveal, "the explanation must come before the reveal step");
+  assert.equal(about, -1, "the explanation section must not exist");
   assert.ok(quizStart < reveal, "the questions must come before the reveal step");
-
-  // It explains the quiz and states the honest limits, without making any
-  // claim the rest of the project avoids.
-  const block = page.slice(about, reveal);
-  assert.doesNotMatch(block, /guarantee[sd]?\s+(income|salary|results?|earnings)/i);
-  assert.match(block, /not a psychometric test/i);
-  // No compatibility percentage, which the rest of the project also refuses.
-  assert.doesNotMatch(block, /your compatibility (is|score)/i);
-  // Income figures stay illustrative, never a promise.
-  assert.match(block, /illustrative/i);
 });
 
 test("the new copy keeps the project's writing rules", () => {
-  const copy = page.slice(page.indexOf('class="quiz-head"'), page.indexOf('id="quizReveal"'));
-  assert.doesNotMatch(copy, /—/, "no em dashes");
-  assert.match(copy, /illustrative/, "income figures must stay illustrative");
+  // Check the whole page for writing rules
+  assert.doesNotMatch(page, /—/, "no em dashes");
+  assert.match(page, /illustrative/, "income figures must stay illustrative");
 });
 
 test("the quiz.css keeps its answers, transitions and reduced-motion support", () => {
   assert.match(css, /\.quiz-head-title/);
-  assert.match(css, /\.quiz-about-body/);
   assert.match(css, /\.quiz-option/);
   assert.match(css, /\.quiz-option:has\(input:checked\)/, "chosen answer cards keep their state");
   assert.match(css, /q-anim-in/, "the question keeps its transition");
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/, "motion must respect the setting");
 
   // The components that were deleted must not leave their styling behind.
-  for (const dead of [".quiz-landing", ".quiz-teaser", ".quiz-benefits", ".quiz-cta", ".quiz-lead"]) {
+  for (const dead of [".quiz-landing", ".quiz-teaser", ".quiz-benefits", ".quiz-cta", ".quiz-lead", ".quiz-about"]) {
     assert.ok(
       !new RegExp("\\" + dead + "\\b").test(css),
       "dead styling for a removed component: " + dead
