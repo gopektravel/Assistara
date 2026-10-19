@@ -408,6 +408,14 @@ Deno.serve(async (req: Request) => {
     }
   };
 
+  // The send is accepted from here on, not finished. Stamp the pending state
+  // BEFORE the race so a replay of this same submission can always tell
+  // "queued, outcome still open" from "never queued": the write is awaited
+  // ahead of the race, so it can never land after, and overwrite, the terminal
+  // state the delivery writes on its way out. Best-effort: a failed stamp just
+  // leaves the outcome as unrecorded as it was before.
+  await markState(SUPABASE_URL, headers, resultId, "requested").catch(() => {});
+
   const raced = await Promise.race([
     deliver().then((v) => ({ kind: "done" as const, v })),
     new Promise<{ kind: "slow" }>((resolve) =>

@@ -204,6 +204,21 @@ function resultUrl(token) {
   return `${SITE}/academy/quiz?t=${encodeURIComponent(token)}`;
 }
 
+// A replay never re-sends, so the delivery state stored with the row is the
+// only honest answer to "was the report email queued?" It is the record of the
+// answer the first submission gave, so a replay answers it the same way:
+//
+//   sent / suppressed -> the send was attempted and settled. A first submit
+//     returned emailQueued: true for both (the gateway answers 200), so a
+//     replay must not turn that into a failure.
+//   requested / sending -> accepted and still delivering: queued, outcome
+//     open, which is a queue, not a failure.
+//   failed -> the attempt failed; the first submit already said false.
+//   not_requested / anything unknown -> nothing was ever accepted for sending.
+function emailWasQueued(state) {
+  return state === "sent" || state === "suppressed" || state === "requested" || state === "sending";
+}
+
 // ---------------------------------------------------------------------------
 // Attribution
 // ---------------------------------------------------------------------------
@@ -555,6 +570,10 @@ async function actionSubmit(req, res, cfg, body) {
         marketingConsentAt: dup.marketing_consent_at || null,
         consentSource: dup.consent_source || null,
         emailState: dup.email_state || null,
+        // The queue outcome of the original submission, replayed as-is, so a
+        // duplicate press shows the confirmation it should have shown and can
+        // never turn a queued report into an error screen.
+        emailQueued: emailWasQueued(dup.email_state),
       });
     }
 
@@ -632,6 +651,9 @@ async function actionSubmit(req, res, cfg, body) {
             marketingConsentAt: winner.marketing_consent_at || null,
             consentSource: winner.consent_source || null,
             emailState: winner.email_state || null,
+            // The loser of a concurrent double-submit reports the winner's
+            // queue outcome, never a blank the page would read as a failure.
+            emailQueued: emailWasQueued(winner.email_state),
           });
         }
       }
@@ -906,6 +928,7 @@ module.exports._internal = {
   hashToken,
   normaliseAttribution,
   validClientKey,
+  emailWasQueued,
   EMAIL_RE,
   CONSENT_SOURCE,
   RESULT_TOKEN_TTL_DAYS,

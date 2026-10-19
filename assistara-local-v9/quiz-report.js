@@ -123,8 +123,13 @@
           return;
         }
 
-        lastToken = res.data.token || "";
-        try { sessionStorage.setItem("assistara_quiz_result", res.data.token); } catch (e) { }
+        // A replay carries no new token (the browser already holds the link it
+        // minted), so only ever store a real one: a bare `undefined` must not
+        // become the saved result link.
+        lastToken = typeof res.data.token === "string" ? res.data.token : "";
+        if (lastToken) {
+          try { sessionStorage.setItem("assistara_quiz_result", lastToken); } catch (e) { }
+        }
         // The server's stored decision is the one that counts.
         if (typeof res.data.marketingConsent === "boolean") {
           marketingOptIn = res.data.marketingConsent;

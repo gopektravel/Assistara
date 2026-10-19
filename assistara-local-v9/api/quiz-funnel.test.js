@@ -903,7 +903,7 @@ test("a replayed submit keeps one row and still reports the stored consent", asy
               marketing_consent: true,
               marketing_consent_at: "2026-10-17T10:00:00.000Z",
               consent_source: "quiz_results_form_v2",
-              email_state: "queued",
+              email_state: "sent",
             }]),
         };
       }
@@ -946,7 +946,12 @@ test("a replayed submit keeps one row and still reports the stored consent", asy
     );
     assert.equal(secondBody.consentSource, "quiz_results_form_v2");
     assert.ok(secondBody.marketingConsentAt, "and the time it was decided");
-    assert.equal(secondBody.emailState, "queued", "and whether the report email went out");
+    assert.equal(secondBody.emailState, "sent", "and whether the report email went out");
+    assert.equal(
+      secondBody.emailQueued,
+      true,
+      "a replay of an already-queued report must confirm the queue, never show the error screen",
+    );
 
     assert.equal(inserts, 1, "a replay must never write a second lead row");
     assert.equal(queued, queuedAfterFirst, "a replay must never queue a second report email");
@@ -954,6 +959,104 @@ test("a replayed submit keeps one row and still reports the stored consent", asy
   } finally {
     global.fetch = real;
   }
+});
+
+// The stored delivery state is the only evidence a replay has, so the mapping
+// from state to "was it queued" is pinned here: a report that was queued (or is
+// still being delivered) must never be replayed as a failure, and a genuine
+// failure must never be dressed up as a queue.
+test("a replayed submit reports the stored queue outcome, never a failure for a queued report", async () => {
+  assert.equal(internal.emailWasQueued("sent"), true);
+  assert.equal(internal.emailWasQueued("suppressed"), true);
+  assert.equal(internal.emailWasQueued("requested"), true);
+  assert.equal(internal.emailWasQueued("sending"), true);
+  assert.equal(internal.emailWasQueued("failed"), false, "a failed send stays a failure");
+  assert.equal(internal.emailWasQueued("not_requested"), false);
+  assert.equal(internal.emailWasQueued(null), false, "a missing state is not a queue");
+  assert.equal(internal.emailWasQueued(undefined), false);
+
+  const cases = [
+    ["sent", true],
+    ["suppressed", true],
+    ["requested", true],
+    ["sending", true],
+    ["failed", false],
+    ["not_requested", false],
+    [null, false],
+  ];
+
+  const real = global.fetch;
+  try {
+    for (const [state, expected] of cases) {
+      let sent = 0;
+      global.fetch = async (url, init) => {
+        const method = (init && init.method) || "GET";
+        const u = String(url);
+        if (/\/functions\/v1\/quiz-results/.test(u)) sent += 1;
+        if (method === "GET" && /idempotency_key=eq\./.test(u)) {
+          return {
+            ok: true,
+            status: 200,
+            text: async () =>
+              JSON.stringify([
+                {
+                  id: "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
+                  report: { intro: { heading: "Hi" } },
+                  email_state: state,
+                },
+              ]),
+          };
+        }
+        return { ok: true, status: 200, text: async () => "[]" };
+      };
+
+      const res = fakeRes();
+      await handler(
+        fakeReq({
+          method: "POST",
+          body: {
+            action: "submit",
+            answers: FULL_ANSWERS,
+            email: "replay@example.com",
+            clientKey: "qz_0123456789abcdef0123456789abcdef",
+            elapsedMs: 40000,
+          },
+          headers: { origin: "https://getassistara.com" },
+        }),
+        res,
+      );
+      const out = JSON.parse(res.body || "{}");
+      assert.equal(out.alreadySubmitted, true, `state ${state} must be recognised as a replay`);
+      assert.equal(
+        out.emailQueued,
+        expected,
+        `the queue outcome reported for the stored state ${JSON.stringify(state)}`,
+      );
+      assert.equal(sent, 0, `a replay for state ${state} must never queue a second report email`);
+    }
+  } finally {
+    global.fetch = real;
+  }
+});
+
+// The gateway has to record that a send was accepted even when it answers
+// before delivering, otherwise a replay during that window reads "nothing was
+// ever requested" and shows a failure for a report that is on its way.
+test("the report gateway records a pending send before it can answer accepted", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const gateway = fs.readFileSync(
+    path.join(__dirname, "..", "..", "supabase", "functions", "quiz-results", "index.ts"),
+    "utf8",
+  );
+  assert.match(
+    gateway,
+    /await markState\(\s*SUPABASE_URL,\s*headers,\s*resultId,\s*"requested"\s*\)/,
+    "the pending state must be stamped before the delivery race",
+  );
+  const pending = gateway.indexOf('"requested"');
+  const race = gateway.indexOf("const raced = await Promise.race(");
+  assert.ok(pending > 0 && race > 0 && pending < race, "the stamp must be ordered ahead of the race");
 });
 
 test("the reveal step is email-only and wired exactly once, so one click cannot submit twice", () => {
