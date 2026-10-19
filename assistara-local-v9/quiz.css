@@ -50,6 +50,12 @@
   flex-wrap: wrap;
 }
 
+/* The confirmation view hides the trail (redundant with the header link);
+   display:flex would otherwise beat the hidden attribute. */
+.quiz-crumbs[hidden] {
+  display: none;
+}
+
 .quiz-crumbs a {
   color: var(--muted, #66625f);
   text-decoration: none;

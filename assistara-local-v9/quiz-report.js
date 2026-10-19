@@ -145,8 +145,18 @@
       });
   }
 
+  // The breadcrumb trail belongs to the quiz flow, not the confirmation:
+  // on the confirmation it is redundant with the header's "Back to Academy".
+  function setCrumbs(visible) {
+    var crumbs = document.querySelector(".quiz-crumbs");
+    if (!crumbs) return;
+    if (visible) crumbs.removeAttribute("hidden");
+    else crumbs.setAttribute("hidden", "");
+  }
+
   function showConfirm(sent) {
     hide($("quizReveal"));
+    setCrumbs(false);
     var card = $("quizConfirm");
     var successDiv = $("quizConfirmSuccess");
     var errorDiv = $("quizConfirmError");
@@ -259,6 +269,7 @@
       hide($("quizConfirm"));
       hide($("confirmError"));
       hide($("confirmRetry"));
+      setCrumbs(true);
       goReveal();
     });
 
@@ -272,6 +283,7 @@
       lastToken = null;
       hide($("rPrefs"));
       hide($("quizConfirm"));
+      setCrumbs(true);
       window.__quizState.startedAt = Date.now();
       show($("quizPlay"));
       if (typeof window.__quizRenderQuestion === "function") window.__quizRenderQuestion();
@@ -291,6 +303,7 @@
     sharedOpened = true;
     hide($("quizPlay"));
     hide($("quizReveal"));
+    setCrumbs(false);
     var heading = $("confirmHeading");
     heading.textContent = "Your next chapter is in your inbox! \u{1F49B}";
     var support = $("confirmSupport");
