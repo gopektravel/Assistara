@@ -84,7 +84,8 @@
 
     var btn = $("revealSubmit");
     btn.disabled = true;
-    btn.textContent = 'Sending <span aria-hidden="true">&#128676;</span>';
+    btn.innerHTML = 'Sending <span aria-hidden="true">→</span>';
+    btn.classList.add("is-loading");
     startedAt = startedAt || Date.now();
 
     fetch(API, {
@@ -104,7 +105,8 @@
       .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
       .then(function (res) {
         btn.disabled = false;
-        btn.textContent = 'Send my report <span aria-hidden="true">&#128676;</span>';
+        btn.innerHTML = 'Send my report <span aria-hidden="true">→</span>';
+        btn.classList.remove("is-loading");
 
         if (!res.data || res.data.ok !== true) {
           var msg = (res.data && res.data.error) || "Something went wrong. Please try again.";
@@ -136,7 +138,8 @@
       })
       .catch(function () {
         btn.disabled = false;
-        btn.textContent = 'Send my report <span aria-hidden="true">&#128676;</span>';
+        btn.innerHTML = 'Send my report <span aria-hidden="true">→</span>';
+        btn.classList.remove("is-loading");
         errBox.textContent = "We could not reach the server. Check your connection and try again.";
         show(errBox);
       });
@@ -145,23 +148,29 @@
   function showConfirm(sent) {
     hide($("quizReveal"));
     var card = $("quizConfirm");
+    var successDiv = $("quizConfirmSuccess");
+    var errorDiv = $("quizConfirmError");
     var heading = $("confirmHeading");
     var support = $("confirmSupport");
     var error = $("confirmError");
     var retry = $("confirmRetry");
+    var errorHeading = $("confirmErrorHeading");
+    var errorSupport = $("confirmErrorSupport");
     if (sent) {
-      heading.textContent = "Your personalized career report is on its way!";
-      support.textContent = "Check your inbox. Your report, career recommendation and 30-day plan were sent to the email you provided.";
-      hide(error);
+      heading.textContent = "Your next chapter is in your inbox! \u{1F49B}";
+      support.textContent = "You did it! Your personalized Remote Career Report is on its way.";
+      show(successDiv);
+      hide(errorDiv);
       if (retry) hide(retry);
     } else {
-      heading.textContent = "We could not send your report.";
-      support.textContent = "Please try again.";
-      show(error);
+      errorHeading.textContent = "We could not send your report.";
+      errorSupport.textContent = "Something went wrong on our end. Please try again.";
+      show(errorDiv);
+      hide(successDiv);
       if (retry) show(retry);
     }
     show(card);
-    focusHeading(heading, true);
+    focusHeading(sent ? heading : errorHeading, true);
     try { $("quizConfirm").scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { }
   }
 
@@ -190,7 +199,7 @@
     btn.onclick = function () {
       if (marketingOptIn !== true || !lastToken) return;
       btn.disabled = true;
-      btn.textContent = "Stopping&#128676;";
+      btn.innerHTML = "Stopping <span aria-hidden=\"true\">→</span>";
       fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -205,12 +214,12 @@
             return;
           }
           btn.disabled = false;
-          btn.textContent = "Stop occasional career emails";
+          btn.innerHTML = "Stop occasional career emails";
           text.innerHTML = "We could not change that just now. Please try again, or use the unsubscribe link in any email.";
         })
         .catch(function () {
           btn.disabled = false;
-          btn.textContent = "Stop occasional career emails";
+          btn.innerHTML = "Stop occasional career emails";
           text.innerHTML = "We could not reach the server. Please try again, or use the unsubscribe link in any email.";
         });
     };
@@ -283,10 +292,11 @@
     hide($("quizPlay"));
     hide($("quizReveal"));
     var heading = $("confirmHeading");
-    heading.textContent = "Your report was sent to your email.";
+    heading.textContent = "Your next chapter is in your inbox! \u{1F49B}";
     var support = $("confirmSupport");
-    support.textContent = "Check your inbox for your personalized career report and 30-day plan.";
-    hide($("confirmError"));
+    support.textContent = "You did it! Your personalized Remote Career Report is on its way.";
+    show($("quizConfirmSuccess"));
+    hide($("quizConfirmError"));
     if (prefsRequested()) {
       wirePrefs();
     } else {

@@ -142,13 +142,44 @@
          ================================================================ -->
     <section class="quiz-confirm shell" id="quizConfirm" hidden>
       <div class="quiz-confirm-card">
-        <div class="quiz-confirm-icon" aria-hidden="true">&#10003;</div>
-        <h2 class="quiz-title" id="confirmHeading" tabindex="-1">Your personalized career report is on its way!</h2>
-        <p class="quiz-support" id="confirmSupport">Check your inbox. Your report, career recommendation and 30-day plan were sent to the email you provided.</p>
-        <p class="quiz-support" id="confirmError" hidden role="alert">We could not send your report just now. Please try again.</p>
-        <div class="quiz-confirm-actions">
-          <button class="btn btn-yellow" type="button" id="confirmRetry" hidden>Try again <span aria-hidden="true">&#8594;</span></button>
-          <button class="btn btn-yellow" type="button" id="retakeQuiz">Take the quiz again <span aria-hidden="true">&#128676;</span></button>
+        <!-- Success state (shown when emailQueued === true) -->
+        <div class="quiz-confirm-success" id="quizConfirmSuccess" hidden>
+          <div class="quiz-confirm-illustration" aria-hidden="true">
+            <svg class="envelope-icon" viewBox="0 0 64 64" fill="none" width="64" height="64">
+              <rect x="4" y="16" width="56" height="36" rx="4" stroke="currentColor" stroke-width="2"/>
+              <path d="M4 16 L32 38 L60 16" stroke="currentColor" stroke-width="2" fill="none"/>
+              <circle cx="32" cy="32" r="8" fill="currentColor"/>
+              <path d="M28 32 L31 35 L36 29" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2 class="quiz-title" id="confirmHeading" tabindex="-1">Your next chapter is in your inbox! <span aria-hidden="true">💛</span></h2>
+          <p class="quiz-support" id="confirmSupport">You did it! Your personalized Remote Career Report is on its way.</p>
+          <div class="quiz-confirm-teaser">
+            <div class="teaser-item">
+              <span class="teaser-bullet" aria-hidden="true">•</span>
+              <span>Your best-fit remote career and why it suits you</span>
+            </div>
+            <div class="teaser-item">
+              <span class="teaser-bullet" aria-hidden="true">•</span>
+              <span>The strengths you already bring</span>
+            </div>
+            <div class="teaser-item">
+              <span class="teaser-bullet" aria-hidden="true">•</span>
+              <span>Your personalized 30-day action plan</span>
+            </div>
+          </div>
+          <p class="quiz-support quiz-confirm-note">Check your inbox (and spam folder) for an email from Assistara Academy.</p>
+        </div>
+
+        <!-- Error state (shown when emailQueued !== true) -->
+        <div class="quiz-confirm-error" id="quizConfirmError" hidden>
+          <div class="quiz-confirm-icon" aria-hidden="true">&#10003;</div>
+          <h2 class="quiz-title" id="confirmErrorHeading" tabindex="-1">We could not send your report.</h2>
+          <p class="quiz-support" id="confirmErrorSupport">Something went wrong on our end. Please try again.</p>
+          <div class="quiz-confirm-actions">
+            <button class="btn btn-yellow" type="button" id="confirmRetry">Try again <span aria-hidden="true">→</span></button>
+            <button class="btn btn-yellow" type="button" id="retakeQuiz">Take the quiz again <span aria-hidden="true">🔄</span></button>
+          </div>
         </div>
       </div>
     </section>
