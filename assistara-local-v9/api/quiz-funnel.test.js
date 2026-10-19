@@ -981,6 +981,19 @@ test("the reveal step is email-only and wired exactly once, so one click cannot 
   assert.equal(count(/\$\("retakeQuiz"\)\.addEventListener\("click"/g), 1, "exactly one retake handler");
   assert.equal(count(/\$\("confirmRetry"\)\.addEventListener\("click"/g), 1, "exactly one retry handler");
 
+  // A disabled button stops a second click, but Enter-key and programmatic
+  // submits bypass it, so submit() itself must be single-flight: refuse to
+  // start while one request is on the wire, and always release the flag when
+  // the request settles (success, API error or network failure).
+  assert.match(report, /var inFlight = false;/, "submit needs a single-flight flag");
+  assert.match(report, /if \(inFlight\) return;/, "a second submit while one is in flight must be a no-op");
+  assert.equal(count(/inFlight = true;/g), 1, "exactly one place marks the flight as started");
+  assert.equal(
+    count(/inFlight = false;/g),
+    3,
+    "one declaration plus a release on both settle paths (response and network error)",
+  );
+
   // Email is the only required field: there is no Skip path anywhere.
   assert.equal(count(/revealSkip/g), 0, "the Skip control must be gone from the reveal step");
   assert.ok(!/revealSkip/.test(page), "the page must not wire a Skip link either");

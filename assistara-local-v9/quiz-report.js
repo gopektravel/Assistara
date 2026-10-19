@@ -31,6 +31,8 @@
 
   var startedAt = 0;
   var lastToken = "";
+  // True while a report submission is on the wire (see submit()).
+  var inFlight = false;
   // The server's stored promotional decision, kept separate from report
   // delivery. Only ever used to render the preferences panel honestly.
   var marketingOptIn = null;
@@ -71,6 +73,10 @@
   }
 
   function submit() {
+    // One submission at a time. The disabled button stops a second click, but
+    // an Enter-key or programmatic double submit bypasses it, so the real
+    // guard is this flag: a second call while one is in flight is a no-op.
+    if (inFlight) return;
     var state = window.__quizState;
     var errBox = $("submitError");
     hide(errBox);
@@ -83,6 +89,7 @@
     if (!validateLead()) return;
 
     var btn = $("revealSubmit");
+    inFlight = true;
     btn.disabled = true;
     btn.innerHTML = 'Sending <span aria-hidden="true">→</span>';
     btn.classList.add("is-loading");
@@ -104,6 +111,7 @@
     })
       .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
       .then(function (res) {
+        inFlight = false;
         btn.disabled = false;
         btn.innerHTML = 'Send my report <span aria-hidden="true">→</span>';
         btn.classList.remove("is-loading");
@@ -137,6 +145,7 @@
         }
       })
       .catch(function () {
+        inFlight = false;
         btn.disabled = false;
         btn.innerHTML = 'Send my report <span aria-hidden="true">→</span>';
         btn.classList.remove("is-loading");
