@@ -154,7 +154,7 @@
     var support = $("confirmSupport");
     var error = $("confirmError");
     var retry = $("confirmRetry");
-    var errorHeading = $("confirmErrorHeading");
+    var errorHdr = $("confirmErrorHdr");
     var errorSupport = $("confirmErrorSupport");
     if (sent) {
       heading.textContent = "Your next chapter is in your inbox! \u{1F49B}";
@@ -163,14 +163,14 @@
       hide(errorDiv);
       if (retry) hide(retry);
     } else {
-      errorHeading.textContent = "We could not send your report.";
+      errorHdr.textContent = "We could not send your report.";
       errorSupport.textContent = "Something went wrong on our end. Please try again.";
       show(errorDiv);
       hide(successDiv);
       if (retry) show(retry);
     }
     show(card);
-    focusHeading(sent ? heading : errorHeading, true);
+    focusHeading(sent ? heading : errorHdr, true);
     try { $("quizConfirm").scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { }
   }
 

@@ -168,13 +168,20 @@
               <span>Your personalized 30-day action plan</span>
             </div>
           </div>
+
+        <!-- Email preferences panel -->
+        <div class="quiz-prefs-panel" id="rPrefs" hidden>
+          <p id="rPrefsText" class="quiz-support"></p>
+          <button class="btn btn-yellow" type="button" id="rPrefsWithdraw" hidden>Stop occasional career emails <span aria-hidden="true">→</span></button>
+        </div>
+
           <p class="quiz-support quiz-confirm-note">Check your inbox (and spam folder) for an email from Assistara Academy.</p>
         </div>
 
         <!-- Error state (shown when emailQueued !== true) -->
         <div class="quiz-confirm-error" id="quizConfirmError" hidden>
           <div class="quiz-confirm-icon" aria-hidden="true">&#10003;</div>
-          <h2 class="quiz-title" id="confirmErrorHeading" tabindex="-1">We could not send your report.</h2>
+          <h2 class="quiz-title" id="confirmErrorHdr" tabindex="-1">We could not send your report.</h2>
           <p class="quiz-support" id="confirmErrorSupport">Something went wrong on our end. Please try again.</p>
           <div class="quiz-confirm-actions">
             <button class="btn btn-yellow" type="button" id="confirmRetry">Try again <span aria-hidden="true">→</span></button>

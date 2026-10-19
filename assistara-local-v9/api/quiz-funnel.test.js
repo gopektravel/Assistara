@@ -996,7 +996,7 @@ test("the reveal step is email-only and wired exactly once, so one click cannot 
   assert.match(report, /showConfirm\(false\);/, "a failed queue must take the error branch");
   assert.match(
     report,
-    /heading\.textContent = "We could not send your report\."/,
+    /errorHdr\.textContent = "We could not send your report\."/,
     "the error branch must say the report was not sent",
   );
 

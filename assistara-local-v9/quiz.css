@@ -1731,3 +1731,25 @@
     transform: none !important;
   }
 }
+
+/* Email preferences panel */
+.quiz-prefs-panel {
+  margin-top: 24px;
+  padding: 20px 24px;
+  background: #faf9f5;
+  border: 1px solid #efece5;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.quiz-prefs-panel p {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #4a4a4a;
+}
+
+.quiz-prefs-panel .btn {
+  width: 100%;
+  max-width: 280px;
+}
