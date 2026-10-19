@@ -1203,6 +1203,63 @@
    who asked for less motion.
    ---------------------------------------------------------------------------- */
 
+/* ----------------------------------------------------------------------------
+   Academy header on the quiz page: simplified, no B2B banners or CTAs.
+   The logo and wordmark form a single brand unit on the left.
+   --------------------------------------------------------------------------- */
+
+/* Logo mark */
+.site-header .mark {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+/* Brand wordmark beside the logo */
+.site-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 20px/1 "Manrope", sans-serif;
+  color: #fff;
+}
+
+/* Simplified nav links for quiz page */
+.site-header .nav-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.site-header .nav-links a {
+  font-size: 14px;
+  color: #d4d4d4;
+  text-decoration: none;
+}
+.site-header .nav-links a:hover {
+  color: #fff;
+}
+
+/* Mobile: hide nav links, show only logo mark */
+@media (max-width: 760px) {
+  .site-header .nav-links { display: none; }
+  .site-header .brand span { display: none; }
+  .site-header .mark { width: 36px; height: 36px; flex: 0 0 36px; }
+}
+
+/* Tablet: show brand text again */
+@media (min-width: 761px) and (max-width: 900px) {
+  .site-header .nav-links { display: none; }
+  .site-header .brand span { display: inline; }
+}
+
+/* Desktop: show nav links */
+@media (min-width: 901px) {
+  .site-header .nav-links { display: flex; }
+  .site-header .brand span { display: inline; }
+}
+
 /* The Academy header component on the quiz page: wordmark beside the logo. */
 .brand-text {
   font-size: 15px;
