@@ -1105,6 +1105,17 @@
       @media (max-width: 900px) {
         .waitlistRow, .exceptionRow { grid-template-columns:1fr 1fr; }
       }
+      .quiz-lead-detail .answerGrid { display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px;align-items:start }
+      .quiz-lead-detail .answerItem { background:#faf9f5;border:1px solid var(--line);border-radius:12px;padding:11px 12px;min-width:0 }
+      .quiz-lead-detail .answerItem.wide { grid-column:1/-1 }
+      .quiz-lead-detail .answerQ { margin:0 0 5px;font-size:12px;font-weight:800;line-height:1.4;color:var(--muted) }
+      .quiz-lead-detail .answerA { margin:0;font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word }
+      .quiz-lead-detail .answerA.empty { color:#a49c8e;font-style:italic }
+      .pagination { display:flex;gap:8px;justify-content:center;margin-top:16px }
+      .filterBar { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center }
+      .filter-group { display:flex;flex-direction:column;gap:4px }
+      .field-label { font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted) }
+      .field-select { padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff }
     </style>
     <link rel="stylesheet" href="/admin-v3.css" />
 </head>
@@ -1142,6 +1153,10 @@
             <button class="nav-item" type="button" data-tab="coupons" data-tooltip="Coupons">
               <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg></span>
               <span class="nav-item-label">Coupons</span>
+            </button>
+            <button class="nav-item" type="button" data-tab="quiz-leads" data-tooltip="Quiz Leads">
+              <span class="nav-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M12 3v4M9 14l2 2 4-4"/></svg></span>
+              <span class="nav-item-label">Quiz Leads</span>
             </button>
           </div>
           <div class="nav-group">
@@ -1352,6 +1367,8 @@
         PROGRESS = "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
         COUPONS =
           "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-coupons",
+        QUIZ_LEADS =
+          "https://jhmmwleejgidrxavzdlq.supabase.co/functions/v1/admin-api",
         // Read-only endpoints reused by the Overview command center so it
         // can surface finance, email and capacity status without mounting
         // (or duplicating) the standalone tool views.
@@ -1395,6 +1412,7 @@
         students = [],
         web = [],
         b2b = [],
+        quizLeads = [],
         accounts = [],
         acquisitionLinks = [],
         acquisitionVisits = [],
@@ -1495,6 +1513,12 @@
           title: "Coupons",
           sub: "Discount codes, redemptions and revenue impact.",
           search: false,
+        },
+        "quiz-leads": {
+          crumb: [["Academy", "Quiz Leads"]],
+          title: "Quiz Leads",
+          sub: "Career Match Quiz leads, consent and delivery status, Academy conversions.",
+          search: true,
         },
         leads: {
           crumb: [["Leads", "All Leads"]],
@@ -3018,6 +3042,10 @@
           renderCoupons();
           return;
         }
+        if (tab === "quiz-leads") {
+          renderQuizLeads();
+          return;
+        }
         $("capacityPanel").style.display = "none";
         $("signupGoal").innerHTML = "";
         stat([
@@ -3065,16 +3093,19 @@
           if (!response.ok) throw Error(json.error || "Acquisition request failed");
           return json.links || [];
         });
-        const [acquisitionResult, accountResult, progressResult, couponResult] = await Promise.allSettled([
+        const quizLeadsRequest = req("quiz-leads", {}, QUIZ_LEADS);
+        const [acquisitionResult, accountResult, progressResult, couponResult, quizLeadsResult] = await Promise.allSettled([
           acquisitionRequest,
           req("list", {}, ACC),
           req("student-progress", {}, PROGRESS),
           req("list", {}, COUPONS),
+          quizLeadsRequest,
         ]);
         acquisitionLinks = acquisitionResult.status === "fulfilled" ? acquisitionResult.value : [];
         accounts = accountResult.status === "fulfilled" && Array.isArray(accountResult.value.accounts) ? accountResult.value.accounts : [];
         studentProgress = progressResult.status === "fulfilled" && Array.isArray(progressResult.value.students) ? progressResult.value.students : [];
         coupons = couponResult.status === "fulfilled" && Array.isArray(couponResult.value.coupons) ? couponResult.value.coupons : [];
+        quizLeads = quizLeadsResult.status === "fulfilled" && Array.isArray(quizLeadsResult.value.leads) ? quizLeadsResult.value.leads : [];
 
         // Attach progress to each student record
         const progressByUid = new Map();
@@ -3344,6 +3375,416 @@
           if (box) loadCouponRedemptions(id, box);
         });
       }
+      
+      function renderQuizLeads() {
+        resetTabScaffold();
+        // Filters
+        const filterHtml = `
+          <div class="filterBar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+            <div class="filter-group" style="display:flex;flex-direction:column;gap:4px">
+              <label class="field-label" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted)" for="quizLeadSearch">Search</label>
+              <input id="quizLeadSearch" class="field-select" type="text" placeholder="Search email, name, career..." style="width:220px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff">
+            </div>
+            <div class="filter-group" style="display:flex;flex-direction:column;gap:4px">
+              <label class="field-label" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted)" for="quizLeadConsent">Consent</label>
+              <select id="quizLeadConsent" class="field-select" style="padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff">
+                <option value="all">All</option>
+                <option value="opted_in">Opted in</option>
+                <option value="opted_out">Opted out</option>
+              </select>
+            </div>
+            <div class="filter-group" style="display:flex;flex-direction:column;gap:4px">
+              <label class="field-label" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted)" for="quizLeadDelivery">Delivery</label>
+              <select id="quizLeadDelivery" class="field-select" style="padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff">
+                <option value="all">All</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
+                <option value="requested">Requested</option>
+                <option value="sending">Sending</option>
+                <option value="not_requested">Not requested</option>
+                <option value="suppressed">Suppressed</option>
+              </select>
+            </div>
+            <div class="filter-group" style="display:flex;flex-direction:column;gap:4px">
+              <label class="field-label" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted)" for="quizLeadCareer">Career</label>
+              <select id="quizLeadCareer" class="field-select" style="padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff">
+                <option value="all">All</option>
+              </select>
+            </div>
+            <div class="filter-group" style="display:flex;flex-direction:column;gap:4px">
+              <label class="field-label" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted)" for="quizLeadConversion">Academy</label>
+              <select id="quizLeadConversion" class="field-select" style="padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff">
+                <option value="all">All</option>
+                <option value="converted">Converted</option>
+                <option value="not_converted">Not converted</option>
+              </select>
+            </div>
+            <div class="filter-group" style="display:flex;flex-direction:column;gap:4px">
+              <label class="field-label" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted)" for="quizLeadSort">Sort</label>
+              <select id="quizLeadSort" class="field-select" style="padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff">
+                <option value="recent">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="email">Email A-Z</option>
+              </select>
+            </div>
+            <div class="filter-group" style="display:flex;flex-direction:column;gap:4px">
+              <label class="field-label" style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted)" for="quizLeadWindow">Window</label>
+              <select id="quizLeadWindow" class="field-select" style="padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;font-weight:700;background:#fff">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="quizLeadExport" style="height:38px;padding:0 16px;font-weight:800" type="button">Export CSV</button>
+          </div>
+        `;
+        $("appFilters").hidden = false;
+        $("appFilters").innerHTML = filterHtml;
+        
+        // Wire filter handlers
+        const searchEl = $("quizLeadSearch");
+        const consentEl = $("quizLeadConsent");
+        const deliveryEl = $("quizLeadDelivery");
+        const careerEl = $("quizLeadCareer");
+        const conversionEl = $("quizLeadConversion");
+        const sortEl = $("quizLeadSort");
+        const windowEl = $("quizLeadWindow");
+        const exportEl = $("quizLeadExport");
+        
+        const currentFilters = { search: "", consent: "all", delivery: "all", career: "all", conversion: "all", sort: "recent", window: 30 };
+        const applyFilters = () => {
+          currentFilters.search = searchEl.value.toLowerCase().trim();
+          currentFilters.consent = consentEl.value;
+          currentFilters.delivery = deliveryEl.value;
+          currentFilters.career = careerEl.value;
+          currentFilters.conversion = conversionEl.value;
+          currentFilters.sort = sortEl.value;
+          currentFilters.window = parseInt(windowEl.value, 10);
+          loadQuizLeads();
+        };
+        
+        searchEl.oninput = debounce(applyFilters, 300);
+        consentEl.onchange = applyFilters;
+        deliveryEl.onchange = applyFilters;
+        careerEl.onchange = applyFilters;
+        conversionEl.onchange = applyFilters;
+        sortEl.onchange = applyFilters;
+        windowEl.onchange = applyFilters;
+        exportEl.onclick = exportQuizLeads;
+        
+        // Populate careers dropdown
+        careerEl.innerHTML = '<option value="all">All</option>' + (quizLeadCareers || []).map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+        
+        loadQuizLeads();
+      }
+      
+      let quizLeadCache = [];
+      let quizLeadCareers = [];
+      let quizLeadTotal = 0;
+      let quizLeadPage = 0;
+      const QUIZ_LEAD_PAGE_SIZE = 50;
+      
+      async function loadQuizLeads() {
+        const { search, consent, delivery, career, conversion, sort, window: sinceDays } = currentFilters;
+        const offset = quizLeadPage * QUIZ_LEAD_PAGE_SIZE;
+        try {
+          const data = await req("quiz-leads", {
+            limit: QUIZ_LEAD_PAGE_SIZE,
+            offset,
+            search,
+            consent,
+            delivery,
+            career,
+            conversion,
+            since: sinceDays,
+            sort
+          }, QUIZ_LEADS);
+          if (data.ok) {
+            quizLeadCache = data.leads || [];
+            quizLeadCareers = data.careers || [];
+            quizLeadTotal = data.total || 0;
+            // Update careers dropdown if needed
+            careerEl.innerHTML = '<option value="all">All</option>' + quizLeadCareers.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+            // Render stats
+            const s = data.stats || {};
+            stat([
+              [s.total || 0, "Total Leads", `Last ${sinceDays} days`],
+              [s.optedIn || 0, "Opted In", "Marketing consent"],
+              [s.emailSent || 0, "Reports Sent", "Email delivered"],
+              [s.emailFailed || 0, "Delivery Failed", "Needs attention"],
+              [s.emailRequested || 0, "Pending", "Queued/Sending"],
+              [s.converted || 0, "Academy Apps", "Quiz→Application"],
+            ]);
+            renderQuizLeadCards();
+          } else {
+            $("cards").innerHTML = '<div class="error">Failed to load quiz leads: ' + esc(data.error) + '</div>';
+          }
+        } catch (e) {
+          $("cards").innerHTML = '<div class="error">Error: ' + esc(e.message) + '</div>';
+        }
+      }
+      
+      function debounce(fn, ms) {
+        let timer;
+        return (...args) => {
+          clearTimeout(timer);
+          timer = setTimeout(() => fn.apply(null, args), ms);
+        };
+      }
+      
+      function renderQuizLeadCards() {
+        const filtered = quizLeadCache.filter(l => {
+          const { search, consent, delivery, career, conversion } = currentFilters;
+          if (search) {
+            const hay = (l.email + " " + (l.first_name || "") + " " + (l.primary_career || "")).toLowerCase();
+            if (!hay.includes(search)) return false;
+          }
+          if (consent !== "all") {
+            if (consent === "opted_in" && l.marketing_consent !== true) return false;
+            if (consent === "opted_out" && l.marketing_consent === true) return false;
+          }
+          if (delivery !== "all" && l.email_state !== delivery) return false;
+          if (career !== "all" && l.primary_career !== career) return false;
+          if (conversion !== "all") {
+            if (conversion === "converted" && !l.application_id) return false;
+            if (conversion === "not_converted" && l.application_id) return false;
+          }
+          return true;
+        });
+        
+        const cardsHtml = filtered.map(lead => quizLeadCard(lead)).join("");
+        const paginationHtml = quizLeadTotal > QUIZ_LEAD_PAGE_SIZE
+          ? `<div class="pagination" style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+              <button class="btn" ${quizLeadPage === 0 ? "disabled" : ""} onclick="quizLeadPrevPage()">← Previous</button>
+              <span style="align-self:center;color:var(--muted)">Page ${quizLeadPage + 1} of ${Math.ceil(quizLeadTotal / QUIZ_LEAD_PAGE_SIZE)}</span>
+              <button class="btn" ${(quizLeadPage + 1) * QUIZ_LEAD_PAGE_SIZE >= quizLeadTotal ? "disabled" : ""} onclick="quizLeadNextPage()">Next →</button>
+            </div>`
+          : "";
+        
+        $("cards").innerHTML = cardsHtml + paginationHtml || '<div class="empty">No quiz leads found.</div>';
+      }
+      
+      function quizLeadPrevPage() { if (quizLeadPage > 0) { quizLeadPage--; loadQuizLeads(); } }
+      function quizLeadNextPage() { if ((quizLeadPage + 1) * QUIZ_LEAD_PAGE_SIZE < quizLeadTotal) { quizLeadPage++; loadQuizLeads(); } }
+      
+      function quizLeadCard(lead) {
+        const emailState = lead.email_state || "not_requested";
+        const deliveryBadge = {
+          sent: '<span class="badge paid">Sent</span>',
+          failed: '<span class="badge declined">Failed</span>',
+          requested: '<span class="badge pending">Queued</span>',
+          sending: '<span class="badge pending">Sending</span>',
+          suppressed: '<span class="badge suspended">Suppressed</span>',
+          not_requested: '<span class="badge">Not requested</span>',
+        }[emailState] || '<span class="badge">Unknown</span>';
+        
+        const consentBadge = lead.marketing_consent === true
+          ? '<span class="badge active">Opted In</span>'
+          : '<span class="badge inactive">Opted Out</span>';
+        
+        const appBadge = lead.application_id
+          ? (lead.application ? (
+              lead.application.payment_status === "paid"
+                ? '<span class="badge paid">Enrolled</span>'
+                : lead.application.decision === "accepted"
+                  ? '<span class="badge active">Accepted</span>'
+                  : lead.application.status === "waitlisted"
+                    ? '<span class="badge pending">Waitlisted</span>'
+                    : '<span class="badge declined">Declined</span>'
+            ) : '<span class="badge active">Linked</span>')
+          : '<span class="badge inactive">No application</span>';
+        
+        const dateStr = lead.created_at ? new Date(lead.created_at).toLocaleString() : "—";
+        const careerLabel = lead.primary_career || "—";
+        
+        let acquisitionHtml = "";
+        if (lead.acquisition) {
+          const parts = [];
+          if (lead.acquisition.channel) parts.push(lead.acquisition.channel);
+          if (lead.acquisition.placement) parts.push(lead.acquisition.placement);
+          if (lead.acquisition.label) parts.push(lead.acquisition.label);
+          acquisitionHtml = parts.length ? `<div class="sub" style="margin-top:4px;font-size:11px;color:var(--muted)">${esc(parts.join(" · "))}</div>` : "";
+        }
+        
+        return `
+          <div class="card" style="cursor:pointer" onclick="openQuizLeadDetail('${lead.id}')">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+              <div style="min-width:0">
+                <div class="name" style="overflow-wrap:anywhere">${esc(lead.first_name || "Quiz Lead")} · ${esc(lead.email || "—")}</div>
+                <div class="sub">${dateStr} · ${esc(careerLabel)}${acquisitionHtml}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;min-width:0">
+                ${deliveryBadge}
+                ${consentBadge}
+                ${appBadge}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      function openQuizLeadDetail(leadId) {
+        const lead = quizLeadCache.find(l => l.id === leadId);
+        if (!lead) return;
+        
+        // Build detail modal
+        const answers = lead.answers || {};
+        const report = lead.report || {};
+        const app = lead.application || null;
+        const acquisition = lead.acquisition || null;
+        
+        // Format answers for display
+        const answerFields = [
+          { key: "q1", label: "Motivation" },
+          { key: "q2", label: "Monthly Income Goal" },
+          { key: "q3", label: "Weekly Hours" },
+          { key: "q4", label: "Primary Career Interest" },
+          { key: "q5", label: "Secret Superpower" },
+          { key: "q6", label: "Tools & Activities" },
+          { key: "q7", label: "Experience Level" },
+          { key: "q8", label: "Biggest Obstacle" },
+          { key: "q9", label: "Interests & Working Style" },
+          { key: "q10", label: "Timeline to Start" },
+        ];
+        
+        const answerHtml = answerFields.map(f => {
+          const val = answers[f.key];
+          if (val === undefined || val === null) return "";
+          let display = "";
+          if (Array.isArray(val)) display = val.join(", ");
+          else if (typeof val === "number") display = "₱" + val.toLocaleString();
+          else display = String(val);
+          return `<div class="answerItem"><div class="answerQ">${esc(f.label)}</div><div class="answerA">${esc(display)}</div></div>`;
+        }).filter(Boolean).join("");
+        
+        const deliveryInfo = {
+          sent: { label: "Delivered", color: "var(--greenInk)", bg: "var(--green)" },
+          failed: { label: "Failed", color: "var(--redInk)", bg: "var(--red)" },
+          requested: { label: "Queued", color: "#8a4b00", bg: "var(--orange)" },
+          sending: { label: "Sending", color: "#8a4b00", bg: "var(--orange)" },
+          suppressed: { label: "Suppressed", color: "var(--redInk)", bg: "var(--red)" },
+          not_requested: { label: "Not requested", color: "var(--muted)", bg: "#efede8" },
+        }[lead.email_state] || { label: "Unknown", color: "var(--muted)", bg: "#efede8" };
+        
+        const modalHtml = `
+          <div class="quiz-lead-detail" style="max-width:800px;margin:auto;padding:20px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+              <div>
+                <h2 style="margin:0 0 4px;font-size:22px">${esc(lead.first_name || "Quiz Lead")}</h2>
+                <div class="sub">${esc(lead.email || "—")} · ${dateStr}</div>
+              </div>
+              <button class="btn" onclick="closeQuizLeadDetail()">Close</button>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+              <div class="stat" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px">
+                <b style="font-size:22px">${esc(lead.primary_career || "—")}</b>
+                <span style="color:var(--muted);font-size:12px">Primary Career</span>
+              </div>
+              <div class="stat" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px">
+                <b style="font-size:22px">${lead.readiness_stage || "—"}</b>
+                <span style="color:var(--muted);font-size:12px">Readiness: ${esc(lead.readiness_key || "—")}</span>
+              </div>
+              <div class="stat" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px">
+                <b style="font-size:22px;color:${deliveryInfo.color}">${deliveryInfo.label}</b>
+                <span style="color:var(--muted);font-size:12px">Report Email</span>
+              </div>
+              <div class="stat" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px">
+                <b style="font-size:22px;color:${lead.marketing_consent ? "var(--greenInk)" : "var(--muted)"}">${lead.marketing_consent ? "Opted In" : "Opted Out"}</b>
+                <span style="color:var(--muted);font-size:12px">Marketing Consent</span>
+              </div>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div class="recordSection" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px">
+                <h3 style="margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Quiz Answers</h3>
+                <div class="answerGrid">${answerHtml || '<div class="empty">No answers recorded</div>'}</div>
+              </div>
+              <div class="recordSection" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px">
+                <h3 style="margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Report & Delivery</h3>
+                <div class="recordFacts">
+                  <div><dt>Email State</dt><dd style="color:${deliveryInfo.color};font-weight:800">${deliveryInfo.label}</dd></div>
+                  <div><dt>Sent At</dt><dd>${lead.email_sent_at ? new Date(lead.email_sent_at).toLocaleString() : "—"}</dd></div>
+                  <div><dt>Attempts</dt><dd>${lead.email_attempts || 0}</dd></div>
+                  ${lead.email_error ? `<div style="grid-column:1/-1"><dt>Error</dt><dd style="color:var(--redInk)">${esc(lead.email_error)}</dd></div>` : ""}
+                  <div><dt>Consent Source</dt><dd>${esc(lead.consent_source || "—")}</dd></div>
+                  <div><dt>Consent At</dt><dd>${lead.marketing_consent_at ? new Date(lead.marketing_consent_at).toLocaleString() : "—"}</dd></div>
+                  <div><dt>Result ID</dt><dd style="font-family:'Manrope',sans-serif;font-size:11px">${esc(lead.id)}</dd></div>
+                  <div><dt>Result Token</dt><dd style="font-family:'Manrope',sans-serif;font-size:11px">${esc(lead.result_token_hash?.slice(0, 16) + "..." || "—")}</dd></div>
+                </div>
+              </div>
+            </div>
+            
+            ${app ? `
+            <div class="recordSection" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px">
+              <h3 style="margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Academy Application</h3>
+              <div class="recordFacts">
+                <div><dt>Status</dt><dd>${esc(app.status || "—")}</dd></div>
+                <div><dt>Decision</dt><dd>${esc(app.decision || "—")}</dd></div>
+                <div><dt>Payment</dt><dd>${esc(app.payment_status || "—")}</dd></div>
+                <div><dt>Application ID</dt><dd style="font-family:'Manrope',sans-serif;font-size:11px"><a href="/admin?app=${esc(lead.application_id)}" target="_blank">${esc(lead.application_id)}</a></dd></div>
+              </div>
+            </div>
+            ` : `
+            <div class="recordSection" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px">
+              <h3 style="margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Academy Application</h3>
+              <p class="quiz-support">No Academy application linked to this quiz lead.</p>
+            </div>
+            `}
+            
+            ${acquisition ? `
+            <div class="recordSection" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px">
+              <h3 style="margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Acquisition Attribution</h3>
+              <div class="recordFacts">
+                <div><dt>Channel</dt><dd>${esc(acquisition.channel || "—")}</dd></div>
+                <div><dt>Placement</dt><dd>${esc(acquisition.placement || "—")}</dd></div>
+                <div><dt>Label</dt><dd>${esc(acquisition.label || "—")}</dd></div>
+                <div><dt>Tracking Token</dt><dd style="font-family:'Manrope',sans-serif;font-size:11px">${esc(acquisition.tracking_token || "—")}</dd></div>
+              </div>
+            </div>
+            ` : ""}
+          </div>
+        `;
+        
+        // Create modal overlay
+        const overlay = document.createElement("div");
+        overlay.id = "quizLeadModal";
+        overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto";
+        overlay.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto">${modalHtml}</div>`;
+        overlay.onclick = (e) => { if (e.target === overlay) closeQuizLeadDetail(); };
+        document.body.appendChild(overlay);
+        document.body.style.overflow = "hidden";
+      }
+      
+      function closeQuizLeadDetail() {
+        const modal = $("quizLeadModal");
+        if (modal) modal.remove();
+        document.body.style.overflow = "";
+      }
+      
+      function exportQuizLeads() {
+        const { search, consent, delivery, career, conversion, sort, window: sinceDays } = currentFilters;
+        const params = new URLSearchParams({
+          action: "quiz-leads",
+          search,
+          consent,
+          delivery,
+          career,
+          conversion,
+          since: String(sinceDays),
+          sort,
+          limit: "10000",
+          offset: "0",
+          export: "csv"
+        });
+        window.open("/api/quiz-leads?" + params.toString(), "_blank");
+      }
+      
+      window.quizLeadPrevPage = quizLeadPrevPage;
+      window.quizLeadNextPage = quizLeadNextPage;
+      window.openQuizLeadDetail = openQuizLeadDetail;
+      window.closeQuizLeadDetail = closeQuizLeadDetail;
+      
       window.toggleCoupon = (id) => {
         const key = String(id);
         const isOpen = openCoupons.has(key);

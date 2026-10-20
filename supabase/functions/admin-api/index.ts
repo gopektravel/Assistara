@@ -61,115 +61,6 @@ Deno.serve(async(req:Request)=>{
     if(error) return new Response(JSON.stringify({ok:false,error:"Could not load applications"}),{status:500,headers:h});
     return new Response(JSON.stringify({ok:true,applications:data}),{status:200,headers:h});
   }
-  // ------------------------------------------------------------------------
-  // Unified prospective-student view (quiz + application + payment).
-  //
-  // One record per person, merged on the lowercased email, which is the only
-  // identity both flows share. An applicant is never duplicated just because
-  // they later took the quiz: the application row stays the single source of
-  // truth for status, and the quiz row only enriches it. Nothing here writes.
-  // ------------------------------------------------------------------------
-  if(action==="quiz-leads"){
-    const limit=Math.min(500,Math.max(1,Number(body.limit)||200));
-    // The quiz tables are added by a later migration. Until it is applied this
-    // must still serve the applicant half of the picture rather than erroring.
-    const {data:results,error:quizError}=await db.from("quiz_results")
-      .select("id,created_at,first_name,email,marketing_consent,marketing_consent_at,consent_source,primary_career,secondary_career,readiness_stage,readiness_key,income_goal_php,weekly_hours,obstacle,start_timeline,lead_priority,lead_priority_band,lead_priority_reasons,answers,email_state,email_sent_at,acquisition_visit_id,acquisition_visitor_id,tracking_token,application_id,report")
-      .order("created_at",{ascending:false}).limit(limit);
-    const quizAvailable=!quizError;
-    const rows=quizAvailable?(results||[]):[];
-
-    const {data:apps,error:appError}=await db.from("academy_applications")
-      .select("id,created_at,name,email,status,decision,payment_status,accepted_at,paid_at,onboarding_completed_at,source")
-      .order("created_at",{ascending:false}).limit(500);
-    if(appError) return new Response(JSON.stringify({ok:false,error:"Could not load applications"}),{status:500,headers:h});
-
-    const key=(e:unknown)=>String(e||"").trim().toLowerCase();
-    const leads=new Map();
-    // Applications first, so an existing applicant is never replaced by a quiz
-    // row that happens to share their address.
-    for(const a of apps||[]){
-      const k=key(a.email); if(!k) continue;
-      leads.set(k,{email:a.email,application:a,quiz:null});
-    }
-    for(const r of rows){
-      const k=key(r.email);
-      if(!k) continue;
-      const existing=leads.get(k);
-      if(existing){ if(!existing.quiz) existing.quiz=r; }
-      else leads.set(k,{email:r.email,application:null,quiz:r});
-    }
-
-    // Lead priority is stored once at quiz-submit time from what the person
-    // actually said. Where we already know they applied, the documented
-    // application bonus is added so the two surfaces agree; the breakdown is
-    // extended with that same line so the number stays explainable.
-    const APPLICATION_BONUS=30;
-    const priorityOf=(r:any,applied:boolean)=>{
-      if(!r) return null;
-      const base=Number(r.lead_priority)||0;
-      const band=String(r.lead_priority_band||"cool");
-      const reasons=Array.isArray(r.lead_priority_reasons)?r.lead_priority_reasons:[];
-      if(!applied) return {score:base,band,reasons};
-      return {score:Math.min(100,base+APPLICATION_BONUS),band,reasons:[...reasons,{label:"Has already submitted an Academy application",points:APPLICATION_BONUS}]};
-    };
-    const seg=(r:any)=>{
-      if(!r) return {readiness:null,experience:null,career:null,obstacle:null};
-      // q10 start timeline drives readiness-to-buy; q7 stage drives experience.
-      const stage=Number(r.readiness_stage)||1;
-      return {
-        readiness:String(r.start_timeline||"exploring"),
-        experience:["beginner","self_taught","trained_certified","portfolio_ready","experienced"][stage-1]||"beginner",
-        career:String(r.primary_career||""),
-        obstacle:String(r.obstacle||""),
-      };
-    };
-
-    const out=[];
-    for(const [k,v] of leads){
-      const a=v.application,r=v.quiz,s=seg(r);
-      out.push({
-        email:v.email||k,
-        first_name:(r&&r.first_name)||(a&&String(a.name||"").trim().split(/\s+/)[0])||"",
-        first_seen:(a&&a.created_at)||(r&&r.created_at)||null,
-        last_seen:(r&&r.created_at)||(a&&a.created_at)||null,
-        quiz:r?{completed_at:r.created_at,primary:r.primary_career,secondary:r.secondary_career,readiness_stage:r.readiness_stage,readiness_key:r.readiness_key,goal:r.income_goal_php,weekly_hours:r.weekly_hours,obstacle:r.obstacle,timeline:r.start_timeline,priority:priorityOf(r,!!a),answers:r.answers||{},report:r.report||null,email_state:r.email_state,email_sent_at:r.email_sent_at,consent:r.marketing_consent===true,consent_at:r.marketing_consent_at,consent_source:r.consent_source||null}:null,
-        application:a?{id:a.id,created_at:a.created_at,status:a.status,decision:a.decision,payment_status:a.payment_status,accepted_at:a.accepted_at,paid_at:a.paid_at,onboarding_completed_at:a.onboarding_completed_at,source:a.source}:null,
-        attribution:r?{visit:r.acquisition_visit_id,visitor:r.acquisition_visitor_id,token:r.tracking_token}:null,
-        segments:s,
-      });
-    }
-    out.sort((x,y)=>String(y.last_seen||"").localeCompare(String(x.last_seen||"")));
-
-    // Funnel counts are read from the rows already in hand, so the numbers on
-    // screen always agree with the list underneath them.
-    const consented=rows.filter(r=>r.marketing_consent===true).length;
-    const priorityCounts:Record<string,number>=rows.reduce((acc:any,r:any)=>{
-      const b=String(r.lead_priority_band||"cool");acc[b]=(acc[b]||0)+1;return acc;
-    },{} as Record<string,number>);
-    const funnel={
-      quiz_completions:rows.length,
-      captured_leads:rows.filter(r=>key(r.email)).length,
-      consented_leads:consented,
-      applications:(apps||[]).length,
-      accepted:(apps||[]).filter(a=>a.decision==="accepted"||a.status==="accepted").length,
-      paid:(apps||[]).filter(a=>a.payment_status==="paid"||!!a.paid_at).length,
-      // Declared here rather than bolted on afterwards, so the shape the
-      // response carries is the shape TypeScript actually knows about.
-      quiz_to_paid:0,
-      // Priority distribution, using the same stored bands the Acquisition
-      // Tool reports, so the two never disagree about how the pipeline looks.
-      by_priority:priorityCounts,
-    };
-    funnel.quiz_to_paid=funnel.captured_leads?Math.round(funnel.paid/funnel.captured_leads*1000)/10:0;
-
-    return new Response(JSON.stringify({ok:true,leads:out,funnel,quizAvailable,definitions:{
-      captured_leads:"Quiz completions that left an email address.",
-      accepted:"Applications with an accepted decision, read live from academy_applications.",
-      paid:"Applications with a paid payment status or a paid_at timestamp.",
-      quiz_to_paid:"Paid enrolments divided by captured quiz leads, over the rows returned.",
-    }}),{status:200,headers:h});
-  }
   if(action==="answers"){
     const ids=Array.isArray(body.ids)?body.ids:[];
     const safeIds=ids.filter((id:string)=>SAFE_ID.test(String(id||"").trim())).map((id:string)=>String(id).trim()).slice(0,50);
@@ -249,6 +140,119 @@ Deno.serve(async(req:Request)=>{
       byId.set(String(row.id),typeof row.admin_notes==="string"?row.admin_notes:"");
     }
     return new Response(JSON.stringify({ok:true,notes:safeIds.map(id=>({id,note:byId.get(id)||""}))}),{status:200,headers:h});
+  }
+  if(action==="quiz-leads"){
+    const limit=Number(body.limit||100);
+    const offset=Number(body.offset||0);
+    const search=String(body.search||"").trim().toLowerCase();
+    const consentFilter=String(body.consent||"all");
+    const deliveryFilter=String(body.delivery||"all");
+    const careerFilter=String(body.career||"all");
+    const conversionFilter=String(body.conversion||"all");
+    const sinceDays=Number(body.since||30);
+    const sortBy=String(body.sort||"recent");
+    const since=new Date(Date.now()-sinceDays*24*60*60*1000).toISOString();
+    const isExport=String(body.export||"")==="csv";
+    
+    let query=db.from('quiz_results').select('id,created_at,email,first_name,primary_career,secondary_career,readiness_stage,readiness_key,marketing_consent,marketing_consent_at,consent_source,email_state,email_sent_at,email_error,email_attempts,application_id,acquisition_visit_id,tracking_token,answers,report',{count:'exact'}).gte('created_at',since);
+    
+    if(search){
+      query=query.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,primary_career.ilike.%${search}%`);
+    }
+    if(consentFilter!=="all"){
+      query=query.eq('marketing_consent',consentFilter==='opted_in');
+    }
+    if(deliveryFilter!=="all"){
+      query=query.eq('email_state',deliveryFilter);
+    }
+    if(careerFilter!=="all"){
+      query=query.eq('primary_career',careerFilter);
+    }
+    if(conversionFilter!=="all"){
+      if(conversionFilter==='converted'){
+        query=query.not('application_id','is',null);
+      }else if(conversionFilter==='not_converted'){
+        query=query.is('application_id',null);
+      }
+    }
+    
+    if(sortBy==="recent") query=query.order('created_at',{ascending:false});
+    else if(sortBy==="oldest") query=query.order('created_at',{ascending:true});
+    else if(sortBy==="email") query=query.order('email',{ascending:true});
+    else query=query.order('created_at',{ascending:false});
+    
+    if(!isExport){
+      query=query.range(offset,offset+limit-1);
+    }
+    
+    const {data,error,count}=await query;
+    if(error) return new Response(JSON.stringify({ok:false,error:"Could not load quiz leads"}),{status:500,headers:h});
+    
+    const {data:allLeads}=await db.from('quiz_results').select('email,marketing_consent,email_state,application_id').gte('created_at',since);
+    const total=allLeads?.length||0;
+    const optedIn=allLeads?.filter(l=>l.marketing_consent===true).length||0;
+    const emailSent=allLeads?.filter(l=>l.email_state==='sent').length||0;
+    const emailFailed=allLeads?.filter(l=>l.email_state==='failed').length||0;
+    const emailRequested=allLeads?.filter(l=>['requested','sending'].includes(l.email_state)).length||0;
+    const converted=allLeads?.filter(l=>l.application_id!==null).length||0;
+    
+    const careers=[...new Set((allLeads||[]).map(l=>l.primary_career).filter(Boolean))].sort();
+    
+    const appIds=[...new Set((data||[]).map(l=>l.application_id).filter(Boolean))];
+    let appsById=new Map();
+    if(appIds.length){
+      const {data:apps}=await db.from('academy_applications').select('id,status,payment_status,decision').in('id',appIds);
+      for(const app of apps||[]){appsById.set(app.id,app);}
+    }
+    
+    const visitIds=[...new Set((data||[]).map(l=>l.acquisition_visit_id).filter(Boolean))];
+    let visitsById=new Map();
+    if(visitIds.length){
+      const {data:visits}=await db.from('acquisition_visits').select('id,channel,placement,label,tracking_token').in('id',visitIds);
+      for(const v of visits||[]){visitsById.set(v.id,v);}
+    }
+    
+    const leads=(data||[]).map(l=>{
+      const app=appsById.get(l.application_id);
+      const visit=visitsById.get(l.acquisition_visit_id);
+      return{
+        ...l,
+        application:app?{status:app.status,payment_status:app.payment_status,decision:app.decision}:null,
+        acquisition:visit?{channel:visit.channel,placement:visit.placement,label:visit.label,tracking_token:visit.tracking_token}:null,
+      };
+    });
+    
+    if(isExport){
+      // Generate CSV
+      const headers=[
+        "ID","Created At","Email","First Name","Primary Career","Secondary Career",
+        "Readiness Stage","Readiness Key","Marketing Consent","Consent At","Consent Source",
+        "Email State","Email Sent At","Email Error","Email Attempts",
+        "Application ID","Application Status","Application Decision","Application Payment Status",
+        "Acquisition Channel","Acquisition Placement","Acquisition Label","Tracking Token"
+      ];
+      
+      const rows=leads.map(l=>{
+        const app=l.application;
+        const acq=l.acquisition;
+        const escape=(s:string|number|null|undefined)=>"\""+String(s??'').replaceAll("\"","\"\"")+"\"";
+        return [
+          escape(l.id),escape(l.created_at),escape(l.email),escape(l.first_name),escape(l.primary_career),escape(l.secondary_career),
+          escape(l.readiness_stage),escape(l.readiness_key),escape(l.marketing_consent),escape(l.marketing_consent_at),escape(l.consent_source),
+          escape(l.email_state),escape(l.email_sent_at),escape(l.email_error),escape(l.email_attempts),
+          escape(l.application_id),escape(app?.status),escape(app?.decision),escape(app?.payment_status),
+          escape(acq?.channel),escape(acq?.placement),escape(acq?.label),escape(acq?.tracking_token)
+        ].join(",");
+      });
+      
+      const csv=[headers.join(","),...rows].join("\n");
+      return new Response(csv,{
+        status:200,
+        headers:{"Content-Type":"text/csv;charset=utf-8","Content-Disposition":`attachment; filename="quiz-leads-${new Date().toISOString().slice(0,10)}.csv"`,...h}
+      });
+    }
+    
+    return new Response(JSON.stringify({ok:true,leads,total,count,stats:{total,optedIn,emailSent,emailFailed,emailRequested,converted},careers}),{status:200,headers:h});
   }
   return new Response(JSON.stringify({ok:false,error:"Unknown action"}),{status:400,headers:h});
 });
