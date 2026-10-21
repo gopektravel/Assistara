@@ -3474,90 +3474,6 @@
         // Populate careers dropdown
         careerEl.innerHTML = '<option value="all">All</option>' + (quizLeadCareers || []).map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
         
-        // loadQuizLeads is defined here so it has access to DOM elements like careerEl
-        async function loadQuizLeads() {
-          const { search, consent, delivery, career, conversion, sort, window: sinceDays } = currentFilters;
-          const offset = quizLeadPage * QUIZ_LEAD_PAGE_SIZE;
-          try {
-            const data = await req("quiz-leads", {
-              limit: QUIZ_LEAD_PAGE_SIZE,
-              offset,
-              search,
-              consent,
-              delivery,
-              career,
-              conversion,
-              since: sinceDays,
-              sort
-            }, QUIZ_LEADS);
-            if (data.ok) {
-              // Transform API response to flat structure expected by UI
-              const rawLeads = data.leads || [];
-              const funnel = data.funnel || {};
-              
-              quizLeadCache = rawLeads.map(l => {
-                const q = l.quiz || {};
-                const app = l.application || null;
-                const attr = l.attribution || {};
-                const segments = l.segments || {};
-                return {
-                  id: l.id || l.quiz_id,
-                  created_at: q.completed_at || l.first_seen,
-                  email: l.email,
-                  first_name: l.first_name || "",
-                  primary_career: q.primary || segments.career || null,
-                  secondary_career: q.secondary || null,
-                  readiness_stage: q.readiness_stage || null,
-                  readiness_key: q.readiness_key || null,
-                  marketing_consent: q.consent === true,
-                  marketing_consent_at: q.consent_at || null,
-                  consent_source: q.consent_source || null,
-                  email_state: q.email_state || "not_requested",
-                  email_sent_at: q.email_sent_at || null,
-                  email_error: q.email_error || null,
-                  email_attempts: q.email_attempts || 0,
-                  application_id: app ? (app.id || l.application_id) : null,
-                  application: app ? {
-                    status: app.status || app.decision,
-                    payment_status: app.payment_status,
-                    decision: app.decision
-                  } : null,
-                  acquisition: (attr.channel || attr.placement || attr.label) ? {
-                    channel: attr.channel || attr.token,
-                    placement: attr.placement,
-                    label: attr.label,
-                    tracking_token: attr.token
-                  } : null,
-                  answers: q.answers || {},
-                  report: q.report || {},
-                  quiz: q
-                };
-              });
-              
-              quizLeadCareers = [...new Set(quizLeadCache.map(l => l.primary_career).filter(Boolean))].sort();
-              quizLeadTotal = funnel.quiz_completions || funnel.captured_leads || quizLeadCache.length || 0;
-              
-              // Update careers dropdown
-              careerEl.innerHTML = '<option value="all">All</option>' + quizLeadCareers.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-              
-              // Render stats from funnel
-              stat([
-                [funnel.captured_leads || quizLeadTotal || 0, "Total Leads", `Last ${sinceDays} days`],
-                [funnel.consented_leads || 0, "Opted In", "Marketing consent"],
-                [funnel.email_sent || funnel.delivered || 0, "Reports Sent", "Email delivered"],
-                [funnel.email_failed || funnel.failed || 0, "Delivery Failed", "Needs attention"],
-                [funnel.email_pending || 0, "Pending", "Queued/Sending"],
-                [funnel.applications || 0, "Academy Apps", "Quiz→Application"],
-              ]);
-              renderQuizLeadCards();
-            } else {
-              $("cards").innerHTML = '<div class="error">Failed to load quiz leads: ' + esc(data.error) + '</div>';
-            }
-          } catch (e) {
-            $("cards").innerHTML = '<div class="error">Error: ' + esc(e.message) + '</div>';
-          }
-        }
-        
         loadQuizLeads();
       }
       
@@ -3568,7 +3484,10 @@
       const QUIZ_LEAD_PAGE_SIZE = 50;
       let currentFilters = { search: "", consent: "all", delivery: "all", career: "all", conversion: "all", sort: "recent", window: 30 };
       
-      function debounce(fn, ms) {
+      // loadQuizLeads queries DOM elements internally so it can be called from global scope (pagination)
+      async function loadQuizLeads() {
+        const careerEl = $("quizLeadCareer");
+        const { search, consent, delivery, career, conversion, sort, window: sinceDays } = currentFilters;
         let timer;
         return (...args) => {
           clearTimeout(timer);
