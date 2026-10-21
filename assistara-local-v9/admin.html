@@ -3451,7 +3451,6 @@
         const windowEl = $("quizLeadWindow");
         const exportEl = $("quizLeadExport");
         
-        const currentFilters = { search: "", consent: "all", delivery: "all", career: "all", conversion: "all", sort: "recent", window: 30 };
         const applyFilters = () => {
           currentFilters.search = searchEl.value.toLowerCase().trim();
           currentFilters.consent = consentEl.value;
@@ -3483,6 +3482,7 @@
       let quizLeadTotal = 0;
       let quizLeadPage = 0;
       const QUIZ_LEAD_PAGE_SIZE = 50;
+      let currentFilters = { search: "", consent: "all", delivery: "all", career: "all", conversion: "all", sort: "recent", window: 30 };
       
       async function loadQuizLeads() {
         const { search, consent, delivery, career, conversion, sort, window: sinceDays } = currentFilters;
