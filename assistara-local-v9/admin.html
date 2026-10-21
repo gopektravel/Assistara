@@ -3462,6 +3462,14 @@
           loadQuizLeads();
         };
         
+        function debounce(fn, ms) {
+          let timer;
+          return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(null, args), ms);
+          };
+        }
+        
         searchEl.oninput = debounce(applyFilters, 300);
         consentEl.onchange = applyFilters;
         deliveryEl.onchange = applyFilters;
